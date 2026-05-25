@@ -19,9 +19,9 @@ const navItems = [
   { href: '/inversionistas', label: 'Inversionistas', icon: BriefcaseBusiness, roles: ['ADMIN', 'MANAGER'] },
   { href: '/caja', label: 'Caja', icon: Banknote, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
   { href: '/clientes', label: 'Clientes', icon: Users, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/prestamos', label: 'Prestamos', icon: HandCoins, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
+  { href: '/prestamos', label: 'Préstamos', icon: HandCoins, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
   { href: '/documentos', label: 'Documentos', icon: FileText, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/configuracion', label: 'Configuracion', icon: Settings, roles: ['ADMIN'] },
+  { href: '/configuracion', label: 'Configuración', icon: Settings, roles: ['ADMIN'] },
 ];
 
 export function Sidebar() {

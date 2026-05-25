@@ -4,7 +4,7 @@ export default function DocumentosPage() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold text-gray-900">Documentos</h1>
-      <p className="mt-1 text-sm text-gray-500">Gestion documental</p>
+      <p className="mt-1 text-sm text-gray-500">Gestión documental</p>
     </div>
   );
 }

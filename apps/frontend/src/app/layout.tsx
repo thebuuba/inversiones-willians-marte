@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/lib/auth-context';
-import { Sidebar } from '@/components/layout/sidebar';
+import { AppShell } from '@/components/layout/app-shell';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -17,14 +17,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </AuthProvider>
       </body>
     </html>
-  );
-}
-
-function AppShell({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <Sidebar />
-      <main className="ml-64 min-h-screen">{children}</main>
-    </>
   );
 }
