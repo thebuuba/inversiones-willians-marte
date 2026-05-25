@@ -3,15 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Banknote,
-  Bell,
-  BriefcaseBusiness,
+  ClipboardList,
   FileText,
-  FilePlus,
-  HandCoins,
   Home,
+  Landmark,
+  LogOut,
   Settings,
+  TrendingUp,
   Users,
+  Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
@@ -19,11 +19,10 @@ import { useAuth } from '@/lib/auth-context';
 const navItems = [
   { href: '/inicio', label: 'Inicio', icon: Home, roles: ['ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER'] },
   { href: '/clientes', label: 'Clientes', icon: Users, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/solicitudes', label: 'Solicitudes', icon: FilePlus, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/prestamos', label: 'Préstamos', icon: HandCoins, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/caja', label: 'Caja', icon: Banknote, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/recordatorios', label: 'Recordatorios', icon: Bell, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/inversionistas', label: 'Inversionistas', icon: BriefcaseBusiness, roles: ['ADMIN', 'MANAGER'] },
+  { href: '/solicitudes', label: 'Solicitudes', icon: ClipboardList, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
+  { href: '/prestamos', label: 'Préstamos', icon: Landmark, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
+  { href: '/caja', label: 'Caja', icon: Wallet, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
+  { href: '/inversionistas', label: 'Inversionistas', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
   { href: '/documentos', label: 'Documentos', icon: FileText, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
   { href: '/configuracion', label: 'Configuración', icon: Settings, roles: ['ADMIN'] },
 ];
@@ -31,56 +30,79 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const initial = user?.name?.charAt(0) ?? 'A';
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-brand-950 text-ink-inverse shadow-xl shadow-brand-950/20">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-[300px] rounded-bl-lg border-r border-[#DDEBE3] bg-white text-[#285C43]">
       <div className="flex h-full flex-col">
-        <div className="border-b border-brand-900 px-6 py-6">
-          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-white text-sm font-bold text-brand-700">
+        <div className="flex items-center gap-4 border-b border-[#DDEBE3] px-6 pb-5 pt-6">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#A9CDBB] text-lg font-bold text-white shadow-[0_10px_22px_rgba(169,205,187,0.32)]">
             WM
           </div>
-          <h1 className="text-lg font-bold">Willians Marte</h1>
-          <p className="text-sm text-brand-200">Sistema de Préstamos</p>
+          <div className="min-w-0">
+            <h1 className="truncate text-[18px] font-bold leading-tight text-[#285C43]">Willians Marte</h1>
+            <p className="mt-1 truncate text-[15px] font-medium leading-tight text-[#5FA37D]">
+              Sistema de Préstamos
+            </p>
+          </div>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems
-            .filter((item) => item.roles.includes(user?.role ?? ''))
-            .map((item) => {
-              const Icon = item.icon;
+        <nav className="flex-1 overflow-hidden px-4 py-6">
+          <p className="mb-4 px-4 text-xs font-bold uppercase tracking-wide text-[#A9CDBB]">
+            Menú
+          </p>
+          <div className="space-y-2.5">
+            {navItems
+              .filter((item) => item.roles.includes(user?.role ?? ''))
+              .map((item) => {
+                const Icon = item.icon;
+                const active = pathname.startsWith(item.href);
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                    pathname.startsWith(item.href)
-                      ? 'bg-brand-600 text-ink-inverse'
-                      : 'text-brand-100 hover:bg-brand-900 hover:text-ink-inverse',
-                  )}
-                >
-                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {item.label}
-                </Link>
-              );
-            })}
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'relative flex h-11 items-center gap-4 rounded-full px-4 text-[17px] font-medium transition-colors',
+                      active
+                        ? 'bg-[#E2F3E8] text-[#285C43]'
+                        : 'text-[#5FA37D] hover:bg-[#F3FAF6]',
+                    )}
+                  >
+                    {active && (
+                      <span className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-[#5FA37D]" />
+                    )}
+                    <Icon
+                      className={cn('h-5 w-5 shrink-0', active ? 'text-[#285C43]' : 'text-[#A9CDBB]')}
+                      strokeWidth={2}
+                      aria-hidden="true"
+                    />
+                    {item.label}
+                  </Link>
+                );
+              })}
+          </div>
         </nav>
 
-        <div className="border-t border-brand-900 px-4 py-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-sm font-medium">
-              {user?.name?.charAt(0)}
+        <div className="border-t border-[#DDEBE3] px-4 pb-5 pt-4">
+          <div className="mb-4 flex items-center gap-4 rounded-[24px] bg-[#F3FAF6] px-4 py-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#A9CDBB] text-base font-bold text-white shadow-[0_8px_18px_rgba(169,205,187,0.3)]">
+              {initial}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.name}</p>
-              <p className="truncate text-xs text-brand-200">{user?.role}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[16px] font-bold leading-tight text-[#285C43]">
+                {user?.name ?? 'Administrador'}
+              </p>
+              <p className="mt-1 truncate text-[14px] leading-tight text-[#A9CDBB]">
+                {user?.email ?? 'admin@empresa.com'}
+              </p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="w-full text-left text-sm text-brand-200 transition-colors hover:text-ink-inverse"
+            className="flex h-10 w-full items-center gap-4 px-4 text-left text-[17px] font-medium text-[#5FA37D] transition-colors hover:text-[#285C43]"
           >
+            <LogOut className="h-5 w-5 text-[#A9CDBB]" strokeWidth={2} aria-hidden="true" />
             Cerrar sesión
           </button>
         </div>
