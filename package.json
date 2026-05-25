@@ -1,0 +1,26 @@
+{
+  "name": "inversiones-willians-marte",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,prisma}\"",
+    "db:generate": "pnpm --filter @inversiones/database generate",
+    "db:migrate": "pnpm --filter @inversiones/database migrate",
+    "db:push": "pnpm --filter @inversiones/database push",
+    "db:studio": "pnpm --filter @inversiones/database studio",
+    "db:seed": "pnpm --filter @inversiones/database seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "prettier": "^3.5.0"
+  },
+  "packageManager": "pnpm@10.8.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@nestjs/core", "@prisma/client", "@prisma/engines", "bcrypt", "prisma", "unrs-resolver"]
+  }
+}

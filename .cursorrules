@@ -1,0 +1,93 @@
+# Inversiones Willians Marte — Reglas para Codex/Cursor
+
+## Stack
+- **Backend:** NestJS 11 + TypeScript (strict mode)
+- **Frontend:** Next.js 16 + App Router + TailwindCSS v4
+- **Base de datos:** PostgreSQL + Prisma 6.5 (ORM)
+- **Monorepo:** pnpm workspaces + Turborepo
+- **Auth:** JWT + Passport (roles: ADMIN, MANAGER, COLLECTOR, VIEWER)
+
+## Estructura del proyecto
+```
+/
+├── apps/
+│   ├── backend/         # NestJS API
+│   │   └── src/
+│   │       ├── common/          # Guards, interceptors, filters, decorators
+│   │       ├── config/          # Configuración global
+│   │       └── modules/
+│   │           ├── auth/        # Login, JWT, profile
+│   │           ├── users/       # CRUD usuarios + roles
+│   │           ├── clients/     # CRUD clientes
+│   │           ├── loan-products/  # Tipos de préstamo configurables
+│   │           ├── loans/       # Core: creación + amortización + cronograma
+│   │           ├── payments/    # Cobros + asignación a cuotas
+│   │           ├── reports/     # Dashboard + cartera + colectores
+│   │           └── audit/       # Trazabilidad de cambios
+│   └── frontend/        # Next.js App Router
+│       └── src/
+│           ├── app/       # Páginas (login, dashboard, clients, loans, etc.)
+│           ├── components/ui/  # Button, Input, Card, Badge
+│           ├── components/layout/ # Sidebar, headers
+│           └── lib/       # API client, Auth context, utils
+├── packages/
+│   ├── database/         # Prisma schema + migrations + client
+│   └── shared/           # Tipos TypeScript compartidos (DTOs, enums)
+├── turbo.json
+├── docker-compose.yml
+└── pnpm-workspace.yaml
+```
+
+## Convenciones de código
+
+### Backend (NestJS)
+- **Módulos:** Cada funcionalidad es un módulo independiente con su propio controller, service, dto y module
+- **DTOs:** Usar `class-validator` con decoradores (`@IsString`, `@IsNumber`, `@IsEnum`, etc.)
+- **Tipos compartidos:** Los enums y DTOs que se usan en frontend y backend van en `@inversiones/shared`
+- **Import type:** Usar `import type { X }` para tipos en DTOs decorados (requerido por `emitDecoratorMetadata`)
+- **PartialType:** Importar de `@nestjs/mapped-types`, NO de `@nestjs/common`
+- **Servicios:** Inyectar Prisma via `import { prisma } from '@inversiones/database'`
+- **Respuestas:** Todas pasan por `ResponseInterceptor` -> `{ success: true, data: ... }`
+- **Errores:** `AllExceptionsFilter` captura todo y devuelve `{ success: false, error: ... }`
+- **Rutas:** Prefijo global `/api/v1`
+- **Roles:** Usar `@Roles('ADMIN')` + `@UseGuards(JwtAuthGuard, RolesGuard)` en controladores
+
+### Frontend (Next.js)
+- **Componentes:** Todos los componentes de página usan `'use client'` cuando tienen estado
+- **API calls:** Usar `api` de `@/lib/api` (axios instance con JWT interceptor)
+- **Auth:** `useAuth()` hook del `AuthContext` para login/logout/user
+- **Estilos:** TailwindCSS v4, componentes UI en `@/components/ui/`
+- **Iconos:** `lucide-react`
+- **Formularios:** Usar `Input` + `Button` components de la UI
+
+### Base de datos (Prisma)
+- **Provider:** PostgreSQL
+- **Ubicación schema:** `packages/database/prisma/schema.prisma`
+- **Migraciones:** `pnpm db:migrate`
+- **Seed:** `pnpm db:seed`
+- **Generar cliente:** `pnpm db:generate`
+- **Convención naming:** snake_case para columnas (@map), camelCase para campos
+- **Prefijo tablas:** sin prefijo (users, clients, loans, etc.)
+
+### Comandos útiles
+```bash
+pnpm dev           # Inicia todo (turbo)
+pnpm build         # Build completo
+pnpm db:migrate    # Nueva migración
+pnpm db:seed       # Poblar BD con datos iniciales
+pnpm db:studio     # Abrir Prisma Studio
+pnpm lint          # Lintear todo
+pnpm format        # Formatear con Prettier
+```
+
+## Algoritmo de amortización
+- Ubicación: `apps/backend/src/modules/loans/services/amortization.service.ts`
+- Soportados: FLAT, REDUCING (francés), COMPOUND, FIXED
+- Cada método de cálculo está en un bloque `if/else if` separado
+- Los montos se redondean a 2 decimales con `Math.round(x * 100) / 100`
+
+## Datos de prueba
+- Admin: admin@inversiones.com / admin123
+- Puerto API: 3000
+- Puerto Frontend: 3001
+- DB: postgresql://natanael@localhost:5432/inversiones

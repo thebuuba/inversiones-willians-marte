@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  COLLECTOR
+  MANAGER
+  VIEWER
+}
+
+enum LoanStatus {
+  ACTIVE
+  PAID
+  OVERDUE
+  RESTRUCTURED
+  WRITTEN_OFF
+}
+
+enum InterestType {
+  FLAT
+  REDUCING
+  COMPOUND
+  FIXED
+}
+
+enum PaymentFrequency {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+}
+
+enum ScheduleStatus {
+  PENDING
+  PAID
+  PARTIAL
+  OVERDUE
+}
+
+enum AllocationType {
+  PRINCIPAL
+  INTEREST
+  PENALTY
+}
+
+// ─── Users ──────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(COLLECTOR)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  createdClients Client[]     @relation("ClientCreatedBy")
+  createdLoans   Loan[]       @relation("LoanCreatedBy")
+  receivedPayments Payment[]  @relation("PaymentReceivedBy")
+  auditLogs      AuditLog[]
+
+  @@map("users")
+}
+
+// ─── Clients ────────────────────────────────────────────────────────────────
+
+model Client {
+  id             String   @id @default(uuid())
+  name           String
+  phone          String?
+  email          String?
+  identification String?  @map("identification")
+  address        String?
+  notes          String?
+  createdById    String   @map("created_by")
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  createdBy User    @relation("ClientCreatedBy", fields: [createdById], references: [id])
+  loans     Loan[]
+  payments  Payment[]
+
+  @@map("clients")
+}
+
+// ─── Loan Products (templates) ──────────────────────────────────────────────
+
+model LoanProduct {
+  id               String          @id @default(uuid())
+  name             String
+  interestType     InterestType    @map("interest_type")
+  interestRate     Decimal         @map("interest_rate")
+  interestFrequency PaymentFrequency? @map("interest_frequency")
+  paymentFrequency PaymentFrequency @map("payment_frequency")
+  maxAmount        Decimal?        @map("max_amount")
+  minAmount        Decimal?        @map("min_amount")
+  maxTerm          Int?            @map("max_term")
+  latePenaltyType  String?         @map("late_penalty_type")
+  latePenaltyValue Decimal?        @map("late_penalty_value")
+  active           Boolean         @default(true)
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  loans Loan[]
+
+  @@map("loan_products")
+}
+
+// ─── Loans ──────────────────────────────────────────────────────────────────
+
+model Loan {
+  id            String         @id @default(uuid())
+  clientId      String         @map("client_id")
+  productId     String         @map("product_id")
+  principal     Decimal
+  interestRate  Decimal        @map("interest_rate")
+  interestType  InterestType   @map("interest_type")
+  totalAmount   Decimal        @map("total_amount")
+  paymentFreq   PaymentFrequency @map("payment_frequency")
+  term          Int
+  startDate     DateTime       @map("start_date")
+  endDate       DateTime?      @map("end_date")
+  status        LoanStatus     @default(ACTIVE)
+  balance       Decimal
+  notes         String?
+  createdById   String         @map("created_by")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  client          Client          @relation(fields: [clientId], references: [id])
+  product         LoanProduct     @relation(fields: [productId], references: [id])
+  createdBy       User            @relation("LoanCreatedBy", fields: [createdById], references: [id])
+  schedule        PaymentSchedule[]
+  payments        Payment[]
+  lateFees        LateFee[]
+
+  @@map("loans")
+}
+
+// ─── Payment Schedule ──────────────────────────────────────────────────────
+
+model PaymentSchedule {
+  id            String         @id @default(uuid())
+  loanId        String         @map("loan_id")
+  dueDate       DateTime       @map("due_date")
+  amount        Decimal
+  principalPart Decimal        @map("principal_part")
+  interestPart  Decimal        @map("interest_part")
+  balanceAfter  Decimal        @map("balance_after")
+  status        ScheduleStatus @default(PENDING)
+  paidDate      DateTime?      @map("paid_date")
+  paidAmount    Decimal?
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  loan           Loan                  @relation(fields: [loanId], references: [id])
+  lateFees       LateFee[]
+  paymentAllocs  PaymentAllocation[]
+
+  @@map("payment_schedule")
+}
+
+// ─── Payments ───────────────────────────────────────────────────────────────
+
+model Payment {
+  id            String   @id @default(uuid())
+  loanId        String   @map("loan_id")
+  clientId      String   @map("client_id")
+  amount        Decimal
+  paymentDate   DateTime @map("payment_date")
+  paymentMethod String?  @map("payment_method")
+  reference     String?
+  receivedById  String   @map("received_by")
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  loan       Loan                @relation(fields: [loanId], references: [id])
+  client     Client              @relation(fields: [clientId], references: [id])
+  receivedBy User                @relation("PaymentReceivedBy", fields: [receivedById], references: [id])
+  allocations PaymentAllocation[]
+
+  @@map("payments")
+}
+
+// ─── Payment Allocations ────────────────────────────────────────────────────
+
+model PaymentAllocation {
+  id         String         @id @default(uuid())
+  paymentId  String         @map("payment_id")
+  scheduleId String         @map("schedule_id")
+  amount     Decimal
+  type       AllocationType
+
+  payment Payment        @relation(fields: [paymentId], references: [id])
+  schedule PaymentSchedule @relation(fields: [scheduleId], references: [id])
+
+  @@map("payment_allocations")
+}
+
+// ─── Late Fees ──────────────────────────────────────────────────────────────
+
+model LateFee {
+  id             String    @id @default(uuid())
+  loanId         String    @map("loan_id")
+  scheduleId     String    @map("schedule_id")
+  amount         Decimal
+  calculatedDate DateTime  @map("calculated_date")
+  paid           Boolean   @default(false)
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  loan     Loan            @relation(fields: [loanId], references: [id])
+  schedule PaymentSchedule @relation(fields: [scheduleId], references: [id])
+
+  @@map("late_fees")
+}
+
+// ─── Audit Log ──────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  oldValues  Json?    @map("old_values")
+  newValues  Json?    @map("new_values")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@inversiones/shared",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "typescript": "^5.8.0"
+  }
+}
