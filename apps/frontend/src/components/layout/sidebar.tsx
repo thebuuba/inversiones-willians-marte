@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  ClipboardList,
   FileText,
   Home,
   Landmark,
@@ -18,6 +19,7 @@ import { useAuth } from '@/lib/auth-context';
 const navItems = [
   { href: '/inicio', label: 'Inicio', icon: Home },
   { href: '/clientes', label: 'Clientes', icon: Users },
+  { href: '/solicitudes', label: 'Solicitudes', icon: ClipboardList },
   { href: '/prestamos', label: 'Préstamos', icon: Landmark },
   { href: '/caja', label: 'Caja', icon: Wallet },
   { href: '/inversionistas', label: 'Inversionistas', icon: TrendingUp },
