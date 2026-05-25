@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  ClipboardList,
   FileText,
   Home,
   Landmark,
@@ -17,14 +16,13 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 
 const navItems = [
-  { href: '/inicio', label: 'Inicio', icon: Home, roles: ['ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER'] },
-  { href: '/clientes', label: 'Clientes', icon: Users, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/solicitudes', label: 'Solicitudes', icon: ClipboardList, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/prestamos', label: 'Préstamos', icon: Landmark, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/caja', label: 'Caja', icon: Wallet, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/inversionistas', label: 'Inversionistas', icon: TrendingUp, roles: ['ADMIN', 'MANAGER'] },
-  { href: '/documentos', label: 'Documentos', icon: FileText, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/configuracion', label: 'Configuración', icon: Settings, roles: ['ADMIN'] },
+  { href: '/inicio', label: 'Inicio', icon: Home },
+  { href: '/clientes', label: 'Clientes', icon: Users },
+  { href: '/prestamos', label: 'Préstamos', icon: Landmark },
+  { href: '/caja', label: 'Caja', icon: Wallet },
+  { href: '/inversionistas', label: 'Inversionistas', icon: TrendingUp },
+  { href: '/documentos', label: 'Documentos', icon: FileText },
+  { href: '/configuracion', label: 'Configuración', icon: Settings },
 ];
 
 export function Sidebar() {
@@ -52,9 +50,7 @@ export function Sidebar() {
             Menú
           </p>
           <div className="space-y-2.5">
-            {navItems
-              .filter((item) => item.roles.includes(user?.role ?? ''))
-              .map((item) => {
+            {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = pathname.startsWith(item.href);
 
