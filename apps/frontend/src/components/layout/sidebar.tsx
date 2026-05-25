@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Banknote,
+  Bell,
   BriefcaseBusiness,
   FileText,
   FilePlus,
@@ -21,6 +22,7 @@ const navItems = [
   { href: '/solicitudes', label: 'Solicitudes', icon: FilePlus, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
   { href: '/prestamos', label: 'Préstamos', icon: HandCoins, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
   { href: '/caja', label: 'Caja', icon: Banknote, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
+  { href: '/recordatorios', label: 'Recordatorios', icon: Bell, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
   { href: '/inversionistas', label: 'Inversionistas', icon: BriefcaseBusiness, roles: ['ADMIN', 'MANAGER'] },
   { href: '/documentos', label: 'Documentos', icon: FileText, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
   { href: '/configuracion', label: 'Configuración', icon: Settings, roles: ['ADMIN'] },
