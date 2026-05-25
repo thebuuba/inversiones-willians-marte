@@ -21,13 +21,13 @@ export default function InicioPage() {
     api.get('/reports/dashboard').then((res) => setData(res.data.data));
   }, []);
 
-  if (!data) return <div className="p-6 text-gray-500">Cargando...</div>;
+  if (!data) return <div className="p-6 text-ink-muted">Cargando...</div>;
 
   return (
     <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Inicio</h1>
-        <p className="mt-1 text-sm text-gray-500">Resumen general del sistema</p>
+      <div className="rounded-lg border border-brand-100 bg-white p-5 shadow-sm">
+        <h1 className="text-2xl font-bold text-ink">Inicio</h1>
+        <p className="mt-1 text-sm text-ink-secondary">Resumen general del sistema</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -51,8 +51,8 @@ export default function InicioPage() {
       </div>
 
       {data.overdueLoans > 0 && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-          <p className="text-sm font-medium text-red-800">
+        <div className="rounded-lg border border-danger-bg bg-danger-bg p-4">
+          <p className="text-sm font-medium text-danger">
             Hay {data.overdueLoans} préstamo(s) vencido(s) que requieren atención
           </p>
         </div>

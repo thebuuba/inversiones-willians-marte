@@ -31,7 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (!isAuthenticated) {
     return (
-      <main className="flex min-h-screen items-center justify-center text-sm text-gray-500">
+      <main className="flex min-h-screen items-center justify-center text-sm text-ink-muted">
         Cargando...
       </main>
     );

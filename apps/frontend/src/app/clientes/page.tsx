@@ -23,10 +23,10 @@ export default function ClientesPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between rounded-lg border border-brand-100 bg-white p-5 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
-          <p className="mt-1 text-sm text-gray-500">Gestión de clientes</p>
+          <h1 className="text-2xl font-bold text-ink">Clientes</h1>
+          <p className="mt-1 text-sm text-ink-secondary">Gestión de clientes</p>
         </div>
       </div>
 
@@ -35,7 +35,7 @@ export default function ClientesPage() {
         placeholder="Buscar por nombre, teléfono o cédula..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full max-w-md rounded-lg border border-gray-300 px-3 py-2 text-sm"
+        className="w-full max-w-md rounded-lg border border-border px-3 py-2 text-sm placeholder-ink-muted focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
       />
 
       <div className="grid gap-4">
@@ -43,8 +43,8 @@ export default function ClientesPage() {
           <Card key={client.id}>
             <CardContent className="flex items-center justify-between py-4">
               <div>
-                <p className="font-medium text-gray-900">{client.name}</p>
-                <p className="text-sm text-gray-500">
+                <p className="font-medium text-ink">{client.name}</p>
+                <p className="text-sm text-ink-secondary">
                   {client.phone} - {client.identification}
                 </p>
               </div>

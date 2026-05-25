@@ -1,22 +1,81 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f0fbf4;
+  --foreground: #102018;
+
+  --brand-950: #052e16;
+  --brand-900: #064e24;
+  --brand-800: #08602c;
+  --brand-700: #0b6b35;
+  --brand-600: #0f7a3a;
+  --brand-500: #149447;
+  --brand-400: #2fbf64;
+  --brand-300: #74d99a;
+  --brand-200: #b8ebc9;
+  --brand-100: #dcf7e5;
+  --brand-50: #f0fbf4;
+
+  --surface: #f0fbf4;
+  --surface-muted: #eef3ef;
+  --border: #dde5de;
+  --border-strong: #b9c8bd;
+  --ink: #102018;
+  --ink-secondary: #4e6357;
+  --ink-muted: #7a8a80;
+  --ink-inverse: #ffffff;
+
+  --success: #15803d;
+  --success-bg: #dcfce7;
+  --warning: #b7791f;
+  --warning-bg: #fef3c7;
+  --danger: #b42318;
+  --danger-bg: #fee4e2;
+  --info: #2563eb;
+  --info-bg: #dbeafe;
+
+  --cash: #16a34a;
+  --capital: #a16207;
+  --loan: #0f766e;
+  --document: #475569;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-950: var(--brand-950);
+  --color-brand-900: var(--brand-900);
+  --color-brand-800: var(--brand-800);
+  --color-brand-700: var(--brand-700);
+  --color-brand-600: var(--brand-600);
+  --color-brand-500: var(--brand-500);
+  --color-brand-400: var(--brand-400);
+  --color-brand-300: var(--brand-300);
+  --color-brand-200: var(--brand-200);
+  --color-brand-100: var(--brand-100);
+  --color-brand-50: var(--brand-50);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-inverse: var(--ink-inverse);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-cash: var(--cash);
+  --color-capital: var(--capital);
+  --color-loan: var(--loan);
+  --color-document: var(--document);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 
 export function Card({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('rounded-xl border border-gray-200 bg-white shadow-sm', className)} {...props}>
+    <div className={cn('rounded-lg border border-border bg-white shadow-sm', className)} {...props}>
       {children}
     </div>
   );
@@ -11,7 +11,7 @@ export function Card({ className, children, ...props }: HTMLAttributes<HTMLDivEl
 
 export function CardHeader({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('px-6 py-4 border-b border-gray-100', className)} {...props}>
+    <div className={cn('border-b border-border px-6 py-4', className)} {...props}>
       {children}
     </div>
   );
@@ -27,14 +27,15 @@ export function CardContent({ className, children, ...props }: HTMLAttributes<HT
 
 export function MetricCard({ title, value, subtitle, icon }: { title: string; value: string | number; subtitle?: string; icon?: ReactNode }) {
   return (
-    <Card className="p-6">
+    <Card className="border-brand-100 p-6 shadow-[0_1px_0_rgba(15,122,58,0.08)]">
+      <div className="mb-4 h-1 w-12 rounded-full bg-brand-600" />
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
+          <p className="text-sm font-medium text-ink-secondary">{title}</p>
+          <p className="text-2xl font-bold text-ink">{value}</p>
+          {subtitle && <p className="text-xs text-ink-muted">{subtitle}</p>}
         </div>
-        {icon && <div className="text-gray-400">{icon}</div>}
+        {icon && <div className="text-ink-muted">{icon}</div>}
       </div>
     </Card>
   );
