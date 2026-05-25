@@ -2,16 +2,26 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  Banknote,
+  BriefcaseBusiness,
+  FileText,
+  HandCoins,
+  Home,
+  Settings,
+  Users,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER'] },
-  { href: '/clients', label: 'Clientes', icon: '👥', roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/loans', label: 'Préstamos', icon: '💰', roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/payments', label: 'Cobros', icon: '💵', roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
-  { href: '/users', label: 'Usuarios', icon: '🔐', roles: ['ADMIN'] },
-  { href: '/reports', label: 'Reportes', icon: '📈', roles: ['ADMIN', 'MANAGER'] },
+  { href: '/inicio', label: 'Inicio', icon: Home, roles: ['ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER'] },
+  { href: '/inversionistas', label: 'Inversionistas', icon: BriefcaseBusiness, roles: ['ADMIN', 'MANAGER'] },
+  { href: '/caja', label: 'Caja', icon: Banknote, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
+  { href: '/clientes', label: 'Clientes', icon: Users, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
+  { href: '/prestamos', label: 'Prestamos', icon: HandCoins, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
+  { href: '/documentos', label: 'Documentos', icon: FileText, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
+  { href: '/configuracion', label: 'Configuracion', icon: Settings, roles: ['ADMIN'] },
 ];
 
 export function Sidebar() {
@@ -29,21 +39,25 @@ export function Sidebar() {
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems
             .filter((item) => item.roles.includes(user?.role ?? ''))
-            .map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                  pathname.startsWith(item.href)
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white',
-                )}
-              >
-                <span>{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
+            .map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    pathname.startsWith(item.href)
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white',
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {item.label}
+                </Link>
+              );
+            })}
         </nav>
 
         <div className="px-4 py-4 border-t border-gray-800">

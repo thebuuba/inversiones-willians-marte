@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { AxiosError } from 'axios';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,9 +22,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.error ?? 'Error al iniciar sesión');
+      router.push('/inicio');
+    } catch (err) {
+      const error = err as AxiosError<{ error?: string }>;
+      setError(error.response?.data?.error ?? 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import { api } from './api';
 
 interface User {
@@ -18,39 +18,48 @@ interface AuthContextType {
   loading: boolean;
 }
 
+interface StoredAuth {
+  user: User | null;
+  token: string | null;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+function getStoredAuth(): StoredAuth {
+  if (typeof window === 'undefined') return { user: null, token: null };
 
-  useEffect(() => {
-    const stored = localStorage.getItem('auth');
-    if (stored) {
-      const { user, token } = JSON.parse(stored);
-      setUser(user);
-      setToken(token);
-    }
-    setLoading(false);
-  }, []);
+  const stored = localStorage.getItem('auth');
+  if (!stored) return { user: null, token: null };
+
+  try {
+    const parsed = JSON.parse(stored) as StoredAuth;
+    return {
+      user: parsed.user ?? null,
+      token: parsed.token ?? null,
+    };
+  } catch {
+    localStorage.removeItem('auth');
+    return { user: null, token: null };
+  }
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [auth, setAuth] = useState<StoredAuth>(getStoredAuth);
 
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
     const { user, accessToken } = data.data;
-    setUser(user);
-    setToken(accessToken);
+    setAuth({ user, token: accessToken });
     localStorage.setItem('auth', JSON.stringify({ user, token: accessToken }));
   }, []);
 
   const logout = useCallback(() => {
-    setUser(null);
-    setToken(null);
+    setAuth({ user: null, token: null });
     localStorage.removeItem('auth');
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user: auth.user, token: auth.token, login, logout, loading: false }}>
       {children}
     </AuthContext.Provider>
   );

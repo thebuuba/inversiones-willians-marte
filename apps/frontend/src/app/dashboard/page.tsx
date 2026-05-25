@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { MetricCard } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 interface DashboardData {
   activeLoans: number;
