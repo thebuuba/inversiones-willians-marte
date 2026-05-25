@@ -6,6 +6,7 @@ import {
   Banknote,
   BriefcaseBusiness,
   FileText,
+  FilePlus,
   HandCoins,
   Home,
   Settings,
@@ -17,6 +18,7 @@ import { useAuth } from '@/lib/auth-context';
 const navItems = [
   { href: '/inicio', label: 'Inicio', icon: Home, roles: ['ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER'] },
   { href: '/clientes', label: 'Clientes', icon: Users, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
+  { href: '/solicitudes', label: 'Solicitudes', icon: FilePlus, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
   { href: '/prestamos', label: 'Préstamos', icon: HandCoins, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
   { href: '/caja', label: 'Caja', icon: Banknote, roles: ['ADMIN', 'MANAGER', 'COLLECTOR'] },
   { href: '/inversionistas', label: 'Inversionistas', icon: BriefcaseBusiness, roles: ['ADMIN', 'MANAGER'] },

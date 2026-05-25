@@ -1,6 +1,13 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
 import { api } from './api';
 
 interface User {
@@ -24,11 +31,10 @@ interface StoredAuth {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AUTH_STORAGE_KEY = 'auth';
+const AUTH_CHANGED_EVENT = 'auth-changed';
 
-function getStoredAuth(): StoredAuth {
-  if (typeof window === 'undefined') return { user: null, token: null };
-
-  const stored = localStorage.getItem('auth');
+function parseStoredAuth(stored: string | null): StoredAuth {
   if (!stored) return { user: null, token: null };
 
   try {
@@ -38,24 +44,50 @@ function getStoredAuth(): StoredAuth {
       token: parsed.token ?? null,
     };
   } catch {
-    localStorage.removeItem('auth');
+    if (typeof window !== 'undefined') localStorage.removeItem(AUTH_STORAGE_KEY);
     return { user: null, token: null };
   }
 }
 
+function getAuthSnapshot() {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem(AUTH_STORAGE_KEY) ?? '';
+}
+
+function getServerSnapshot() {
+  return '';
+}
+
+function subscribeAuth(callback: () => void) {
+  window.addEventListener('storage', callback);
+  window.addEventListener(AUTH_CHANGED_EVENT, callback);
+
+  return () => {
+    window.removeEventListener('storage', callback);
+    window.removeEventListener(AUTH_CHANGED_EVENT, callback);
+  };
+}
+
+function notifyAuthChanged() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [auth, setAuth] = useState<StoredAuth>(getStoredAuth);
+  const authSnapshot = useSyncExternalStore(subscribeAuth, getAuthSnapshot, getServerSnapshot);
+  const auth = useMemo(() => parseStoredAuth(authSnapshot), [authSnapshot]);
 
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
     const { user, accessToken } = data.data;
-    setAuth({ user, token: accessToken });
-    localStorage.setItem('auth', JSON.stringify({ user, token: accessToken }));
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user, token: accessToken }));
+    notifyAuthChanged();
   }, []);
 
   const logout = useCallback(() => {
-    setAuth({ user: null, token: null });
-    localStorage.removeItem('auth');
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    notifyAuthChanged();
   }, []);
 
   return (
