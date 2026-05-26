@@ -259,13 +259,13 @@ function ClientTabs({ activeTab, onTabChange }: { activeTab: ClientTab; onTabCha
   return (
     <motion.div animate="visible" className="mb-5" custom={1} initial="hidden" variants={fadeUp}>
       <div className="mb-3 flex justify-end">
-        <button
+        <Link
           className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#285C43] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.18)] transition hover:-translate-y-0.5 hover:bg-[#1F4A36]"
-          type="button"
+          href="/prestamos/nuevo"
         >
           <Plus className="h-4 w-4" />
           Nuevo préstamo
-        </button>
+        </Link>
       </div>
 
       <nav className="overflow-x-auto rounded-[16px] border border-[#DDEBE3] bg-white p-1.5 shadow-[0_7px_22px_rgba(40,92,67,0.035)]">

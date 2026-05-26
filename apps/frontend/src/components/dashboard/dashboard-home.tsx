@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
@@ -226,10 +227,13 @@ export function DashboardHome() {
           <button className="h-11 rounded-full border border-[#DDEBE3] bg-white px-5 text-sm font-bold text-[#5FA37D] shadow-sm">
             Ver reportes
           </button>
-          <button className="flex h-11 items-center gap-2 rounded-full bg-[#5FA37D] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.22)]">
+          <Link
+            className="flex h-11 items-center gap-2 rounded-full bg-[#5FA37D] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.22)]"
+            href="/prestamos/nuevo"
+          >
             <Plus className="h-4 w-4" />
             Nuevo préstamo
-          </button>
+          </Link>
         </div>
       </div>
 
