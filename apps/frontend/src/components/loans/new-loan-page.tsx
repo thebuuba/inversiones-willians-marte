@@ -125,6 +125,11 @@ function ClientSelectorCard({
       <span className="shrink-0 rounded-full bg-[#E7F4EC] px-3 py-1.5 text-xs font-bold text-[#2F7654]">
         2 activos
       </span>
+      {selected && (
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#5FA37D] text-white shadow-[0_8px_18px_rgba(95,163,125,0.18)]">
+          <Check className="h-5 w-5" />
+        </span>
+      )}
     </motion.button>
   );
 }
@@ -143,6 +148,46 @@ function LoanPreviewPlaceholder() {
         </div>
         <h2 className="mt-6 text-lg font-bold text-[#173D2C]">Selecciona un cliente</h2>
         <p className="mt-2 text-sm font-medium text-[#7A8A80]">Busca y selecciona el solicitante del préstamo.</p>
+      </div>
+    </motion.section>
+  );
+}
+
+function SelectedClientPreview() {
+  return (
+    <motion.section
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      className="rounded-[22px] border border-[#B8EBC9] bg-[#F1FAF5] p-7 shadow-[0_8px_24px_rgba(40,92,67,0.025)]"
+      initial={{ opacity: 0, scale: 0.98, y: 12 }}
+      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#6F8076]">CLIENTE SELECCIONADO</p>
+
+      <div className="mt-5 flex items-center gap-5">
+        <div
+          aria-label="María González Pérez"
+          className="h-[76px] w-[76px] shrink-0 rounded-[18px] border-[3px] border-white bg-cover bg-center shadow-[0_8px_20px_rgba(40,92,67,0.13)]"
+          role="img"
+          style={{ backgroundImage: 'url(https://i.pravatar.cc/96?img=32)' }}
+        />
+        <div className="min-w-0">
+          <h2 className="truncate text-[22px] font-bold leading-tight text-[#173D2C]">María González Pérez</h2>
+          <p className="mt-1 text-base font-medium text-[#7A8A80]">402-1234567-8</p>
+          <p className="mt-0.5 text-base font-medium text-[#7A8A80]">+1 (809) 555-0142</p>
+        </div>
+      </div>
+
+      <div className="my-6 h-px bg-[#DDEBE3]" />
+
+      <div className="grid grid-cols-2 gap-6">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#7A8A80]">PRÉSTAMOS ACTIVOS</p>
+          <p className="mt-4 text-[26px] font-bold leading-none text-[#173D2C]">2</p>
+        </div>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#7A8A80]">TOTAL PRESTADO</p>
+          <p className="mt-4 text-[26px] font-bold leading-none text-[#173D2C]">RD$185,000</p>
+        </div>
       </div>
     </motion.section>
   );
@@ -186,7 +231,7 @@ function NewLoanStepOne({
         <ClientSelectorCard selected={selectedClient} onSelect={onSelectClient} />
       </motion.section>
 
-      <LoanPreviewPlaceholder />
+      {selectedClient ? <SelectedClientPreview /> : <LoanPreviewPlaceholder />}
     </div>
   );
 }
