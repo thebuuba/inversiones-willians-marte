@@ -10,7 +10,7 @@ interface NewRequestModalProps {
 }
 
 const fieldClass =
-  'h-[52px] w-full rounded-[14px] border border-[#DDEBE3] bg-white px-4 text-base font-medium text-[#285C43] shadow-[0_3px_10px_rgba(40,92,67,0.04)] outline-none transition placeholder:text-[#8E929B] focus:border-[#285C43] focus:shadow-[0_0_0_3px_rgba(95,163,125,0.12)]';
+  'h-[52px] w-full rounded-[14px] border border-[#DDEBE3] bg-white px-4 text-base font-medium text-[#173D2C] shadow-[0_3px_10px_rgba(40,92,67,0.04)] outline-none transition placeholder:text-[#8E929B] focus:border-[#285C43] focus:shadow-[0_0_0_3px_rgba(95,163,125,0.12)]';
 
 function Field({
   label,
@@ -62,17 +62,17 @@ export function NewRequestModal({ open, onClose }: NewRequestModalProps) {
           >
             <div className="flex items-start justify-between bg-[#F4FAF6] px-7 py-6">
               <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-[16px] bg-[#B8DCC5] text-[#285C43]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-[16px] bg-[#B8DCC5] text-[#173D2C]">
                   <UserPlus className="h-7 w-7" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold leading-tight text-[#285C43]">Nueva solicitud</h2>
+                  <h2 className="text-xl font-bold leading-tight text-[#173D2C]">Nueva solicitud</h2>
                   <p className="mt-1 text-base text-[#7E9086]">Captura los datos del solicitante.</p>
                 </div>
               </div>
               <button
                 aria-label="Cerrar"
-                className="rounded-full p-2 text-[#4B5750] transition hover:bg-white hover:text-[#285C43]"
+                className="rounded-full p-2 text-[#4B5750] transition hover:bg-white hover:text-[#173D2C]"
                 onClick={onClose}
                 type="button"
               >
@@ -96,7 +96,7 @@ export function NewRequestModal({ open, onClose }: NewRequestModalProps) {
               <label className="mt-7 block">
                 <span className="mb-2 block text-sm font-bold text-[#6F8076]">Descripción del préstamo</span>
                 <textarea
-                  className="h-[130px] w-full resize-none rounded-[14px] border border-[#DDEBE3] bg-white px-4 py-4 text-base font-medium text-[#285C43] shadow-[0_3px_10px_rgba(40,92,67,0.04)] outline-none transition placeholder:text-[#8E929B] focus:border-[#285C43] focus:shadow-[0_0_0_3px_rgba(95,163,125,0.12)]"
+                  className="h-[130px] w-full resize-none rounded-[14px] border border-[#DDEBE3] bg-white px-4 py-4 text-base font-medium text-[#173D2C] shadow-[0_3px_10px_rgba(40,92,67,0.04)] outline-none transition placeholder:text-[#8E929B] focus:border-[#285C43] focus:shadow-[0_0_0_3px_rgba(95,163,125,0.12)]"
                   onChange={(event) => updateField('description')(event.target.value)}
                   placeholder="Describe el motivo del préstamo, ingresos, garantías..."
                   value={form.description}
@@ -120,7 +120,7 @@ export function NewRequestModal({ open, onClose }: NewRequestModalProps) {
 
             <div className="flex justify-end gap-3 border-t border-[#EDF2EF] bg-white px-7 py-5">
               <button
-                className="h-12 rounded-full border border-[#DDEBE3] bg-white px-7 text-base font-bold text-[#285C43] transition hover:bg-[#F3FAF6]"
+                className="h-12 rounded-full border border-[#DDEBE3] bg-white px-7 text-base font-bold text-[#173D2C] transition hover:bg-[#F3FAF6]"
                 onClick={onClose}
                 type="button"
               >

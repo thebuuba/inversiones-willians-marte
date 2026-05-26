@@ -274,11 +274,11 @@ function Header({ onNewMovement }: { onNewMovement: () => void }) {
       variants={fadeUp}
     >
       <div>
-        <span className="inline-flex items-center gap-2 rounded-full bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#285C43]">
+        <span className="inline-flex items-center gap-2 rounded-full bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#173D2C]">
           <span className="h-2 w-2 rounded-full bg-[#5FA37D]" />
           Movimientos en vivo
         </span>
-        <h1 className="mt-3 text-[28px] font-bold leading-tight text-[#285C43]">Caja</h1>
+        <h1 className="mt-3 text-[28px] font-bold leading-tight text-[#173D2C]">Caja</h1>
         <p className="mt-1.5 text-sm text-[#7E9086]">Controla las entradas y salidas de dinero del negocio.</p>
       </div>
       <button
@@ -327,7 +327,7 @@ function SummaryCard({
         </div>
         <p className="text-xs font-bold uppercase tracking-[0.09em] text-[#6F8076]">{title}</p>
       </div>
-      <p className="mt-6 text-[28px] font-bold leading-none text-[#285C43]">{value}</p>
+      <p className="mt-6 text-[28px] font-bold leading-none text-[#173D2C]">{value}</p>
       <div className="mt-4 text-sm font-medium text-[#6F8076]">{detail}</div>
       {!isBalance && (
         <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[#EEF3EF]">
@@ -349,7 +349,7 @@ function FilterBar() {
           {['Todos', 'Entradas', 'Salidas'].map((tab) => (
             <button
               className={`h-9 rounded-[12px] px-4 text-sm font-semibold transition hover:-translate-y-0.5 ${
-                tab === 'Todos' ? 'bg-[#E7F4EC] text-[#285C43] shadow-[0_8px_18px_rgba(40,92,67,0.05)]' : 'text-[#5C6D63]'
+                tab === 'Todos' ? 'bg-[#E7F4EC] text-[#173D2C] shadow-[0_8px_18px_rgba(40,92,67,0.05)]' : 'text-[#5C6D63]'
               }`}
               key={tab}
             >
@@ -361,7 +361,7 @@ function FilterBar() {
           <Search className="h-4 w-4 shrink-0" />
           <span className="truncate text-sm">Buscar por persona o concepto...</span>
         </div>
-        <button className="flex h-10 items-center justify-between rounded-full border border-[#DDEBE3] bg-white px-4 text-sm font-semibold text-[#285C43] shadow-sm transition hover:bg-[#F3FAF6] xl:w-[235px]">
+        <button className="flex h-10 items-center justify-between rounded-full border border-[#DDEBE3] bg-white px-4 text-sm font-semibold text-[#173D2C] shadow-sm transition hover:bg-[#F3FAF6] xl:w-[235px]">
           Todas las categorías
           <ChevronDown className="h-4 w-4 text-[#A9CDBB]" />
         </button>
@@ -372,7 +372,7 @@ function FilterBar() {
 
 function Tag({ label, tone, icon }: Movement['tags'][number]) {
   const styles = {
-    green: 'bg-[#E7F4EC] text-[#285C43]',
+    green: 'bg-[#E7F4EC] text-[#173D2C]',
     orange: 'bg-[#FFE3D2] text-[#C96F4A]',
     blue: 'bg-[#D8E9FF] text-[#3F7FBD]',
     purple: 'bg-[#E8DDF6] text-[#6F55A5]',
@@ -419,7 +419,7 @@ function TransactionItem({ movement }: { movement: Movement }) {
       <div className="flex min-w-0 items-center gap-4">
         <div
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${
-            isIncome ? 'bg-[#E7F4EC] text-[#285C43]' : 'bg-[#FFE3D2] text-[#C96F4A]'
+            isIncome ? 'bg-[#E7F4EC] text-[#173D2C]' : 'bg-[#FFE3D2] text-[#C96F4A]'
           }`}
         >
           <DirectionIcon className="h-4 w-4" />
@@ -427,7 +427,7 @@ function TransactionItem({ movement }: { movement: Movement }) {
         <Avatar movement={movement} />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-sm font-bold text-[#285C43]">{movement.name}</h3>
+            <h3 className="truncate text-sm font-bold text-[#173D2C]">{movement.name}</h3>
             <span className="text-[#A9CDBB]">·</span>
             <span className="text-xs text-[#A9CDBB]">{movement.code}</span>
           </div>
@@ -440,7 +440,7 @@ function TransactionItem({ movement }: { movement: Movement }) {
         </div>
       </div>
       <div className="text-right">
-        <p className={`text-base font-bold ${isIncome ? 'text-[#285C43]' : 'text-[#A65B3D]'}`}>{movement.amount}</p>
+        <p className={`text-base font-bold ${isIncome ? 'text-[#173D2C]' : 'text-[#A65B3D]'}`}>{movement.amount}</p>
         <p className="mt-1 text-xs text-[#A9B8AE]">{movement.time}</p>
       </div>
     </motion.div>
@@ -453,14 +453,14 @@ function TransactionGroup({ group, index }: { group: MovementGroup; index: numbe
       <div className="mb-3 flex items-center justify-between gap-4 px-1">
         <div className="flex items-center gap-2.5">
           <Calendar className="h-4 w-4 text-[#7E9086]" />
-          <p className="text-sm font-bold text-[#285C43]">
+          <p className="text-sm font-bold text-[#173D2C]">
             {group.date}
             <span className="px-2 text-[#A9CDBB]">·</span>
             <span className="font-medium text-[#A9B8AE]">{group.count}</span>
           </p>
         </div>
         <div className="flex items-center gap-5 text-sm font-bold">
-          <span className="text-[#285C43]">{group.income}</span>
+          <span className="text-[#173D2C]">{group.income}</span>
           <span className="text-[#A65B3D]">{group.expense}</span>
         </div>
       </div>
@@ -533,7 +533,7 @@ export function CashPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4FAF6] p-5 font-sans text-[#285C43]">
+    <div className="min-h-screen bg-[#F6FAF7] p-5 font-sans text-[#173D2C]">
       <Header onNewMovement={() => setIsModalOpen(true)} />
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -553,7 +553,7 @@ export function CashPanel() {
         <SummaryCard
           detail={
             <span>
-              Hoy <strong className="text-[#285C43]">+RD$0</strong>
+              Hoy <strong className="text-[#173D2C]">+RD$0</strong>
             </span>
           }
           icon={<ArrowDownLeft className="h-5 w-5" />}

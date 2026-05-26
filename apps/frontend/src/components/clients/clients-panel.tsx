@@ -133,7 +133,7 @@ export function ClientsPanel() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#F4FAF6] p-5 font-sans text-[#285C43]">
+    <div className="min-h-screen bg-[#F6FAF7] p-5 font-sans text-[#173D2C]">
       <motion.header
         variants={fadeUp}
         initial="hidden"
@@ -142,7 +142,7 @@ export function ClientsPanel() {
       >
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#A9CDBB]">GESTIÓN</p>
-          <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#285C43]">Clientes</h1>
+          <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#173D2C]">Clientes</h1>
           <p className="mt-1.5 text-base text-[#5FA37D]">
             Administra tu cartera de clientes — 12 registrados en total.
           </p>
@@ -173,7 +173,7 @@ export function ClientsPanel() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-[#A9CDBB]">{stat.label}</p>
-                <p className="mt-1 text-[24px] font-bold leading-none text-[#285C43]">{stat.value}</p>
+                <p className="mt-1 text-[24px] font-bold leading-none text-[#173D2C]">{stat.value}</p>
               </div>
             </PanelCard>
           );
@@ -186,7 +186,7 @@ export function ClientsPanel() {
             <Search className="h-5 w-5 shrink-0" />
             <span className="truncate text-sm">Buscar por nombre, ID, cédula, teléfono o email...</span>
           </div>
-          <button className="flex h-12 items-center justify-between gap-4 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-5 text-sm font-bold text-[#285C43] transition hover:bg-[#F3FAF6] xl:w-[270px]">
+          <button className="flex h-12 items-center justify-between gap-4 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-5 text-sm font-bold text-[#173D2C] transition hover:bg-[#F3FAF6] xl:w-[270px]">
             <span className="flex items-center gap-3">
               <MapPin className="h-5 w-5 text-[#A9CDBB]" />
               Todas las ciudades
@@ -246,7 +246,7 @@ export function ClientsPanel() {
                   <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#7CC99B]" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold leading-tight text-[#285C43]">{client.name}</p>
+                  <p className="text-sm font-bold leading-tight text-[#173D2C]">{client.name}</p>
                   <p className="mt-0.5 text-xs font-medium text-[#A9CDBB]">{client.code}</p>
                 </div>
               </div>
@@ -273,7 +273,7 @@ export function ClientsPanel() {
 
         <div className="flex items-center justify-between border-t border-[#DDEBE3] bg-[#F3FAF6] px-6 py-4">
           <p className="text-sm font-semibold text-[#5FA37D]">
-            Mostrando <span className="font-bold text-[#285C43]">1–6 de 12</span> clientes
+            Mostrando <span className="font-bold text-[#173D2C]">1–6 de 12</span> clientes
           </p>
           <div className="flex items-center gap-2">
             <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#A9CDBB] shadow-sm transition hover:text-[#5FA37D]">

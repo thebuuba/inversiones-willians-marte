@@ -228,7 +228,7 @@ function ClientHeader() {
   return (
     <motion.header animate="visible" className="mb-4" initial="hidden" variants={fadeUp}>
       <Link
-        className="inline-flex items-center gap-2 text-sm font-semibold text-[#5C6D63] transition hover:text-[#285C43]"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-[#5C6D63] transition hover:text-[#173D2C]"
         href="/clientes"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -277,13 +277,13 @@ function ClientTabs({ activeTab, onTabChange }: { activeTab: ClientTab; onTabCha
             return (
               <button
                 className={`flex h-10 items-center gap-2 rounded-[12px] px-3.5 text-sm font-bold transition ${
-                  active ? 'bg-[#E7F4EC] text-[#285C43] shadow-sm' : 'text-[#5C6D63] hover:bg-[#F6FAF7]'
+                  active ? 'bg-[#E7F4EC] text-[#173D2C] shadow-sm' : 'text-[#5C6D63] hover:bg-[#F6FAF7]'
                 }`}
                 key={tab.label}
                 onClick={() => onTabChange(tab.label)}
                 type="button"
               >
-                <Icon className={`h-4 w-4 ${active ? 'text-[#285C43]' : 'text-[#7A8A80]'}`} />
+                <Icon className={`h-4 w-4 ${active ? 'text-[#173D2C]' : 'text-[#7A8A80]'}`} />
                 {tab.label}
                 {tab.count && (
                   <span className="flex h-6 w-6 items-center justify-center rounded-full border border-[#A9CDBB] bg-white text-[11px] font-bold text-[#5FA37D]">
@@ -319,7 +319,7 @@ function ProgressBar({ value }: { value: number }) {
     <div>
       <div className="mb-2 flex items-center justify-between text-sm font-semibold">
         <span className="text-[#7E9086]">Progreso de pago</span>
-        <span className="text-[#285C43]">{value}%</span>
+        <span className="text-[#173D2C]">{value}%</span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-[#E7F4EC]">
         <motion.div
@@ -490,7 +490,7 @@ function DocumentCard({
       <div className="flex items-center gap-4 text-[#7A8A80]">
         <button
           aria-label={`Descargar ${document.title}`}
-          className="rounded-full p-1.5 transition hover:bg-[#EAF6EF] hover:text-[#285C43]"
+          className="rounded-full p-1.5 transition hover:bg-[#EAF6EF] hover:text-[#173D2C]"
           type="button"
         >
           <Download className="h-4 w-4" />
@@ -788,7 +788,7 @@ function NoteCard({
       <div className="flex shrink-0 items-center gap-4 text-[#7A8A80]">
         <button
           aria-label="Editar nota"
-          className="rounded-full p-1.5 transition hover:bg-[#EAF6EF] hover:text-[#285C43]"
+          className="rounded-full p-1.5 transition hover:bg-[#EAF6EF] hover:text-[#173D2C]"
           onClick={onEdit}
           type="button"
         >
@@ -961,7 +961,7 @@ function ClientSummaryCard() {
         </div>
 
         <button
-          className="flex h-10 items-center justify-center gap-2 rounded-full border border-[#DDEBE3] bg-white px-5 text-sm font-bold text-[#285C43] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="flex h-10 items-center justify-center gap-2 rounded-full border border-[#DDEBE3] bg-white px-5 text-sm font-bold text-[#173D2C] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           type="button"
         >
           <Pencil className="h-4 w-4" />

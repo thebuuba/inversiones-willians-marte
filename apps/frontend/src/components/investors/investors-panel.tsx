@@ -144,7 +144,7 @@ function StatusPill({ status }: { status: keyof typeof statusStyles }) {
 
 export function InvestorsPanel() {
   return (
-    <div className="min-h-screen bg-[#F4FAF6] p-5 font-sans text-[#285C43]">
+    <div className="min-h-screen bg-[#F6FAF7] p-5 font-sans text-[#173D2C]">
       <motion.header
         variants={fadeUp}
         initial="hidden"
@@ -153,7 +153,7 @@ export function InvestorsPanel() {
       >
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#A9CDBB]">CAPITAL</p>
-          <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#285C43]">Inversionistas</h1>
+          <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#173D2C]">Inversionistas</h1>
           <p className="mt-1.5 text-base text-[#5FA37D]">
             Personas que aportan capital a la empresa y reciben rendimiento mensual.
           </p>
@@ -172,17 +172,17 @@ export function InvestorsPanel() {
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[2.05fr_1fr_1fr]">
         <PanelCard className="relative overflow-hidden border-0 bg-gradient-to-br from-[#D5EDDD] to-[#B8DCC5] p-7" index={1}>
-          <div className="absolute right-7 top-7 flex h-14 w-14 items-center justify-center rounded-full bg-white/58 text-[#285C43]">
+          <div className="absolute right-7 top-7 flex h-14 w-14 items-center justify-center rounded-full bg-white/58 text-[#173D2C]">
             <PiggyBank className="h-7 w-7" />
           </div>
-          <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#285C43]">CAPITAL INVERTIDO TOTAL</p>
-          <p className="mt-8 text-[38px] font-bold leading-none text-[#285C43]">RD$4,000,000</p>
+          <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#173D2C]">CAPITAL INVERTIDO TOTAL</p>
+          <p className="mt-8 text-[38px] font-bold leading-none text-[#173D2C]">RD$4,000,000</p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/76 px-3 py-1.5 text-sm font-bold text-[#285C43]">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/76 px-3 py-1.5 text-sm font-bold text-[#173D2C]">
               <UsersRound className="h-4 w-4" />
               7 activos
             </span>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/76 px-3 py-1.5 text-sm font-bold text-[#285C43]">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/76 px-3 py-1.5 text-sm font-bold text-[#173D2C]">
               <ArrowUpRight className="h-4 w-4" />
               3.50% promedio
             </span>
@@ -194,7 +194,7 @@ export function InvestorsPanel() {
             <DollarSign className="h-6 w-6" />
           </div>
           <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#A9CDBB]">PAGO MENSUAL</p>
-          <p className="mt-3 text-[30px] font-bold leading-none text-[#285C43]">RD$147.7K</p>
+          <p className="mt-3 text-[30px] font-bold leading-none text-[#173D2C]">RD$147.7K</p>
           <p className="mt-4 text-sm font-bold text-[#A98219]">a distribuir este mes</p>
         </PanelCard>
 
@@ -203,7 +203,7 @@ export function InvestorsPanel() {
             <CalendarClock className="h-6 w-6" />
           </div>
           <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#A9CDBB]">PAGADO HISTÓRICO</p>
-          <p className="mt-3 text-[30px] font-bold leading-none text-[#285C43]">RD$2.68M</p>
+          <p className="mt-3 text-[30px] font-bold leading-none text-[#173D2C]">RD$2.68M</p>
           <p className="mt-4 text-sm font-bold text-[#5C82B7]">desde el inicio</p>
         </PanelCard>
       </div>
@@ -214,7 +214,7 @@ export function InvestorsPanel() {
             <Search className="h-5 w-5 shrink-0" />
             <span className="truncate text-sm">Buscar por nombre, ID o cédula...</span>
           </div>
-          <button className="flex h-12 items-center justify-between gap-4 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-5 text-sm font-bold text-[#285C43] transition hover:bg-[#F3FAF6] xl:w-[300px]">
+          <button className="flex h-12 items-center justify-between gap-4 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-5 text-sm font-bold text-[#173D2C] transition hover:bg-[#F3FAF6] xl:w-[300px]">
             <span className="flex items-center gap-3">
               <SlidersHorizontal className="h-5 w-5 text-[#A9CDBB]" />
               Ordenar: Mayor capital
@@ -269,7 +269,7 @@ export function InvestorsPanel() {
                     />
                   </div>
                   <div>
-                    <p className="text-sm font-bold leading-tight text-[#285C43]">{investor.name}</p>
+                    <p className="text-sm font-bold leading-tight text-[#173D2C]">{investor.name}</p>
                     <p className="mt-1 text-xs font-medium text-[#A9CDBB]">
                       {investor.code} <span className="mx-2 text-[#DDEBE3]">•</span> {investor.since}
                     </p>
@@ -282,7 +282,7 @@ export function InvestorsPanel() {
 
               <div className="rounded-[18px] bg-gradient-to-br from-[#E4F4E9] to-[#D9EFE0] p-5">
                 <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#5FA37D]">CAPITAL INVERTIDO</p>
-                <p className="mt-3 text-[26px] font-bold leading-none text-[#285C43]">{investor.capital}</p>
+                <p className="mt-3 text-[26px] font-bold leading-none text-[#173D2C]">{investor.capital}</p>
                 <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-bold text-[#5FA37D]">
                   <ArrowUpRight className="h-4 w-4" />
                   {investor.rate}
@@ -318,7 +318,7 @@ export function InvestorsPanel() {
 
       <PanelCard className="flex items-center justify-between p-5" index={12}>
         <p className="text-sm font-semibold text-[#5FA37D]">
-          Mostrando <span className="font-bold text-[#285C43]">1–6 de 9</span> inversionistas
+          Mostrando <span className="font-bold text-[#173D2C]">1–6 de 9</span> inversionistas
         </p>
         <div className="flex items-center gap-2">
           <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#A9CDBB] shadow-sm transition hover:text-[#5FA37D]">

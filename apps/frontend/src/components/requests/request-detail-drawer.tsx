@@ -78,7 +78,7 @@ function InfoCard({
       </div>
       <div className="min-w-0">
         <p className="text-[11px] font-bold uppercase tracking-wide text-[#A9CDBB]">{label}</p>
-        <p className="mt-1 truncate text-sm font-bold text-[#285C43]">{value}</p>
+        <p className="mt-1 truncate text-sm font-bold text-[#173D2C]">{value}</p>
       </div>
     </div>
   );
@@ -117,7 +117,7 @@ export function RequestDetailDrawer({
                 />
                 <div>
                   <p className="text-xs font-bold text-[#7E9086]">{data.code}</p>
-                  <h2 className="mt-1 text-lg font-bold leading-tight text-[#285C43]">{data.name}</h2>
+                  <h2 className="mt-1 text-lg font-bold leading-tight text-[#173D2C]">{data.name}</h2>
                   <div className="mt-2">
                     <StatusBadge status={data.status} />
                   </div>
@@ -125,7 +125,7 @@ export function RequestDetailDrawer({
               </div>
               <button
                 aria-label="Cerrar detalle"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-[#DDEBE3] bg-white text-[#4B5750] transition hover:bg-[#F3FAF6] hover:text-[#285C43]"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-[#DDEBE3] bg-white text-[#4B5750] transition hover:bg-[#F3FAF6] hover:text-[#173D2C]"
                 onClick={onClose}
                 type="button"
               >
@@ -141,7 +141,7 @@ export function RequestDetailDrawer({
                 transition={{ delay: 0.08 }}
               >
                 <p className="text-xs font-bold uppercase tracking-wide text-[#6F8076]">MONTO SOLICITADO</p>
-                <p className="mt-3 text-[30px] font-bold leading-none text-[#285C43]">{data.amount}</p>
+                <p className="mt-3 text-[30px] font-bold leading-none text-[#173D2C]">{data.amount}</p>
                 <p className="mt-3 text-sm text-[#6F8076]">{data.receivedAt}</p>
               </motion.div>
 
@@ -162,7 +162,7 @@ export function RequestDetailDrawer({
                   <FileText className="h-4 w-4" />
                   DESCRIPCIÓN
                 </h3>
-                <div className="rounded-[16px] bg-white p-4 text-sm leading-relaxed text-[#285C43]">
+                <div className="rounded-[16px] bg-white p-4 text-sm leading-relaxed text-[#173D2C]">
                   {data.description}
                 </div>
               </section>
@@ -180,7 +180,7 @@ export function RequestDetailDrawer({
             </div>
 
             <div className="fixed bottom-0 right-0 w-full max-w-[540px] border-t border-[#DDEBE3] bg-white px-6 py-4">
-              <button className="mb-3 flex h-10 w-full items-center justify-center gap-2.5 rounded-full border border-[#DDEBE3] bg-white text-sm font-bold text-[#285C43] transition hover:bg-[#F3FAF6]" type="button">
+              <button className="mb-3 flex h-10 w-full items-center justify-center gap-2.5 rounded-full border border-[#DDEBE3] bg-white text-sm font-bold text-[#173D2C] transition hover:bg-[#F3FAF6]" type="button">
                 <Printer className="h-4 w-4" />
                 Imprimir solicitud
               </button>

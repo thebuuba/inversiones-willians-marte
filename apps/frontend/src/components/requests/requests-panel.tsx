@@ -120,7 +120,7 @@ export function RequestsPanel() {
   const [selectedRequest, setSelectedRequest] = useState<RequestDetail | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#F4FAF6] p-5 font-sans text-[#285C43]">
+    <div className="min-h-screen bg-[#F6FAF7] p-5 font-sans text-[#173D2C]">
       <motion.header
         variants={fadeUp}
         initial="hidden"
@@ -132,7 +132,7 @@ export function RequestsPanel() {
             <span className="h-2 w-2 rounded-full bg-[#5FA37D]" />
             Bandeja de entrada
           </span>
-          <h1 className="mt-3 text-[28px] font-bold leading-tight text-[#285C43]">Solicitudes</h1>
+          <h1 className="mt-3 text-[28px] font-bold leading-tight text-[#173D2C]">Solicitudes</h1>
           <p className="mt-1.5 text-sm text-[#7E9086]">
             Revisa, aprueba o rechaza las solicitudes de préstamo entrantes.
           </p>
@@ -160,7 +160,7 @@ export function RequestsPanel() {
                 <Icon className="h-5 w-5" />
               </div>
               <p className="text-xs font-bold uppercase tracking-wide text-[#8CA096]">{stat.label}</p>
-              <p className="mt-2 text-[24px] font-bold leading-none text-[#285C43]">{stat.value}</p>
+              <p className="mt-2 text-[24px] font-bold leading-none text-[#173D2C]">{stat.value}</p>
             </PanelCard>
           );
         })}
@@ -169,7 +169,7 @@ export function RequestsPanel() {
       <PanelCard className="mb-5 p-3.5" index={5}>
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
           <div className="flex shrink-0 items-center gap-2">
-            <button className="flex h-10 items-center gap-2 rounded-[14px] bg-[#E7F4EC] px-3.5 text-sm font-bold text-[#285C43] shadow-[0_8px_18px_rgba(40,92,67,0.05)] transition hover:-translate-y-0.5">
+            <button className="flex h-10 items-center gap-2 rounded-[14px] bg-[#E7F4EC] px-3.5 text-sm font-bold text-[#173D2C] shadow-[0_8px_18px_rgba(40,92,67,0.05)] transition hover:-translate-y-0.5">
               <Inbox className="h-4 w-4 text-[#5FA37D]" />
               Activas
               <span className="flex h-6 min-w-6 items-center justify-center rounded-full border border-[#A9CDBB] bg-white px-1.5 text-xs text-[#5FA37D]">
@@ -194,7 +194,7 @@ export function RequestsPanel() {
             {['Todas', 'Más recientes'].map((label) => (
               <button
                 key={label}
-                className="flex h-10 items-center justify-between rounded-full border border-[#DDEBE3] bg-white px-4 text-sm font-semibold text-[#285C43] shadow-sm transition hover:bg-[#F3FAF6]"
+                className="flex h-10 items-center justify-between rounded-full border border-[#DDEBE3] bg-white px-4 text-sm font-semibold text-[#173D2C] shadow-sm transition hover:bg-[#F3FAF6]"
               >
                 {label}
                 <ChevronDown className="h-4 w-4 text-[#A9CDBB]" />
@@ -219,7 +219,7 @@ export function RequestsPanel() {
             <div className="h-11 w-11 shrink-0 rounded-full bg-cover bg-center shadow-[0_6px_14px_rgba(40,92,67,0.12)]" style={{ backgroundImage: `url(${request.avatar})` }} />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-sm font-bold text-[#285C43]">{request.name}</h2>
+                <h2 className="text-sm font-bold text-[#173D2C]">{request.name}</h2>
                 <span className="text-[#A9CDBB]">·</span>
                 <span className="text-xs font-medium text-[#8CA096]">{request.code}</span>
               </div>
@@ -230,7 +230,7 @@ export function RequestsPanel() {
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-5">
-              <p className="text-base font-bold text-[#285C43]">{request.amount}</p>
+              <p className="text-base font-bold text-[#173D2C]">{request.amount}</p>
               <ChevronRight className="h-4 w-4 text-[#A9CDBB]" />
             </div>
           </motion.article>

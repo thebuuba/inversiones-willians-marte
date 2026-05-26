@@ -197,7 +197,7 @@ function SectionHeader({
   return (
     <div className="mb-5 flex items-start justify-between gap-4">
       <div>
-        <h2 className="text-lg font-bold leading-tight text-[#285C43]">{title}</h2>
+        <h2 className="text-lg font-bold leading-tight text-[#173D2C]">{title}</h2>
         <p className="mt-1 text-sm text-[#A9CDBB]">{subtitle}</p>
       </div>
       {right}
@@ -207,7 +207,7 @@ function SectionHeader({
 
 export function DashboardHome() {
   return (
-    <div className="min-h-screen bg-[#F4FAF6] p-5 font-sans text-[#285C43]">
+    <div className="min-h-screen bg-[#F6FAF7] p-5 font-sans text-[#173D2C]">
       <div className="mb-5 flex flex-col items-start justify-between gap-4 2xl:flex-row 2xl:items-end">
         <div>
           <div className="mb-3 flex items-center gap-3">
@@ -217,7 +217,7 @@ export function DashboardHome() {
             </span>
             <span className="text-sm text-[#A9CDBB]">lunes, 25 de mayo</span>
           </div>
-          <h1 className="text-[28px] font-bold leading-tight text-[#285C43]">
+          <h1 className="text-[28px] font-bold leading-tight text-[#173D2C]">
             Hola, Administrador 👋
           </h1>
           <p className="mt-1.5 text-base text-[#5FA37D]">Aquí tienes un resumen de tu cartera hoy.</p>
@@ -259,7 +259,7 @@ export function DashboardHome() {
                 </span>
               </div>
               <p className="text-xs font-bold uppercase tracking-wide text-[#A9CDBB]">{metric.title}</p>
-              <p className="mt-1.5 text-[24px] font-bold leading-tight text-[#285C43]">
+              <p className="mt-1.5 text-[24px] font-bold leading-tight text-[#173D2C]">
                 {metric.value}
               </p>
               <p className="mt-1.5 text-sm text-[#A9CDBB]">{metric.note}</p>
@@ -365,7 +365,7 @@ export function DashboardHome() {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-sm text-[#A9CDBB]">Total</span>
-              <span className="text-[24px] font-bold text-[#285C43]">100%</span>
+              <span className="text-[24px] font-bold text-[#173D2C]">100%</span>
             </div>
           </div>
           <div className="mt-3 space-y-2">
@@ -375,7 +375,7 @@ export function DashboardHome() {
                   <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
                   {entry.name}
                 </span>
-                <span className="font-bold text-[#285C43]">{entry.value}%</span>
+                <span className="font-bold text-[#173D2C]">{entry.value}%</span>
               </div>
             ))}
           </div>
@@ -481,14 +481,14 @@ export function DashboardHome() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                      <span className="text-sm font-bold text-[#285C43]">{row.name}</span>
+                      <span className="text-sm font-bold text-[#173D2C]">{row.name}</span>
                       <span className="text-sm text-[#A9CDBB]">{row.action}</span>
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
                       <span className="rounded-lg border border-[#DDEBE3] bg-[#F3FAF6] px-2.5 py-0.5 font-mono text-xs font-bold text-[#5FA37D]">
                         {row.ref}
                       </span>
-                      {row.amount && <span className="text-sm font-bold text-[#285C43]">{row.amount}</span>}
+                      {row.amount && <span className="text-sm font-bold text-[#173D2C]">{row.amount}</span>}
                     </div>
                   </div>
                   <span className="shrink-0 text-sm text-[#A9CDBB]">{row.time}</span>
@@ -516,10 +516,10 @@ export function DashboardHome() {
                   {payment.tag}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-[#285C43]">{payment.name}</p>
+                  <p className="truncate text-sm font-bold text-[#173D2C]">{payment.name}</p>
                   <p className="mt-0.5 text-xs text-[#A9CDBB]">{payment.date}</p>
                 </div>
-                <span className="shrink-0 text-sm font-bold text-[#285C43]">{payment.amount}</span>
+                <span className="shrink-0 text-sm font-bold text-[#173D2C]">{payment.amount}</span>
               </div>
             ))}
             <button className="mt-3 h-11 w-full rounded-[16px] bg-[#F3FAF6] text-sm font-bold text-[#5FA37D]">

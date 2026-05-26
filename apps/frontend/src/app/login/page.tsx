@@ -31,10 +31,10 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F4FAF6] px-5 py-8 font-sans">
+    <main className="flex min-h-screen items-center justify-center bg-[#F6FAF7] px-5 py-8 font-sans">
       <div className="w-full max-w-[470px]">
         <div className="mb-9 text-left">
-          <h1 className="text-[34px] font-bold leading-tight tracking-[-0.02em] text-[#285C43]">
+          <h1 className="text-[34px] font-bold leading-tight tracking-[-0.02em] text-[#173D2C]">
             Bienvenido de vuelta
           </h1>
           <p className="mt-3 text-[19px] font-normal leading-7 text-[#5FA37D]">
@@ -54,7 +54,7 @@ export default function LoginPage() {
 
           <div className="space-y-6">
             <div>
-              <label htmlFor="email" className="mb-3 block text-[16px] font-bold text-[#285C43]">
+              <label htmlFor="email" className="mb-3 block text-[16px] font-bold text-[#173D2C]">
                 Correo electrónico
               </label>
               <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#A9CDBB] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
@@ -66,19 +66,19 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="usuario@empresa.com"
                   required
-                  className="h-full flex-1 bg-transparent text-[16px] text-[#285C43] outline-none placeholder:text-[#A9CDBB]"
+                  className="h-full flex-1 bg-transparent text-[16px] text-[#173D2C] outline-none placeholder:text-[#A9CDBB]"
                 />
               </div>
             </div>
 
             <div>
               <div className="mb-3 flex items-center justify-between gap-4">
-                <label htmlFor="password" className="block text-[16px] font-bold text-[#285C43]">
+                <label htmlFor="password" className="block text-[16px] font-bold text-[#173D2C]">
                   Contraseña
                 </label>
                 <button
                   type="button"
-                  className="text-[14px] font-bold text-[#5FA37D] transition-colors hover:text-[#285C43]"
+                  className="text-[14px] font-bold text-[#5FA37D] transition-colors hover:text-[#173D2C]"
                 >
                   ¿Olvidaste tu contraseña?
                 </button>
@@ -92,7 +92,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="h-full flex-1 bg-transparent text-[16px] tracking-[0.22em] text-[#285C43] outline-none placeholder:text-[#A9CDBB]"
+                  className="h-full flex-1 bg-transparent text-[16px] tracking-[0.22em] text-[#173D2C] outline-none placeholder:text-[#A9CDBB]"
                 />
                 <button
                   type="button"
@@ -130,7 +130,7 @@ export default function LoginPage() {
 
             <button
               type="button"
-              className="flex h-[54px] w-full items-center justify-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-white text-[18px] font-semibold text-[#285C43] transition-colors hover:bg-[#F4FAF6]"
+              className="flex h-[54px] w-full items-center justify-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-white text-[18px] font-semibold text-[#173D2C] transition-colors hover:bg-[#F4FAF6]"
             >
               <span className="text-[17px] font-bold text-[#4285F4]">G</span>
               Acceder con Google
@@ -142,7 +142,7 @@ export default function LoginPage() {
           ¿Problemas para acceder?{' '}
           <button
             type="button"
-            className="font-bold text-[#5FA37D] transition-colors hover:text-[#285C43]"
+            className="font-bold text-[#5FA37D] transition-colors hover:text-[#173D2C]"
           >
             Contactar soporte
           </button>

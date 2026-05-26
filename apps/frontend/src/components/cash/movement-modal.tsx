@@ -47,7 +47,7 @@ const initialValues: MovementFormValues = {
 };
 
 function inputClass(hasError = false) {
-  return `h-11 w-full rounded-[10px] border bg-white px-4 text-sm font-medium text-[#285C43] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#5FA37D] ${
+  return `h-11 w-full rounded-[10px] border bg-white px-4 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#5FA37D] ${
     hasError ? 'border-[#E4A58B]' : 'border-[#DDEBE3]'
   }`;
 }
@@ -83,13 +83,13 @@ function MovementTypeCard({
     >
       <span
         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] ${
-          isIncome ? 'bg-[#B8DCC5] text-[#285C43]' : 'bg-[#FFE3D2] text-[#C96F4A]'
+          isIncome ? 'bg-[#B8DCC5] text-[#173D2C]' : 'bg-[#FFE3D2] text-[#C96F4A]'
         }`}
       >
         {icon}
       </span>
       <span>
-        <span className="block text-base font-bold text-[#285C43]">{label}</span>
+        <span className="block text-base font-bold text-[#173D2C]">{label}</span>
         <span className="mt-0.5 block text-sm font-medium text-[#6F8076]">{subtitle}</span>
       </span>
     </button>
@@ -204,11 +204,11 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
           >
             <header className="flex items-start justify-between gap-5 bg-[#F1F8F4] px-7 py-5">
               <div className="flex items-center gap-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-[#B8DCC5] text-[#285C43]">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-[#B8DCC5] text-[#173D2C]">
                   <Wallet className="h-6 w-6" />
                 </span>
                 <div>
-                  <h2 className="text-xl font-bold leading-tight text-[#285C43]">Registrar movimiento</h2>
+                  <h2 className="text-xl font-bold leading-tight text-[#173D2C]">Registrar movimiento</h2>
                   <p className="mt-1 text-sm font-medium text-[#7E9086]">
                     Las entradas suman al saldo y las salidas lo descuentan.
                   </p>
@@ -216,7 +216,7 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
               </div>
               <button
                 aria-label="Cerrar modal"
-                className="rounded-full p-1.5 text-[#3D443F] transition hover:bg-white hover:text-[#285C43]"
+                className="rounded-full p-1.5 text-[#3D443F] transition hover:bg-white hover:text-[#173D2C]"
                 onClick={closeModal}
                 type="button"
               >
@@ -286,7 +286,7 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
 
                 <FormField className="sm:col-span-2" label="Descripción">
                   <textarea
-                    className="h-[95px] w-full resize-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 py-3 text-sm font-medium text-[#285C43] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#5FA37D]"
+                    className="h-[95px] w-full resize-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 py-3 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#5FA37D]"
                     onChange={(event) => updateValue('description', event.target.value)}
                     placeholder="Detalles del movimiento..."
                     value={values.description}
@@ -297,7 +297,7 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
 
             <footer className="flex flex-col items-stretch justify-end gap-3 border-t border-[#EDF2EF] px-7 py-5 sm:flex-row">
               <button
-                className="h-11 rounded-full border border-[#DDEBE3] bg-white px-8 text-sm font-bold text-[#285C43] transition hover:bg-[#F4FAF6]"
+                className="h-11 rounded-full border border-[#DDEBE3] bg-white px-8 text-sm font-bold text-[#173D2C] transition hover:bg-[#F4FAF6]"
                 onClick={closeModal}
                 type="button"
               >
