@@ -10,11 +10,13 @@ const publicRoutes = ['/login'];
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, token, loading } = useAuth();
   const isPublicRoute = publicRoutes.includes(pathname);
   const isAuthenticated = Boolean(user && token);
 
   useEffect(() => {
+    if (loading) return;
+
     if (!isAuthenticated && !isPublicRoute) {
       router.replace('/login');
       return;
@@ -23,13 +25,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (isAuthenticated && pathname === '/login') {
       router.replace('/inicio');
     }
-  }, [isAuthenticated, isPublicRoute, pathname, router]);
+  }, [isAuthenticated, isPublicRoute, loading, pathname, router]);
 
   if (isPublicRoute) {
     return <>{children}</>;
   }
 
-  if (!isAuthenticated) {
+  if (loading || !isAuthenticated) {
     return (
       <main className="flex min-h-screen items-center justify-center text-sm text-ink-muted">
         Cargando...

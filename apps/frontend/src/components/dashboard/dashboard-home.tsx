@@ -280,8 +280,14 @@ export function DashboardHome() {
               </div>
             }
           />
-          <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[250px] min-w-0">
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              minWidth={0}
+              minHeight={0}
+              initialDimension={{ width: 720, height: 250 }}
+            >
               <AreaChart data={monthlyCollections} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="cobradoGradient" x1="0" x2="0" y1="0" y2="1">
@@ -331,8 +337,14 @@ export function DashboardHome() {
 
         <Card className="p-6" index={5}>
           <SectionHeader title="Estado de cartera" subtitle="Distribución por estatus" />
-          <div className="relative mx-auto h-[184px] max-w-[196px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="relative mx-auto h-[184px] min-w-0 max-w-[196px]">
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              minWidth={0}
+              minHeight={0}
+              initialDimension={{ width: 196, height: 184 }}
+            >
               <PieChart>
                 <Pie
                   data={portfolioStatus}
@@ -382,8 +394,14 @@ export function DashboardHome() {
               </div>
             }
           />
-          <div className="h-[230px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[230px] min-w-0">
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              minWidth={0}
+              minHeight={0}
+              initialDimension={{ width: 720, height: 230 }}
+            >
               <BarChart data={weeklyMovement} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid stroke="#DDEBE3" strokeDasharray="4 6" vertical={false} />
                 <XAxis

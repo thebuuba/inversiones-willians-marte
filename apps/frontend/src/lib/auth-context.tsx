@@ -4,8 +4,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
-  useSyncExternalStore,
+  useState,
   type ReactNode,
 } from 'react';
 import { api } from './api';
@@ -49,25 +50,6 @@ function parseStoredAuth(stored: string | null): StoredAuth {
   }
 }
 
-function getAuthSnapshot() {
-  if (typeof window === 'undefined') return '';
-  return localStorage.getItem(AUTH_STORAGE_KEY) ?? '';
-}
-
-function getServerSnapshot() {
-  return '';
-}
-
-function subscribeAuth(callback: () => void) {
-  window.addEventListener('storage', callback);
-  window.addEventListener(AUTH_CHANGED_EVENT, callback);
-
-  return () => {
-    window.removeEventListener('storage', callback);
-    window.removeEventListener(AUTH_CHANGED_EVENT, callback);
-  };
-}
-
 function notifyAuthChanged() {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
@@ -75,25 +57,49 @@ function notifyAuthChanged() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const authSnapshot = useSyncExternalStore(subscribeAuth, getAuthSnapshot, getServerSnapshot);
-  const auth = useMemo(() => parseStoredAuth(authSnapshot), [authSnapshot]);
+  const [auth, setAuth] = useState<StoredAuth>({ user: null, token: null });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    function syncAuth() {
+      setAuth(parseStoredAuth(localStorage.getItem(AUTH_STORAGE_KEY)));
+      setLoading(false);
+    }
+
+    syncAuth();
+    window.addEventListener('storage', syncAuth);
+    window.addEventListener(AUTH_CHANGED_EVENT, syncAuth);
+
+    return () => {
+      window.removeEventListener('storage', syncAuth);
+      window.removeEventListener(AUTH_CHANGED_EVENT, syncAuth);
+    };
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
     const { user, accessToken } = data.data;
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user, token: accessToken }));
+    const nextAuth = { user, token: accessToken };
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextAuth));
+    setAuth(nextAuth);
+    setLoading(false);
     notifyAuthChanged();
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
+    setAuth({ user: null, token: null });
+    setLoading(false);
     notifyAuthChanged();
   }, []);
 
+  const value = useMemo(
+    () => ({ user: auth.user, token: auth.token, login, logout, loading }),
+    [auth.token, auth.user, loading, login, logout],
+  );
+
   return (
-    <AuthContext.Provider value={{ user: auth.user, token: auth.token, login, logout, loading: false }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
 }
 
