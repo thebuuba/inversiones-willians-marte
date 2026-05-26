@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -129,6 +130,8 @@ function StatusPill({ status }: { status: keyof typeof statusStyles }) {
 }
 
 export function ClientsPanel() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-[#F4FAF6] p-5 font-sans text-[#285C43]">
       <motion.header
@@ -227,9 +230,10 @@ export function ClientsPanel() {
               initial="hidden"
               animate="visible"
               custom={index + 7}
-              className={`grid min-h-[74px] grid-cols-[2fr_1.35fr_1.55fr_1.35fr_1fr_0.8fr] items-center border-t border-[#EDF2EF] px-6 text-[#5FA37D] transition hover:bg-[#F4FAF6] ${
+              className={`grid min-h-[74px] cursor-pointer grid-cols-[2fr_1.35fr_1.55fr_1.35fr_1fr_0.8fr] items-center border-t border-[#EDF2EF] px-6 text-[#5FA37D] transition hover:bg-[#F4FAF6] ${
                 client.selected ? 'bg-[#F4FAF6]' : 'bg-white'
               }`}
+              onClick={() => router.push(`/clientes/${client.code.toLowerCase()}`)}
             >
               <div className="flex items-center gap-4">
                 <div className="relative h-12 w-12 shrink-0">
@@ -252,7 +256,14 @@ export function ClientsPanel() {
               <StatusPill status={client.status as keyof typeof statusStyles} />
               <div className="flex items-center justify-end gap-3">
                 {client.selected && <MoreHorizontal className="h-4 w-4 text-[#5FA37D]" />}
-                <button className="rounded-full bg-[#E7F4EC] px-4 py-1.5 text-sm font-bold text-[#5FA37D] transition hover:bg-[#DDEFE5]">
+                <button
+                  className="rounded-full bg-[#E7F4EC] px-4 py-1.5 text-sm font-bold text-[#5FA37D] transition hover:bg-[#DDEFE5]"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    router.push(`/clientes/${client.code.toLowerCase()}`);
+                  }}
+                  type="button"
+                >
                   Ver
                 </button>
               </div>
