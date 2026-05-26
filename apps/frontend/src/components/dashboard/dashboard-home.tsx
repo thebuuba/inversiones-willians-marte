@@ -220,7 +220,7 @@ export function DashboardHome() {
           <h1 className="text-[28px] font-bold leading-tight text-[#173D2C]">
             Hola, Administrador 👋
           </h1>
-          <p className="mt-1.5 text-base text-[#5FA37D]">Aquí tienes un resumen de tu cartera hoy.</p>
+          <p className="mt-1.5 text-base text-[#7A8A80]">Aquí tienes un resumen de tu cartera hoy.</p>
         </div>
         <div className="flex items-center gap-3">
           <button className="h-11 rounded-full border border-[#DDEBE3] bg-white px-5 text-sm font-bold text-[#5FA37D] shadow-sm">
@@ -258,7 +258,7 @@ export function DashboardHome() {
                   {metric.badge}
                 </span>
               </div>
-              <p className="text-xs font-bold uppercase tracking-wide text-[#A9CDBB]">{metric.title}</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-[#7A8A80]">{metric.title}</p>
               <p className="mt-1.5 text-[24px] font-bold leading-tight text-[#173D2C]">
                 {metric.value}
               </p>

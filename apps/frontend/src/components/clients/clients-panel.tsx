@@ -143,7 +143,7 @@ export function ClientsPanel() {
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#A9CDBB]">GESTIÓN</p>
           <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#173D2C]">Clientes</h1>
-          <p className="mt-1.5 text-base text-[#5FA37D]">
+          <p className="mt-1.5 text-base text-[#7A8A80]">
             Administra tu cartera de clientes — 12 registrados en total.
           </p>
         </div>
@@ -172,7 +172,7 @@ export function ClientsPanel() {
                 <Icon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-[#A9CDBB]">{stat.label}</p>
+                <p className="text-sm font-semibold text-[#7A8A80]">{stat.label}</p>
                 <p className="mt-1 text-[24px] font-bold leading-none text-[#173D2C]">{stat.value}</p>
               </div>
             </PanelCard>
@@ -250,9 +250,9 @@ export function ClientsPanel() {
                   <p className="mt-0.5 text-xs font-medium text-[#A9CDBB]">{client.code}</p>
                 </div>
               </div>
-              <span className="font-mono text-sm text-[#5FA37D]">{client.id}</span>
-              <span className="text-sm text-[#5FA37D]">{client.phone}</span>
-              <span className="text-sm text-[#5FA37D]">{client.city}</span>
+              <span className="font-mono text-sm text-[#7A8A80]">{client.id}</span>
+              <span className="text-sm text-[#7A8A80]">{client.phone}</span>
+              <span className="text-sm text-[#7A8A80]">{client.city}</span>
               <StatusPill status={client.status as keyof typeof statusStyles} />
               <div className="flex items-center justify-end gap-3">
                 {client.selected && <MoreHorizontal className="h-4 w-4 text-[#5FA37D]" />}
