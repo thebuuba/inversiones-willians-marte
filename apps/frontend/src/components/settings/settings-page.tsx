@@ -13,6 +13,7 @@ import {
   Cloud,
   CreditCard,
   Download,
+  Edit3,
   KeyRound,
   Mail,
   MessageCircle,
@@ -21,6 +22,7 @@ import {
   Plus,
   ShieldCheck,
   ShieldX,
+  Trash2,
   Upload,
   UserRound,
   UsersRound,
@@ -492,13 +494,6 @@ function SettingsLoansTab() {
   );
 }
 
-const roleColors: Record<string, string> = {
-  ADMIN: 'bg-[#FFE8D8] text-[#B45B38]',
-  MANAGER: 'bg-[#D9ECFF] text-[#3A75B8]',
-  COLLECTOR: 'bg-[#E7F4EC] text-[#3E8A61]',
-  VIEWER: 'bg-[#F0F0F0] text-[#7A8A80]',
-};
-
 function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
   const [form, setForm] = useState<CreateUserInput>({ name: '', email: '', password: '', role: 'COLLECTOR' });
   const [saving, setSaving] = useState(false);
@@ -636,6 +631,46 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
   );
 }
 
+const roleBadgeColors: Record<string, { bg: string; text: string }> = {
+  ADMIN: { bg: '#FFE8D8', text: '#B45B38' },
+  MANAGER: { bg: '#D9ECFF', text: '#3A75B8' },
+  COLLECTOR: { bg: '#E7F4EC', text: '#3E8A61' },
+  VIEWER: { bg: '#F0F0F0', text: '#7A8A80' },
+};
+
+const statusStyles = {
+  Activo: { bg: '#E7F4EC', text: '#2F7D57', dot: '#5FA37D' },
+  Inactivo: { bg: '#F0ECE5', text: '#8D7A5F', dot: '#CDBA97' },
+} as const;
+
+function RoleBadge({ role }: { role: string }) {
+  const style = roleBadgeColors[role] ?? roleBadgeColors.VIEWER;
+
+  return (
+    <span
+      className="inline-flex min-w-max items-center rounded-full px-3 py-1 text-sm font-bold"
+      style={{ backgroundColor: style.bg, color: style.text }}
+    >
+      {role}
+    </span>
+  );
+}
+
+function StatusBadge({ active }: { active: boolean }) {
+  const status = active ? 'Activo' : 'Inactivo';
+  const style = statusStyles[status];
+
+  return (
+    <span
+      className="inline-flex min-w-[92px] items-center justify-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold"
+      style={{ backgroundColor: style.bg, color: style.text }}
+    >
+      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
+      {status}
+    </span>
+  );
+}
+
 function SettingsUsersRolesTab() {
   const { user } = useAuth();
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -653,10 +688,33 @@ function SettingsUsersRolesTab() {
     load();
   }
 
+  const activeCount = users.filter((u) => u.active).length;
+
+  const rolesMap: Record<string, { count: number; users: UserItem[] }> = {};
+  for (const u of users) {
+    if (!rolesMap[u.role]) rolesMap[u.role] = { count: 0, users: [] };
+    rolesMap[u.role].count++;
+    rolesMap[u.role].users.push(u);
+  }
+
+  const roleDot: Record<string, string> = {
+    ADMIN: '#B8DCC5',
+    MANAGER: '#FFE3D2',
+    COLLECTOR: '#D8E9FF',
+    VIEWER: '#E8DDF6',
+  };
+
+  const roleLabel: Record<string, string> = {
+    ADMIN: 'Administrador',
+    MANAGER: 'Gerente',
+    COLLECTOR: 'Cobrador',
+    VIEWER: 'Solo vista',
+  };
+
   return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}
-      className="mx-auto max-w-3xl"
+      className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]"
       initial={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
     >
@@ -667,12 +725,12 @@ function SettingsUsersRolesTab() {
           <CardTitle
             icon={<UsersRound className="h-6 w-6" />}
             subtitle="Personas con acceso al sistema."
-            title="Usuarios del sistema"
+            title="Miembros del equipo"
           />
         </div>
 
         <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <p className="text-sm font-medium text-[#7A8A80]">{users.length} usuario(s)</p>
+          <p className="text-sm font-medium text-[#7A8A80]">{users.length} miembros · {activeCount} activos</p>
           {isAdmin && (
             <button
               className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2F7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
@@ -685,46 +743,93 @@ function SettingsUsersRolesTab() {
           )}
         </div>
 
-        <div className="space-y-3">
-          {users.length === 0 && (
-            <p className="py-12 text-center text-sm font-medium text-[#A9CDBB]">No hay usuarios registrados</p>
-          )}
-          {users.map((u) => (
-            <div
-              key={u.id}
-              className="flex items-center gap-4 rounded-[16px] border border-[#DDEBE3] bg-white p-4 transition hover:shadow-[0_8px_20px_rgba(40,92,67,0.06)]"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#E7F4EC] text-[#5FA37D]">
-                <UserRound className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-bold text-[#173D2C]">{u.name}</p>
-                  <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${roleColors[u.role] ?? roleColors.VIEWER}`}>
-                    {u.role}
-                  </span>
-                  {!u.active && (
-                    <span className="rounded-full bg-[#FFE8D8] px-2.5 py-0.5 text-[11px] font-bold text-[#B45B38]">
-                      Inactivo
-                    </span>
+        {users.length === 0 ? (
+          <p className="py-12 text-center text-sm font-medium text-[#A9CDBB]">No hay usuarios registrados</p>
+        ) : (
+          <div className="overflow-hidden rounded-[18px] border border-[#EDF2EF]">
+            <div className="hidden grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] bg-[#F3F8F5] px-5 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#8CA096] md:grid">
+              <span>Miembro</span>
+              <span>Rol</span>
+              <span>Estado</span>
+              <span className="text-right">Acciones</span>
+            </div>
+            {users.map((u) => (
+              <div
+                key={u.id}
+                className="grid gap-4 border-t border-[#EDF2EF] bg-white px-5 py-4 md:grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] md:items-center"
+              >
+                <div className="flex min-w-0 items-center gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E7F4EC] text-sm font-bold text-[#285C43] shadow-[0_6px_14px_rgba(40,92,67,0.12)]">
+                    {u.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-bold leading-tight text-[#173D2C]">{u.name}</p>
+                    <p className="mt-1 truncate text-sm font-medium text-[#7A8A80]">{u.email}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 md:block">
+                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#8CA096] md:hidden">Rol</span>
+                  <RoleBadge role={u.role} />
+                </div>
+
+                <div className="flex items-center justify-between gap-3 md:block">
+                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#8CA096] md:hidden">Estado</span>
+                  <StatusBadge active={u.active} />
+                </div>
+
+                <div className="flex items-center justify-end gap-4 text-[#7A8A80]">
+                  {isAdmin && (
+                    <>
+                      <button
+                        aria-label={`${u.active ? 'Desactivar' : 'Activar'} ${u.name}`}
+                        className={`rounded-full p-1.5 transition hover:bg-[#EAF6EF] ${
+                          u.active ? 'hover:text-[#285C43]' : 'hover:text-[#2F7D57]'
+                        }`}
+                        onClick={() => handleToggle(u.id)}
+                        type="button"
+                      >
+                        {u.active ? <ShieldX className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+                      </button>
+                      <button
+                        aria-label={`Eliminar ${u.name}`}
+                        className="rounded-full p-1.5 transition hover:bg-[#FFE3D2] hover:text-[#B45B38]"
+                        onClick={() => handleToggle(u.id)}
+                        type="button"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </>
                   )}
                 </div>
-                <p className="mt-0.5 text-xs text-[#A9CDBB]">{u.email}</p>
               </div>
-              {isAdmin && (
-                <button
-                  className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
-                    u.active
-                      ? 'text-[#A9CDBB] hover:bg-[#FFE8D8] hover:text-[#C96F4A]'
-                      : 'text-[#5FA37D] hover:bg-[#E7F4EC]'
-                  }`}
-                  onClick={() => handleToggle(u.id)}
-                  title={u.active ? 'Desactivar usuario' : 'Activar usuario'}
-                  type="button"
-                >
-                  {u.active ? <ShieldX className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-                </button>
-              )}
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard className="p-6 lg:p-7" index={3}>
+        <CardTitle
+          icon={<ShieldCheck className="h-6 w-6" />}
+          subtitle="Define qué puede hacer cada tipo de usuario."
+          title="Roles y permisos"
+        />
+
+        <div className="space-y-4">
+          {Object.entries(rolesMap).map(([role, { count }]) => (
+            <div
+              key={role}
+              className="rounded-[18px] border border-[#EDF2EF] bg-white p-5 shadow-[0_5px_18px_rgba(40,92,67,0.025)]"
+            >
+              <div className="mb-3 flex items-center justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: roleDot[role] ?? '#ccc' }} />
+                  <p className="truncate text-base font-bold text-[#173D2C]">{roleLabel[role] ?? role}</p>
+                </div>
+                <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-[#E7F4EC] px-2 text-sm font-bold text-[#2F7D57]">
+                  {count}
+                </span>
+              </div>
             </div>
           ))}
         </div>
