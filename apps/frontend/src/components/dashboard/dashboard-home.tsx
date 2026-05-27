@@ -40,37 +40,31 @@ import {
   getDashboard,
   getPortfolio,
   getAudit,
+  getMonthlyCollections,
+  getWeeklyMovement,
+  getUpcomingPayments,
 } from '@/lib/api/dashboard';
-import type { DashboardData, PortfolioGroup, AuditEntry } from '@/lib/api/dashboard';
+import type { DashboardData, PortfolioGroup, AuditEntry, MonthlyCollection, WeeklyMovementItem, UpcomingPayment } from '@/lib/api/dashboard';
 
-const monthlyCollections = [
-  { month: 'Feb', cobrado: 42, esperado: 48 },
-  { month: 'Mar', cobrado: 53, esperado: 52 },
-  { month: 'Abr', cobrado: 49, esperado: 56 },
-  { month: 'May', cobrado: 61, esperado: 58 },
-  { month: 'Jun', cobrado: 70, esperado: 63 },
-  { month: 'Jul', cobrado: 67, esperado: 68 },
-  { month: 'Ago', cobrado: 82, esperado: 76 },
-  { month: 'Sep', cobrado: 90, esperado: 82 },
-];
+function formatCompact(n: number): string {
+  if (n >= 1_000_000) return `RD$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `RD$${(n / 1_000).toFixed(0)}K`;
+  return `RD$${n.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
-const weeklyMovement = [
-  { day: 'Lun', nuevos: 9, cerrados: 3 },
-  { day: 'Mar', nuevos: 15, cerrados: 6 },
-  { day: 'Mié', nuevos: 12, cerrados: 9 },
-  { day: 'Jue', nuevos: 18, cerrados: 6 },
-  { day: 'Vie', nuevos: 24, cerrados: 12 },
-  { day: 'Sáb', nuevos: 12, cerrados: 3 },
-  { day: 'Dom', nuevos: 6, cerrados: 0 },
-];
+function formatCurrency(n: number): string {
+  return `RD$${n.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
-const upcomingPayments = [
-  { tag: 'HOY', name: 'Pedro Martínez', date: 'Hoy', amount: 'RD$3,500', warm: true },
-  { tag: 'HOY', name: 'Sofía Hernández', date: 'Hoy', amount: 'RD$1,800', warm: true },
-  { tag: 'MAÑ', name: 'Roberto Díaz', date: 'Mañana', amount: 'RD$5,200' },
-  { tag: 'MAÑ', name: 'Carmen Rivera', date: 'Mañana', amount: 'RD$2,400' },
-  { tag: 'OCT 12', name: 'Luis Castillo', date: '12 Oct', amount: 'RD$4,100' },
-];
+const today = new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' });
+
+const statusConfig: Record<string, { label: string; color: string }> = {
+  ACTIVE: { label: 'Al día', color: '#7CC99B' },
+  PAID: { label: 'Pagados', color: '#A9D9C6' },
+  OVERDUE: { label: 'Vencidos', color: '#F7C49E' },
+  RESTRUCTURED: { label: 'Reestructurados', color: '#A9D8F2' },
+  WRITTEN_OFF: { label: 'Castigados', color: '#E0E0E0' },
+};
 
 const cardVariants: Variants = {
   hidden: { opacity: 0, y: 18 },
@@ -95,15 +89,6 @@ function Card({ children, className = '', index = 0 }: { children: ReactNode; cl
   );
 }
 
-function DotLegend({ color, label }: { color: string; label: string }) {
-  return (
-    <div className="flex items-center gap-2 text-xs font-medium text-[#5FA37D]">
-      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-      {label}
-    </div>
-  );
-}
-
 function SectionHeader({
   title,
   subtitle,
@@ -124,35 +109,21 @@ function SectionHeader({
   );
 }
 
-const today = new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' });
-
-function formatCurrency(n: number): string {
-  return `RD$${n.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-function formatCompact(n: number): string {
-  if (n >= 1_000_000) return `RD$${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `RD$${(n / 1_000).toFixed(0)}K`;
-  return formatCurrency(n);
-}
-
-const statusConfig: Record<string, { label: string; color: string }> = {
-  ACTIVE: { label: 'Al día', color: '#7CC99B' },
-  PAID: { label: 'Pagados', color: '#A9D9C6' },
-  OVERDUE: { label: 'Vencidos', color: '#F7C49E' },
-  RESTRUCTURED: { label: 'Reestructurados', color: '#A9D8F2' },
-  WRITTEN_OFF: { label: 'Castigados', color: '#E0E0E0' },
-};
-
 export function DashboardHome() {
   const [dash, setDash] = useState<DashboardData | null>(null);
   const [portfolio, setPortfolio] = useState<PortfolioGroup[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
+  const [monthlyCollections, setMonthlyCollections] = useState<MonthlyCollection[]>([]);
+  const [weeklyMovement, setWeeklyMovement] = useState<WeeklyMovementItem[]>([]);
+  const [upcomingPayments, setUpcomingPayments] = useState<UpcomingPayment[]>([]);
 
   useEffect(() => {
     getDashboard().then(setDash);
     getPortfolio().then(setPortfolio);
     getAudit().then((rows) => setAudit(rows.slice(0, 6)));
+    getMonthlyCollections().then(setMonthlyCollections);
+    getWeeklyMovement().then(setWeeklyMovement);
+    getUpcomingPayments().then(setUpcomingPayments);
   }, []);
 
   const activeLoans = dash?.activeLoans ?? 0;
@@ -296,8 +267,8 @@ export function DashboardHome() {
                   cursor={{ stroke: '#DDEBE3', strokeDasharray: '4 6' }}
                   contentStyle={{ border: '1px solid #DDEBE3', borderRadius: 16, boxShadow: '0 12px 28px rgba(40,92,67,0.08)' }}
                 />
-                <Area type="monotone" dataKey="cobrado" stroke="#7CC99B" strokeWidth={3} fill="url(#cobradoGradient)" isAnimationActive animationDuration={1400} />
-                <Line type="monotone" dataKey="esperado" stroke="#B8E0CF" strokeWidth={3} strokeDasharray="6 7" dot={false} isAnimationActive animationDuration={1300} />
+                <Area type="monotone" dataKey="collected" stroke="#7CC99B" strokeWidth={3} fill="url(#cobradoGradient)" isAnimationActive animationDuration={1400} />
+                <Line type="monotone" dataKey="expected" stroke="#B8E0CF" strokeWidth={3} strokeDasharray="6 7" dot={false} isAnimationActive animationDuration={1300} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -409,18 +380,31 @@ export function DashboardHome() {
         <Card className="p-6" index={9}>
           <SectionHeader title="Próximos cobros" subtitle="Agenda de los próximos días" />
           <div className="space-y-3">
-            {upcomingPayments.map((payment) => (
-              <div key={`${payment.name}-${payment.amount}`} className={`flex items-center gap-3 rounded-[16px] border p-3 ${payment.warm ? 'border-[#F7D6BD] bg-[#FFF7EF]' : 'border-[#DDEBE3] bg-[#F3FAF6]'}`}>
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-[11px] font-bold ${payment.warm ? 'bg-[#FFB174] text-white' : 'bg-white text-[#5FA37D]'}`}>
-                  {payment.tag}
+            {upcomingPayments.length === 0 ? (
+              <p className="py-6 text-center text-sm text-[#A9CDBB]">No hay cobros próximos</p>
+            ) : upcomingPayments.map((payment) => {
+              const due = new Date(payment.dueDate);
+              const today2 = new Date();
+              today2.setHours(0, 0, 0, 0);
+              const diffDays = Math.floor((due.getTime() - today2.getTime()) / 86400000);
+              let tag = due.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' });
+              let warm = false;
+              if (diffDays === 0) { tag = 'HOY'; warm = true; }
+              else if (diffDays === 1) { tag = 'MAÑ'; warm = true; }
+
+              return (
+                <div key={payment.id} className={`flex items-center gap-3 rounded-[16px] border p-3 ${warm ? 'border-[#F7D6BD] bg-[#FFF7EF]' : 'border-[#DDEBE3] bg-[#F3FAF6]'}`}>
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-[11px] font-bold ${warm ? 'bg-[#FFB174] text-white' : 'bg-white text-[#5FA37D]'}`}>
+                    {tag}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-[#173D2C]">{payment.clientName}</p>
+                    <p className="mt-0.5 text-xs text-[#A9CDBB]">{due.toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                  </div>
+                  <span className="shrink-0 text-sm font-bold text-[#173D2C]">{formatCurrency(payment.amount)}</span>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-[#173D2C]">{payment.name}</p>
-                  <p className="mt-0.5 text-xs text-[#A9CDBB]">{payment.date}</p>
-                </div>
-                <span className="shrink-0 text-sm font-bold text-[#173D2C]">{payment.amount}</span>
-              </div>
-            ))}
+              );
+            })}
             <button className="mt-3 h-11 w-full rounded-[16px] bg-[#F3FAF6] text-sm font-bold text-[#5FA37D]">Ver agenda completa</button>
           </div>
         </Card>

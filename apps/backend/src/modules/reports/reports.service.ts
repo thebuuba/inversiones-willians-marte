@@ -88,4 +88,88 @@ export class ReportsService {
 
     return result;
   }
+
+  async monthlyCollections() {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const rows = await prisma.$queryRaw<Array<{ month: Date; collected: string; expected: string }>>`
+      SELECT
+        DATE_TRUNC('month', ps.due_date)::date AS month,
+        COALESCE(SUM(p.amount) FILTER (WHERE p.id IS NOT NULL), 0) AS collected,
+        COALESCE(SUM(ps.amount), 0) AS expected
+      FROM payment_schedule ps
+      LEFT JOIN payment_allocations pa ON pa.schedule_id = ps.id
+      LEFT JOIN payments p ON p.id = pa.payment_id
+      WHERE ps.due_date >= $1
+      GROUP BY DATE_TRUNC('month', ps.due_date)
+      ORDER BY month ASC
+    `;
+
+    return rows.map((r) => ({
+      month: r.month.toLocaleString('default', { month: 'short' }),
+      collected: Number(r.collected),
+      expected: Number(r.expected),
+    }));
+  }
+
+  async weeklyMovement() {
+    const rows = await prisma.$queryRaw<Array<{ day: string; nuevos: string; cerrados: string }>>`
+      SELECT
+        d.day,
+        COALESCE(SUM(n.count), 0) AS nuevos,
+        COALESCE(SUM(c.count), 0) AS cerrados
+      FROM (VALUES ('Lun'),('Mar'),('Mié'),('Jue'),('Vie'),('Sáb'),('Dom')) AS d(day)
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*) AS count
+        FROM loans
+        WHERE TO_CHAR(start_date, 'Dy') = d.day
+      ) n ON true
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*) AS count
+        FROM loans
+        WHERE status = 'PAID' AND end_date IS NOT NULL
+          AND TO_CHAR(end_date, 'Dy') = d.day
+      ) c ON true
+      GROUP BY d.day
+      ORDER BY CASE d.day
+        WHEN 'Lun' THEN 1 WHEN 'Mar' THEN 2 WHEN 'Mié' THEN 3
+        WHEN 'Jue' THEN 4 WHEN 'Vie' THEN 5 WHEN 'Sáb' THEN 6 WHEN 'Dom' THEN 7
+      END
+    `;
+
+    return rows.map((r) => ({
+      day: r.day,
+      nuevos: Number(r.nuevos),
+      cerrados: Number(r.cerrados),
+    }));
+  }
+
+  async upcomingPayments(daysAhead = 7) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const future = new Date(today);
+    future.setDate(future.getDate() + daysAhead);
+
+    const schedules = await prisma.paymentSchedule.findMany({
+      where: {
+        dueDate: { gte: today, lte: future },
+        status: { in: ['PENDING', 'PARTIAL'] },
+      },
+      include: {
+        loan: {
+          include: { client: true },
+        },
+      },
+      orderBy: { dueDate: 'asc' },
+    });
+
+    return schedules.map((s) => ({
+      id: s.id,
+      clientName: s.loan.client.firstName + ' ' + s.loan.client.lastName,
+      dueDate: s.dueDate,
+      amount: Number(s.amount),
+      status: s.status,
+    }));
+  }
 }

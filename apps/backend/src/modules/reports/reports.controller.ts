@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { Roles } from '../../common/decorators';
@@ -25,5 +25,23 @@ export class ReportsController {
   @Roles('ADMIN', 'MANAGER')
   collectors() {
     return this.reports.collectorPerformance();
+  }
+
+  @Get('collections/monthly')
+  @Roles('ADMIN', 'MANAGER')
+  monthlyCollections() {
+    return this.reports.monthlyCollections();
+  }
+
+  @Get('movement/weekly')
+  @Roles('ADMIN', 'MANAGER')
+  weeklyMovement() {
+    return this.reports.weeklyMovement();
+  }
+
+  @Get('payments/upcoming')
+  @Roles('ADMIN', 'MANAGER')
+  upcomingPayments() {
+    return this.reports.upcomingPayments();
   }
 }

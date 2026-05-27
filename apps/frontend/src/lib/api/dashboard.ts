@@ -30,6 +30,26 @@ export interface AuditEntry {
   createdAt: string;
 }
 
+export interface MonthlyCollection {
+  month: string;
+  collected: number;
+  expected: number;
+}
+
+export interface WeeklyMovementItem {
+  day: string;
+  nuevos: number;
+  cerrados: number;
+}
+
+export interface UpcomingPayment {
+  id: string;
+  clientName: string;
+  dueDate: string;
+  amount: number;
+  status: string;
+}
+
 export async function getDashboard(): Promise<DashboardData> {
   const { data } = await api.get<ApiResponse<DashboardData>>('/reports/dashboard');
   return data.data as DashboardData;
@@ -42,5 +62,20 @@ export async function getPortfolio(): Promise<PortfolioGroup[]> {
 
 export async function getAudit(): Promise<AuditEntry[]> {
   const { data } = await api.get<ApiResponse<AuditEntry[]>>('/audit');
+  return data.data ?? [];
+}
+
+export async function getMonthlyCollections(): Promise<MonthlyCollection[]> {
+  const { data } = await api.get<ApiResponse<MonthlyCollection[]>>('/reports/collections/monthly');
+  return data.data ?? [];
+}
+
+export async function getWeeklyMovement(): Promise<WeeklyMovementItem[]> {
+  const { data } = await api.get<ApiResponse<WeeklyMovementItem[]>>('/reports/movement/weekly');
+  return data.data ?? [];
+}
+
+export async function getUpcomingPayments(): Promise<UpcomingPayment[]> {
+  const { data } = await api.get<ApiResponse<UpcomingPayment[]>>('/reports/payments/upcoming');
   return data.data ?? [];
 }
