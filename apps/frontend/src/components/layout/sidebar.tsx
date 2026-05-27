@@ -10,6 +10,7 @@ import {
   Landmark,
   LogOut,
   Settings,
+  Shield,
   TrendingUp,
   Users,
   Wallet,
@@ -27,6 +28,10 @@ const navItems = [
   { href: '/inversionistas', label: 'Inversionistas', icon: TrendingUp },
   { href: '/documentos', label: 'Documentos', icon: FileText },
   { href: '/configuracion', label: 'Configuración', icon: Settings },
+];
+
+const adminItems = [
+  { href: '/usuarios', label: 'Usuarios', icon: Shield },
 ];
 
 export function Sidebar() {
@@ -92,6 +97,38 @@ export function Sidebar() {
                 );
               })}
           </div>
+          {user?.role === 'ADMIN' && (
+            <>
+              <p className="mb-4 mt-4 px-3 text-[11px] font-bold uppercase tracking-[0.32em] text-[#A9B8AE]">
+                ADMIN
+              </p>
+              <div className="space-y-1.5">
+                {adminItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = pathname.startsWith(item.href);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          'relative flex h-10 items-center gap-3.5 rounded-[16px] px-3 text-[15px] font-medium transition-colors',
+                          active
+                            ? 'bg-[#E7F4EC] text-[#285C43]'
+                            : 'text-[#5C6D63] hover:bg-[#F3FAF6]',
+                        )}
+                      >
+                        <Icon
+                          className={cn('h-[18px] w-[18px] shrink-0', active ? 'text-[#5FA37D]' : 'text-[#8CA096]')}
+                          strokeWidth={2}
+                          aria-hidden="true"
+                        />
+                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+              </div>
+            </>
+          )}
         </nav>
 
         <div className="relative border-t border-[#DDEBE3] px-6 py-5">
