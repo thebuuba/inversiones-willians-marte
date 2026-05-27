@@ -39,6 +39,21 @@ const loanTypes = [
   },
 ] satisfies Array<{ id: LoanTypeId; title: string; description: string }>;
 
+const amortizationRows = [
+  { number: '1', payment: 'RD$4,874.36', principal: 'RD$3,624.36', interest: 'RD$1,250.00', balance: 'RD$46,375.64' },
+  { number: '2', payment: 'RD$4,874.36', principal: 'RD$3,714.97', interest: 'RD$1,159.39', balance: 'RD$42,660.68' },
+  { number: '3', payment: 'RD$4,874.36', principal: 'RD$3,807.84', interest: 'RD$1,066.52', balance: 'RD$38,852.84' },
+  { number: '4', payment: 'RD$4,874.36', principal: 'RD$3,903.04', interest: 'RD$971.32', balance: 'RD$34,949.80' },
+  { number: '5', payment: 'RD$4,874.36', principal: 'RD$4,000.61', interest: 'RD$873.75', balance: 'RD$30,949.19' },
+  { number: '6', payment: 'RD$4,874.36', principal: 'RD$4,100.63', interest: 'RD$773.73', balance: 'RD$26,848.57' },
+  { number: '7', payment: 'RD$4,874.36', principal: 'RD$4,203.15', interest: 'RD$671.21', balance: 'RD$22,645.42' },
+  { number: '8', payment: 'RD$4,874.36', principal: 'RD$4,308.23', interest: 'RD$566.13', balance: 'RD$18,337.19' },
+  { number: '9', payment: 'RD$4,874.36', principal: 'RD$4,415.94', interest: 'RD$458.42', balance: 'RD$13,921.25' },
+  { number: '10', payment: 'RD$4,874.36', principal: 'RD$4,526.34', interest: 'RD$348.03', balance: 'RD$9,394.91' },
+  { number: '11', payment: 'RD$4,874.36', principal: 'RD$4,639.50', interest: 'RD$234.87', balance: 'RD$4,755.41' },
+  { number: '12', payment: 'RD$4,874.36', principal: 'RD$4,755.41', interest: 'RD$118.89', balance: 'RD$0.00' },
+];
+
 function parseNumber(value: string) {
   const parsed = Number(value.replace(/[^\d.]/g, ''));
   return Number.isFinite(parsed) ? parsed : 0;
@@ -53,15 +68,15 @@ function formatCurrency(value: number) {
 
 function LoanWizardStepper({ step }: { step: WizardStep }) {
   return (
-    <div className="flex items-center justify-end gap-3">
+    <div className="flex items-center justify-end gap-2.5">
       {[1, 2, 3].map((item, index) => {
         const completed = item < step;
         const active = item === step;
 
         return (
-          <div className="flex items-center gap-3" key={item}>
+          <div className="flex items-center gap-2.5" key={item}>
             <span
-              className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition ${
+              className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition ${
                 completed
                   ? 'bg-[#B8DCC5] text-[#2F7654]'
                   : active
@@ -69,10 +84,10 @@ function LoanWizardStepper({ step }: { step: WizardStep }) {
                     : 'bg-[#EEF3EF] text-[#B9C8BD]'
               }`}
             >
-              {completed ? <Check className="h-5 w-5" /> : item}
+              {completed ? <Check className="h-[18px] w-[18px]" /> : item}
             </span>
             {index < 2 && (
-              <span className={`h-px w-12 ${completed ? 'bg-[#5FA37D]' : 'bg-[#E4ECE7]'}`} />
+              <span className={`h-px w-10 ${completed ? 'bg-[#5FA37D]' : 'bg-[#E4ECE7]'}`} />
             )}
           </div>
         );
@@ -569,6 +584,173 @@ function NewLoanStepTwo({
   );
 }
 
+function SummaryMetricCard({
+  label,
+  value,
+  helper,
+  highlight = false,
+}: {
+  label: string;
+  value: string;
+  helper?: string;
+  highlight?: boolean;
+}) {
+  return (
+    <motion.section
+      animate={{ opacity: 1, y: 0 }}
+      className="min-h-[136px] rounded-[22px] border border-[#DDEBE3] bg-white p-6 shadow-[0_8px_24px_rgba(40,92,67,0.035)]"
+      initial={{ opacity: 0, y: 14 }}
+      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#A7B5AD]">{label}</p>
+      <p className={`mt-4 text-[30px] font-bold leading-none ${highlight ? 'text-[#B45B38]' : 'text-[#173D2C]'}`}>
+        {value}
+      </p>
+      {helper && <p className="mt-3 text-sm font-medium text-[#6F8076]">{helper}</p>}
+    </motion.section>
+  );
+}
+
+function LoanSummaryCards() {
+  return (
+    <div className="mt-9 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <SummaryMetricCard label="CAPITAL" value="RD$50,000.00" />
+      <SummaryMetricCard helper="mensual" label="CUOTA" value="RD$4,874.36" />
+      <SummaryMetricCard helper="17.0% sobre capital" highlight label="TOTAL INTERESES" value="RD$8,492.28" />
+      <SummaryMetricCard helper="en 12 meses" label="TOTAL A PAGAR" value="RD$58,492.32" />
+    </div>
+  );
+}
+
+function LoanClientSummary() {
+  const pills = ['Sistema Francés', 'Mensual', '2.5% mensual'];
+
+  return (
+    <motion.section
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-8 rounded-[22px] border border-[#DDEBE3] bg-white px-7 py-7 shadow-[0_8px_24px_rgba(40,92,67,0.035)]"
+      initial={{ opacity: 0, y: 14 }}
+      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
+    >
+      <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-4">
+          <div
+            aria-label="María González Pérez"
+            className="h-14 w-14 shrink-0 rounded-full border-[3px] border-white bg-cover bg-center shadow-[0_7px_18px_rgba(40,92,67,0.14)]"
+            role="img"
+            style={{ backgroundImage: 'url(https://i.pravatar.cc/96?img=32)' }}
+          />
+          <div>
+            <p className="text-lg font-bold leading-tight text-[#173D2C]">María González Pérez</p>
+            <p className="mt-1 text-sm font-medium text-[#7A8A80]">CL-0142 · 402-1234567-8</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {pills.map((pill, index) => (
+            <span
+              className={`rounded-full px-4 py-2 text-sm font-bold ${
+                index === 0 ? 'bg-[#E7F4EC] text-[#2F7654]' : 'bg-[#F3FAF6] text-[#5C6D63]'
+              }`}
+              key={pill}
+            >
+              {pill}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div className="mt-6 h-px bg-[#EDF2EF]" />
+    </motion.section>
+  );
+}
+
+function AmortizationRow({
+  row,
+  total = false,
+}: {
+  row: { number: string; payment: string; principal: string; interest: string; balance: string };
+  total?: boolean;
+}) {
+  return (
+    <div
+      className={`grid min-w-[980px] grid-cols-[120px_1.2fr_1.2fr_1.2fr_1.2fr] items-center border-t border-[#EDF2EF] px-7 py-5 text-base ${
+        total ? 'bg-[#F3FAF6] font-bold' : row.number === '5' ? 'bg-[#F6FAF7]' : 'bg-white'
+      }`}
+    >
+      <span className={total ? 'text-[#6F8076]' : 'font-medium text-[#7A8A80]'}>{row.number}</span>
+      <span className="text-right font-bold text-[#173D2C]">{row.payment}</span>
+      <span className="text-right font-medium text-[#2F7654]">{row.principal}</span>
+      <span className="text-right font-medium text-[#B45B38]">{row.interest}</span>
+      <span className={`text-right font-bold ${total ? 'text-[#A7B5AD]' : 'text-[#173D2C]'}`}>{row.balance}</span>
+    </div>
+  );
+}
+
+function AmortizationTableCard() {
+  const [expanded, setExpanded] = useState(false);
+  const visibleRows = expanded ? amortizationRows : amortizationRows.slice(0, 6);
+
+  return (
+    <motion.section
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-8 overflow-hidden rounded-[22px] border border-[#DDEBE3] bg-white shadow-[0_8px_24px_rgba(40,92,67,0.035)]"
+      initial={{ opacity: 0, y: 14 }}
+      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
+    >
+      <div className="flex items-center justify-between gap-4 px-7 py-6">
+        <h2 className="text-lg font-bold text-[#173D2C]">Tabla de amortización</h2>
+        <p className="text-sm font-medium text-[#7A8A80]">12 meses en total</p>
+      </div>
+
+      <div className="overflow-x-auto">
+        <div className="grid min-w-[980px] grid-cols-[120px_1.2fr_1.2fr_1.2fr_1.2fr] bg-[#F3FAF6] px-7 py-5 text-sm font-bold uppercase tracking-[0.08em] text-[#7A8A80]">
+          <span>#</span>
+          <span className="text-right">CUOTA</span>
+          <span className="text-right">CAPITAL</span>
+          <span className="text-right">INTERÉS</span>
+          <span className="text-right">SALDO</span>
+        </div>
+
+        <motion.div layout>
+          {visibleRows.map((row) => (
+            <AmortizationRow key={row.number} row={row} />
+          ))}
+        </motion.div>
+
+        <AmortizationRow
+          row={{
+            number: 'TOTAL',
+            payment: 'RD$58,492.32',
+            principal: 'RD$50,000.01',
+            interest: 'RD$8,492.28',
+            balance: 'RD$0.00',
+          }}
+          total
+        />
+      </div>
+
+      <button
+        className="flex h-16 w-full items-center justify-center gap-3 border-t border-[#EDF2EF] bg-white text-base font-medium text-[#4F9B76] transition hover:bg-[#F6FAF7]"
+        onClick={() => setExpanded((current) => !current)}
+        type="button"
+      >
+        <ChevronDown className={`h-5 w-5 transition ${expanded ? 'rotate-180' : ''}`} />
+        {expanded ? 'Ocultar cuotas restantes' : 'Ver las 6 cuotas restantes'}
+      </button>
+    </motion.section>
+  );
+}
+
+function NewLoanStepThree() {
+  return (
+    <>
+      <LoanSummaryCards />
+      <LoanClientSummary />
+      <AmortizationTableCard />
+    </>
+  );
+}
+
 function Header({ step }: { step: WizardStep }) {
   return (
     <>
@@ -584,11 +766,13 @@ function Header({ step }: { step: WizardStep }) {
 
       <div className={`${step === 1 ? 'mt-8' : ''} grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end`}>
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#E7F4EC] px-3 py-1 text-sm font-bold text-[#2F7654]">
-            <span className="h-2 w-2 rounded-full bg-[#5FA37D]" />
-            Nuevo préstamo
-          </span>
-          <h1 className="mt-6 text-[36px] font-bold leading-none text-[#173D2C] sm:text-[42px]">
+          {step !== 3 && (
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#E7F4EC] px-3 py-1 text-sm font-bold text-[#2F7654]">
+              <span className="h-2 w-2 rounded-full bg-[#5FA37D]" />
+              Nuevo préstamo
+            </span>
+          )}
+          <h1 className={`${step === 3 ? '' : 'mt-6'} text-[36px] font-bold leading-none text-[#173D2C] sm:text-[42px]`}>
             Crear préstamo
           </h1>
           <p className="mt-4 max-w-[720px] text-base font-medium leading-7 text-[#7A8A80]">
@@ -605,12 +789,14 @@ function WizardActions({
   step,
   selectedClient,
   onBack,
+  onConfirm,
   onContinue,
   onShowAmortization,
 }: {
   step: WizardStep;
   selectedClient: boolean;
   onBack: () => void;
+  onConfirm: () => void;
   onContinue: () => void;
   onShowAmortization: () => void;
 }) {
@@ -618,6 +804,29 @@ function WizardActions({
     return (
       <div className="sticky bottom-0 -mx-5 mt-8 flex justify-end bg-[#F6FAF7]/92 px-5 py-4 backdrop-blur-sm lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
         <ContinueButton enabled={selectedClient} onClick={onContinue} />
+      </div>
+    );
+  }
+
+  if (step === 3) {
+    return (
+      <div className="sticky bottom-0 -mx-5 mt-9 flex flex-col justify-between gap-4 bg-[#F6FAF7]/92 px-5 py-4 backdrop-blur-sm sm:flex-row lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
+        <button
+          className="inline-flex h-14 items-center justify-center gap-3 rounded-full border border-[#DDEBE3] bg-white px-8 text-sm font-bold text-[#173D2C] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#F6FAF7] hover:shadow-md"
+          onClick={onBack}
+          type="button"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          Modificar parámetros
+        </button>
+        <button
+          className="inline-flex h-14 items-center justify-center gap-3 rounded-full bg-[#2F7654] px-9 text-sm font-bold text-white shadow-[0_14px_26px_rgba(47,118,84,0.24)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
+          onClick={onConfirm}
+          type="button"
+        >
+          <Check className="h-5 w-5" />
+          Confirmar y crear préstamo
+        </button>
       </div>
     );
   }
@@ -659,7 +868,7 @@ export function NewLoanPage() {
 
         {step === 1 ? (
           <NewLoanStepOne selectedClient={selectedClient} onSelectClient={() => setSelectedClient(true)} />
-        ) : (
+        ) : step === 2 ? (
           <NewLoanStepTwo
             amount={amount}
             onAmountChange={setAmount}
@@ -670,10 +879,13 @@ export function NewLoanPage() {
             selectedType={selectedType}
             term={term}
           />
+        ) : (
+          <NewLoanStepThree />
         )}
 
         <WizardActions
-          onBack={() => setStep(1)}
+          onBack={() => setStep(step === 3 ? 2 : 1)}
+          onConfirm={() => undefined}
           onContinue={() => setStep(2)}
           onShowAmortization={() => setStep(3)}
           selectedClient={selectedClient}
