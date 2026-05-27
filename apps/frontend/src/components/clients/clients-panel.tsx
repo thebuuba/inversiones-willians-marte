@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -152,10 +153,13 @@ export function ClientsPanel() {
             <Download className="h-4 w-4" />
             Exportar
           </button>
-          <button className="flex h-11 items-center gap-2 rounded-full bg-[#5FA37D] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.22)] transition hover:-translate-y-0.5">
+          <Link
+            className="flex h-11 items-center gap-2 rounded-full bg-[#5FA37D] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.22)] transition hover:-translate-y-0.5"
+            href="/clientes/nuevo"
+          >
             <Plus className="h-4 w-4" />
             Agregar cliente
-          </button>
+          </Link>
         </div>
       </motion.header>
 
