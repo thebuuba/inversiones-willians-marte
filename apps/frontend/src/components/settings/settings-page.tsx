@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, type ReactNode } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
+import { getUsers, createUser, toggleActiveUser, type UserItem, type CreateUserInput } from '@/lib/api/users';
+import { useAuth } from '@/lib/auth-context';
 import {
   Building2,
   Bell,
@@ -11,7 +13,6 @@ import {
   Cloud,
   CreditCard,
   Download,
-  Edit3,
   KeyRound,
   Mail,
   MessageCircle,
@@ -19,9 +20,11 @@ import {
   Smartphone,
   Plus,
   ShieldCheck,
-  Trash2,
+  ShieldX,
   Upload,
+  UserRound,
   UsersRound,
+  X,
 } from 'lucide-react';
 
 const tabs = ['General', 'Préstamos', 'Usuarios y roles', 'Notificaciones', 'Seguridad', 'Integraciones'];
@@ -489,271 +492,243 @@ function SettingsLoansTab() {
   );
 }
 
-const roleStyles = {
-  Administrador: { bg: '#B8DCC5', text: '#173D2C' },
-  'Gestor de cobros': { bg: '#FFE3D2', text: '#173D2C' },
-  Asesor: { bg: '#D8E9FF', text: '#173D2C' },
-  Contabilidad: { bg: '#E8DDF6', text: '#173D2C' },
-} as const;
+const roleColors: Record<string, string> = {
+  ADMIN: 'bg-[#FFE8D8] text-[#B45B38]',
+  MANAGER: 'bg-[#D9ECFF] text-[#3A75B8]',
+  COLLECTOR: 'bg-[#E7F4EC] text-[#3E8A61]',
+  VIEWER: 'bg-[#F0F0F0] text-[#7A8A80]',
+};
 
-const statusStyles = {
-  Activo: { bg: '#E7F4EC', text: '#2F7D57', dot: '#5FA37D' },
-  Inactivo: { bg: '#F0ECE5', text: '#8D7A5F', dot: '#CDBA97' },
-} as const;
+function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
+  const [form, setForm] = useState<CreateUserInput>({ name: '', email: '', password: '', role: 'COLLECTOR' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
-const members = [
-  {
-    name: 'Willians Marte',
-    email: 'willians@empresa.com',
-    role: 'Administrador',
-    status: 'Activo',
-    avatar: 'https://i.pravatar.cc/96?img=11',
-  },
-  {
-    name: 'María Rodríguez',
-    email: 'maria@empresa.com',
-    role: 'Gestor de cobros',
-    status: 'Activo',
-    avatar: 'https://i.pravatar.cc/96?img=32',
-  },
-  {
-    name: 'Carlos Pérez',
-    email: 'carlos@empresa.com',
-    role: 'Asesor',
-    status: 'Activo',
-    avatar: 'https://i.pravatar.cc/96?img=12',
-  },
-  {
-    name: 'Ana Núñez',
-    email: 'ana@empresa.com',
-    role: 'Contabilidad',
-    status: 'Inactivo',
-    avatar: 'https://i.pravatar.cc/96?img=5',
-  },
-] satisfies Array<{
-  name: string;
-  email: string;
-  role: keyof typeof roleStyles;
-  status: keyof typeof statusStyles;
-  avatar: string;
-}>;
-
-const permissions = [
-  {
-    role: 'Administrador',
-    count: 1,
-    dot: '#B8DCC5',
-    permissions: ['Acceso total', 'Configuración', 'Usuarios'],
-  },
-  {
-    role: 'Gestor de cobros',
-    count: 3,
-    dot: '#FFE3D2',
-    permissions: ['Cobros', 'Clientes', 'Reportes'],
-  },
-  {
-    role: 'Asesor',
-    count: 5,
-    dot: '#D8E9FF',
-    permissions: ['Crear préstamos', 'Ver clientes'],
-  },
-  {
-    role: 'Contabilidad',
-    count: 2,
-    dot: '#E8DDF6',
-    permissions: ['Caja', 'Reportes', 'Documentos'],
-  },
-];
-
-function RoleBadge({ role }: { role: keyof typeof roleStyles }) {
-  const style = roleStyles[role];
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    try {
+      await createUser(form);
+      onCreated();
+      onClose();
+      setForm({ name: '', email: '', password: '', role: 'COLLECTOR' });
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } };
+      setError(axiosErr.response?.data?.error ?? 'Error al crear usuario');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
-    <span
-      className="inline-flex min-w-max items-center rounded-full px-3 py-1 text-sm font-bold"
-      style={{ backgroundColor: style.bg, color: style.text }}
-    >
-      {role}
-    </span>
-  );
-}
-
-function StatusBadge({ status }: { status: keyof typeof statusStyles }) {
-  const style = statusStyles[status];
-
-  return (
-    <span
-      className="inline-flex min-w-[92px] items-center justify-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold"
-      style={{ backgroundColor: style.bg, color: style.text }}
-    >
-      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
-      {status}
-    </span>
-  );
-}
-
-function TeamMemberRow({ member }: { member: (typeof members)[number] }) {
-  return (
-    <div className="grid gap-4 border-t border-[#EDF2EF] bg-white px-5 py-4 md:grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] md:items-center">
-      <div className="flex min-w-0 items-center gap-4">
-        <div
-          className="h-11 w-11 shrink-0 rounded-full bg-cover bg-center shadow-[0_6px_14px_rgba(40,92,67,0.12)]"
-          style={{ backgroundImage: `url(${member.avatar})` }}
-        />
-        <div className="min-w-0">
-          <p className="truncate text-base font-bold leading-tight text-[#173D2C]">{member.name}</p>
-          <p className="mt-1 truncate text-sm font-medium text-[#7A8A80]">{member.email}</p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-3 md:block">
-        <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#8CA096] md:hidden">Rol</span>
-        <RoleBadge role={member.role} />
-      </div>
-
-      <div className="flex items-center justify-between gap-3 md:block">
-        <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#8CA096] md:hidden">Estado</span>
-        <StatusBadge status={member.status} />
-      </div>
-
-      <div className="flex items-center justify-end gap-4 text-[#7A8A80]">
-        <button
-          aria-label={`Editar ${member.name}`}
-          className="rounded-full p-1.5 transition hover:bg-[#EAF6EF] hover:text-[#285C43]"
-          type="button"
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          exit={{ opacity: 0 }}
+          initial={{ opacity: 0 }}
+          onClick={onClose}
         >
-          <Edit3 className="h-5 w-5" />
-        </button>
-        <button
-          aria-label={`Eliminar ${member.name}`}
-          className="rounded-full p-1.5 transition hover:bg-[#FFE3D2] hover:text-[#B45B38]"
-          type="button"
-        >
-          <Trash2 className="h-5 w-5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function TeamMembersCard() {
-  return (
-    <SectionCard className="p-6 lg:p-7" index={2}>
-      <div className="mb-8 flex flex-col justify-between gap-5 xl:flex-row xl:items-start">
-        <CardTitle
-          icon={<UsersRound className="h-6 w-6" />}
-          subtitle="Personas con acceso al sistema."
-          title="Miembros del equipo"
-        />
-      </div>
-
-      <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <p className="text-sm font-medium text-[#7A8A80]">4 miembros · 3 activos</p>
-        <button
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2F7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
-          onClick={() => undefined}
-          type="button"
-        >
-          <Plus className="h-4 w-4" />
-          Invitar miembro
-        </button>
-      </div>
-
-      <div className="overflow-hidden rounded-[18px] border border-[#EDF2EF]">
-        <div className="hidden grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] bg-[#F3F8F5] px-5 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#8CA096] md:grid">
-          <span>Miembro</span>
-          <span>Rol</span>
-          <span>Estado</span>
-          <span className="text-right">Acciones</span>
-        </div>
-        {members.map((member) => (
-          <TeamMemberRow key={member.email} member={member} />
-        ))}
-      </div>
-    </SectionCard>
-  );
-}
-
-function RolePermissionItem({
-  role,
-  count,
-  dot,
-  permissions: rolePermissions,
-}: {
-  role: string;
-  count: number;
-  dot: string;
-  permissions: string[];
-}) {
-  return (
-    <div className="rounded-[18px] border border-[#EDF2EF] bg-white p-5 shadow-[0_5px_18px_rgba(40,92,67,0.025)]">
-      <div className="mb-3 flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: dot }} />
-          <p className="truncate text-base font-bold text-[#173D2C]">{role}</p>
-        </div>
-        <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-[#E7F4EC] px-2 text-sm font-bold text-[#2F7D57]">
-          {count}
-        </span>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {rolePermissions.map((permission) => (
-          <span
-            className="rounded-full border border-[#DDEBE3] bg-white px-3 py-1 text-xs font-bold text-[#6F8076]"
-            key={permission}
+          <motion.form
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-xl"
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={handleSubmit}
           >
-            {permission}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-[#173D2C]">Nuevo usuario</h2>
+              <button onClick={onClose} type="button" className="rounded-full p-1 text-[#A9CDBB] hover:bg-[#F3F4F6]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-function RolePermissionsCard() {
-  return (
-    <SectionCard className="p-6 lg:p-7" index={3}>
-      <CardTitle
-        icon={<ShieldCheck className="h-6 w-6" />}
-        subtitle="Define qué puede hacer cada tipo de usuario."
-        title="Roles y permisos"
-      />
+            {error && (
+              <p className="mb-4 rounded-[12px] bg-[#FFE8D8] p-3 text-sm text-[#B45B38]">{error}</p>
+            )}
 
-      <div className="space-y-4">
-        {permissions.map((item) => (
-          <RolePermissionItem
-            count={item.count}
-            dot={item.dot}
-            key={item.role}
-            permissions={item.permissions}
-            role={item.role}
-          />
-        ))}
-      </div>
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-[#173D2C]">
+                  <UserRound className="h-4 w-4 text-[#5FA37D]" />
+                  Nombre completo
+                </label>
+                <input
+                  className="w-full rounded-[12px] border border-[#DDEBE3] px-4 py-2.5 text-sm text-[#173D2C] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#285C43]/10"
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Ej: Juan Pérez"
+                  required
+                  value={form.name}
+                />
+              </div>
+              <div>
+                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-[#173D2C]">
+                  <Mail className="h-4 w-4 text-[#5FA37D]" />
+                  Correo electrónico
+                </label>
+                <input
+                  className="w-full rounded-[12px] border border-[#DDEBE3] px-4 py-2.5 text-sm text-[#173D2C] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#285C43]/10"
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="ejemplo@correo.com"
+                  required
+                  type="email"
+                  value={form.email}
+                />
+              </div>
+              <div>
+                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-[#173D2C]">
+                  <KeyRound className="h-4 w-4 text-[#5FA37D]" />
+                  Contraseña
+                </label>
+                <input
+                  className="w-full rounded-[12px] border border-[#DDEBE3] px-4 py-2.5 text-sm text-[#173D2C] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#285C43]/10"
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  minLength={6}
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                  type="password"
+                  value={form.password}
+                />
+              </div>
+              <div>
+                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-[#173D2C]">
+                  <ShieldCheck className="h-4 w-4 text-[#5FA37D]" />
+                  Rol
+                </label>
+                <select
+                  className="w-full rounded-[12px] border border-[#DDEBE3] px-4 py-2.5 text-sm text-[#173D2C] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#285C43]/10"
+                  onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  value={form.role}
+                >
+                  <option value="ADMIN">Administrador</option>
+                  <option value="MANAGER">Gerente</option>
+                  <option value="COLLECTOR">Cobrador</option>
+                  <option value="VIEWER">Solo vista</option>
+                </select>
+              </div>
+            </div>
 
-      <button
-        className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-[16px] border border-dashed border-[#B8EBC9] bg-[#F7FCF9] text-base font-bold text-[#2F7D57] transition hover:bg-[#EAF6EF]"
-        onClick={() => undefined}
-        type="button"
-      >
-        <Plus className="h-5 w-5" />
-        Crear rol
-      </button>
-    </SectionCard>
+            <div className="mt-6 flex gap-3">
+              <button
+                className="flex-1 rounded-full bg-[#F3F4F6] py-2.5 text-sm font-bold text-[#7E9086] transition hover:bg-[#E7F4EC]"
+                onClick={onClose}
+                type="button"
+              >
+                Cancelar
+              </button>
+              <button
+                className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
+                  saving ? 'bg-[#A9CDBB]' : 'bg-[#285C43] shadow-[0_8px_16px_rgba(40,92,67,0.22)] hover:-translate-y-0.5'
+                }`}
+                disabled={saving}
+                type="submit"
+              >
+                {saving ? 'Creando...' : 'Crear usuario'}
+              </button>
+            </div>
+          </motion.form>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
 function SettingsUsersRolesTab() {
+  const { user } = useAuth();
+  const [users, setUsers] = useState<UserItem[]>([]);
+  const [showCreate, setShowCreate] = useState(false);
+  const isAdmin = user?.role === 'ADMIN';
+
+  function load() {
+    getUsers().then(setUsers);
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function handleToggle(id: string) {
+    await toggleActiveUser(id);
+    load();
+  }
+
   return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}
-      className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]"
+      className="mx-auto max-w-3xl"
       initial={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
     >
-      <TeamMembersCard />
-      <RolePermissionsCard />
+      <CreateUserModal open={showCreate} onClose={() => setShowCreate(false)} onCreated={load} />
+
+      <SectionCard className="p-6 lg:p-7" index={2}>
+        <div className="mb-8 flex flex-col justify-between gap-5 xl:flex-row xl:items-start">
+          <CardTitle
+            icon={<UsersRound className="h-6 w-6" />}
+            subtitle="Personas con acceso al sistema."
+            title="Usuarios del sistema"
+          />
+        </div>
+
+        <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <p className="text-sm font-medium text-[#7A8A80]">{users.length} usuario(s)</p>
+          {isAdmin && (
+            <button
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2F7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
+              onClick={() => setShowCreate(true)}
+              type="button"
+            >
+              <Plus className="h-4 w-4" />
+              Nuevo usuario
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          {users.length === 0 && (
+            <p className="py-12 text-center text-sm font-medium text-[#A9CDBB]">No hay usuarios registrados</p>
+          )}
+          {users.map((u) => (
+            <div
+              key={u.id}
+              className="flex items-center gap-4 rounded-[16px] border border-[#DDEBE3] bg-white p-4 transition hover:shadow-[0_8px_20px_rgba(40,92,67,0.06)]"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#E7F4EC] text-[#5FA37D]">
+                <UserRound className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-bold text-[#173D2C]">{u.name}</p>
+                  <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${roleColors[u.role] ?? roleColors.VIEWER}`}>
+                    {u.role}
+                  </span>
+                  {!u.active && (
+                    <span className="rounded-full bg-[#FFE8D8] px-2.5 py-0.5 text-[11px] font-bold text-[#B45B38]">
+                      Inactivo
+                    </span>
+                  )}
+                </div>
+                <p className="mt-0.5 text-xs text-[#A9CDBB]">{u.email}</p>
+              </div>
+              {isAdmin && (
+                <button
+                  className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
+                    u.active
+                      ? 'text-[#A9CDBB] hover:bg-[#FFE8D8] hover:text-[#C96F4A]'
+                      : 'text-[#5FA37D] hover:bg-[#E7F4EC]'
+                  }`}
+                  onClick={() => handleToggle(u.id)}
+                  title={u.active ? 'Desactivar usuario' : 'Activar usuario'}
+                  type="button"
+                >
+                  {u.active ? <ShieldX className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </SectionCard>
     </motion.div>
   );
 }
