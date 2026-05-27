@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
@@ -35,6 +36,12 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
+import {
+  getDashboard,
+  getPortfolio,
+  getAudit,
+} from '@/lib/api/dashboard';
+import type { DashboardData, PortfolioGroup, AuditEntry } from '@/lib/api/dashboard';
 
 const monthlyCollections = [
   { month: 'Feb', cobrado: 42, esperado: 48 },
@@ -47,13 +54,6 @@ const monthlyCollections = [
   { month: 'Sep', cobrado: 90, esperado: 82 },
 ];
 
-const portfolioStatus = [
-  { name: 'Al día', value: 68, color: '#7CC99B' },
-  { name: 'Próximos', value: 18, color: '#A9D9C6' },
-  { name: 'Retrasados', value: 9, color: '#F7C49E' },
-  { name: 'Vencidos', value: 5, color: '#A9D8F2' },
-];
-
 const weeklyMovement = [
   { day: 'Lun', nuevos: 9, cerrados: 3 },
   { day: 'Mar', nuevos: 15, cerrados: 6 },
@@ -62,88 +62,6 @@ const weeklyMovement = [
   { day: 'Vie', nuevos: 24, cerrados: 12 },
   { day: 'Sáb', nuevos: 12, cerrados: 3 },
   { day: 'Dom', nuevos: 6, cerrados: 0 },
-];
-
-const metrics = [
-  {
-    title: 'PRÉSTAMOS ACTIVOS',
-    value: '248',
-    note: 'vs mes anterior',
-    badge: '+12',
-    trend: 'up',
-    icon: BriefcaseBusiness,
-    iconBg: '#E7F4EC',
-    iconColor: '#5FA37D',
-  },
-  {
-    title: 'CLIENTES REGISTRADOS',
-    value: '586',
-    note: 'este mes',
-    badge: '+24',
-    trend: 'up',
-    icon: Users,
-    iconBg: '#FFE8D8',
-    iconColor: '#C96F4A',
-  },
-  {
-    title: 'COBRADO HOY',
-    value: 'RD$48,520',
-    note: 'vs ayer',
-    badge: '+8.2%',
-    trend: 'up',
-    icon: DollarSign,
-    iconBg: '#FFF2B8',
-    iconColor: '#A98219',
-  },
-  {
-    title: 'SALDO CARTERA',
-    value: 'RD$1.24M',
-    note: 'vs mes anterior',
-    badge: '-2.1%',
-    trend: 'down',
-    icon: Wallet,
-    iconBg: '#CFE4FF',
-    iconColor: '#4E7CAD',
-  },
-];
-
-const alerts = [
-  {
-    title: '12 préstamos vencidos',
-    detail: 'RD$184,500 en mora total',
-    action: 'Ver lista →',
-    icon: AlertTriangle,
-    bg: '#FFF7EF',
-    border: '#F7D6BD',
-    text: '#C96F4A',
-  },
-  {
-    title: '8 cobros para hoy',
-    detail: 'RD$28,400 esperados',
-    action: 'Ver agenda →',
-    icon: Clock3,
-    bg: '#FFFBEA',
-    border: '#F7E7AE',
-    text: '#A98219',
-  },
-  {
-    title: '5 solicitudes pendientes',
-    detail: 'Esperan aprobación',
-    action: 'Revisar →',
-    icon: ShieldCheck,
-    bg: '#F3FAF6',
-    border: '#DDEBE3',
-    text: '#5FA37D',
-  },
-];
-
-const auditRows = [
-  { name: 'María González', action: 'Aprobó préstamo', ref: 'PRES-2024-0142', amount: 'RD$45,000', time: 'Hace 5 min', icon: CheckCircle2, bg: '#E7F4EC', color: '#5FA37D' },
-  { name: 'Carlos Reyes', action: 'Registró cobro', ref: 'Cliente #387', amount: 'RD$2,800', time: 'Hace 18 min', icon: DollarSign, bg: '#FFF2B8', color: '#A98219' },
-  { name: 'Administrador', action: 'Modificó cliente', ref: 'Juan Pérez', amount: '', time: 'Hace 42 min', icon: Edit3, bg: '#DBEAFE', color: '#4E7CAD' },
-  { name: 'Laura Méndez', action: 'Rechazó solicitud', ref: 'PRES-2024-0141', amount: 'RD$120,000', time: 'Hace 1 h', icon: AlertTriangle, bg: '#FFE8D8', color: '#C96F4A' },
-  { name: 'Carlos Reyes', action: 'Generó reporte', ref: 'Cartera mensual', amount: '', time: 'Hace 2 h', icon: FileText, bg: '#E9DDFB', color: '#8A63C7' },
-  { name: 'María González', action: 'Creó cliente', ref: 'Ana Rodríguez', amount: '', time: 'Hace 3 h', icon: UserPlus, bg: '#E7F4EC', color: '#5FA37D' },
 ];
 
 const upcomingPayments = [
@@ -206,7 +124,101 @@ function SectionHeader({
   );
 }
 
+const today = new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' });
+
+function formatCurrency(n: number): string {
+  return `RD$${n.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatCompact(n: number): string {
+  if (n >= 1_000_000) return `RD$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `RD$${(n / 1_000).toFixed(0)}K`;
+  return formatCurrency(n);
+}
+
+const statusConfig: Record<string, { label: string; color: string }> = {
+  ACTIVE: { label: 'Al día', color: '#7CC99B' },
+  PAID: { label: 'Pagados', color: '#A9D9C6' },
+  OVERDUE: { label: 'Vencidos', color: '#F7C49E' },
+  RESTRUCTURED: { label: 'Reestructurados', color: '#A9D8F2' },
+  WRITTEN_OFF: { label: 'Castigados', color: '#E0E0E0' },
+};
+
 export function DashboardHome() {
+  const [dash, setDash] = useState<DashboardData | null>(null);
+  const [portfolio, setPortfolio] = useState<PortfolioGroup[]>([]);
+  const [audit, setAudit] = useState<AuditEntry[]>([]);
+
+  useEffect(() => {
+    getDashboard().then(setDash);
+    getPortfolio().then(setPortfolio);
+    getAudit().then((rows) => setAudit(rows.slice(0, 6)));
+  }, []);
+
+  const activeLoans = dash?.activeLoans ?? 0;
+  const totalClients = dash?.totalClients ?? 0;
+  const collectionsToday = dash?.collectionsToday ?? 0;
+  const portfolioBalance = dash?.portfolioBalance ?? 0;
+  const overdueLoans = dash?.overdueLoans ?? 0;
+
+  const metricCards = [
+    { title: 'PRÉSTAMOS ACTIVOS', value: String(activeLoans), note: 'en cartera actual', badge: '', trend: 'up' as const, icon: BriefcaseBusiness, iconBg: '#E7F4EC', iconColor: '#5FA37D' },
+    { title: 'CLIENTES REGISTRADOS', value: String(totalClients), note: 'clientes activos', badge: '', trend: 'up' as const, icon: Users, iconBg: '#FFE8D8', iconColor: '#C96F4A' },
+    { title: 'COBRADO HOY', value: formatCurrency(collectionsToday), note: 'pagos registrados hoy', badge: '', trend: 'up' as const, icon: DollarSign, iconBg: '#FFF2B8', iconColor: '#A98219' },
+    { title: 'SALDO CARTERA', value: formatCompact(portfolioBalance), note: 'balance total pendiente', badge: '', trend: 'up' as const, icon: Wallet, iconBg: '#CFE4FF', iconColor: '#4E7CAD' },
+  ];
+
+  const portfolioPie = portfolio.length > 0
+    ? portfolio.map((g) => ({
+        name: statusConfig[g.status]?.label ?? g.status,
+        value: g.count,
+        color: statusConfig[g.status]?.color ?? '#ccc',
+      }))
+    : [{ name: 'Sin datos', value: 1, color: '#E0E0E0' }];
+
+  const portfolioTotal = portfolioPie.reduce((s, e) => s + e.value, 0);
+
+  const alerts = [
+    overdueLoans > 0 && {
+      title: `${overdueLoans} préstamos vencidos`,
+      detail: 'Requieren atención inmediata',
+      action: 'Ver lista →',
+      icon: AlertTriangle,
+      bg: '#FFF7EF',
+      border: '#F7D6BD',
+      text: '#C96F4A',
+    },
+    collectionsToday > 0 && {
+      title: `${formatCurrency(collectionsToday)} cobrados hoy`,
+      detail: 'Pagos registrados el día de hoy',
+      action: 'Ver cobros →',
+      icon: Clock3,
+      bg: '#FFFBEA',
+      border: '#F7E7AE',
+      text: '#A98219',
+    },
+    {
+      title: 'Sistema operativo',
+      detail: 'Todo funcionando correctamente',
+      action: '',
+      icon: ShieldCheck,
+      bg: '#F3FAF6',
+      border: '#DDEBE3',
+      text: '#5FA37D',
+    },
+  ].filter(Boolean) as Array<{ title: string; detail: string; action: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; bg: string; border: string; text: string }>;
+
+  const auditRows = audit.map((entry) => ({
+    name: entry.performedByName ?? 'Sistema',
+    action: entry.action,
+    ref: entry.entity,
+    amount: entry.details ?? '',
+    time: timeAgo(entry.createdAt),
+    icon: actionIcon(entry.action),
+    bg: actionBg(entry.action),
+    color: '#5FA37D',
+  }));
+
   return (
     <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
       <div className="mb-5 flex flex-col items-start justify-between gap-4 2xl:flex-row 2xl:items-end">
@@ -216,7 +228,7 @@ export function DashboardHome() {
               <span className="h-2 w-2 rounded-full bg-[#5FA37D]" />
               En línea
             </span>
-            <span className="text-sm text-[#A9CDBB]">lunes, 25 de mayo</span>
+            <span className="text-sm text-[#A9CDBB]">{today}</span>
           </div>
           <h1 className="text-[28px] font-bold leading-tight text-[#173D2C]">
             Hola, Administrador 👋
@@ -238,9 +250,9 @@ export function DashboardHome() {
       </div>
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-4">
-        {metrics.map((metric, index) => {
+        {metricCards.map((metric, index) => {
           const Icon = metric.icon;
-          const Trend = metric.trend === 'up' ? TrendingUp : TrendingDown;
+          const Trend = TrendingUp;
 
           return (
             <Card key={metric.title} className="min-h-[148px] p-5" index={index}>
@@ -251,21 +263,15 @@ export function DashboardHome() {
                 >
                   <Icon className="h-5 w-5" strokeWidth={2} />
                 </div>
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
-                    metric.trend === 'up'
-                      ? 'bg-[#E7F4EC] text-[#5FA37D]'
-                      : 'bg-[#FFE8D8] text-[#C96F4A]'
-                  }`}
-                >
-                  <Trend className="h-3.5 w-3.5" />
-                  {metric.badge}
-                </span>
+                {metric.badge && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#E7F4EC] px-2.5 py-1 text-xs font-bold text-[#5FA37D]">
+                    <Trend className="h-3.5 w-3.5" />
+                    {metric.badge}
+                  </span>
+                )}
               </div>
               <p className="text-xs font-bold uppercase tracking-wide text-[#7A8A80]">{metric.title}</p>
-              <p className="mt-1.5 text-[24px] font-bold leading-tight text-[#173D2C]">
-                {metric.value}
-              </p>
+              <p className="mt-1.5 text-[24px] font-bold leading-tight text-[#173D2C]">{metric.value}</p>
               <p className="mt-1.5 text-sm text-[#A9CDBB]">{metric.note}</p>
             </Card>
           );
@@ -274,24 +280,9 @@ export function DashboardHome() {
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
         <Card className="p-6" index={4}>
-          <SectionHeader
-            title="Cobros mensuales"
-            subtitle="Ingresos vs proyección · últimos 9 meses"
-            right={
-              <div className="flex items-center gap-3 pt-1">
-                <DotLegend color="#7CC99B" label="Cobrado" />
-                <DotLegend color="#B8E0CF" label="Esperado" />
-              </div>
-            }
-          />
+          <SectionHeader title="Cobros mensuales" subtitle="Ingresos vs proyección · últimos 9 meses" />
           <div className="h-[250px] min-w-0">
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-              minWidth={0}
-              minHeight={0}
-              initialDimension={{ width: 720, height: 250 }}
-            >
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 720, height: 250 }}>
               <AreaChart data={monthlyCollections} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="cobradoGradient" x1="0" x2="0" y1="0" y2="1">
@@ -300,40 +291,13 @@ export function DashboardHome() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid stroke="#DDEBE3" strokeDasharray="4 6" vertical={false} />
-                <XAxis
-                  dataKey="month"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#6F7280', fontSize: 13 }}
-                  dy={10}
-                />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6F7280', fontSize: 13 }} dy={10} />
                 <Tooltip
                   cursor={{ stroke: '#DDEBE3', strokeDasharray: '4 6' }}
-                  contentStyle={{
-                    border: '1px solid #DDEBE3',
-                    borderRadius: 16,
-                    boxShadow: '0 12px 28px rgba(40,92,67,0.08)',
-                  }}
+                  contentStyle={{ border: '1px solid #DDEBE3', borderRadius: 16, boxShadow: '0 12px 28px rgba(40,92,67,0.08)' }}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="cobrado"
-                  stroke="#7CC99B"
-                  strokeWidth={3}
-                  fill="url(#cobradoGradient)"
-                  isAnimationActive
-                  animationDuration={1400}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="esperado"
-                  stroke="#B8E0CF"
-                  strokeWidth={3}
-                  strokeDasharray="6 7"
-                  dot={false}
-                  isAnimationActive
-                  animationDuration={1300}
-                />
+                <Area type="monotone" dataKey="cobrado" stroke="#7CC99B" strokeWidth={3} fill="url(#cobradoGradient)" isAnimationActive animationDuration={1400} />
+                <Line type="monotone" dataKey="esperado" stroke="#B8E0CF" strokeWidth={3} strokeDasharray="6 7" dot={false} isAnimationActive animationDuration={1300} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -342,26 +306,10 @@ export function DashboardHome() {
         <Card className="p-6" index={5}>
           <SectionHeader title="Estado de cartera" subtitle="Distribución por estatus" />
           <div className="relative mx-auto h-[184px] min-w-0 max-w-[196px]">
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-              minWidth={0}
-              minHeight={0}
-              initialDimension={{ width: 196, height: 184 }}
-            >
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 196, height: 184 }}>
               <PieChart>
-                <Pie
-                  data={portfolioStatus}
-                  dataKey="value"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={2}
-                  startAngle={0}
-                  endAngle={360}
-                  isAnimationActive
-                  animationDuration={1200}
-                >
-                  {portfolioStatus.map((entry) => (
+                <Pie data={portfolioPie} dataKey="value" innerRadius={50} outerRadius={80} paddingAngle={2} startAngle={0} endAngle={360} isAnimationActive animationDuration={1200}>
+                  {portfolioPie.map((entry) => (
                     <Cell key={entry.name} fill={entry.color} stroke="#FFFFFF" strokeWidth={4} />
                   ))}
                 </Pie>
@@ -369,17 +317,17 @@ export function DashboardHome() {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-sm text-[#A9CDBB]">Total</span>
-              <span className="text-[24px] font-bold text-[#173D2C]">100%</span>
+              <span className="text-[24px] font-bold text-[#173D2C]">{portfolioTotal}</span>
             </div>
           </div>
           <div className="mt-3 space-y-2">
-            {portfolioStatus.map((entry) => (
+            {portfolioPie.map((entry) => (
               <div key={entry.name} className="flex items-center justify-between text-sm font-semibold text-[#5FA37D]">
                 <span className="flex items-center gap-2.5">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
                   {entry.name}
                 </span>
-                <span className="font-bold text-[#173D2C]">{entry.value}%</span>
+                <span className="font-bold text-[#173D2C]">{entry.value}</span>
               </div>
             ))}
           </div>
@@ -388,37 +336,13 @@ export function DashboardHome() {
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
         <Card className="p-6" index={6}>
-          <SectionHeader
-            title="Movimiento semanal"
-            subtitle="Préstamos abiertos vs cerrados"
-            right={
-              <div className="flex items-center gap-3 pt-1">
-                <DotLegend color="#7CC99B" label="Nuevos" />
-                <DotLegend color="#F7B17E" label="Cerrados" />
-              </div>
-            }
-          />
+          <SectionHeader title="Movimiento semanal" subtitle="Préstamos abiertos vs cerrados" />
           <div className="h-[230px] min-w-0">
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-              minWidth={0}
-              minHeight={0}
-              initialDimension={{ width: 720, height: 230 }}
-            >
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 720, height: 230 }}>
               <BarChart data={weeklyMovement} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid stroke="#DDEBE3" strokeDasharray="4 6" vertical={false} />
-                <XAxis
-                  dataKey="day"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#6F7280', fontSize: 13 }}
-                  dy={10}
-                />
-                <Tooltip
-                  cursor={{ fill: 'rgba(231,244,236,0.45)' }}
-                  contentStyle={{ border: '1px solid #DDEBE3', borderRadius: 16 }}
-                />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#6F7280', fontSize: 13 }} dy={10} />
+                <Tooltip cursor={{ fill: 'rgba(231,244,236,0.45)' }} contentStyle={{ border: '1px solid #DDEBE3', borderRadius: 16 }} />
                 <Bar dataKey="nuevos" fill="#7CC99B" radius={[7, 7, 0, 0]} barSize={34} animationDuration={1100} />
                 <Bar dataKey="cerrados" fill="#F7C49E" radius={[7, 7, 0, 0]} barSize={34} animationDuration={1200} />
               </BarChart>
@@ -430,28 +354,19 @@ export function DashboardHome() {
           <SectionHeader
             title="Alertas"
             subtitle="Requieren tu atención"
-            right={
-              <span className="rounded-full bg-[#FFE8D8] px-2.5 py-1 text-sm font-bold text-[#C96F4A]">
-                3
-              </span>
-            }
+            right={<span className="rounded-full bg-[#FFE8D8] px-2.5 py-1 text-sm font-bold text-[#C96F4A]">{alerts.length}</span>}
           />
           <div className="space-y-3">
             {alerts.map((alert) => {
               const Icon = alert.icon;
-
               return (
-                <div
-                  key={alert.title}
-                  className="rounded-[16px] border p-3.5"
-                  style={{ backgroundColor: alert.bg, borderColor: alert.border }}
-                >
+                <div key={alert.title} className="rounded-[16px] border p-3.5" style={{ backgroundColor: alert.bg, borderColor: alert.border }}>
                   <div className="flex items-start gap-4">
                     <Icon className="mt-0.5 h-4 w-4 shrink-0" style={{ color: alert.text }} />
                     <div>
                       <p className="text-sm font-bold" style={{ color: alert.text }}>{alert.title}</p>
                       <p className="mt-1 text-xs text-[#A9CDBB]">{alert.detail}</p>
-                      <p className="mt-1 text-xs font-bold" style={{ color: alert.text }}>{alert.action}</p>
+                      {alert.action && <p className="mt-1 text-xs font-bold" style={{ color: alert.text }}>{alert.action}</p>}
                     </div>
                   </div>
                 </div>
@@ -463,24 +378,13 @@ export function DashboardHome() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
         <Card className="p-6" index={8}>
-          <SectionHeader
-            title="Auditoría reciente"
-            subtitle="Últimas acciones registradas en el sistema"
-            right={<button className="pt-1.5 text-sm font-bold text-[#5FA37D]">Ver historial completo</button>}
-          />
+          <SectionHeader title="Auditoría reciente" subtitle="Últimas acciones registradas en el sistema" />
           <div>
-            {auditRows.map((row, index) => {
+            {auditRows.length > 0 ? auditRows.map((row, index) => {
               const Icon = row.icon;
-
               return (
-                <div
-                  key={`${row.name}-${row.time}`}
-                  className={`flex items-center gap-3.5 py-3.5 ${index !== auditRows.length - 1 ? 'border-b border-[#EDF2EF]' : ''}`}
-                >
-                  <div
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                    style={{ backgroundColor: row.bg, color: row.color }}
-                  >
+                <div key={`${row.name}-${row.time}`} className={`flex items-center gap-3.5 py-3.5 ${index !== auditRows.length - 1 ? 'border-b border-[#EDF2EF]' : ''}`}>
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: row.bg, color: row.color }}>
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -489,16 +393,16 @@ export function DashboardHome() {
                       <span className="text-sm text-[#A9CDBB]">{row.action}</span>
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className="rounded-lg border border-[#DDEBE3] bg-[#F3FAF6] px-2.5 py-0.5 font-mono text-xs font-bold text-[#5FA37D]">
-                        {row.ref}
-                      </span>
+                      <span className="rounded-lg border border-[#DDEBE3] bg-[#F3FAF6] px-2.5 py-0.5 font-mono text-xs font-bold text-[#5FA37D]">{row.ref}</span>
                       {row.amount && <span className="text-sm font-bold text-[#173D2C]">{row.amount}</span>}
                     </div>
                   </div>
                   <span className="shrink-0 text-sm text-[#A9CDBB]">{row.time}</span>
                 </div>
               );
-            })}
+            }) : (
+              <p className="py-6 text-center text-sm text-[#A9CDBB]">No hay actividad reciente</p>
+            )}
           </div>
         </Card>
 
@@ -506,17 +410,8 @@ export function DashboardHome() {
           <SectionHeader title="Próximos cobros" subtitle="Agenda de los próximos días" />
           <div className="space-y-3">
             {upcomingPayments.map((payment) => (
-              <div
-                key={`${payment.name}-${payment.amount}`}
-                className={`flex items-center gap-3 rounded-[16px] border p-3 ${
-                  payment.warm ? 'border-[#F7D6BD] bg-[#FFF7EF]' : 'border-[#DDEBE3] bg-[#F3FAF6]'
-                }`}
-              >
-                <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-[11px] font-bold ${
-                    payment.warm ? 'bg-[#FFB174] text-white' : 'bg-white text-[#5FA37D]'
-                  }`}
-                >
+              <div key={`${payment.name}-${payment.amount}`} className={`flex items-center gap-3 rounded-[16px] border p-3 ${payment.warm ? 'border-[#F7D6BD] bg-[#FFF7EF]' : 'border-[#DDEBE3] bg-[#F3FAF6]'}`}>
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-[11px] font-bold ${payment.warm ? 'bg-[#FFB174] text-white' : 'bg-white text-[#5FA37D]'}`}>
                   {payment.tag}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -526,9 +421,7 @@ export function DashboardHome() {
                 <span className="shrink-0 text-sm font-bold text-[#173D2C]">{payment.amount}</span>
               </div>
             ))}
-            <button className="mt-3 h-11 w-full rounded-[16px] bg-[#F3FAF6] text-sm font-bold text-[#5FA37D]">
-              Ver agenda completa
-            </button>
+            <button className="mt-3 h-11 w-full rounded-[16px] bg-[#F3FAF6] text-sm font-bold text-[#5FA37D]">Ver agenda completa</button>
           </div>
         </Card>
       </div>
@@ -538,4 +431,34 @@ export function DashboardHome() {
       </button>
     </div>
   );
+}
+
+function timeAgo(dateString: string): string {
+  const diff = Date.now() - new Date(dateString).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Ahora';
+  if (mins < 60) return `Hace ${mins} min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `Hace ${hours} h`;
+  return `Hace ${Math.floor(hours / 24)} d`;
+}
+
+function actionIcon(action: string): React.ComponentType<{ className?: string }> {
+  const lower = action.toLowerCase();
+  if (lower.includes('aprob') || lower.includes('cre')) return CheckCircle2;
+  if (lower.includes('cobro') || lower.includes('pago')) return DollarSign;
+  if (lower.includes('modif') || lower.includes('edit')) return Edit3;
+  if (lower.includes('rech')) return AlertTriangle;
+  if (lower.includes('report') || lower.includes('gener')) return FileText;
+  return UserPlus;
+}
+
+function actionBg(action: string): string {
+  const lower = action.toLowerCase();
+  if (lower.includes('aprob') || lower.includes('cre')) return '#E7F4EC';
+  if (lower.includes('cobro') || lower.includes('pago')) return '#FFF2B8';
+  if (lower.includes('modif') || lower.includes('edit')) return '#DBEAFE';
+  if (lower.includes('rech')) return '#FFE8D8';
+  if (lower.includes('report') || lower.includes('gener')) return '#E9DDFB';
+  return '#E7F4EC';
 }

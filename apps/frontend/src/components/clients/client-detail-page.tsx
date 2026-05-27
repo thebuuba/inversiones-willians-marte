@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useEffect, type ReactNode, useState } from 'react';
 import { getClient } from '@/lib/api/clients';
-import type { ClientDetail, LoanSummary } from '@inversiones/shared';
+import { getDocuments, deleteDocument } from '@/lib/api/documents';
+import type { ClientDetail, LoanSummary, DocumentItem } from '@inversiones/shared';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -442,8 +443,16 @@ function DocumentCard({
   );
 }
 
-function ClientDocumentsTab({ documents: docs }: { documents: ClientDocument[] }) {
-  const [documents, setDocuments] = useState<ClientDocument[]>(docs);
+function ClientDocumentsTab({ clientId }: { clientId: string }) {
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+
+  useEffect(() => {
+    getDocuments(clientId).then(setDocuments);
+  }, [clientId]);
+
+  function handleDelete(id: string) {
+    deleteDocument(id).then(() => setDocuments((prev) => prev.filter((d) => d.id !== id)));
+  }
 
   return (
     <section>
@@ -462,12 +471,19 @@ function ClientDocumentsTab({ documents: docs }: { documents: ClientDocument[] }
         {documents.length === 0 ? (
           <p className="py-10 text-center text-sm font-medium text-[#A9CDBB] lg:col-span-2">Sin documentos adjuntos.</p>
         ) : (
-          documents.map((document, index) => (
+          documents.map((doc, index) => (
             <DocumentCard
-              document={document}
+              key={doc.id}
+              document={{
+                title: doc.name,
+                category: doc.category,
+                size: doc.fileSize ? `${(doc.fileSize / 1024).toFixed(0)} KB` : '—',
+                date: new Date(doc.createdAt).toLocaleDateString('es-DO'),
+                tone: 'green',
+                icon: CreditCard,
+              }}
               index={index + 3}
-              key={document.title}
-              onDelete={() => setDocuments((current) => current.filter((item) => item.title !== document.title))}
+              onDelete={() => handleDelete(doc.id)}
             />
           ))
         )}
@@ -1013,7 +1029,7 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
         {activeTab === 'Préstamos' ? (
           <ClientLoansTab loans={clientData.loans} />
         ) : activeTab === 'Documentos' ? (
-          <ClientDocumentsTab documents={[]} />
+          <ClientDocumentsTab clientId={clientData.id} />
         ) : activeTab === 'Historial' ? (
           <ClientHistoryTab events={[]} />
         ) : activeTab === 'Notas' ? (

@@ -18,6 +18,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { MovementModal, type MovementFormValues } from './movement-modal';
+import { createPayment } from '@/lib/api/payments';
 
 type MovementType = 'in' | 'out';
 
@@ -478,9 +479,28 @@ export function CashPanel() {
   const [totals, setTotals] = useState<CashTotals>(initialTotals);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleCreateMovement = (values: MovementFormValues) => {
+  const handleCreateMovement = async (values: MovementFormValues) => {
     const amount = parseCurrency(values.amount);
     const isIncome = values.type === 'in';
+    const isLoanPayment = values.category === 'Pago de préstamo' && values.clientId && values.loanId;
+
+    if (isLoanPayment) {
+      try {
+        await createPayment({
+          loanId: values.loanId!,
+          clientId: values.clientId!,
+          amount,
+          paymentDate: new Date().toISOString(),
+          paymentMethod: values.method,
+          notes: values.description,
+        });
+      } catch {
+        return;
+      }
+      setIsModalOpen(false);
+      return;
+    }
+
     const nextCodeNumber = groups.reduce((max, group) => {
       return group.movements.reduce((movementMax, movement) => {
         const codeNumber = Number(movement.code.replace(/\D/g, '')) || 0;

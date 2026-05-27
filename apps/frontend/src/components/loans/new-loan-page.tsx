@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -12,32 +13,12 @@ import {
   Search,
   UserRound,
 } from 'lucide-react';
+import { getLoanProducts, type LoanProductItem } from '@/lib/api/loan-products';
+import { createLoan } from '@/lib/api/loans';
+import { getClients } from '@/lib/api/clients';
+import type { Client } from '@inversiones/shared';
 
 type WizardStep = 1 | 2 | 3;
-type LoanTypeId = 'french' | 'absolute' | 'open' | 'free';
-
-const loanTypes = [
-  {
-    id: 'french',
-    title: 'Sistema Francés',
-    description: 'Cuota fija con amortización creciente',
-  },
-  {
-    id: 'absolute',
-    title: 'Préstamo Absoluto',
-    description: 'Interés fijo sobre capital inicial',
-  },
-  {
-    id: 'open',
-    title: 'Plazo Abierto',
-    description: 'Sin fecha fija · cuota mínima mensual',
-  },
-  {
-    id: 'free',
-    title: 'Sin Intereses',
-    description: 'Capital dividido en cuotas iguales',
-  },
-] satisfies Array<{ id: LoanTypeId; title: string; description: string }>;
 
 const amortizationRows = [
   { number: '1', payment: 'RD$4,874.36', principal: 'RD$3,624.36', interest: 'RD$1,250.00', balance: 'RD$46,375.64' },
@@ -96,56 +77,40 @@ function LoanWizardStepper({ step }: { step: WizardStep }) {
   );
 }
 
-function ClientSearchInput() {
+function ClientSearchInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
   return (
-    <div className="flex h-[50px] items-center gap-3.5 rounded-[12px] border border-[#DDEBE3] bg-white px-5 shadow-[0_4px_12px_rgba(40,92,67,0.06)] transition focus-within:border-[#B8DCC5] focus-within:ring-2 focus-within:ring-[#EAF6EF]">
-      <Search className="h-5 w-5 shrink-0 text-[#A7B5AD]" />
+    <div className="relative mb-5">
+      <Search className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#A9CDBB]" />
       <input
-        className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-[#173D2C] outline-none placeholder:text-[#7A8A80]"
-        placeholder="Buscar por nombre, cédula o ID..."
+        className="h-[52px] w-full rounded-[16px] border border-[#DDEBE3] bg-[#F8FBF9] pl-14 pr-5 text-base font-medium text-[#173D2C] outline-none transition placeholder:text-[#A0AFA8] focus:border-[#285C43] focus:bg-white focus:shadow-[0_0_0_4px_rgba(95,163,125,0.12)]"
+        placeholder="Buscar cliente por nombre, cédula o teléfono…"
         type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
       />
     </div>
   );
 }
 
-function ClientSelectorCard({
-  selected,
-  onSelect,
-}: {
-  selected: boolean;
-  onSelect: () => void;
-}) {
+function ClientSelectorCard() {
   return (
-    <motion.button
-      className={`mt-5 flex min-h-[86px] w-full items-center gap-4 rounded-[18px] border px-5 text-left transition ${
-        selected
-          ? 'border-[#5FA37D] bg-[#EAF6EF] shadow-[0_10px_24px_rgba(95,163,125,0.1)]'
-          : 'border-[#EDF2EF] bg-white hover:-translate-y-0.5 hover:border-[#DDEBE3] hover:shadow-[0_10px_24px_rgba(40,92,67,0.045)]'
-      }`}
-      onClick={onSelect}
-      type="button"
-      whileTap={{ scale: 0.995 }}
-    >
-      <div
-        aria-label="María González Pérez"
-        className="h-12 w-12 shrink-0 rounded-full border-[3px] border-white bg-cover bg-center shadow-[0_7px_18px_rgba(40,92,67,0.14)]"
-        role="img"
-        style={{ backgroundImage: 'url(https://i.pravatar.cc/96?img=32)' }}
-      />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold leading-tight text-[#173D2C]">María González Pérez</p>
-        <p className="mt-1 text-sm font-medium text-[#7A8A80]">CL-0142 · 402-1234567-8</p>
+    <div className="w-full rounded-[16px] border border-dashed border-[#A9CDBB] bg-[#F7FBF9] p-5 text-left">
+      <div className="flex items-center gap-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-[#285C43] text-white">
+          <UserRound className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-[#173D2C]">Seleccionar cliente</p>
+          <p className="mt-1 text-sm text-[#7A8A80]">Escribe el nombre, cédula o teléfono arriba</p>
+        </div>
       </div>
-      <span className="shrink-0 rounded-full bg-[#E7F4EC] px-3 py-1.5 text-xs font-bold text-[#2F7654]">
-        2 activos
-      </span>
-      {selected && (
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#5FA37D] text-white shadow-[0_8px_18px_rgba(95,163,125,0.18)]">
-          <Check className="h-5 w-5" />
-        </span>
-      )}
-    </motion.button>
+    </div>
   );
 }
 
@@ -168,43 +133,42 @@ function LoanPreviewPlaceholder() {
   );
 }
 
-function SelectedClientPreview() {
+function SelectedClientPreview({ client }: { client: Client }) {
+  const fullName = `${client.firstName} ${client.lastName}`;
+
   return (
-    <motion.section
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      className="rounded-[22px] border border-[#B8EBC9] bg-[#F1FAF5] p-7 shadow-[0_8px_24px_rgba(40,92,67,0.025)]"
-      initial={{ opacity: 0, scale: 0.98, y: 12 }}
-      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+    <motion.aside
+      animate={{ opacity: 1, x: 0 }}
+      className="rounded-[22px] border border-[#DDEBE3] bg-white p-6 shadow-[0_8px_24px_rgba(40,92,67,0.035)] lg:p-8"
+      initial={{ opacity: 0, x: 18 }}
+      transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
     >
-      <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#6F8076]">CLIENTE SELECCIONADO</p>
+      <div className="mb-5 flex items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[#EAF6EF]">
+          <UserRound className="h-6 w-6 text-[#5FA37D]" />
+        </div>
+        <h2 className="text-sm font-bold uppercase tracking-[0.1em] text-[#7A8A80]">CLIENTE SELECCIONADO</h2>
+      </div>
 
-      <div className="mt-5 flex items-center gap-5">
-        <div
-          aria-label="María González Pérez"
-          className="h-[76px] w-[76px] shrink-0 rounded-[18px] border-[3px] border-white bg-cover bg-center shadow-[0_8px_20px_rgba(40,92,67,0.13)]"
-          role="img"
-          style={{ backgroundImage: 'url(https://i.pravatar.cc/96?img=32)' }}
-        />
-        <div className="min-w-0">
-          <h2 className="truncate text-[22px] font-bold leading-tight text-[#173D2C]">María González Pérez</h2>
-          <p className="mt-1 text-base font-medium text-[#7A8A80]">402-1234567-8</p>
-          <p className="mt-0.5 text-base font-medium text-[#7A8A80]">+1 (809) 555-0142</p>
+      <div className="flex items-center gap-5">
+        <div className="relative h-[70px] w-[70px] shrink-0">
+          <div className="flex h-full w-full items-center justify-center rounded-[18px] border-[3px] border-white bg-[#EAF6EF] shadow-[0_8px_18px_rgba(40,92,67,0.12)]">
+            <UserRound className="h-8 w-8 text-[#5FA37D]" />
+          </div>
+          <span className="absolute bottom-0 right-0 h-4 w-4 rounded-full border-[3px] border-white bg-[#5FA37D]" />
+        </div>
+        <div>
+          <p className="text-xl font-bold leading-tight text-[#173D2C]">{fullName}</p>
+          <p className="mt-1.5 text-sm font-medium text-[#7A8A80]">{client.identification ?? '—'}</p>
+          <p className="mt-0.5 text-sm font-medium text-[#7A8A80]">{client.phone ?? '—'}</p>
         </div>
       </div>
 
-      <div className="my-6 h-px bg-[#DDEBE3]" />
-
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#7A8A80]">PRÉSTAMOS ACTIVOS</p>
-          <p className="mt-4 text-[26px] font-bold leading-none text-[#173D2C]">2</p>
-        </div>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#7A8A80]">TOTAL PRESTADO</p>
-          <p className="mt-4 text-[26px] font-bold leading-none text-[#173D2C]">RD$185,000</p>
-        </div>
+      <div className="mt-5 flex items-center gap-2 rounded-[14px] bg-[#DDEBE3] px-4 py-2.5 text-xs font-bold text-[#5FA37D]">
+        <Check className="h-4 w-4" />
+        Cliente verificado
       </div>
-    </motion.section>
+    </motion.aside>
   );
 }
 
@@ -230,9 +194,20 @@ function NewLoanStepOne({
   selectedClient,
   onSelectClient,
 }: {
-  selectedClient: boolean;
-  onSelectClient: () => void;
+  selectedClient: Client | null;
+  onSelectClient: (client: Client) => void;
 }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<Client[]>([]);
+
+  useEffect(() => {
+    if (query.length < 2) { setResults([]); return; }
+    const timer = setTimeout(() => {
+      getClients(query).then(setResults);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   return (
     <div className="mt-9 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(400px,0.75fr)]">
       <motion.section
@@ -242,11 +217,30 @@ function NewLoanStepOne({
         transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
       >
         <h2 className="mb-6 text-lg font-bold text-[#173D2C]">Seleccionar cliente</h2>
-        <ClientSearchInput />
-        <ClientSelectorCard selected={selectedClient} onSelect={onSelectClient} />
+        <ClientSearchInput value={query} onChange={setQuery} />
+        {results.length > 0 && (
+          <div className="mb-4 space-y-2">
+            {results.map((client) => (
+              <button
+                key={client.id}
+                className={`w-full rounded-[14px] border p-4 text-left text-sm transition ${
+                  selectedClient?.id === client.id
+                    ? 'border-[#5FA37D] bg-[#EAF6EF]'
+                    : 'border-[#DDEBE3] bg-white hover:bg-[#F6FAF7]'
+                }`}
+                onClick={() => onSelectClient(client)}
+                type="button"
+              >
+                <p className="font-bold text-[#173D2C]">{client.firstName} {client.lastName}</p>
+                <p className="mt-1 text-[#777D7A]">{client.identification ?? '—'} · {client.phone ?? '—'}</p>
+              </button>
+            ))}
+          </div>
+        )}
+        <ClientSelectorCard />
       </motion.section>
 
-      {selectedClient ? <SelectedClientPreview /> : <LoanPreviewPlaceholder />}
+      {selectedClient ? <SelectedClientPreview client={selectedClient} /> : <LoanPreviewPlaceholder />}
     </div>
   );
 }
@@ -282,11 +276,13 @@ function LoanTypeOption({
 }
 
 function LoanTypeSelector({
-  selectedType,
-  onSelectType,
+  products,
+  selectedProduct,
+  onSelectProduct,
 }: {
-  selectedType: LoanTypeId;
-  onSelectType: (type: LoanTypeId) => void;
+  products: LoanProductItem[];
+  selectedProduct: LoanProductItem | null;
+  onSelectProduct: (product: LoanProductItem) => void;
 }) {
   return (
     <motion.section
@@ -295,15 +291,15 @@ function LoanTypeSelector({
       initial={{ opacity: 0, y: 14 }}
       transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
     >
-      <h2 className="mb-7 text-xl font-bold text-[#173D2C]">Tipo de préstamo</h2>
+      <h2 className="mb-7 text-xl font-bold text-[#173D2C]">Producto de préstamo</h2>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {loanTypes.map((type) => (
+        {products.map((product) => (
           <LoanTypeOption
-            active={selectedType === type.id}
-            description={type.description}
-            key={type.id}
-            onClick={() => onSelectType(type.id)}
-            title={type.title}
+            active={selectedProduct?.id === product.id}
+            description={`${product.interestRate}% · ${product.paymentFrequency === 'MONTHLY' ? 'Mensual' : product.paymentFrequency}`}
+            key={product.id}
+            onClick={() => onSelectProduct(product)}
+            title={product.name}
           />
         ))}
       </div>
@@ -370,18 +366,16 @@ function SelectInput({
 
 function LoanParametersForm({
   amount,
-  rate,
   term,
   onAmountChange,
-  onRateChange,
   onTermChange,
+  selectedProduct,
 }: {
   amount: string;
-  rate: string;
   term: string;
   onAmountChange: (value: string) => void;
-  onRateChange: (value: string) => void;
   onTermChange: (value: string) => void;
+  selectedProduct: LoanProductItem | null;
 }) {
   return (
     <motion.section
@@ -397,15 +391,13 @@ function LoanParametersForm({
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
             <span className="mb-2 block text-sm font-bold text-[#6F8076]">Tasa de interés</span>
-            <div className="grid grid-cols-[minmax(0,1fr)_145px] gap-3">
-              <TextInput label="" onChange={onRateChange} value={rate} />
-              <SelectInput options={['% mensual', '% anual']} value="% mensual" />
-            </div>
+            <TextInput label="" value={selectedProduct ? `${selectedProduct.interestRate}%` : '—'} onChange={() => {}} />
           </div>
           <div>
             <span className="mb-2 block text-sm font-bold text-[#6F8076]">Plazo</span>
             <div className="grid grid-cols-[minmax(0,1fr)_135px] gap-3">
               <TextInput label="" onChange={onTermChange} value={term} />
+              <SelectInput options={['meses']} value="meses" />
               <SelectInput options={['Meses', 'Semanas']} value="Meses" />
             </div>
           </div>
@@ -456,14 +448,14 @@ function LoanSummaryPanel({
   interest,
   total,
   term,
-  selectedType,
+  selectedProduct,
 }: {
   amount: number;
   payment: number;
   interest: number;
   total: number;
   term: number;
-  selectedType: (typeof loanTypes)[number];
+  selectedProduct: LoanProductItem | null;
 }) {
   const interestPercent = amount > 0 ? (interest / amount) * 100 : 0;
 
@@ -507,36 +499,40 @@ function LoanSummaryPanel({
         </div>
       </section>
 
-      <section className="rounded-[18px] border border-[#B8EBC9] bg-[#EAF6EF] p-5">
-        <div className="flex items-center gap-3">
-          <span className="h-3 w-3 shrink-0 rounded-full bg-[#5FA37D]" />
-          <p className="text-base font-bold text-[#2F7654]">{selectedType.title}</p>
-        </div>
-        <p className="mt-3 text-sm font-medium text-[#7A8A80]">{selectedType.description}</p>
-      </section>
+      {selectedProduct && (
+        <section className="rounded-[18px] border border-[#B8EBC9] bg-[#EAF6EF] p-5">
+          <div className="flex items-center gap-3">
+            <span className="h-3 w-3 shrink-0 rounded-full bg-[#5FA37D]" />
+            <p className="text-base font-bold text-[#2F7654]">{selectedProduct.name}</p>
+          </div>
+          <p className="mt-3 text-sm font-medium text-[#7A8A80]">
+            {selectedProduct.interestRate}% · {selectedProduct.paymentFrequency === 'MONTHLY' ? 'Mensual' : selectedProduct.paymentFrequency}
+          </p>
+        </section>
+      )}
     </div>
   );
 }
 
 function NewLoanStepTwo({
-  selectedType,
-  onSelectType,
+  selectedProduct,
+  onSelectProduct,
   amount,
-  rate,
   term,
   onAmountChange,
-  onRateChange,
   onTermChange,
+  products,
 }: {
-  selectedType: LoanTypeId;
-  onSelectType: (type: LoanTypeId) => void;
+  selectedProduct: LoanProductItem | null;
+  onSelectProduct: (product: LoanProductItem) => void;
   amount: string;
-  rate: string;
   term: string;
   onAmountChange: (value: string) => void;
-  onRateChange: (value: string) => void;
   onTermChange: (value: string) => void;
+  products: LoanProductItem[];
 }) {
+  const rate = selectedProduct ? String(selectedProduct.interestRate) : '0';
+
   const summary = useMemo(() => {
     const principal = parseNumber(amount);
     const monthlyRate = parseNumber(rate) / 100;
@@ -556,19 +552,18 @@ function NewLoanStepTwo({
     };
   }, [amount, rate, term]);
 
-  const currentType = loanTypes.find((type) => type.id === selectedType) ?? loanTypes[0];
+  const currentProduct = selectedProduct;
 
   return (
     <div className="mt-9 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(400px,0.75fr)]">
       <div className="space-y-8">
-        <LoanTypeSelector selectedType={selectedType} onSelectType={onSelectType} />
+        <LoanTypeSelector products={products} selectedProduct={selectedProduct} onSelectProduct={onSelectProduct} />
         <LoanParametersForm
           amount={amount}
           onAmountChange={onAmountChange}
-          onRateChange={onRateChange}
           onTermChange={onTermChange}
-          rate={rate}
           term={term}
+          selectedProduct={selectedProduct}
         />
       </div>
 
@@ -576,7 +571,7 @@ function NewLoanStepTwo({
         amount={summary.principal}
         interest={summary.interest}
         payment={summary.payment}
-        selectedType={currentType}
+        selectedProduct={currentProduct}
         term={summary.months}
         total={summary.total}
       />
@@ -622,8 +617,21 @@ function LoanSummaryCards() {
   );
 }
 
-function LoanClientSummary() {
-  const pills = ['Sistema Francés', 'Mensual', '2.5% mensual'];
+function LoanClientSummary({
+  client,
+  product,
+  amount,
+  term,
+}: {
+  client: Client;
+  product: LoanProductItem | null;
+  amount: string;
+  term: string;
+}) {
+  const fullName = `${client.firstName} ${client.lastName}`;
+  const freqLabel = product?.paymentFrequency === 'MONTHLY' ? 'Mensual' : product?.paymentFrequency ?? '';
+  const rateLabel = product ? `${product.interestRate}%` : '';
+  const pills = [product?.name ?? '', freqLabel, rateLabel].filter(Boolean);
 
   return (
     <motion.section
@@ -634,15 +642,12 @@ function LoanClientSummary() {
     >
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
-          <div
-            aria-label="María González Pérez"
-            className="h-14 w-14 shrink-0 rounded-full border-[3px] border-white bg-cover bg-center shadow-[0_7px_18px_rgba(40,92,67,0.14)]"
-            role="img"
-            style={{ backgroundImage: 'url(https://i.pravatar.cc/96?img=32)' }}
-          />
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-[3px] border-white bg-[#EAF6EF] shadow-[0_7px_18px_rgba(40,92,67,0.14)]">
+            <UserRound className="h-7 w-7 text-[#5FA37D]" />
+          </div>
           <div>
-            <p className="text-lg font-bold leading-tight text-[#173D2C]">María González Pérez</p>
-            <p className="mt-1 text-sm font-medium text-[#7A8A80]">CL-0142 · 402-1234567-8</p>
+            <p className="text-lg font-bold leading-tight text-[#173D2C]">{fullName}</p>
+            <p className="mt-1 text-sm font-medium text-[#7A8A80]">{client.identification ?? '—'}</p>
           </div>
         </div>
 
@@ -659,7 +664,6 @@ function LoanClientSummary() {
           ))}
         </div>
       </div>
-      <div className="mt-6 h-px bg-[#EDF2EF]" />
     </motion.section>
   );
 }
@@ -741,12 +745,22 @@ function AmortizationTableCard() {
   );
 }
 
-function NewLoanStepThree() {
+function NewLoanStepThree({
+  selectedClient,
+  selectedProduct,
+  amount,
+  term,
+}: {
+  selectedClient: Client | null;
+  selectedProduct: LoanProductItem | null;
+  amount: string;
+  term: string;
+}) {
   return (
     <>
       <LoanSummaryCards />
-      <LoanClientSummary />
-      <AmortizationTableCard />
+      {selectedClient && <LoanClientSummary client={selectedClient} product={selectedProduct} amount={amount} term={term} />}
+      <p className="mt-6 text-center text-sm font-medium text-[#A9CDBB]">La tabla de amortización se generará al crear el préstamo.</p>
     </>
   );
 }
@@ -788,17 +802,21 @@ function Header({ step }: { step: WizardStep }) {
 function WizardActions({
   step,
   selectedClient,
+  canContinue,
+  canConfirm,
+  saving,
   onBack,
   onConfirm,
   onContinue,
-  onShowAmortization,
 }: {
   step: WizardStep;
   selectedClient: boolean;
+  canContinue: boolean;
+  canConfirm: boolean;
+  saving: boolean;
   onBack: () => void;
   onConfirm: () => void;
   onContinue: () => void;
-  onShowAmortization: () => void;
 }) {
   if (step === 1) {
     return (
@@ -820,12 +838,13 @@ function WizardActions({
           Modificar parámetros
         </button>
         <button
-          className="inline-flex h-14 items-center justify-center gap-3 rounded-full bg-[#2F7654] px-9 text-sm font-bold text-white shadow-[0_14px_26px_rgba(47,118,84,0.24)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
+          className="inline-flex h-14 items-center justify-center gap-3 rounded-full bg-[#2F7654] px-9 text-sm font-bold text-white shadow-[0_14px_26px_rgba(47,118,84,0.24)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!canConfirm || saving}
           onClick={onConfirm}
           type="button"
         >
           <Check className="h-5 w-5" />
-          Confirmar y crear préstamo
+          {saving ? 'Creando...' : 'Confirmar y crear préstamo'}
         </button>
       </div>
     );
@@ -843,23 +862,45 @@ function WizardActions({
       </button>
       <button
         className="inline-flex h-14 items-center justify-center gap-3 rounded-full bg-[#2F7654] px-9 text-sm font-bold text-white shadow-[0_14px_26px_rgba(47,118,84,0.22)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
-        onClick={onShowAmortization}
+        onClick={onContinue}
         type="button"
       >
-        Ver tabla de amortización
-        <ChevronDown className="h-5 w-5" />
+        Revisar resumen
       </button>
     </div>
   );
 }
 
 export function NewLoanPage() {
+  const router = useRouter();
   const [step, setStep] = useState<WizardStep>(1);
-  const [selectedClient, setSelectedClient] = useState(false);
-  const [selectedType, setSelectedType] = useState<LoanTypeId>('french');
-  const [amount, setAmount] = useState('50000');
-  const [rate, setRate] = useState('2.5');
-  const [term, setTerm] = useState('12');
+  const [products, setProducts] = useState<LoanProductItem[]>([]);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<LoanProductItem | null>(null);
+  const [amount, setAmount] = useState('');
+  const [term, setTerm] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    getLoanProducts().then(setProducts);
+  }, []);
+
+  async function handleCreate() {
+    if (!selectedClient || !selectedProduct || !amount || !term) return;
+    setSaving(true);
+    try {
+      const loan = await createLoan({
+        clientId: selectedClient.id,
+        productId: selectedProduct.id,
+        principal: Number(amount),
+        term: Number(term),
+        startDate: new Date().toISOString(),
+      });
+      router.push(`/clientes/${selectedClient.id}`);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-[#F3F4F6] px-5 py-7 font-sans text-[#173D2C] lg:px-9 lg:py-8">
@@ -867,28 +908,37 @@ export function NewLoanPage() {
         <Header step={step} />
 
         {step === 1 ? (
-          <NewLoanStepOne selectedClient={selectedClient} onSelectClient={() => setSelectedClient(true)} />
+          <NewLoanStepOne
+            selectedClient={selectedClient}
+            onSelectClient={setSelectedClient}
+          />
         ) : step === 2 ? (
           <NewLoanStepTwo
             amount={amount}
             onAmountChange={setAmount}
-            onRateChange={setRate}
-            onSelectType={setSelectedType}
+            onSelectProduct={setSelectedProduct}
             onTermChange={setTerm}
-            rate={rate}
-            selectedType={selectedType}
+            products={products}
+            selectedProduct={selectedProduct}
             term={term}
           />
         ) : (
-          <NewLoanStepThree />
+          <NewLoanStepThree
+            selectedClient={selectedClient}
+            selectedProduct={selectedProduct}
+            amount={amount}
+            term={term}
+          />
         )}
 
         <WizardActions
           onBack={() => setStep(step === 3 ? 2 : 1)}
-          onConfirm={() => undefined}
-          onContinue={() => setStep(2)}
-          onShowAmortization={() => setStep(3)}
-          selectedClient={selectedClient}
+          onConfirm={handleCreate}
+          onContinue={() => setStep(step === 2 ? 3 : 2)}
+          selectedClient={!!selectedClient}
+          canContinue={!!selectedClient}
+          canConfirm={!!selectedClient && !!selectedProduct && !!amount && !!term}
+          saving={saving}
           step={step}
         />
       </div>

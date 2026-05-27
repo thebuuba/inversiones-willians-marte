@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -17,65 +17,15 @@ import {
   XCircle,
 } from 'lucide-react';
 import { NewRequestModal } from '@/components/requests/new-request-modal';
-import { RequestDetailDrawer, type RequestDetail } from '@/components/requests/request-detail-drawer';
+import { RequestDetailDrawer } from '@/components/requests/request-detail-drawer';
+import { getRequests, createRequest, approveRequest, rejectRequest } from '@/lib/api/requests';
+import type { LoanRequestItem, CreateRequestDto } from '@inversiones/shared';
 
-const stats = [
-  { label: 'TOTAL', value: '6', icon: Inbox, bg: '#B8DCC5', color: '#285C43' },
-  { label: 'PENDIENTES', value: '2', icon: Clock3, bg: '#FFF4C8', color: '#B89A22' },
-  { label: 'APROBADAS', value: '2', icon: CheckCircle2, bg: '#E4F0FF', color: '#5C82B7' },
-  { label: 'RECHAZADAS', value: '1', icon: XCircle, bg: '#FFE3D2', color: '#C96F4A' },
-];
-
-const requests = [
-  {
-    name: 'Carmen Reyes Polanco',
-    code: 'SOL-2041',
-    description:
-      'Solicito un préstamo para ampliar mi colmado familiar y comprar una nevera nueva. Tengo ingresos estables hace 4 años.',
-    status: 'Pendiente',
-    time: 'Hace 12 meses',
-    amount: 'RD$85,000',
-    avatar: 'https://i.pravatar.cc/96?img=32',
-    identification: '402-1234567-8',
-    phone: '+1 (809) 555-0142',
-    reference: 'Pedro Reyes — +...',
-    date: '24/5/2025',
-    receivedAt: 'Recibido el 24 de mayo de 2025',
-  },
-  {
-    name: 'Luis Martínez Cruz',
-    code: 'SOL-2040',
-    description:
-      'Necesito capital para reparación de mi vehículo de trabajo. Soy chofer de aplicaciones desde hace 2 años.',
-    status: 'En revisión',
-    time: 'Hace 12 meses',
-    amount: 'RD$32,000',
-    avatar: 'https://i.pravatar.cc/96?img=13',
-    identification: '001-9876543-2',
-    phone: '+1 (829) 432-1180',
-    reference: 'María Cruz (madre) — +...',
-    date: '24/5/2025',
-    receivedAt: 'Recibido el 24 de mayo de 2025',
-  },
-  {
-    name: 'Yulissa Encarnación',
-    code: 'SOL-2037',
-    description: 'Solicito préstamo para iniciar mi negocio de comida casera por encargo. Tengo cocina equipada.',
-    status: 'Pendiente',
-    time: 'Hace 12 meses',
-    amount: 'RD$25,000',
-    avatar: 'https://i.pravatar.cc/96?img=12',
-    identification: '402-5544332-1',
-    phone: '+1 (829) 555-2037',
-    reference: 'Ana Encarnación — +...',
-    date: '24/5/2025',
-    receivedAt: 'Recibido el 24 de mayo de 2025',
-  },
-];
-
-const statusStyles = {
-  Pendiente: { bg: '#FFF4C8', text: '#B89A22', dot: '#E2C64F' },
-  'En revisión': { bg: '#E4F0FF', text: '#5C82B7', dot: '#6EA8E8' },
+const statusMap: Record<string, { label: string; bg: string; text: string; dot: string }> = {
+  PENDING: { label: 'Pendiente', bg: '#FFF4C8', text: '#B89A22', dot: '#E2C64F' },
+  UNDER_REVIEW: { label: 'En revisión', bg: '#E4F0FF', text: '#5C82B7', dot: '#6EA8E8' },
+  APPROVED: { label: 'Aprobada', bg: '#E7F4EC', text: '#2F7654', dot: '#5FA37D' },
+  REJECTED: { label: 'Rechazada', bg: '#FFE8D8', text: '#C96F4A', dot: '#E6A07A' },
 };
 
 const fadeUp: Variants = {
@@ -101,8 +51,8 @@ function PanelCard({ children, className = '', index = 0 }: { children: ReactNod
   );
 }
 
-function StatusBadge({ status }: { status: keyof typeof statusStyles }) {
-  const style = statusStyles[status];
+function StatusBadge({ status }: { status: string }) {
+  const style = statusMap[status] ?? { label: status, bg: '#F3FAF6', text: '#5C6D63', dot: '#A9CDBB' };
 
   return (
     <span
@@ -110,14 +60,56 @@ function StatusBadge({ status }: { status: keyof typeof statusStyles }) {
       style={{ backgroundColor: style.bg, color: style.text }}
     >
       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
-      {status}
+      {style.label}
     </span>
   );
 }
 
+function timeAgo(dateString: string): string {
+  const diff = Date.now() - new Date(dateString).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Ahora';
+  if (mins < 60) return `Hace ${mins} min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `Hace ${hours} h`;
+  return `Hace ${Math.floor(hours / 24)} d`;
+}
+
 export function RequestsPanel() {
+  const [requests, setRequests] = useState<LoanRequestItem[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<RequestDetail | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<LoanRequestItem | null>(null);
+
+  useEffect(() => {
+    getRequests().then(setRequests);
+  }, []);
+
+  function refresh() {
+    getRequests().then(setRequests);
+    setSelectedRequest(null);
+  }
+
+  async function handleCreate(dto: CreateRequestDto) {
+    try {
+      await createRequest(dto);
+      refresh();
+      setModalOpen(false);
+    } catch {
+      /* silent */
+    }
+  }
+
+  const total = requests.length;
+  const pending = requests.filter((r) => r.status === 'PENDING').length;
+  const approved = requests.filter((r) => r.status === 'APPROVED').length;
+  const rejected = requests.filter((r) => r.status === 'REJECTED').length;
+
+  const stats = [
+    { label: 'TOTAL', value: String(total), icon: Inbox, bg: '#B8DCC5', color: '#285C43' },
+    { label: 'PENDIENTES', value: String(pending), icon: Clock3, bg: '#FFF4C8', color: '#B89A22' },
+    { label: 'APROBADAS', value: String(approved), icon: CheckCircle2, bg: '#E4F0FF', color: '#5C82B7' },
+    { label: 'RECHAZADAS', value: String(rejected), icon: XCircle, bg: '#FFE3D2', color: '#C96F4A' },
+  ];
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
@@ -150,13 +142,9 @@ export function RequestsPanel() {
       <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
-
           return (
             <PanelCard key={stat.label} className="min-h-[124px] p-5" index={index + 1}>
-              <div
-                className="mb-4 flex h-10 w-10 items-center justify-center rounded-[12px]"
-                style={{ backgroundColor: stat.bg, color: stat.color }}
-              >
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[12px]" style={{ backgroundColor: stat.bg, color: stat.color }}>
                 <Icon className="h-5 w-5" />
               </div>
               <p className="text-xs font-bold uppercase tracking-wide text-[#8CA096]">{stat.label}</p>
@@ -173,15 +161,12 @@ export function RequestsPanel() {
               <Inbox className="h-4 w-4 text-[#5FA37D]" />
               Activas
               <span className="flex h-6 min-w-6 items-center justify-center rounded-full border border-[#A9CDBB] bg-white px-1.5 text-xs text-[#5FA37D]">
-                3
+                {pending}
               </span>
             </button>
             <button className="flex h-10 items-center gap-2 rounded-[14px] px-3.5 text-sm font-bold text-[#5C6D63] transition hover:bg-[#F3FAF6]">
               <History className="h-4 w-4 text-[#8CA096]" />
               Historial
-              <span className="flex h-6 min-w-6 items-center justify-center rounded-full border border-[#DDEBE3] bg-white px-1.5 text-xs text-[#8CA096]">
-                3
-              </span>
             </button>
           </div>
 
@@ -205,9 +190,12 @@ export function RequestsPanel() {
       </PanelCard>
 
       <div className="space-y-3.5">
+        {requests.length === 0 && (
+          <p className="py-12 text-center text-sm font-medium text-[#A9CDBB]">No hay solicitudes registradas</p>
+        )}
         {requests.map((request, index) => (
           <motion.article
-            key={request.code}
+            key={request.id}
             variants={fadeUp}
             initial="hidden"
             animate="visible"
@@ -216,21 +204,23 @@ export function RequestsPanel() {
             whileHover={{ y: -3 }}
             className="flex min-h-[86px] cursor-pointer items-center gap-4 rounded-[18px] border border-[#EDF2EF] bg-white px-5 py-4 shadow-[0_7px_22px_rgba(40,92,67,0.03)] transition-shadow hover:shadow-[0_14px_32px_rgba(40,92,67,0.075)]"
           >
-            <div className="h-11 w-11 shrink-0 rounded-full bg-cover bg-center shadow-[0_6px_14px_rgba(40,92,67,0.12)]" style={{ backgroundImage: `url(${request.avatar})` }} />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E7F4EC] text-sm font-bold text-[#5FA37D]">
+              {request.firstName[0]}{request.lastName[0]}
+            </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-sm font-bold text-[#173D2C]">{request.name}</h2>
+                <h2 className="text-sm font-bold text-[#173D2C]">{request.firstName} {request.lastName}</h2>
                 <span className="text-[#A9CDBB]">·</span>
                 <span className="text-xs font-medium text-[#8CA096]">{request.code}</span>
               </div>
               <p className="mt-1.5 max-w-[920px] truncate text-xs font-medium text-[#7E9086]">{request.description}</p>
               <div className="mt-2 flex items-center gap-2.5">
-                <StatusBadge status={request.status as keyof typeof statusStyles} />
-                <span className="text-xs text-[#A9CDBB]">{request.time}</span>
+                <StatusBadge status={request.status} />
+                <span className="text-xs text-[#A9CDBB]">{timeAgo(request.createdAt)}</span>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-5">
-              <p className="text-base font-bold text-[#173D2C]">{request.amount}</p>
+              <p className="text-base font-bold text-[#173D2C]">RD${Number(request.amount).toLocaleString('es-DO')}</p>
               <ChevronRight className="h-4 w-4 text-[#A9CDBB]" />
             </div>
           </motion.article>
@@ -241,12 +231,12 @@ export function RequestsPanel() {
         <List className="h-6 w-6" strokeWidth={3} />
       </button>
 
-      <NewRequestModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <NewRequestModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleCreate} />
       <RequestDetailDrawer
         isOpen={Boolean(selectedRequest)}
-        onApprove={() => setSelectedRequest(null)}
+        onApprove={async () => { if (selectedRequest) { await approveRequest(selectedRequest.id); refresh(); } }}
         onClose={() => setSelectedRequest(null)}
-        onReject={() => setSelectedRequest(null)}
+        onReject={async () => { if (selectedRequest) { await rejectRequest(selectedRequest.id); refresh(); } }}
         request={selectedRequest}
       />
     </div>

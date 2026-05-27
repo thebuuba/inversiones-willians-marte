@@ -125,6 +125,81 @@ export interface CreateLoanDto {
   notes?: string;
 }
 
+export const InvestorStatusEnum = {
+  ACTIVE: 'ACTIVE',
+  PAUSED: 'PAUSED',
+  WITHDRAWN: 'WITHDRAWN',
+} as const;
+export type InvestorStatus = (typeof InvestorStatusEnum)[keyof typeof InvestorStatusEnum];
+
+export interface CreateInvestorDto {
+  name: string;
+  email?: string;
+  phone?: string;
+  capital: number;
+  monthlyPayment: number;
+  rate: number;
+  notes?: string;
+}
+
+export interface InvestorItem extends CreateInvestorDto {
+  id: string;
+  code: string;
+  status: InvestorStatus;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDocumentDto {
+  clientId?: string;
+  investorId?: string;
+  loanId?: string;
+  name: string;
+  category: string;
+  notes?: string;
+}
+
+export interface DocumentItem extends CreateDocumentDto {
+  id: string;
+  fileUrl?: string;
+  fileSize?: number;
+  mimeType?: string;
+  uploadedById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const RequestStatusEnum = {
+  PENDING: 'PENDING',
+  UNDER_REVIEW: 'UNDER_REVIEW',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+} as const;
+export type RequestStatus = (typeof RequestStatusEnum)[keyof typeof RequestStatusEnum];
+
+export interface CreateRequestDto {
+  firstName: string;
+  lastName: string;
+  identification?: string;
+  phone?: string;
+  amount: number;
+  description?: string;
+  reference?: string;
+  clientId?: string;
+}
+
+export interface LoanRequestItem extends CreateRequestDto {
+  id: string;
+  code: string;
+  status: RequestStatus;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  createdByName?: string;
+  client?: { id: string; firstName: string; lastName: string };
+}
+
 export interface CreatePaymentDto {
   loanId: string;
   clientId: string;

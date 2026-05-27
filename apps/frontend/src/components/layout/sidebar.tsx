@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   FileText,
@@ -16,12 +16,13 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
+import { getRequests } from '@/lib/api/requests';
 
 const navItems = [
   { href: '/inicio', label: 'Inicio', icon: Home },
   { href: '/clientes', label: 'Clientes', icon: Users },
   { href: '/prestamos', label: 'Préstamos', icon: Landmark },
-  { href: '/solicitudes', label: 'Solicitudes', icon: Inbox, badge: 2 },
+  { href: '/solicitudes', label: 'Solicitudes', icon: Inbox },
   { href: '/caja', label: 'Caja', icon: Wallet },
   { href: '/inversionistas', label: 'Inversionistas', icon: TrendingUp },
   { href: '/documentos', label: 'Documentos', icon: FileText },
@@ -32,7 +33,14 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const initial = user?.name?.charAt(0) ?? 'A';
+
+  useEffect(() => {
+    getRequests().then((requests) => {
+      setPendingCount(requests.filter((r) => r.status === 'PENDING').length);
+    }).catch(() => {});
+  }, []);
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-[260px] rounded-r-lg border border-l-0 border-[#DDEBE3] bg-white text-[#285C43]">
@@ -75,9 +83,9 @@ export function Sidebar() {
                       aria-hidden="true"
                     />
                     <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                    {item.badge && (
+                    {item.href === '/solicitudes' && pendingCount > 0 && (
                       <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#FFE3D2] px-1.5 text-xs font-bold text-[#C96F4A]">
-                        {item.badge}
+                        {pendingCount}
                       </span>
                     )}
                   </Link>

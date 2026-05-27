@@ -13,64 +13,37 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-
-export interface RequestDetail {
-  name: string;
-  code: string;
-  description: string;
-  status: string;
-  amount: string;
-  avatar: string;
-  identification?: string;
-  phone?: string;
-  reference?: string;
-  date?: string;
-  receivedAt?: string;
-  photo?: string;
-}
+import type { LoanRequestItem } from '@inversiones/shared';
 
 interface RequestDetailDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  request?: RequestDetail | null;
+  request?: LoanRequestItem | null;
   onApprove?: () => void;
   onReject?: () => void;
 }
 
-const fallbackRequest: RequestDetail = {
-  name: 'Luis Martínez Cruz',
-  code: 'SOL-2040',
-  description:
-    'Necesito capital para reparación de mi vehículo de trabajo. Soy chofer de aplicaciones desde hace 2 años.',
-  status: 'En revisión',
-  amount: 'RD$32,000',
-  avatar: 'https://i.pravatar.cc/96?img=13',
-  identification: '001-9876543-2',
-  phone: '+1 (829) 432-1180',
-  reference: 'María Cruz (madre) — +...',
-  date: '24/5/2025',
-  receivedAt: 'Recibido el 24 de mayo de 2025',
-  photo: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&w=500&q=80',
+const statusMap: Record<string, { label: string; bg: string; text: string; dot: string }> = {
+  PENDING: { label: 'Pendiente', bg: '#FFF4C8', text: '#B89A22', dot: '#E2C64F' },
+  UNDER_REVIEW: { label: 'En revisión', bg: '#E4F0FF', text: '#5C82B7', dot: '#6EA8E8' },
+  APPROVED: { label: 'Aprobada', bg: '#E7F4EC', text: '#2F7654', dot: '#5FA37D' },
+  REJECTED: { label: 'Rechazada', bg: '#FFE8D8', text: '#C96F4A', dot: '#E6A07A' },
 };
 
 function StatusBadge({ status }: { status: string }) {
+  const style = statusMap[status] ?? { label: status, bg: '#F3FAF6', text: '#5C6D63', dot: '#A9CDBB' };
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#D8E9FF] px-3 py-1 text-xs font-bold text-[#3F7FBD]">
-      <span className="h-1.5 w-1.5 rounded-full bg-[#3F7FBD]" />
-      {status}
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
+      style={{ backgroundColor: style.bg, color: style.text }}
+    >
+      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: style.dot }} />
+      {style.label}
     </span>
   );
 }
 
-function InfoCard({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-}) {
+function InfoCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="flex items-center gap-3 rounded-[14px] bg-white p-3.5 transition hover:-translate-y-0.5">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#E7F4EC] text-[#5FA37D]">
@@ -91,11 +64,11 @@ export function RequestDetailDrawer({
   onApprove,
   onReject,
 }: RequestDetailDrawerProps) {
-  const data = request ?? fallbackRequest;
+  const data = request;
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isOpen && data && (
         <motion.div
           animate={{ opacity: 1 }}
           className="fixed inset-0 z-50 bg-black/65"
@@ -111,13 +84,12 @@ export function RequestDetailDrawer({
           >
             <div className="sticky top-0 z-10 flex items-start justify-between border-b border-[#DDEBE3] bg-white px-6 py-5">
               <div className="flex items-center gap-4">
-                <div
-                  className="h-12 w-12 rounded-full border-[3px] border-[#B8DCC5] bg-cover bg-center shadow-[0_8px_20px_rgba(40,92,67,0.12)]"
-                  style={{ backgroundImage: `url(${data.avatar})` }}
-                />
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#E7F4EC] text-sm font-bold text-[#5FA37D]">
+                  {data.firstName[0]}{data.lastName[0]}
+                </div>
                 <div>
                   <p className="text-xs font-bold text-[#7E9086]">{data.code}</p>
-                  <h2 className="mt-1 text-lg font-bold leading-tight text-[#173D2C]">{data.name}</h2>
+                  <h2 className="mt-1 text-lg font-bold leading-tight text-[#173D2C]">{data.firstName} {data.lastName}</h2>
                   <div className="mt-2">
                     <StatusBadge status={data.status} />
                   </div>
@@ -141,68 +113,76 @@ export function RequestDetailDrawer({
                 transition={{ delay: 0.08 }}
               >
                 <p className="text-xs font-bold uppercase tracking-wide text-[#6F8076]">MONTO SOLICITADO</p>
-                <p className="mt-3 text-[30px] font-bold leading-none text-[#173D2C]">{data.amount}</p>
-                <p className="mt-3 text-sm text-[#6F8076]">{data.receivedAt}</p>
+                <p className="mt-3 text-[30px] font-bold leading-none text-[#173D2C]">
+                  RD${Number(data.amount).toLocaleString('es-DO')}
+                </p>
+                <p className="mt-3 text-sm text-[#6F8076]">
+                  Recibido el {new Date(data.createdAt).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
               </motion.div>
 
               <section className="mt-6">
-                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#7E9086]">
-                  DATOS DEL SOLICITANTE
-                </h3>
+                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#7E9086]">DATOS DEL SOLICITANTE</h3>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <InfoCard icon={CreditCard} label="CÉDULA" value={data.identification ?? '001-9876543-2'} />
-                  <InfoCard icon={Phone} label="TELÉFONO" value={data.phone ?? '+1 (829) 432-1180'} />
-                  <InfoCard icon={User} label="REFERENTE" value={data.reference ?? 'María Cruz (madre) — +...'} />
-                  <InfoCard icon={Calendar} label="FECHA" value={data.date ?? '24/5/2025'} />
+                  <InfoCard icon={CreditCard} label="CÉDULA" value={data.identification ?? '—'} />
+                  <InfoCard icon={Phone} label="TELÉFONO" value={data.phone ?? '—'} />
+                  <InfoCard icon={User} label="REFERENTE" value={data.reference ?? '—'} />
+                  <InfoCard icon={Calendar} label="FECHA" value={new Date(data.createdAt).toLocaleDateString('es-DO')} />
                 </div>
               </section>
 
-              <section className="mt-6">
-                <h3 className="mb-3 flex items-center gap-2.5 text-xs font-bold uppercase tracking-wide text-[#7E9086]">
-                  <FileText className="h-4 w-4" />
-                  DESCRIPCIÓN
-                </h3>
-                <div className="rounded-[16px] bg-white p-4 text-sm leading-relaxed text-[#173D2C]">
-                  {data.description}
-                </div>
-              </section>
+              {data.description && (
+                <section className="mt-6">
+                  <h3 className="mb-3 flex items-center gap-2.5 text-xs font-bold uppercase tracking-wide text-[#7E9086]">
+                    <FileText className="h-4 w-4" />
+                    DESCRIPCIÓN
+                  </h3>
+                  <div className="rounded-[16px] bg-white p-4 text-sm leading-relaxed text-[#173D2C]">
+                    {data.description}
+                  </div>
+                </section>
+              )}
 
               <section className="mt-6">
                 <h3 className="mb-3 flex items-center gap-2.5 text-xs font-bold uppercase tracking-wide text-[#7E9086]">
                   <ImageIcon className="h-4 w-4" />
-                  FOTOGRAFÍAS (1)
+                  FOTOGRAFÍAS
                 </h3>
-                <div
-                  className="h-[118px] w-[155px] rounded-[14px] bg-cover bg-center shadow-[0_8px_20px_rgba(40,92,67,0.12)]"
-                  style={{ backgroundImage: `url(${data.photo ?? fallbackRequest.photo})` }}
-                />
+                <div className="flex h-[118px] w-[155px] items-center justify-center rounded-[14px] bg-[#EEF8F1] text-xs text-[#A9CDBB]">
+                  Sin fotos
+                </div>
               </section>
             </div>
 
-            <div className="fixed bottom-0 right-0 w-full max-w-[540px] border-t border-[#DDEBE3] bg-white px-6 py-4">
-              <button className="mb-3 flex h-10 w-full items-center justify-center gap-2.5 rounded-full border border-[#DDEBE3] bg-white text-sm font-bold text-[#173D2C] transition hover:bg-[#F3FAF6]" type="button">
-                <Printer className="h-4 w-4" />
-                Imprimir solicitud
-              </button>
-              <div className="grid grid-cols-2 gap-3">
+            {data.status === 'PENDING' && (
+              <div className="fixed bottom-0 right-0 w-full max-w-[540px] border-t border-[#DDEBE3] bg-white px-6 py-4">
                 <button
-                  className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#F7D6BD] bg-white text-sm font-bold text-[#C96F4A] transition hover:bg-[#FFF7EF]"
-                  onClick={onReject}
+                  className="mb-3 flex h-10 w-full items-center justify-center gap-2.5 rounded-full border border-[#DDEBE3] bg-white text-sm font-bold text-[#173D2C] transition hover:bg-[#F3FAF6]"
                   type="button"
                 >
-                  <X className="h-4 w-4" />
-                  Rechazar
+                  <Printer className="h-4 w-4" />
+                  Imprimir solicitud
                 </button>
-                <button
-                  className="flex h-10 items-center justify-center gap-2.5 rounded-full bg-[#285C43] text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.22)] transition hover:bg-[#1F4734]"
-                  onClick={onApprove}
-                  type="button"
-                >
-                  <Check className="h-4 w-4" />
-                  Aprobar solicitud
-                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#F7D6BD] bg-white text-sm font-bold text-[#C96F4A] transition hover:bg-[#FFF7EF]"
+                    onClick={onReject}
+                    type="button"
+                  >
+                    <X className="h-4 w-4" />
+                    Rechazar
+                  </button>
+                  <button
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full bg-[#285C43] text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.22)] transition hover:bg-[#1F4734]"
+                    onClick={onApprove}
+                    type="button"
+                  >
+                    <Check className="h-4 w-4" />
+                    Aprobar solicitud
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </motion.aside>
         </motion.div>
       )}

@@ -72,7 +72,8 @@ export class LoansService {
     if (search) {
       where.client = {
         OR: [
-          { name: { contains: search, mode: 'insensitive' as const } },
+          { firstName: { contains: search, mode: 'insensitive' as const } },
+          { lastName: { contains: search, mode: 'insensitive' as const } },
           { identification: { contains: search } },
         ],
       };
@@ -81,7 +82,7 @@ export class LoansService {
     return prisma.loan.findMany({
       where,
       include: {
-        client: { select: { id: true, name: true, phone: true } },
+        client: { select: { id: true, firstName: true, lastName: true, phone: true, identification: true } },
         product: { select: { id: true, name: true } },
         _count: { select: { payments: true, schedule: true } },
       },

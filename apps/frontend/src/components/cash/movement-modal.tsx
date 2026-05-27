@@ -1,14 +1,18 @@
 'use client';
 
-import { type FormEvent, type ReactNode, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowDownLeft,
   ArrowUpRight,
   ChevronDown,
+  Search,
   Wallet,
   X,
 } from 'lucide-react';
+import { getClients } from '@/lib/api/clients';
+import { getClient } from '@/lib/api/clients';
+import type { Client, LoanSummary } from '@inversiones/shared';
 
 type MovementType = 'in' | 'out';
 
@@ -19,6 +23,8 @@ export interface MovementFormValues {
   category: string;
   method: string;
   description: string;
+  clientId?: string;
+  loanId?: string;
 }
 
 interface MovementModalProps {
@@ -151,12 +157,65 @@ function SelectField({
 export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps) {
   const [values, setValues] = useState<MovementFormValues>(initialValues);
   const [submitted, setSubmitted] = useState(false);
+  const [searchResults, setSearchResults] = useState<Client[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [clientLoans, setClientLoans] = useState<LoanSummary[]>([]);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  const isLoanPayment = values.category === 'Pago de préstamo';
+
+  useEffect(() => {
+    if (!isLoanPayment) {
+      setSearchResults([]);
+      setShowResults(false);
+      setSelectedClient(null);
+      setClientLoans([]);
+      return;
+    }
+    if (values.person.length < 2) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      const clients = await getClients(values.person);
+      setSearchResults(clients);
+      setShowResults(clients.length > 0);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [values.person, isLoanPayment]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  function handleSelectClient(client: Client) {
+    setSelectedClient(client);
+    setShowResults(false);
+    setValues((prev) => ({
+      ...prev,
+      person: `${client.firstName} ${client.lastName}`,
+      clientId: client.id,
+      loanId: undefined,
+    }));
+    getClient(client.id).then((detail) => {
+      setClientLoans(detail.loans.filter((l) => l.status === 'ACTIVE'));
+    });
+  }
 
   const amountNumber = Number(values.amount.replace(/[^\d.]/g, '')) || 0;
   const errors = {
     person: submitted && values.person.trim().length === 0,
     amount: submitted && amountNumber <= 0,
     category: submitted && values.category.trim().length === 0,
+    loan: submitted && isLoanPayment && !values.loanId,
   };
 
   const updateValue = <Key extends keyof MovementFormValues>(key: Key, value: MovementFormValues[Key]) => {
@@ -166,6 +225,10 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
   const closeModal = () => {
     setSubmitted(false);
     setValues(initialValues);
+    setSearchResults([]);
+    setShowResults(false);
+    setSelectedClient(null);
+    setClientLoans([]);
     onClose();
   };
 
@@ -176,10 +239,17 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
     if (values.person.trim().length === 0 || amountNumber <= 0 || values.category.trim().length === 0) {
       return;
     }
+    if (isLoanPayment && !values.loanId) {
+      return;
+    }
 
     onSubmit({ ...values, person: values.person.trim(), amount: String(amountNumber) });
     setSubmitted(false);
     setValues(initialValues);
+    setSearchResults([]);
+    setShowResults(false);
+    setSelectedClient(null);
+    setClientLoans([]);
   };
 
   return (
@@ -245,14 +315,73 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
               </div>
 
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-                <FormField error={errors.person} label="Persona o entidad">
-                  <input
-                    className={inputClass(errors.person)}
-                    onChange={(event) => updateValue('person', event.target.value)}
-                    placeholder="Ej. Carmen Reyes"
-                    value={values.person}
-                  />
-                </FormField>
+                {isLoanPayment ? (
+                  <div ref={searchRef} className="relative sm:col-span-2">
+                    <FormField error={errors.person} label="Buscar cliente">
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8F9691]" />
+                        <input
+                          autoComplete="off"
+                          className={`${inputClass(errors.person)} pl-12`}
+                          onChange={(event) => {
+                            updateValue('person', event.target.value);
+                            if (selectedClient) {
+                              setSelectedClient(null);
+                              setClientLoans([]);
+                              updateValue('clientId', undefined);
+                              updateValue('loanId', undefined);
+                            }
+                          }}
+                          placeholder="Buscar por nombre, cédula o teléfono..."
+                          value={values.person}
+                        />
+                      </div>
+                    </FormField>
+                    {showResults && (
+                      <div className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-[12px] border border-[#DDEBE3] bg-white shadow-[0_12px_32px_rgba(40,92,67,0.12)]">
+                        {searchResults.map((client) => (
+                          <button
+                            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-[#F3FAF6]"
+                            key={client.id}
+                            onClick={() => handleSelectClient(client)}
+                            type="button"
+                          >
+                            <span className="font-bold text-[#173D2C]">{client.firstName} {client.lastName}</span>
+                            <span className="text-[#A9CDBB]">{client.identification}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {selectedClient && (
+                      <div className="mt-2">
+                        <FormField error={errors.loan} label="Préstamo">
+                          <select
+                            className={`${inputClass(errors.loan)} appearance-none pr-10`}
+                            onChange={(e) => updateValue('loanId', e.target.value)}
+                            value={values.loanId ?? ''}
+                          >
+                            <option value="">Seleccionar préstamo...</option>
+                            {clientLoans.length === 0 && <option value="" disabled>Sin préstamos activos</option>}
+                            {clientLoans.map((loan) => (
+                              <option key={loan.id} value={loan.id}>
+                                {loan.product?.name ?? 'Préstamo'} · RD${Number(loan.balance).toLocaleString('es-DO')} · Cuota {loan.paymentFreq}
+                              </option>
+                            ))}
+                          </select>
+                        </FormField>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <FormField error={errors.person} label="Persona o entidad">
+                    <input
+                      className={inputClass(errors.person)}
+                      onChange={(event) => updateValue('person', event.target.value)}
+                      placeholder="Ej. Carmen Reyes"
+                      value={values.person}
+                    />
+                  </FormField>
+                )}
 
                 <FormField error={errors.amount} label="Monto">
                   <div className="relative">

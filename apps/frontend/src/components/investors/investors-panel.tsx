@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -21,88 +22,21 @@ import {
   SlidersHorizontal,
   UsersRound,
 } from 'lucide-react';
+import { getInvestors } from '@/lib/api/investors';
+import type { InvestorItem } from '@inversiones/shared';
 
 const filters = ['Todos', 'Activos', 'Pausados', 'Retirados'];
 
-const investors = [
-  {
-    name: 'Francisco Núñez Lara',
-    code: 'INV-012',
-    since: 'desde Sep 2022',
-    capital: 'RD$1,200,000',
-    rate: '4% / mes',
-    monthly: 'RD$48.0K',
-    earned: 'RD$768.0K',
-    status: 'Activo',
-    next: 'Próx. 01 Oct 2024',
-    avatar: 'https://i.pravatar.cc/96?img=13',
-  },
-  {
-    name: 'Gabriel Tavárez Soto',
-    code: 'INV-006',
-    since: 'desde Oct 2022',
-    capital: 'RD$850,000',
-    rate: '3.9% / mes',
-    monthly: 'RD$33.1K',
-    earned: 'RD$530.4K',
-    status: 'Activo',
-    next: 'Próx. 01 Oct 2024',
-    avatar: 'https://i.pravatar.cc/96?img=56',
-  },
-  {
-    name: 'Hernán Castillo Reyes',
-    code: 'INV-010',
-    since: 'desde Jul 2023',
-    capital: 'RD$750,000',
-    rate: '3.8% / mes',
-    monthly: 'RD$28.5K',
-    earned: 'RD$342.0K',
-    status: 'Pausado',
-    next: 'Próx. Pausado',
-    avatar: 'https://i.pravatar.cc/96?img=5',
-  },
-  {
-    name: 'Lucía Espinal Ortiz',
-    code: 'INV-007',
-    since: 'desde Abr 2023',
-    capital: 'RD$600,000',
-    rate: '3.7% / mes',
-    monthly: 'RD$22.2K',
-    earned: 'RD$333.0K',
-    status: 'Activo',
-    next: 'Próx. 01 Oct 2024',
-    avatar: 'https://i.pravatar.cc/96?img=13',
-  },
-  {
-    name: 'Roberto Almonte Vega',
-    code: 'INV-014',
-    since: 'desde Ene 2023',
-    capital: 'RD$500,000',
-    rate: '3.5% / mes',
-    monthly: 'RD$17.5K',
-    earned: 'RD$210.0K',
-    status: 'Activo',
-    next: 'Próx. 01 Oct 2024',
-    avatar: 'https://i.pravatar.cc/96?img=12',
-  },
-  {
-    name: 'Andrés Rosario Fernández',
-    code: 'INV-008',
-    since: 'desde Mar 2023',
-    capital: 'RD$450,000',
-    rate: '3.5% / mes',
-    monthly: 'RD$15.8K',
-    earned: 'RD$220.5K',
-    status: 'Retirado',
-    next: 'Próx. Retirado',
-    avatar: 'https://i.pravatar.cc/96?img=32',
-  },
-];
+const statusStyles: Record<string, { bg: string; text: string; dot: string; ring: string }> = {
+  ACTIVE: { bg: '#E7F4EC', text: '#5FA37D', dot: '#7CC99B', ring: '#7CC99B' },
+  PAUSED: { bg: '#FFF4C8', text: '#A98219', dot: '#E2C64F', ring: '#E2C64F' },
+  WITHDRAWN: { bg: '#EEF3EF', text: '#7A8A80', dot: '#A9CDBB', ring: '#A9CDBB' },
+};
 
-const statusStyles = {
-  Activo: { bg: '#E7F4EC', text: '#5FA37D', dot: '#7CC99B', ring: '#7CC99B' },
-  Pausado: { bg: '#FFF4C8', text: '#A98219', dot: '#E2C64F', ring: '#E2C64F' },
-  Retirado: { bg: '#EEF3EF', text: '#7A8A80', dot: '#A9CDBB', ring: '#A9CDBB' },
+const statusLabels: Record<string, string> = {
+  ACTIVE: 'Activo',
+  PAUSED: 'Pausado',
+  WITHDRAWN: 'Retirado',
 };
 
 const fadeUp: Variants = {
@@ -128,8 +62,9 @@ function PanelCard({ children, className = '', index = 0 }: { children: ReactNod
   );
 }
 
-function StatusPill({ status }: { status: keyof typeof statusStyles }) {
-  const style = statusStyles[status];
+function StatusPill({ status }: { status: string }) {
+  const style = statusStyles[status] ?? statusStyles.WITHDRAWN;
+  const label = statusLabels[status] ?? status;
 
   return (
     <span
@@ -137,12 +72,29 @@ function StatusPill({ status }: { status: keyof typeof statusStyles }) {
       style={{ backgroundColor: style.bg, color: style.text }}
     >
       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
-      {status}
+      {label}
     </span>
   );
 }
 
+function formatCurrency(n: number): string {
+  return `RD$${n.toLocaleString('es-DO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+
 export function InvestorsPanel() {
+  const [investors, setInvestors] = useState<InvestorItem[]>([]);
+
+  useEffect(() => {
+    getInvestors().then(setInvestors);
+  }, []);
+
+  const totalCapital = investors.reduce((s, i) => s + i.capital, 0);
+  const totalMonthly = investors.reduce((s, i) => s + i.monthlyPayment, 0);
+  const activeCount = investors.filter((i) => i.status === 'ACTIVE').length;
+  const avgRate = investors.length > 0
+    ? (investors.reduce((s, i) => s + i.rate, 0) / investors.length).toFixed(2)
+    : '0';
+
   return (
     <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
       <motion.header
@@ -176,15 +128,15 @@ export function InvestorsPanel() {
             <PiggyBank className="h-7 w-7" />
           </div>
           <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#173D2C]">CAPITAL INVERTIDO TOTAL</p>
-          <p className="mt-8 text-[38px] font-bold leading-none text-[#173D2C]">RD$4,000,000</p>
+          <p className="mt-8 text-[38px] font-bold leading-none text-[#173D2C]">{formatCurrency(totalCapital)}</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/76 px-3 py-1.5 text-sm font-bold text-[#173D2C]">
               <UsersRound className="h-4 w-4" />
-              7 activos
+              {activeCount} activos
             </span>
             <span className="inline-flex items-center gap-2 rounded-full bg-white/76 px-3 py-1.5 text-sm font-bold text-[#173D2C]">
               <ArrowUpRight className="h-4 w-4" />
-              3.50% promedio
+              {avgRate}% promedio
             </span>
           </div>
         </PanelCard>
@@ -194,7 +146,7 @@ export function InvestorsPanel() {
             <DollarSign className="h-6 w-6" />
           </div>
           <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#A9CDBB]">PAGO MENSUAL</p>
-          <p className="mt-3 text-[30px] font-bold leading-none text-[#173D2C]">RD$147.7K</p>
+          <p className="mt-3 text-[30px] font-bold leading-none text-[#173D2C]">{formatCurrency(totalMonthly)}</p>
           <p className="mt-4 text-sm font-bold text-[#A98219]">a distribuir este mes</p>
         </PanelCard>
 
@@ -203,7 +155,7 @@ export function InvestorsPanel() {
             <CalendarClock className="h-6 w-6" />
           </div>
           <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#A9CDBB]">PAGADO HISTÓRICO</p>
-          <p className="mt-3 text-[30px] font-bold leading-none text-[#173D2C]">RD$2.68M</p>
+          <p className="mt-3 text-[30px] font-bold leading-none text-[#173D2C]">—</p>
           <p className="mt-4 text-sm font-bold text-[#5C82B7]">desde el inicio</p>
         </PanelCard>
       </div>
@@ -242,36 +194,23 @@ export function InvestorsPanel() {
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
         {investors.map((investor, index) => {
-          const status = investor.status as keyof typeof statusStyles;
-          const style = statusStyles[status];
+          const style = statusStyles[investor.status] ?? statusStyles.WITHDRAWN;
 
           return (
             <PanelCard
-              key={investor.code}
+              key={investor.id}
               className="p-5 transition hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(40,92,67,0.08)]"
               index={index + 5}
             >
               <div className="mb-5 flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="relative h-12 w-12 shrink-0">
-                    <div
-                      aria-label={investor.name}
-                      className="h-full w-full rounded-full border-[3px] border-white bg-cover bg-center shadow-[0_6px_14px_rgba(40,92,67,0.12)]"
-                      role="img"
-                      style={{
-                        backgroundImage: `url(${investor.avatar})`,
-                        boxShadow: `0 0 0 2px ${style.ring}44, 0 6px 14px rgba(40,92,67,0.12)`,
-                      }}
-                    />
-                    <span
-                      className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white"
-                      style={{ backgroundColor: style.dot }}
-                    />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#E7F4EC] text-sm font-bold text-[#5FA37D]">
+                    {investor.name.charAt(0)}
                   </div>
                   <div>
                     <p className="text-sm font-bold leading-tight text-[#173D2C]">{investor.name}</p>
                     <p className="mt-1 text-xs font-medium text-[#A9CDBB]">
-                      {investor.code} <span className="mx-2 text-[#DDEBE3]">•</span> {investor.since}
+                      {investor.code} <span className="mx-2 text-[#DDEBE3]">•</span> desde {new Date(investor.createdAt).toLocaleDateString('es-DO', { month: 'short', year: 'numeric' })}
                     </p>
                   </div>
                 </div>
@@ -282,29 +221,29 @@ export function InvestorsPanel() {
 
               <div className="rounded-[18px] bg-gradient-to-br from-[#E4F4E9] to-[#D9EFE0] p-5">
                 <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#5FA37D]">CAPITAL INVERTIDO</p>
-                <p className="mt-3 text-[26px] font-bold leading-none text-[#173D2C]">{investor.capital}</p>
+                <p className="mt-3 text-[26px] font-bold leading-none text-[#173D2C]">{formatCurrency(investor.capital)}</p>
                 <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-bold text-[#5FA37D]">
                   <ArrowUpRight className="h-4 w-4" />
-                  {investor.rate}
+                  {investor.rate}% / mes
                 </span>
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div className="rounded-[16px] border border-[#F2DE9B] bg-[#FFF8DA] p-4">
                   <p className="text-xs font-bold uppercase text-[#B89A22]">PAGO MENSUAL</p>
-                  <p className="mt-3 text-lg font-bold text-[#A98219]">{investor.monthly}</p>
+                  <p className="mt-3 text-lg font-bold text-[#A98219]">{formatCurrency(investor.monthlyPayment)}</p>
                 </div>
                 <div className="rounded-[16px] border border-[#D8E9FF] bg-[#E4F0FF] p-4">
                   <p className="text-xs font-bold uppercase text-[#789DD0]">TOTAL GANADO</p>
-                  <p className="mt-3 text-lg font-bold text-[#5C82B7]">{investor.earned}</p>
+                  <p className="mt-3 text-lg font-bold text-[#5C82B7]">—</p>
                 </div>
               </div>
 
               <div className="mt-4 flex items-center justify-between border-t border-[#EDF2EF] pt-4">
-                <StatusPill status={status} />
+                <StatusPill status={investor.status} />
                 <span className="flex items-center gap-2 text-sm font-medium text-[#A9CDBB]">
                   <Calendar className="h-4 w-4" />
-                  {investor.next}
+                  {investor.status === 'ACTIVE' ? 'Activo' : investor.status === 'PAUSED' ? 'Pausado' : 'Retirado'}
                 </span>
               </div>
 
@@ -318,18 +257,13 @@ export function InvestorsPanel() {
 
       <PanelCard className="flex items-center justify-between p-5" index={12}>
         <p className="text-sm font-semibold text-[#5FA37D]">
-          Mostrando <span className="font-bold text-[#173D2C]">1–6 de 9</span> inversionistas
+          Mostrando <span className="font-bold text-[#173D2C]">{investors.length}</span> inversionistas
         </p>
         <div className="flex items-center gap-2">
           <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#A9CDBB] shadow-sm transition hover:text-[#5FA37D]">
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#B89A22] text-sm font-bold text-white shadow-[0_10px_18px_rgba(184,154,34,0.22)]">
-            1
-          </button>
-          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-sm font-bold text-[#5FA37D] shadow-sm">
-            2
-          </button>
+          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#B89A22] text-sm font-bold text-white shadow-[0_10px_18px_rgba(184,154,34,0.22)]">1</button>
           <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#5FA37D] shadow-sm transition hover:bg-[#E7F4EC]">
             <ChevronRight className="h-4 w-4" />
           </button>

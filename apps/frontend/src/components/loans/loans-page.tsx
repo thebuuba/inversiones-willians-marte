@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -16,121 +16,43 @@ import {
   Search,
   WalletCards,
 } from 'lucide-react';
-
-const loans = [
-  {
-    client: 'María González Pérez',
-    detail: 'PR-2042 · 402-1234567-8',
-    type: 'Cuota fija',
-    amount: 'RD$ 150,000',
-    interest: '18% interés',
-    progress: '7/12 cuotas',
-    percent: 60,
-    nextPayment: '2025-12-12',
-    status: 'Al día',
-    avatar: 'https://i.pravatar.cc/96?img=12',
-  },
-  {
-    client: 'Carlos Reyes Núñez',
-    detail: 'PR-2041 · 001-9876543-2',
-    type: 'Plazo fijo',
-    amount: 'RD$ 850,000',
-    interest: '14% interés',
-    progress: '14/36 cuotas',
-    percent: 38,
-    nextPayment: '2025-12-01',
-    status: 'Al día',
-    avatar: 'https://i.pravatar.cc/96?img=32',
-  },
-  {
-    client: 'Laura Méndez Castillo',
-    detail: 'PR-2040 · 402-5544332-1',
-    type: 'Plazo indefinido',
-    amount: 'RD$ 500,000',
-    interest: '16% interés',
-    progress: '6/24 cuotas',
-    percent: 22,
-    nextPayment: '2025-11-20',
-    status: 'Atrasado',
-    avatar: 'https://i.pravatar.cc/96?img=13',
-  },
-  {
-    client: 'Pedro Martínez Soto',
-    detail: 'PR-2039 · 001-2233445-6',
-    type: 'Plazo fijo',
-    amount: 'RD$ 3,200,000',
-    interest: '11% interés',
-    progress: '18/120 cuotas',
-    percent: 15,
-    nextPayment: '2025-12-10',
-    status: 'Al día',
-    avatar: 'https://i.pravatar.cc/96?img=56',
-  },
-  {
-    client: 'Sofía Hernández Rivera',
-    detail: 'PR-2038 · 402-7788990-1',
-    type: 'Cuota fija',
-    amount: 'RD$ 75,000',
-    interest: '19% interés',
-    progress: '6/6 cuotas',
-    percent: 100,
-    nextPayment: '—',
-    status: 'Pagado',
-    avatar: 'https://i.pravatar.cc/96?img=5',
-  },
-  {
-    client: 'Roberto Díaz Almonte',
-    detail: 'PR-2037 · 001-3344556-7',
-    type: 'Solo interés',
-    amount: 'RD$ 220,000',
-    interest: '12% interés',
-    progress: '0/18 cuotas',
-    percent: 0,
-    nextPayment: '2025-12-25',
-    status: 'Pendiente',
-    avatar: '',
-  },
-  {
-    client: 'Ana Rodríguez Vargas',
-    detail: 'PR-2036 · 402-9988776-5',
-    type: 'Cuota fija',
-    amount: 'RD$ 95,000',
-    interest: '18% interés',
-    progress: '4/10 cuotas',
-    percent: 40,
-    nextPayment: '2025-12-15',
-    status: 'Al día',
-    avatar: 'https://i.pravatar.cc/96?img=22',
-  },
-  {
-    client: 'Jorge Peña Vásquez',
-    detail: 'PR-2035 · 001-5566778-9',
-    type: 'Pago único',
-    amount: 'RD$ 620,000',
-    interest: '15% interés',
-    progress: '5/30 cuotas',
-    percent: 17,
-    nextPayment: '2025-11-08',
-    status: 'Atrasado',
-    avatar: 'https://i.pravatar.cc/96?img=33',
-  },
-  {
-    client: 'Carmen Liriano Polanco',
-    detail: 'PR-2034 · 402-1122334-5',
-    type: 'Plazo indefinido',
-    amount: 'RD$ 1,200,000',
-    interest: '13% interés',
-    progress: '14/24 cuotas',
-    percent: 60,
-    nextPayment: '2025-12-12',
-    status: 'Al día',
-    avatar: 'https://i.pravatar.cc/96?img=47',
-  },
-];
+import { getLoans, type LoanListItem } from '@/lib/api/loans';
 
 const statusFilters = ['Todos', 'Al día', 'Atrasados', 'Pendientes', 'Pagados'];
-const typeFilters = ['Todos los tipos', 'Cuota fija', 'Plazo fijo', 'Plazo indefinido', 'Solo interés', 'Pago único'];
 const sortOptions = ['Más recientes', 'Más antiguos', 'Mayor monto', 'Menor monto'];
+
+function loanToRow(loan: LoanListItem) {
+  const clientName = `${loan.client.firstName} ${loan.client.lastName}`;
+  const detail = `${loan.client.identification ?? '—'}`;
+  const paidSchedules = Math.round(
+    loan.principal > 0 ? ((loan.principal - loan.balance) / loan.principal) * loan.term : 0,
+  );
+  const totalSchedules = loan.term;
+  const percent = loan.principal > 0 ? Math.round(((loan.principal - loan.balance) / loan.principal) * 100) : 0;
+  const nextPayment = '—';
+
+  let statusLabel: string;
+  if (loan.status === 'ACTIVE') statusLabel = 'Al día';
+  else if (loan.status === 'OVERDUE') statusLabel = 'Atrasado';
+  else if (loan.status === 'PAID') statusLabel = 'Pagado';
+  else if (loan.status === 'RESTRUCTURED') statusLabel = 'Pendiente';
+  else statusLabel = 'Pendiente';
+
+  const typeLabel = loan.product?.name ?? '—';
+
+  return {
+    id: loan.id,
+    client: clientName,
+    detail,
+    type: typeLabel,
+    amount: loan.principal,
+    interest: `${loan.interestRate}% interés`,
+    progress: `${paidSchedules}/${totalSchedules} cuotas`,
+    percent,
+    nextPayment,
+    status: statusLabel,
+  };
+}
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 16 },
@@ -155,7 +77,7 @@ function PanelCard({ children, className = '', index = 0 }: { children: ReactNod
   );
 }
 
-function LoansHeader() {
+function LoansHeader({ total, amount }: { total: number; amount: string }) {
   return (
     <motion.header
       animate="visible"
@@ -167,7 +89,7 @@ function LoansHeader() {
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#A9CDBB]">GESTIÓN</p>
         <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#151918]">Préstamos</h1>
         <p className="mt-1.5 text-base font-medium text-[#7A7F7D]">
-          Administra los préstamos activos — 9 registrados, RD$ 6,910,000 colocados.
+          Administra los préstamos activos — {total} registrados, RD$ {amount} colocados.
         </p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -184,6 +106,26 @@ function LoansHeader() {
         </Link>
       </div>
     </motion.header>
+  );
+}
+
+function LoanSummaryCards({ items }: { items: ReturnType<typeof loanToRow>[] }) {
+  const total = items.length;
+  const alDia = items.filter((i) => i.status === 'Al día').length;
+  const atrasados = items.filter((i) => i.status === 'Atrasado').length;
+  const pendientes = items.filter((i) => i.status === 'Pendiente').length;
+  const totalAmount = items.reduce((s, i) => s + i.amount, 0);
+  const totalAmountStr = totalAmount >= 1_000_000
+    ? `${(totalAmount / 1_000_000).toFixed(1)}M`
+    : totalAmount >= 1_000 ? `${(totalAmount / 1_000).toFixed(0)}K` : String(totalAmount);
+
+  return (
+    <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
+      <SummaryCard icon={<WalletCards className="h-6 w-6" />} iconBg="#EAF6EF" iconColor="#4F9B76" label="CARTERA TOTAL" subtext={`${total} préstamos`} value={`RD$ ${totalAmountStr}`} />
+      <SummaryCard icon={<CheckCircle2 className="h-6 w-6" />} iconBg="#B8DCC5" iconColor="#4F9B76" label="AL DÍA" subtext="préstamos saludables" value={String(alDia)} />
+      <SummaryCard icon={<AlertCircle className="h-6 w-6" />} iconBg="#FADCCB" iconColor="#E05A1A" label="ATRASADOS" subtext="requieren atención" value={String(atrasados)} />
+      <SummaryCard icon={<Clock3 className="h-6 w-6" />} iconBg="#FFF1C7" iconColor="#B7791F" label="PENDIENTES" subtext="por desembolsar" value={String(pendientes)} />
+    </div>
   );
 }
 
@@ -213,17 +155,6 @@ function SummaryCard({
         <p className="mt-2 text-sm font-medium text-[#9B9F9D]">{subtext}</p>
       </div>
     </PanelCard>
-  );
-}
-
-function LoanSummaryCards() {
-  return (
-    <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
-      <SummaryCard icon={<WalletCards className="h-6 w-6" />} iconBg="#EAF6EF" iconColor="#4F9B76" label="CARTERA TOTAL" subtext="9 préstamos" value="RD$ 6.91M" />
-      <SummaryCard icon={<CheckCircle2 className="h-6 w-6" />} iconBg="#B8DCC5" iconColor="#4F9B76" label="AL DÍA" subtext="préstamos saludables" value="5" />
-      <SummaryCard icon={<AlertCircle className="h-6 w-6" />} iconBg="#FADCCB" iconColor="#E05A1A" label="ATRASADOS" subtext="requieren atención" value="2" />
-      <SummaryCard icon={<Clock3 className="h-6 w-6" />} iconBg="#FFF1C7" iconColor="#B7791F" label="PENDIENTES" subtext="por desembolsar" value="1" />
-    </div>
   );
 }
 
@@ -283,20 +214,16 @@ function LoanStatusPills({ activeStatus, onChange }: { activeStatus: string; onC
 function LoanFilters({
   search,
   selectedStatus,
-  selectedType,
   sort,
   onSearchChange,
   onStatusChange,
-  onTypeChange,
   onSortChange,
 }: {
   search: string;
   selectedStatus: string;
-  selectedType: string;
   sort: string;
   onSearchChange: (value: string) => void;
   onStatusChange: (value: string) => void;
-  onTypeChange: (value: string) => void;
   onSortChange: (value: string) => void;
 }) {
   return (
@@ -311,7 +238,6 @@ function LoanFilters({
             value={search}
           />
         </label>
-        <SelectControl icon={<Filter className="h-5 w-5" />} onChange={onTypeChange} options={typeFilters} value={selectedType} />
         <SelectControl icon={<Clock3 className="h-5 w-5" />} onChange={onSortChange} options={sortOptions} value={sort} />
       </div>
       <LoanStatusPills activeStatus={selectedStatus} onChange={onStatusChange} />
@@ -319,16 +245,10 @@ function LoanFilters({
   );
 }
 
+const badgeColors = ['bg-[#FFF1C7] text-[#B7791F]', 'bg-[#EAF6EF] text-[#4F9B76]', 'bg-[#DCEBFF] text-[#2563EB]', 'bg-[#E9DDFB] text-[#7C3AED]', 'bg-[#FADCCB] text-[#D94E1F]'];
 function LoanTypeBadge({ type }: { type: string }) {
-  const styles: Record<string, string> = {
-    'Cuota fija': 'bg-[#FFF1C7] text-[#B7791F]',
-    'Plazo fijo': 'bg-[#EAF6EF] text-[#4F9B76]',
-    'Plazo indefinido': 'bg-[#DCEBFF] text-[#2563EB]',
-    'Solo interés': 'bg-[#E9DDFB] text-[#7C3AED]',
-    'Pago único': 'bg-[#FADCCB] text-[#D94E1F]',
-  };
-
-  return <span className={`inline-flex rounded-full px-3.5 py-1.5 text-sm font-bold ${styles[type]}`}>{type}</span>;
+  const idx = Math.abs(type.split('').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0)) % badgeColors.length;
+  return <span className={`inline-flex rounded-full px-3.5 py-1.5 text-sm font-bold ${badgeColors[idx]}`}>{type}</span>;
 }
 
 function LoanStatusBadge({ status }: { status: string }) {
@@ -362,7 +282,9 @@ function ProgressCell({ progress, percent }: { progress: string; percent: number
   );
 }
 
-function LoanRow({ loan, index }: { loan: (typeof loans)[number]; index: number }) {
+type LoanRowData = ReturnType<typeof loanToRow>;
+
+function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
   return (
     <motion.div
       animate="visible"
@@ -375,19 +297,9 @@ function LoanRow({ loan, index }: { loan: (typeof loans)[number]; index: number 
     >
       <div className="flex items-center gap-4">
         <div className="relative h-12 w-12 shrink-0">
-          {loan.avatar ? (
-            <div
-              aria-label={loan.client}
-              className="h-full w-full rounded-full border-[3px] border-white bg-cover bg-center shadow-[0_6px_14px_rgba(40,92,67,0.13)]"
-              role="img"
-              style={{ backgroundImage: `url(${loan.avatar})` }}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center rounded-full bg-[#FF6A00] text-white shadow-[0_6px_14px_rgba(40,92,67,0.13)]">
-              <span className="h-7 w-7 rounded-full border-[5px] border-dotted border-white" />
-            </div>
-          )}
-          <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#7CC99B]" />
+          <div className="flex h-full w-full items-center justify-center rounded-full bg-[#EAF6EF] text-[#5FA37D] shadow-[0_6px_14px_rgba(40,92,67,0.13)]">
+            <span className="text-sm font-bold">{loan.client.charAt(0)}</span>
+          </div>
         </div>
         <div>
           <p className="text-sm font-bold leading-tight text-[#151918]">{loan.client}</p>
@@ -396,7 +308,7 @@ function LoanRow({ loan, index }: { loan: (typeof loans)[number]; index: number 
       </div>
       <LoanTypeBadge type={loan.type} />
       <div>
-        <p className="text-sm font-bold text-[#151918]">{loan.amount}</p>
+        <p className="text-sm font-bold text-[#151918]">RD$ {loan.amount.toLocaleString()}</p>
         <p className="mt-1 text-sm font-medium text-[#777D7A]">{loan.interest}</p>
       </div>
       <ProgressCell percent={loan.percent} progress={loan.progress} />
@@ -419,21 +331,15 @@ function LoanRow({ loan, index }: { loan: (typeof loans)[number]; index: number 
   );
 }
 
-function Pagination({ count }: { count: number }) {
+function Pagination({ count, total }: { count: number; total: number }) {
   return (
     <div className="flex min-w-[1180px] items-center justify-between border-t border-[#EDF2EF] px-6 py-4">
-      <p className="text-sm font-medium text-[#777D7A]">Mostrando {count} de 9 préstamos</p>
-      <div className="flex items-center gap-4 text-sm font-medium text-[#3F4542]">
-        <button className="transition hover:text-[#5FA37D]" type="button">Anterior</button>
-        <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#5FA37D] font-bold text-white" type="button">1</button>
-        <button className="transition hover:text-[#5FA37D]" type="button">2</button>
-        <button className="transition hover:text-[#5FA37D]" type="button">Siguiente</button>
-      </div>
+      <p className="text-sm font-medium text-[#777D7A]">Mostrando {count} de {total} préstamos</p>
     </div>
   );
 }
 
-function LoansTable({ rows }: { rows: typeof loans }) {
+function LoansTable({ rows, total }: { rows: LoanRowData[]; total: number }) {
   return (
     <PanelCard className="overflow-hidden" index={6}>
       <div className="overflow-x-auto">
@@ -446,9 +352,9 @@ function LoansTable({ rows }: { rows: typeof loans }) {
           <span className="flex items-center justify-end gap-1">ESTADO <ChevronDown className="h-4 w-4" /></span>
         </div>
         {rows.map((loan, index) => (
-          <LoanRow index={index} key={loan.detail} loan={loan} />
+          <LoanRow index={index} key={loan.id} loan={loan} />
         ))}
-        <Pagination count={rows.length} />
+        <Pagination count={rows.length} total={total} />
       </div>
     </PanelCard>
   );
@@ -462,46 +368,68 @@ function normalizeStatusFilter(status: string) {
 }
 
 export function LoansPage() {
+  const [loans, setLoans] = useState<LoanListItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
-  const [selectedType, setSelectedType] = useState('Todos los tipos');
   const [sort, setSort] = useState('Más recientes');
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const filteredLoans = useMemo(() => {
+  useEffect(() => {
+    setLoading(true);
+    getLoans(undefined, search || undefined)
+      .then(setLoans)
+      .finally(() => setLoading(false));
+  }, [search]);
+
+  const rows = useMemo(() => {
+    const mapped = loans.map(loanToRow);
     const query = search.trim().toLowerCase();
     const status = normalizeStatusFilter(selectedStatus);
 
-    return loans
-      .filter((loan) => {
-        const matchesSearch = !query || `${loan.client} ${loan.detail}`.toLowerCase().includes(query);
-        const matchesStatus = selectedStatus === 'Todos' || loan.status === status;
-        const matchesType = selectedType === 'Todos los tipos' || loan.type === selectedType;
-        return matchesSearch && matchesStatus && matchesType;
+    return mapped
+      .filter((row) => {
+        const matchesSearch = !query || `${row.client} ${row.detail}`.toLowerCase().includes(query);
+        const matchesStatus = selectedStatus === 'Todos' || row.status === status;
+        return matchesSearch && matchesStatus;
       })
       .sort((a, b) => {
-        if (sort === 'Más antiguos') return a.detail.localeCompare(b.detail);
-        if (sort === 'Mayor monto') return Number(b.amount.replace(/\D/g, '')) - Number(a.amount.replace(/\D/g, ''));
-        if (sort === 'Menor monto') return Number(a.amount.replace(/\D/g, '')) - Number(b.amount.replace(/\D/g, ''));
-        return b.detail.localeCompare(a.detail);
+        if (sort === 'Más antiguos') return a.client.localeCompare(b.client);
+        if (sort === 'Mayor monto') return b.amount - a.amount;
+        if (sort === 'Menor monto') return a.amount - b.amount;
+        return b.client.localeCompare(a.client);
       });
-  }, [search, selectedStatus, selectedType, sort]);
+  }, [loans, search, selectedStatus, sort]);
+
+  function handleSearch(value: string) {
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => setSearch(value), 300);
+  }
 
   return (
     <main className="min-h-screen bg-[#F4F5F6] p-5 font-sans text-[#173D2C]">
       <div className="mx-auto max-w-[1640px]">
-        <LoansHeader />
-        <LoanSummaryCards />
+        <LoansHeader total={loans.length} amount={
+          loans.length > 0
+            ? (loans.reduce((s, l) => s + l.principal, 0) >= 1_000_000
+              ? `${(loans.reduce((s, l) => s + l.principal, 0) / 1_000_000).toFixed(1)}M`
+              : `${(loans.reduce((s, l) => s + l.principal, 0) / 1_000).toFixed(0)}K`)
+            : '0'
+        } />
+        {!loading && <LoanSummaryCards items={rows} />}
         <LoanFilters
-          onSearchChange={setSearch}
+          onSearchChange={handleSearch}
           onSortChange={setSort}
           onStatusChange={setSelectedStatus}
-          onTypeChange={setSelectedType}
           search={search}
           selectedStatus={selectedStatus}
-          selectedType={selectedType}
           sort={sort}
         />
-        <LoansTable rows={filteredLoans} />
+        {loading ? (
+          <div className="flex items-center justify-center py-20 text-sm font-medium text-[#A9CDBB]">Cargando préstamos...</div>
+        ) : (
+          <LoansTable rows={rows} total={loans.length} />
+        )}
       </div>
     </main>
   );

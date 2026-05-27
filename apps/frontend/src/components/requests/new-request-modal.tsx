@@ -3,10 +3,12 @@
 import { memo, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ImagePlus, UserPlus, X } from 'lucide-react';
+import type { CreateRequestDto } from '@inversiones/shared';
 
 interface NewRequestModalProps {
   open: boolean;
   onClose: () => void;
+  onSubmit: (dto: CreateRequestDto) => void;
 }
 
 const fieldClass =
@@ -33,20 +35,41 @@ const Field = memo(function Field({
   );
 });
 
-export function NewRequestModal({ open, onClose }: NewRequestModalProps) {
+function parseAmount(raw: string): number {
+  return Number(raw.replace(/[^0-9.]/g, '')) || 0;
+}
+
+export function NewRequestModal({ open, onClose, onSubmit }: NewRequestModalProps) {
   const [form, setForm] = useState({
-    firstName: 'Carmen',
-    lastName: 'Reyes Polanco',
-    identification: '000-0000000-0',
-    phone: '+1 (809) 000-0000',
-    amount: 'RD$ 50,000',
-    reference: 'Juan Reyes — 809 555 0000',
+    firstName: '',
+    lastName: '',
+    identification: '',
+    phone: '',
+    amount: '',
+    reference: '',
     description: '',
   });
 
   const updateField = useCallback((field: FormField, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
   }, []);
+
+  const handleSubmit = () => {
+    const amount = parseAmount(form.amount);
+    if (!form.firstName.trim() || !form.lastName.trim() || amount <= 0) return;
+
+    onSubmit({
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      identification: form.identification.trim() || undefined,
+      phone: form.phone.trim() || undefined,
+      amount,
+      reference: form.reference.trim() || undefined,
+      description: form.description.trim() || undefined,
+    });
+
+    setForm({ firstName: '', lastName: '', identification: '', phone: '', amount: '', reference: '', description: '' });
+  };
 
   return (
     <AnimatePresence>
@@ -132,6 +155,7 @@ export function NewRequestModal({ open, onClose }: NewRequestModalProps) {
               </button>
               <button
                 className="h-11 rounded-full bg-[#285C43] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.22)] transition hover:bg-[#1F4734]"
+                onClick={handleSubmit}
                 type="button"
               >
                 Crear solicitud

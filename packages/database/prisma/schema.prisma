@@ -50,6 +50,13 @@ enum AllocationType {
   PENALTY
 }
 
+enum RequestStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
 // ─── Users ──────────────────────────────────────────────────────────────────
 
 model User {
@@ -62,10 +69,13 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  createdClients Client[]     @relation("ClientCreatedBy")
-  createdLoans   Loan[]       @relation("LoanCreatedBy")
-  receivedPayments Payment[]  @relation("PaymentReceivedBy")
-  auditLogs      AuditLog[]
+  createdClients  Client[]      @relation("ClientCreatedBy")
+  createdLoans    Loan[]        @relation("LoanCreatedBy")
+  receivedPayments Payment[]    @relation("PaymentReceivedBy")
+  auditLogs       AuditLog[]
+  loanRequests    LoanRequest[]
+  investors       Investor[]
+  uploadedDocuments Document[]
 
   @@map("users")
 }
@@ -93,11 +103,37 @@ model Client {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  createdBy User    @relation("ClientCreatedBy", fields: [createdById], references: [id])
-  loans     Loan[]
-  payments  Payment[]
+  createdBy    User           @relation("ClientCreatedBy", fields: [createdById], references: [id])
+  loans        Loan[]
+  payments     Payment[]
+  loanRequests LoanRequest[]
+  documents    Document[]
 
   @@map("clients")
+}
+
+// ─── Loan Requests (Solicitudes) ───────────────────────────────────────────
+
+model LoanRequest {
+  id             String        @id @default(uuid())
+  code           String        @unique
+  firstName      String        @map("first_name")
+  lastName       String        @map("last_name")
+  identification String?
+  phone          String?
+  amount         Decimal
+  description    String?
+  reference      String?
+  status         RequestStatus @default(PENDING)
+  createdById    String        @map("created_by")
+  clientId       String?       @map("client_id")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  createdBy User    @relation(fields: [createdById], references: [id])
+  client    Client? @relation(fields: [clientId], references: [id])
+
+  @@map("loan_requests")
 }
 
 // ─── Loan Products (templates) ──────────────────────────────────────────────
@@ -229,6 +265,59 @@ model LateFee {
   schedule PaymentSchedule @relation(fields: [scheduleId], references: [id])
 
   @@map("late_fees")
+}
+
+// ─── Investors ──────────────────────────────────────────────────────────────
+
+enum InvestorStatus {
+  ACTIVE
+  PAUSED
+  WITHDRAWN
+}
+
+model Investor {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  name            String
+  email           String?
+  phone           String?
+  capital         Decimal       @default(0)
+  monthlyPayment  Decimal       @default(0) @map("monthly_payment")
+  rate            Decimal       @default(0)
+  status          InvestorStatus @default(ACTIVE)
+  notes           String?
+  createdById     String        @map("created_by")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  createdBy User       @relation(fields: [createdById], references: [id])
+  documents Document[]
+
+  @@map("investors")
+}
+
+// ─── Documents ──────────────────────────────────────────────────────────────
+
+model Document {
+  id         String   @id @default(uuid())
+  clientId   String?  @map("client_id")
+  investorId String?  @map("investor_id")
+  loanId     String?  @map("loan_id")
+  name       String
+  category   String   @default("general")
+  fileUrl    String?  @map("file_url")
+  fileSize   Int?     @map("file_size")
+  mimeType   String?  @map("mime_type")
+  notes      String?
+  uploadedById String @map("uploaded_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  uploadedBy User   @relation(fields: [uploadedById], references: [id])
+  client     Client? @relation(fields: [clientId], references: [id])
+  investor   Investor? @relation(fields: [investorId], references: [id])
+
+  @@map("documents")
 }
 
 // ─── Audit Log ──────────────────────────────────────────────────────────────

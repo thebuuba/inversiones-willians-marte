@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ClientsModule } from './modules/clients/clients.module';
@@ -8,10 +9,14 @@ import { LoansModule } from './modules/loans/loans.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { RequestsModule } from './modules/requests/requests.module';
+import { InvestorsModule } from './modules/investors/investors.module';
+import { DocumentsModule } from './modules/documents/documents.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     AuthModule,
     UsersModule,
     ClientsModule,
@@ -20,6 +25,9 @@ import { AuditModule } from './modules/audit/audit.module';
     PaymentsModule,
     ReportsModule,
     AuditModule,
+    RequestsModule,
+    InvestorsModule,
+    DocumentsModule,
   ],
 })
 export class AppModule {}
