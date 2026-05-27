@@ -533,7 +533,7 @@ export function CashPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6FAF7] p-5 font-sans text-[#173D2C]">
+    <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
       <Header onNewMovement={() => setIsModalOpen(true)} />
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-3">

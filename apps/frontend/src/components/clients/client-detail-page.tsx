@@ -1024,7 +1024,7 @@ export function ClientDetailPage() {
   const [activeTab, setActiveTab] = useState<ClientTab>('Información');
 
   return (
-    <main className="min-h-screen bg-[#F6FAF7] p-5 font-sans text-[#1F4A36]">
+    <main className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#1F4A36]">
       <div className="mx-auto max-w-[1180px]">
         <ClientHeader />
         <ClientTabs activeTab={activeTab} onTabChange={setActiveTab} />

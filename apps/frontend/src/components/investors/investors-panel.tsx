@@ -144,7 +144,7 @@ function StatusPill({ status }: { status: keyof typeof statusStyles }) {
 
 export function InvestorsPanel() {
   return (
-    <div className="min-h-screen bg-[#F6FAF7] p-5 font-sans text-[#173D2C]">
+    <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
       <motion.header
         variants={fadeUp}
         initial="hidden"

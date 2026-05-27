@@ -1087,7 +1087,7 @@ export function SettingsPage() {
   const [activeTab, setActiveTab] = useState('Seguridad');
 
   return (
-    <main className="min-h-screen bg-[#F6FAF7] p-5 font-sans text-[#173D2C]">
+    <main className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
       <SettingsHeader />
       <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
 

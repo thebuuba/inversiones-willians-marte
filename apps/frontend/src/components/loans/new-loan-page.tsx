@@ -802,7 +802,7 @@ function WizardActions({
 }) {
   if (step === 1) {
     return (
-      <div className="sticky bottom-0 -mx-5 mt-8 flex justify-end bg-[#F6FAF7]/92 px-5 py-4 backdrop-blur-sm lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
+      <div className="sticky bottom-0 -mx-5 mt-8 flex justify-end bg-[#F3F4F6]/92 px-5 py-4 backdrop-blur-sm lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
         <ContinueButton enabled={selectedClient} onClick={onContinue} />
       </div>
     );
@@ -810,7 +810,7 @@ function WizardActions({
 
   if (step === 3) {
     return (
-      <div className="sticky bottom-0 -mx-5 mt-9 flex flex-col justify-between gap-4 bg-[#F6FAF7]/92 px-5 py-4 backdrop-blur-sm sm:flex-row lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
+      <div className="sticky bottom-0 -mx-5 mt-9 flex flex-col justify-between gap-4 bg-[#F3F4F6]/92 px-5 py-4 backdrop-blur-sm sm:flex-row lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
         <button
           className="inline-flex h-14 items-center justify-center gap-3 rounded-full border border-[#DDEBE3] bg-white px-8 text-sm font-bold text-[#173D2C] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#F6FAF7] hover:shadow-md"
           onClick={onBack}
@@ -832,7 +832,7 @@ function WizardActions({
   }
 
   return (
-    <div className="sticky bottom-0 -mx-5 mt-8 flex flex-col justify-between gap-4 bg-[#F6FAF7]/92 px-5 py-4 backdrop-blur-sm sm:flex-row lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
+    <div className="sticky bottom-0 -mx-5 mt-8 flex flex-col justify-between gap-4 bg-[#F3F4F6]/92 px-5 py-4 backdrop-blur-sm sm:flex-row lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
       <button
         className="inline-flex h-14 items-center justify-center gap-3 rounded-full border border-[#DDEBE3] bg-white px-8 text-sm font-bold text-[#173D2C] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#F6FAF7] hover:shadow-md"
         onClick={onBack}
@@ -862,7 +862,7 @@ export function NewLoanPage() {
   const [term, setTerm] = useState('12');
 
   return (
-    <main className="min-h-screen bg-[#F6FAF7] px-5 py-7 font-sans text-[#173D2C] lg:px-9 lg:py-8">
+    <main className="min-h-screen bg-[#F3F4F6] px-5 py-7 font-sans text-[#173D2C] lg:px-9 lg:py-8">
       <div className="mx-auto max-w-[1720px]">
         <Header step={step} />
 

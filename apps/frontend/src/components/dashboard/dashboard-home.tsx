@@ -208,7 +208,7 @@ function SectionHeader({
 
 export function DashboardHome() {
   return (
-    <div className="min-h-screen bg-[#F6FAF7] p-5 font-sans text-[#173D2C]">
+    <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
       <div className="mb-5 flex flex-col items-start justify-between gap-4 2xl:flex-row 2xl:items-end">
         <div>
           <div className="mb-3 flex items-center gap-3">
