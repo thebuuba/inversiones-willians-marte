@@ -283,16 +283,16 @@ function CompanyInfoCard() {
       <LogoUploader />
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-        <FormInput label="Nombre comercial" value="Willians Marte Préstamos" />
-        <FormInput label="RNC / Identificación" value="1-30-12345-6" />
-        <FormInput label="Correo de contacto" value="admin@empresa.com" />
-        <FormInput label="Teléfono" value="+1 (809) 555-0142" />
+        <FormInput label="Nombre comercial" value="" />
+        <FormInput label="RNC / Identificación" value="" />
+        <FormInput label="Correo de contacto" value="" />
+        <FormInput label="Teléfono" value="" />
         <FormInput
           className="md:col-span-2"
           helper="Aparece en facturas y contratos."
           label="Dirección"
           multiline
-          value="Av. 27 de Febrero #245, Santo Domingo, RD"
+          value=""
         />
       </div>
     </SectionCard>
@@ -309,10 +309,10 @@ function LocalizationCard() {
       />
 
       <div className="space-y-5">
-        <FormSelect label="Idioma" value="Español" />
-        <FormSelect label="Moneda principal" value="RD$ — Peso Dominicano" />
-        <FormSelect label="Zona horaria" value="(GMT-4) Santo Domingo" />
-        <FormSelect label="Formato de fecha" value="DD/MM/AAAA" />
+        <FormSelect label="Idioma" options={[]} value="" />
+        <FormSelect label="Moneda principal" options={[]} value="" />
+        <FormSelect label="Zona horaria" options={[]} value="" />
+        <FormSelect label="Formato de fecha" options={[]} value="" />
       </div>
     </SectionCard>
   );
@@ -354,22 +354,22 @@ function DefaultLoanParametersCard() {
           helper="Porcentaje aplicado al capital cada mes."
           label="Tasa de interés mensual"
           suffix="%"
-          value="2.5"
+          value=""
         />
-        <FormInput label="Mora por día de atraso" suffix="%" value="0.50" />
-        <FormInput label="Plazo mínimo (meses)" value="1" />
-        <FormInput label="Plazo máximo (meses)" value="24" />
-        <FormInput label="Monto mínimo" prefix="RD$" value="5,000" />
-        <FormInput label="Monto máximo" prefix="RD$" value="500,000" />
+        <FormInput label="Mora por día de atraso" suffix="%" value="" />
+        <FormInput label="Plazo mínimo (meses)" value="" />
+        <FormInput label="Plazo máximo (meses)" value="" />
+        <FormInput label="Monto mínimo" prefix="RD$" value="" />
+        <FormInput label="Monto máximo" prefix="RD$" value="" />
         <FormSelect
           label="Frecuencia de pago por defecto"
-          options={['Mensual', 'Quincenal', 'Semanal', 'Diario']}
-          value="Mensual"
+          options={[]}
+          value=""
         />
         <FormSelect
           label="Método de cálculo"
-          options={['Sistema francés (cuota fija)', 'Interés simple', 'Saldo insoluto']}
-          value="Sistema francés (cuota fija)"
+          options={[]}
+          value=""
         />
       </div>
 
@@ -380,41 +380,18 @@ function DefaultLoanParametersCard() {
           title="Aprobación automática"
         />
         <SwitchRow
-          defaultChecked
+          defaultChecked={false}
           description="Solicitar al menos un garante por cada préstamo nuevo."
           title="Requerir garante"
         />
         <SwitchRow
           bordered={false}
-          defaultChecked
+          defaultChecked={false}
           description="Crear automáticamente la tabla de cuotas al aprobar."
           title="Generar amortización al crear"
         />
       </div>
     </SectionCard>
-  );
-}
-
-function LoanProductItem({
-  color,
-  title,
-  detail,
-  enabled,
-}: {
-  color: string;
-  title: string;
-  detail: string;
-  enabled: boolean;
-}) {
-  return (
-    <div className="flex min-h-[88px] items-center gap-4 rounded-[18px] border border-[#EDF2EF] bg-white px-4 py-3.5 shadow-[0_5px_18px_rgba(40,92,67,0.025)]">
-      <div className="h-12 w-12 shrink-0 rounded-[14px]" style={{ backgroundColor: color }} />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-bold text-[#173D2C]">{title}</p>
-        <p className="mt-1 truncate text-sm font-medium text-[#7A8A80]">{detail}</p>
-      </div>
-      <ToggleSwitch defaultChecked={enabled} />
-    </div>
   );
 }
 
@@ -428,30 +405,7 @@ function LoanProductsCard() {
       />
 
       <div className="space-y-4">
-        <LoanProductItem
-          color="#B8DCC5"
-          detail="2.5% mensual · 1–24 meses"
-          enabled
-          title="Préstamo Personal"
-        />
-        <LoanProductItem
-          color="#FFE3D2"
-          detail="3.2% mensual · 3–36 meses"
-          enabled
-          title="Préstamo Comercial"
-        />
-        <LoanProductItem
-          color="#FFF4C8"
-          detail="4.0% mensual · 1–6 meses"
-          enabled
-          title="Préstamo Express"
-        />
-        <LoanProductItem
-          color="#D8E9FF"
-          detail="1.5% mensual · 12–120 meses"
-          enabled={false}
-          title="Préstamo Hipotecario"
-        />
+        <p className="py-6 text-center text-sm font-medium text-[#A9CDBB]">No hay productos configurados</p>
       </div>
 
       <button
@@ -838,73 +792,20 @@ function SettingsUsersRolesTab() {
   );
 }
 
-const notificationChannels = [
-  {
-    title: 'Correo electrónico',
-    detail: 'smtp.empresa.com · admin@empresa.com',
-    icon: Mail,
-    iconBg: '#D8E9FF',
-    iconColor: '#3F7FBD',
-    enabled: true,
-  },
-  {
-    title: 'WhatsApp Business',
-    detail: 'Conectado · +1 (809) 555-0142',
-    icon: MessageCircle,
-    iconBg: '#B8DCC5',
-    iconColor: '#2F7654',
-    enabled: true,
-  },
-  {
-    title: 'SMS',
-    detail: 'Proveedor: Twilio',
-    icon: Smartphone,
-    iconBg: '#FFE3D2',
-    iconColor: '#C96F4A',
-    enabled: false,
-  },
-  {
-    title: 'Push (app móvil)',
-    detail: 'Notificaciones en dispositivos.',
-    icon: Bell,
-    iconBg: '#FFF4C8',
-    iconColor: '#A98219',
-    enabled: true,
-  },
-];
+const notificationChannels: {
+  title: string;
+  detail: string;
+  icon: React.ComponentType<{ className?: string }>;
+  iconBg: string;
+  iconColor: string;
+  enabled: boolean;
+}[] = [];
 
-const internalAlerts = [
-  {
-    title: 'NUEVO PRÉSTAMO CREADO',
-    detail: 'Notifica al administrador y al asesor responsable.',
-    enabled: true,
-  },
-  {
-    title: 'Pago recibido',
-    detail: 'Confirmación inmediata al gestor de cobros.',
-    enabled: true,
-  },
-  {
-    title: 'Préstamo en mora (3+ días)',
-    detail: 'Alerta diaria con el listado consolidado.',
-    enabled: true,
-  },
-  {
-    title: 'Cierre diario de caja',
-    detail: 'Resumen automático al finalizar la jornada.',
-    enabled: false,
-  },
-  {
-    title: 'Nuevo cliente registrado',
-    detail: 'Útil al activar campañas de bienvenida.',
-    enabled: false,
-  },
-  {
-    title: 'Documento próximo a vencer',
-    detail: 'Avisa 7 días antes del vencimiento.',
-    enabled: true,
-  },
-];
+const internalAlerts: {
+  title: string;
+  detail: string;
+  enabled: boolean;
+}[] = [];
 
 function NotificationChannelItem({
   channel,
@@ -989,13 +890,13 @@ function InternalAlertsCard() {
         <FormSelect
           helper="Días antes de la fecha de cuota."
           label="Recordatorio de pago al cliente"
-          options={['3 días antes', '1 día antes', '5 días antes', '7 días antes']}
-          value="3 días antes"
+          options={[]}
+          value=""
         />
         <FormInput
           helper="Para resúmenes y alertas programadas."
           label="Hora de envío diario"
-          value="08:30 a.m."
+          value=""
         />
       </div>
     </SectionCard>
@@ -1016,28 +917,11 @@ function SettingsNotificationsTab() {
   );
 }
 
-const securityOptions = [
-  {
-    title: 'Autenticación en dos pasos (2FA)',
-    detail: 'Solicita un código adicional al iniciar sesión.',
-    enabled: true,
-  },
-  {
-    title: 'Inicio de sesión con Google',
-    detail: 'Permite acceso con cuentas corporativas.',
-    enabled: false,
-  },
-  {
-    title: 'Bloqueo por intentos fallidos',
-    detail: 'Bloquea la cuenta tras 5 intentos incorrectos.',
-    enabled: true,
-  },
-  {
-    title: 'Cierre automático de sesión',
-    detail: 'Cierra sesiones inactivas tras 30 minutos.',
-    enabled: true,
-  },
-];
+const securityOptions: {
+  title: string;
+  detail: string;
+  enabled: boolean;
+}[] = [];
 
 function SecurityOptionItem({
   option,
@@ -1079,13 +963,13 @@ function AccessAuthenticationCard() {
       <div className="mt-6 grid grid-cols-1 gap-5 border-t border-[#EDF2EF] pt-6 md:grid-cols-2">
         <FormSelect
           label="Longitud mínima de contraseña"
-          options={['8 caracteres', '10 caracteres', '12 caracteres']}
-          value="8 caracteres"
+          options={[]}
+          value=""
         />
         <FormSelect
           label="Caducidad de contraseña"
-          options={['90 días', '60 días', '30 días', 'Nunca']}
-          value="90 días"
+          options={[]}
+          value=""
         />
       </div>
     </SectionCard>
@@ -1101,26 +985,18 @@ function BackupsCard() {
         title="Respaldos"
       />
 
-      <div className="mb-6 flex items-center gap-4 rounded-[18px] bg-[#EAF6EF] p-5">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#5FA37D] text-white">
-          <Check className="h-5 w-5" />
-        </span>
-        <div>
-          <p className="text-base font-bold text-[#2F7D57]">Respaldo activo</p>
-          <p className="mt-1 text-sm font-medium text-[#5C6D63]">Último respaldo: hoy, 03:00 AM</p>
-        </div>
-      </div>
+      <p className="py-6 text-center text-sm font-medium text-[#A9CDBB]">No hay respaldos configurados</p>
 
       <div className="space-y-5">
         <FormSelect
           label="Frecuencia"
-          options={['Diaria', 'Semanal', 'Mensual']}
-          value="Diaria"
+          options={[]}
+          value=""
         />
         <FormSelect
           label="Retención"
-          options={['30 días', '60 días', '90 días', '1 año']}
-          value="30 días"
+          options={[]}
+          value=""
         />
       </div>
 
