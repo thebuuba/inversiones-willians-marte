@@ -48,12 +48,60 @@ export const AllocationTypeEnum = {
 export type AllocationType = (typeof AllocationTypeEnum)[keyof typeof AllocationTypeEnum];
 
 export interface CreateClientDto {
-  name: string;
+  firstName: string;
+  lastName: string;
   phone?: string;
+  altPhone?: string;
   email?: string;
   identification?: string;
   address?: string;
+  birthDate?: string;
+  gender?: string;
+  maritalStatus?: string;
+  nationality?: string;
+  dependents?: number;
+  photo?: string;
   notes?: string;
+}
+
+export interface Client extends CreateClientDto {
+  id: string;
+  createdById: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { loans: number };
+}
+
+export interface ClientDetail extends Client {
+  loans: LoanSummary[];
+}
+
+export interface LoanSummary {
+  id: string;
+  clientId: string;
+  productId: string;
+  principal: number;
+  interestRate: number;
+  interestType: InterestType;
+  totalAmount: number;
+  paymentFreq: PaymentFrequency;
+  term: number;
+  startDate: string;
+  endDate?: string;
+  status: LoanStatus;
+  balance: number;
+  notes?: string;
+  product?: LoanProductSummary;
+  _count?: { payments: number };
+}
+
+export interface LoanProductSummary {
+  id: string;
+  name: string;
+  interestType: InterestType;
+  interestRate: number;
+  paymentFrequency: PaymentFrequency;
 }
 
 export interface CreateUserDto {

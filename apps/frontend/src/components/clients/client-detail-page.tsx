@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, type ReactNode, useState } from 'react';
+import { getClient } from '@/lib/api/clients';
+import type { ClientDetail, LoanSummary } from '@inversiones/shared';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -31,72 +32,33 @@ import {
   Phone,
 } from 'lucide-react';
 
-const client = {
-  name: 'María González Pérez',
-  code: 'CL-0142',
-  status: 'Activo',
-  avatar: 'https://i.pravatar.cc/160?img=32',
-  loansActive: '2',
-  totalLoaned: 'RD$185,000',
-  totalPaid: 'RD$72,400',
-};
+type ClientTab = 'Información' | 'Préstamos' | 'Documentos' | 'Historial' | 'Notas';
 
-const tabs = [
+const tabs: { label: ClientTab; icon: typeof UserRound; count?: number }[] = [
   { label: 'Información', icon: UserRound },
-  { label: 'Préstamos', icon: TrendingUp, count: 3 },
-  { label: 'Documentos', icon: FileText, count: 4 },
+  { label: 'Préstamos', icon: TrendingUp },
+  { label: 'Documentos', icon: FileText },
   { label: 'Historial', icon: History },
-  { label: 'Notas', icon: StickyNote, count: 2 },
+  { label: 'Notas', icon: StickyNote },
 ];
 
-const loans = [
-  {
-    code: 'PR-2104',
-    duration: '24 meses',
-    frequency: 'Mensual',
-    status: 'Activo',
-    capital: 'RD$85,000',
-    balance: 'RD$54,600',
-    payment: 'RD$4,250',
-    progress: 36,
-    disbursement: '14 de junio de 2024',
-  },
-  {
-    code: 'PR-1987',
-    duration: '36 meses',
-    frequency: 'Mensual',
-    status: 'Activo',
-    capital: 'RD$100,000',
-    balance: 'RD$58,000',
-    payment: 'RD$5,500',
-    progress: 42,
-    disbursement: '19 de enero de 2024',
-  },
-  {
-    code: 'PR-1340',
-    duration: '18 meses',
-    frequency: 'Mensual',
-    status: 'Pagado',
-    capital: 'RD$40,000',
-    balance: 'RD$0',
-    payment: 'RD$2,000',
-    progress: 100,
-    disbursement: '31 de enero de 2023',
-  },
-];
-
-type ClientTab = (typeof tabs)[number]['label'];
-
-const infoCards = [
-  { label: 'CÉDULA', value: '402-1234567-8', icon: CreditCard },
-  { label: 'TELÉFONO', value: '+1 (809) 555-0142', icon: Phone },
-  { label: 'CORREO ELECTRÓNICO', value: 'maria.gonzalez@gmail.com', icon: Mail },
-  { label: 'CIUDAD', value: 'Santo Domingo', icon: MapPin },
-  { label: 'DIRECCIÓN', value: 'Calle El Conde #45, Zona Colonial', icon: Building2 },
-  { label: 'OCUPACIÓN', value: 'Comerciante', icon: BriefcaseBusiness },
-  { label: 'FECHA DE NACIMIENTO', value: '1985-03-14', icon: CalendarDays },
-  { label: 'CLIENTE DESDE', value: '10 de enero de 2023', icon: CalendarDays },
-];
+function buildInfoCards(clientData: ClientDetail) {
+  const fmt = new Intl.DateTimeFormat('es-DO', { dateStyle: 'long' });
+  return [
+    { label: 'CÉDULA', value: clientData.identification ?? '—', icon: CreditCard },
+    { label: 'TELÉFONO', value: clientData.phone ?? '—', icon: Phone },
+    { label: 'TELÉFONO ALT.', value: clientData.altPhone ?? '—', icon: Phone },
+    { label: 'CORREO ELECTRÓNICO', value: clientData.email ?? '—', icon: Mail },
+    { label: 'DIRECCIÓN', value: clientData.address ?? '—', icon: Building2 },
+    { label: 'GÉNERO', value: clientData.gender ?? '—', icon: UserRound },
+    { label: 'ESTADO CIVIL', value: clientData.maritalStatus ?? '—', icon: UserRound },
+    { label: 'NACIONALIDAD', value: clientData.nationality ?? '—', icon: MapPin },
+    { label: 'FECHA DE NACIMIENTO', value: clientData.birthDate ? fmt.format(new Date(clientData.birthDate)) : '—', icon: CalendarDays },
+    { label: 'DEPENDIENTES', value: clientData.dependents != null ? String(clientData.dependents) : '—', icon: UserRound },
+    { label: 'CLIENTE DESDE', value: fmt.format(new Date(clientData.createdAt)), icon: CalendarDays },
+    { label: 'NOTAS', value: clientData.notes ?? '—', icon: StickyNote },
+  ];
+}
 
 interface ClientDocument {
   title: string;
@@ -142,69 +104,20 @@ const initialDocuments: ClientDocument[] = [
   },
 ];
 
-const historyEvents = [
-  {
-    type: 'Pago',
-    amount: '+RD$4,250',
-    title: 'Pago cuota PR-2104',
-    author: 'Por Sistema',
-    date: '25 may de 2025',
-  },
-  {
-    type: 'Nota',
-    title: 'Nota agregada por Williams Marte',
-    author: 'Por Williams Marte',
-    date: '10 may de 2025',
-  },
-  {
-    type: 'Pago',
-    amount: '+RD$5,500',
-    title: 'Pago cuota PR-1987',
-    author: 'Por Sistema',
-    date: '4 may de 2025',
-  },
-  {
-    type: 'Pago',
-    amount: '+RD$4,250',
-    title: 'Pago cuota PR-2104',
-    author: 'Por Sistema',
-    date: '25 abr de 2025',
-  },
-  {
-    type: 'Estado',
-    title: 'Préstamo PR-1340 marcado como pagado',
-    author: 'Por Sistema',
-    date: '1 ago de 2024',
-  },
-  {
-    type: 'Documento',
-    title: 'Documento agregado',
-    author: 'Por Sistema',
-    date: '15 jun de 2024',
-  },
-] as const;
-
-interface ClientNote {
-  id: number;
-  text: string;
+interface HistoryEvent {
+  type: string;
+  amount?: string;
+  title: string;
   author: string;
   date: string;
 }
 
-const initialNotes: ClientNote[] = [
-  {
-    id: 1,
-    text: 'Cliente muy puntual con sus pagos. Interesada en un préstamo comercial mayor a futuro.',
-    author: 'Willians Marte',
-    date: '10 de mayo de 2025',
-  },
-  {
-    id: 2,
-    text: 'Llamó para consultar sobre refinanciamiento. Pendiente revisión de ingresos.',
-    author: 'María Rodríguez',
-    date: '22 de abril de 2025',
-  },
-];
+type ClientNote = {
+  id: number;
+  text: string;
+  author: string;
+  date: string;
+};
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 16 },
@@ -215,16 +128,23 @@ const fadeUp: Variants = {
   }),
 };
 
-function StatusBadge() {
-  return (
+function StatusBadge({ active }: { active: boolean }) {
+  return active ? (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#3E8A61]">
       <span className="h-2 w-2 rounded-full bg-[#5FA37D]" />
       Activo
     </span>
+  ) : (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EEF3EF] px-3 py-1 text-xs font-bold text-[#7A8A80]">
+      <span className="h-2 w-2 rounded-full bg-[#A9CDBB]" />
+      Inactivo
+    </span>
   );
 }
 
-function ClientHeader() {
+function ClientHeader({ clientData }: { clientData: ClientDetail }) {
+  const fullName = `${clientData.firstName} ${clientData.lastName}`;
+
   return (
     <motion.header animate="visible" className="mb-4" initial="hidden" variants={fadeUp}>
       <Link
@@ -236,18 +156,24 @@ function ClientHeader() {
       </Link>
 
       <div className="mt-5 flex items-center gap-3.5">
-        <div
-          aria-label={client.name}
-          className="h-12 w-12 rounded-[15px] border-[3px] border-[#B8EBC9] bg-cover bg-center shadow-[0_8px_18px_rgba(40,92,67,0.1)]"
-          role="img"
-          style={{ backgroundImage: `url(${client.avatar})` }}
-        />
+        {clientData.photo ? (
+          <div
+            aria-label={fullName}
+            className="h-12 w-12 rounded-[15px] border-[3px] border-[#B8EBC9] bg-cover bg-center shadow-[0_8px_18px_rgba(40,92,67,0.1)]"
+            role="img"
+            style={{ backgroundImage: `url(${clientData.photo})` }}
+          />
+        ) : (
+          <div className="flex h-12 w-12 items-center justify-center rounded-[15px] border-[3px] border-[#B8EBC9] bg-[#EAF6EF] shadow-[0_8px_18px_rgba(40,92,67,0.1)]">
+            <UserRound className="h-6 w-6 text-[#5FA37D]" />
+          </div>
+        )}
         <div>
-          <h1 className="text-[24px] font-bold leading-tight text-[#1F4A36]">{client.name}</h1>
+          <h1 className="text-[24px] font-bold leading-tight text-[#1F4A36]">{fullName}</h1>
           <div className="mt-1.5 flex items-center gap-2">
-            <p className="text-sm font-medium text-[#7A8A80]">{client.code}</p>
+            <p className="text-sm font-medium text-[#7A8A80]">{clientData.identification ?? '—'}</p>
             <span className="text-[#A9CDBB]">·</span>
-            <StatusBadge />
+            <StatusBadge active={clientData.active} />
           </div>
         </div>
       </div>
@@ -344,7 +270,11 @@ function LoanMetric({ label, value, tone = 'green' }: { label: string; value: st
   );
 }
 
-function LoanCard({ loan, index }: { loan: (typeof loans)[number]; index: number }) {
+function LoanCard({ loan, index }: { loan: LoanSummary; index: number }) {
+  const progress = loan.principal > 0 ? Math.round(((loan.principal - loan.balance) / loan.principal) * 100) : 0;
+  const fmt = new Intl.NumberFormat('es-DO');
+  const statusLabel = loan.status === 'ACTIVE' ? 'Activo' : loan.status === 'PAID' ? 'Pagado' : loan.status === 'OVERDUE' ? 'Vencido' : loan.status;
+
   return (
     <motion.article
       animate="visible"
@@ -359,38 +289,42 @@ function LoanCard({ loan, index }: { loan: (typeof loans)[number]; index: number
             <TrendingUp className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-base font-bold leading-tight text-[#173D2C]">{loan.code}</h3>
+            <h3 className="text-base font-bold leading-tight text-[#173D2C]">{loan.product?.name ?? 'Préstamo'}</h3>
             <p className="mt-1 text-sm font-medium text-[#7A8A80]">
-              {loan.duration} · {loan.frequency}
+              {loan.term} cuotas · {loan.paymentFreq === 'MONTHLY' ? 'Mensual' : loan.paymentFreq === 'DAILY' ? 'Diario' : loan.paymentFreq}
             </p>
           </div>
         </div>
-        <LoanStatusBadge status={loan.status} />
+        <LoanStatusBadge status={statusLabel} />
       </div>
 
       <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <LoanMetric label="CAPITAL" value={loan.capital} />
-        <LoanMetric label="SALDO PENDIENTE" tone="orange" value={loan.balance} />
-        <LoanMetric label="CUOTA" value={loan.payment} />
+        <LoanMetric label="CAPITAL" value={`RD$${fmt.format(loan.principal)}`} />
+        <LoanMetric label="SALDO PENDIENTE" tone="orange" value={`RD$${fmt.format(loan.balance)}`} />
+        <LoanMetric label="CUOTA" value={`RD$${fmt.format(Math.round(loan.totalAmount / loan.term))}`} />
       </div>
 
-      <ProgressBar value={loan.progress} />
+      <ProgressBar value={progress} />
 
       <div className="mt-4 flex items-center gap-2 text-sm font-medium text-[#A7B5AD]">
         <CalendarDays className="h-4 w-4" />
-        Desembolso: {loan.disbursement}
+        Inicio: {new Date(loan.startDate).toLocaleDateString('es-DO')}
       </div>
     </motion.article>
   );
 }
 
-function ClientLoansTab() {
+function ClientLoansTab({ loans }: { loans: LoanSummary[] }) {
   return (
     <section>
       <div className="space-y-4">
-        {loans.map((loan, index) => (
-          <LoanCard index={index + 2} key={loan.code} loan={loan} />
-        ))}
+        {loans.length === 0 ? (
+          <p className="py-10 text-center text-sm font-medium text-[#A9CDBB]">Sin préstamos registrados.</p>
+        ) : (
+          loans.map((loan, index) => (
+            <LoanCard index={index + 2} key={loan.id} loan={loan} />
+          ))
+        )}
       </div>
     </section>
   );
@@ -508,8 +442,8 @@ function DocumentCard({
   );
 }
 
-function ClientDocumentsTab() {
-  const [documents, setDocuments] = useState<ClientDocument[]>(initialDocuments);
+function ClientDocumentsTab({ documents: docs }: { documents: ClientDocument[] }) {
+  const [documents, setDocuments] = useState<ClientDocument[]>(docs);
 
   return (
     <section>
@@ -525,20 +459,24 @@ function ClientDocumentsTab() {
       </motion.div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {documents.map((document, index) => (
-          <DocumentCard
-            document={document}
-            index={index + 3}
-            key={document.title}
-            onDelete={() => setDocuments((current) => current.filter((item) => item.title !== document.title))}
-          />
-        ))}
+        {documents.length === 0 ? (
+          <p className="py-10 text-center text-sm font-medium text-[#A9CDBB] lg:col-span-2">Sin documentos adjuntos.</p>
+        ) : (
+          documents.map((document, index) => (
+            <DocumentCard
+              document={document}
+              index={index + 3}
+              key={document.title}
+              onDelete={() => setDocuments((current) => current.filter((item) => item.title !== document.title))}
+            />
+          ))
+        )}
       </div>
     </section>
   );
 }
 
-function historyTone(type: (typeof historyEvents)[number]['type']) {
+function historyTone(type: string) {
   const styles = {
     Pago: {
       iconBg: '#E7F4EC',
@@ -570,10 +508,10 @@ function historyTone(type: (typeof historyEvents)[number]['type']) {
     },
   };
 
-  return styles[type];
+  return styles[type as keyof typeof styles];
 }
 
-function HistoryBadge({ type }: { type: (typeof historyEvents)[number]['type'] }) {
+function HistoryBadge({ type }: { type: string }) {
   const style = historyTone(type);
 
   return (
@@ -586,7 +524,7 @@ function HistoryBadge({ type }: { type: (typeof historyEvents)[number]['type'] }
   );
 }
 
-function TimelineItem({ event, index }: { event: (typeof historyEvents)[number]; index: number }) {
+function TimelineItem({ event, index }: { event: HistoryEvent; index: number }) {
   const style = historyTone(event.type);
   const Icon = style.icon;
 
@@ -626,23 +564,27 @@ function TimelineItem({ event, index }: { event: (typeof historyEvents)[number];
   );
 }
 
-function Timeline() {
+function Timeline({ events }: { events: HistoryEvent[] }) {
   return (
     <div className="relative">
       <div className="absolute bottom-0 left-[14px] top-0 w-px bg-[#DDEBE3]" />
       <div className="space-y-6">
-        {historyEvents.map((event, index) => (
-          <TimelineItem event={event} index={index + 2} key={`${event.type}-${event.date}-${index}`} />
-        ))}
+        {events.length === 0 ? (
+          <p className="py-10 text-center text-sm font-medium text-[#A9CDBB]">Sin actividad registrada.</p>
+        ) : (
+          events.map((event, index) => (
+            <TimelineItem event={event} index={index + 2} key={`${event.type}-${event.date}-${index}`} />
+          ))
+        )}
       </div>
     </div>
   );
 }
 
-function ClientHistoryTab() {
+function ClientHistoryTab({ events }: { events: HistoryEvent[] }) {
   return (
     <section>
-      <Timeline />
+      <Timeline events={events} />
     </section>
   );
 }
@@ -829,7 +771,7 @@ function NewNoteCard({
   );
 }
 
-function ClientNotesTab() {
+function ClientNotesTab({ initialNotes = [] }: { initialNotes?: ClientNote[] }) {
   const [notes, setNotes] = useState<ClientNote[]>(initialNotes);
   const [isCreating, setIsCreating] = useState(false);
   const [draft, setDraft] = useState('');
@@ -931,7 +873,12 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ClientSummaryCard() {
+function ClientSummaryCard({ clientData }: { clientData: ClientDetail }) {
+  const fullName = `${clientData.firstName} ${clientData.lastName}`;
+  const activeLoans = clientData.loans.filter((l) => l.status === 'ACTIVE').length;
+  const totalLoaned = clientData.loans.reduce((s, l) => s + l.principal, 0);
+  const totalPaid = clientData.loans.reduce((s, l) => s + l.principal - l.balance, 0);
+
   return (
     <motion.section
       animate="visible"
@@ -943,19 +890,25 @@ function ClientSummaryCard() {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
         <div className="flex items-center gap-5">
           <div className="relative h-[86px] w-[86px] shrink-0">
-            <div
-              aria-label={client.name}
-              className="h-full w-full rounded-[18px] border-4 border-white bg-cover bg-center shadow-[0_10px_22px_rgba(40,92,67,0.12)]"
-              role="img"
-              style={{ backgroundImage: `url(${client.avatar})` }}
-            />
-            <span className="absolute bottom-1 right-1 h-4 w-4 rounded-full border-[3px] border-white bg-[#5FA37D]" />
+            {clientData.photo ? (
+              <div
+                aria-label={fullName}
+                className="h-full w-full rounded-[18px] border-4 border-white bg-cover bg-center shadow-[0_10px_22px_rgba(40,92,67,0.12)]"
+                role="img"
+                style={{ backgroundImage: `url(${clientData.photo})` }}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center rounded-[18px] border-4 border-white bg-[#EAF6EF] shadow-[0_10px_22px_rgba(40,92,67,0.12)]">
+                <UserRound className="h-8 w-8 text-[#5FA37D]" />
+              </div>
+            )}
+            <span className={`absolute bottom-1 right-1 h-4 w-4 rounded-full border-[3px] border-white ${clientData.active ? 'bg-[#5FA37D]' : 'bg-[#A9CDBB]'}`} />
           </div>
           <div>
-            <h2 className="text-[24px] font-bold leading-tight text-[#1F4A36]">{client.name}</h2>
-            <p className="mt-1.5 text-sm font-medium text-[#7A8A80]">{client.code}</p>
+            <h2 className="text-[24px] font-bold leading-tight text-[#1F4A36]">{fullName}</h2>
+            <p className="mt-1.5 text-sm font-medium text-[#7A8A80]">{clientData.identification ?? '—'}</p>
             <div className="mt-3">
-              <StatusBadge />
+              <StatusBadge active={clientData.active} />
             </div>
           </div>
         </div>
@@ -972,9 +925,9 @@ function ClientSummaryCard() {
       <div className="my-5 h-px bg-[#D2E8D9]" />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Metric label="PRÉSTAMOS ACTIVOS" value={client.loansActive} />
-        <Metric label="TOTAL PRESTADO" value={client.totalLoaned} />
-        <Metric label="TOTAL PAGADO" value={client.totalPaid} />
+        <Metric label="PRÉSTAMOS ACTIVOS" value={String(activeLoans)} />
+        <Metric label="TOTAL PRESTADO" value={`RD$${totalLoaned.toLocaleString()}`} />
+        <Metric label="TOTAL PAGADO" value={`RD$${totalPaid.toLocaleString()}`} />
       </div>
     </motion.section>
   );
@@ -1000,10 +953,12 @@ function ClientInfoCard({ label, value, icon, index }: { label: string; value: s
   );
 }
 
-function ClientInfoGrid() {
+function ClientInfoGrid({ clientData }: { clientData: ClientDetail }) {
+  const cards = buildInfoCards(clientData);
+
   return (
     <section className="grid grid-cols-1 gap-3.5 md:grid-cols-2 xl:grid-cols-3">
-      {infoCards.map((card, index) => {
+      {cards.map((card, index) => {
         const Icon = card.icon;
 
         return (
@@ -1020,26 +975,53 @@ function ClientInfoGrid() {
   );
 }
 
-export function ClientDetailPage() {
+export function ClientDetailPage({ clientId }: { clientId: string }) {
   const [activeTab, setActiveTab] = useState<ClientTab>('Información');
+  const [clientData, setClientData] = useState<ClientDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    getClient(clientId)
+      .then(setClientData)
+      .catch(() => setClientData(null))
+      .finally(() => setLoading(false));
+  }, [clientId]);
+
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#F3F4F6] p-5 font-sans">
+        <p className="text-sm font-medium text-[#A9CDBB]">Cargando...</p>
+      </main>
+    );
+  }
+
+  if (!clientData) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-[#F3F4F6] p-5 font-sans">
+        <p className="text-sm font-medium text-[#A9CDBB]">Cliente no encontrado.</p>
+        <Link className="mt-4 text-sm font-bold text-[#5FA37D] underline" href="/clientes">Volver a clientes</Link>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#1F4A36]">
       <div className="mx-auto max-w-[1180px]">
-        <ClientHeader />
+        <ClientHeader clientData={clientData} />
         <ClientTabs activeTab={activeTab} onTabChange={setActiveTab} />
         {activeTab === 'Préstamos' ? (
-          <ClientLoansTab />
+          <ClientLoansTab loans={clientData.loans} />
         ) : activeTab === 'Documentos' ? (
-          <ClientDocumentsTab />
+          <ClientDocumentsTab documents={[]} />
         ) : activeTab === 'Historial' ? (
-          <ClientHistoryTab />
+          <ClientHistoryTab events={[]} />
         ) : activeTab === 'Notas' ? (
           <ClientNotesTab />
         ) : activeTab === 'Información' ? (
           <>
-            <ClientSummaryCard />
-            <ClientInfoGrid />
+            <ClientSummaryCard clientData={clientData} />
+            <ClientInfoGrid clientData={clientData} />
           </>
         ) : null}
       </div>

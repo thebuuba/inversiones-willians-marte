@@ -15,7 +15,8 @@ export class ClientsService {
     const where = search
       ? {
           OR: [
-            { name: { contains: search, mode: 'insensitive' as const } },
+            { firstName: { contains: search, mode: 'insensitive' as const } },
+            { lastName: { contains: search, mode: 'insensitive' as const } },
             { phone: { contains: search } },
             { identification: { contains: search } },
           ],

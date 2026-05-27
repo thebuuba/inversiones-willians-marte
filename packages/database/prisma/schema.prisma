@@ -74,11 +74,19 @@ model User {
 
 model Client {
   id             String   @id @default(uuid())
-  name           String
+  firstName      String   @map("first_name")
+  lastName       String   @map("last_name")
   phone          String?
+  altPhone       String?  @map("alt_phone")
   email          String?
   identification String?  @map("identification")
   address        String?
+  birthDate      DateTime?  @map("birth_date")
+  gender         String?
+  maritalStatus  String?  @map("marital_status")
+  nationality    String?
+  dependents     Int?
+  photo          String?
   notes          String?
   createdById    String   @map("created_by")
   active         Boolean  @default(true)

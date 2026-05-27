@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from 'react';
+import { createClient } from '@/lib/api/clients';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -41,7 +43,13 @@ function PageCard({ children, className = '', index = 0 }: { children: ReactNode
   );
 }
 
-function FormHeaderActions() {
+function FormHeaderActions({
+  onSave,
+  saving,
+}: {
+  onSave: () => void;
+  saving: boolean;
+}) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap xl:justify-end">
       <Link
@@ -52,18 +60,13 @@ function FormHeaderActions() {
         Cancelar
       </Link>
       <button
-        className="inline-flex h-12 items-center justify-center gap-3 rounded-full border border-[#B8EBC9] bg-[#EAF6EF] px-7 text-sm font-bold text-[#4F9B76] shadow-[0_5px_14px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:bg-[#DFF1E7] hover:shadow-md"
-        type="button"
-      >
-        <UserPlus className="h-5 w-5" />
-        Guardar y nuevo cliente
-      </button>
-      <button
-        className="inline-flex h-12 items-center justify-center gap-3 rounded-full bg-[#5FA37D] px-7 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.24)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
+        className="inline-flex h-12 items-center justify-center gap-3 rounded-full bg-[#5FA37D] px-7 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.24)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={saving}
+        onClick={onSave}
         type="button"
       >
         <Save className="h-5 w-5" />
-        Guardar cliente
+        {saving ? 'Guardando...' : 'Guardar cliente'}
       </button>
     </div>
   );
@@ -75,12 +78,16 @@ function StyledInput({
   required = false,
   helper,
   type = 'text',
+  value,
+  onChange,
 }: {
   label: string;
   placeholder: string;
   required?: boolean;
   helper?: string;
   type?: string;
+  value: string;
+  onChange: (value: string) => void;
 }) {
   return (
     <label className="block">
@@ -91,6 +98,8 @@ function StyledInput({
         className="h-[52px] w-full rounded-[14px] border border-[#DDEBE3] bg-white px-4 text-sm font-medium text-[#173D2C] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition placeholder:text-[#7E808A] focus:border-[#5FA37D] focus:ring-4 focus:ring-[#EAF6EF]"
         placeholder={placeholder}
         type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
       />
       {helper && <span className="mt-2 block text-sm font-medium text-[#9C9F9D]">{helper}</span>}
     </label>
@@ -101,10 +110,14 @@ function StyledSelect({
   label,
   options,
   required = false,
+  value,
+  onChange,
 }: {
   label: string;
   options: string[];
   required?: boolean;
+  value: string;
+  onChange: (value: string) => void;
 }) {
   return (
     <label className="block">
@@ -112,7 +125,11 @@ function StyledSelect({
         {label} {required && <span className="text-[#5FA37D]">*</span>}
       </span>
       <div className="relative">
-        <select className="h-[52px] w-full appearance-none rounded-[14px] border border-[#DDEBE3] bg-white px-4 pr-12 text-sm font-medium text-[#151918] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition focus:border-[#5FA37D] focus:ring-4 focus:ring-[#EAF6EF]">
+        <select
+          className="h-[52px] w-full appearance-none rounded-[14px] border border-[#DDEBE3] bg-white px-4 pr-12 text-sm font-medium text-[#151918] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition focus:border-[#5FA37D] focus:ring-4 focus:ring-[#EAF6EF]"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        >
           {options.map((option) => (
             <option key={option}>{option}</option>
           ))}
@@ -123,13 +140,25 @@ function StyledSelect({
   );
 }
 
-function StyledTextarea({ label, placeholder }: { label: string; placeholder: string }) {
+function StyledTextarea({
+  label,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
   return (
     <label className="block">
       <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">{label}</span>
       <textarea
         className="min-h-[116px] w-full resize-y rounded-[14px] border border-[#DDEBE3] bg-white px-4 py-4 text-sm font-medium text-[#173D2C] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition placeholder:text-[#7E808A] focus:border-[#5FA37D] focus:ring-4 focus:ring-[#EAF6EF]"
         placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
       />
     </label>
   );
@@ -239,7 +268,29 @@ function RequiredFieldsNotice() {
   );
 }
 
-function PersonalInfoCard() {
+interface FormState {
+  firstName: string;
+  lastName: string;
+  identification: string;
+  birthDate: string;
+  gender: string;
+  maritalStatus: string;
+  nationality: string;
+  dependents: string;
+  phone: string;
+  altPhone: string;
+  email: string;
+  notes: string;
+  photo: string;
+}
+
+function PersonalInfoCard({
+  values,
+  onChange,
+}: {
+  values: FormState;
+  onChange: (field: keyof FormState, value: string) => void;
+}) {
   return (
     <PageCard className="p-7" index={1}>
       <CardHeader
@@ -249,20 +300,26 @@ function PersonalInfoCard() {
       />
 
       <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-        <StyledInput label="Nombres" placeholder="María Isabel" required />
-        <StyledInput label="Apellidos" placeholder="González Pérez" required />
-        <StyledInput label="Cédula / Documento" placeholder="402-1234567-8" required />
-        <StyledInput label="Fecha de nacimiento" placeholder="dd/mm/aaaa" required />
-        <StyledSelect label="Género" options={['Selecciona', 'Femenino', 'Masculino', 'Otro']} />
-        <StyledSelect label="Estado civil" options={['Selecciona', 'Soltero/a', 'Casado/a', 'Unión libre']} />
-        <StyledInput label="Nacionalidad" placeholder="Dominicana" />
-        <StyledInput helper="Personas a cargo" label="Dependientes" placeholder="0" type="number" />
+        <StyledInput label="Nombres" placeholder="María Isabel" required value={values.firstName} onChange={(v) => onChange('firstName', v)} />
+        <StyledInput label="Apellidos" placeholder="González Pérez" required value={values.lastName} onChange={(v) => onChange('lastName', v)} />
+        <StyledInput label="Cédula / Documento" placeholder="402-1234567-8" required value={values.identification} onChange={(v) => onChange('identification', v)} />
+        <StyledInput label="Fecha de nacimiento" placeholder="dd/mm/aaaa" required value={values.birthDate} onChange={(v) => onChange('birthDate', v)} />
+        <StyledSelect label="Género" options={['', 'Femenino', 'Masculino', 'Otro']} value={values.gender} onChange={(v) => onChange('gender', v)} />
+        <StyledSelect label="Estado civil" options={['', 'Soltero/a', 'Casado/a', 'Unión libre']} value={values.maritalStatus} onChange={(v) => onChange('maritalStatus', v)} />
+        <StyledInput label="Nacionalidad" placeholder="Dominicana" value={values.nationality} onChange={(v) => onChange('nationality', v)} />
+        <StyledInput helper="Personas a cargo" label="Dependientes" placeholder="0" type="number" value={values.dependents} onChange={(v) => onChange('dependents', v)} />
       </div>
     </PageCard>
   );
 }
 
-function ContactInfoCard() {
+function ContactInfoCard({
+  values,
+  onChange,
+}: {
+  values: FormState;
+  onChange: (field: keyof FormState, value: string) => void;
+}) {
   return (
     <PageCard className="p-7" index={2}>
       <CardHeader
@@ -274,17 +331,23 @@ function ContactInfoCard() {
       />
 
       <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-        <StyledInput label="Teléfono móvil" placeholder="+1 (809) 555-0142" required />
-        <StyledInput label="Teléfono alternativo" placeholder="+1 (829) 555-0000" />
+        <StyledInput label="Teléfono móvil" placeholder="+1 (809) 555-0142" required value={values.phone} onChange={(v) => onChange('phone', v)} />
+        <StyledInput label="Teléfono alternativo" placeholder="+1 (829) 555-0000" value={values.altPhone} onChange={(v) => onChange('altPhone', v)} />
         <div className="md:col-span-2">
-          <StyledInput label="Correo electrónico" placeholder="cliente@correo.com" required type="email" />
+          <StyledInput label="Correo electrónico" placeholder="cliente@correo.com" required type="email" value={values.email} onChange={(v) => onChange('email', v)} />
         </div>
       </div>
     </PageCard>
   );
 }
 
-function AdditionalNotesCard() {
+function AdditionalNotesCard({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
   return (
     <PageCard className="p-7" index={3}>
       <CardHeader
@@ -292,12 +355,66 @@ function AdditionalNotesCard() {
         title="Notas adicionales"
         subtitle="Observaciones internas sobre el cliente."
       />
-      <StyledTextarea label="Comentarios" placeholder="Información relevante para evaluar al cliente..." />
+      <StyledTextarea label="Comentarios" placeholder="Información relevante para evaluar al cliente..." value={value} onChange={onChange} />
     </PageCard>
   );
 }
 
 export function AddClientPage() {
+  const router = useRouter();
+  const [form, setForm] = useState<FormState>({
+    firstName: '',
+    lastName: '',
+    identification: '',
+    birthDate: '',
+    gender: '',
+    maritalStatus: '',
+    nationality: '',
+    dependents: '',
+    phone: '',
+    altPhone: '',
+    email: '',
+    notes: '',
+    photo: '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  function updateField(field: keyof FormState, value: string) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleSave() {
+    if (!form.firstName.trim() || !form.lastName.trim()) {
+      setError('Nombre y apellidos son obligatorios');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      const client = await createClient({
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        identification: form.identification.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        altPhone: form.altPhone.trim() || undefined,
+        email: form.email.trim() || undefined,
+        birthDate: form.birthDate || undefined,
+        gender: form.gender || undefined,
+        maritalStatus: form.maritalStatus || undefined,
+        nationality: form.nationality.trim() || undefined,
+        dependents: form.dependents ? Number(form.dependents) : undefined,
+        photo: form.photo || undefined,
+        notes: form.notes.trim() || undefined,
+      });
+      router.push(`/clientes/${client.id}`);
+    } catch {
+      setError('Error al guardar el cliente. Intenta de nuevo.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C] lg:p-7">
       <div className="mx-auto max-w-[1640px]">
@@ -320,8 +437,14 @@ export function AddClientPage() {
               Completa la información para registrar un nuevo cliente en tu cartera de préstamos.
             </p>
           </div>
-          <FormHeaderActions />
+          <FormHeaderActions onSave={handleSave} saving={saving} />
         </motion.header>
+
+        {error && (
+          <div className="mb-6 rounded-[16px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-700">
+            {error}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-7 xl:grid-cols-[390px_minmax(0,1fr)]">
           <div className="space-y-7">
@@ -330,9 +453,9 @@ export function AddClientPage() {
           </div>
 
           <div className="space-y-7">
-            <PersonalInfoCard />
-            <ContactInfoCard />
-            <AdditionalNotesCard />
+            <PersonalInfoCard values={form} onChange={updateField} />
+            <ContactInfoCard values={form} onChange={updateField} />
+            <AdditionalNotesCard value={form.notes} onChange={(v) => updateField('notes', v)} />
           </div>
         </div>
       </div>
