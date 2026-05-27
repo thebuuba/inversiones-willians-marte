@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { CreateRequestDto } from './dto/create-request.dto';
 
@@ -38,7 +38,7 @@ export class RequestsService {
 
   async approve(id: string) {
     const request = await this.findOne(id);
-    if (request.status !== 'PENDING') throw new NotFoundException('Only pending requests can be approved');
+    if (request.status !== 'PENDING') throw new BadRequestException('Only pending requests can be approved');
 
     return prisma.loanRequest.update({
       where: { id },
@@ -49,7 +49,7 @@ export class RequestsService {
 
   async reject(id: string) {
     const request = await this.findOne(id);
-    if (request.status !== 'PENDING') throw new NotFoundException('Only pending requests can be rejected');
+    if (request.status !== 'PENDING') throw new BadRequestException('Only pending requests can be rejected');
 
     return prisma.loanRequest.update({
       where: { id },

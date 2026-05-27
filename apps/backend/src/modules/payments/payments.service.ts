@@ -74,7 +74,8 @@ export class PaymentsService {
     });
 
     for (const alloc of allocations) {
-      const schedule = loan.schedule.find((s) => s.id === alloc.scheduleId)!;
+      const schedule = loan.schedule.find((s) => s.id === alloc.scheduleId);
+      if (!schedule) continue;
       const totalPaid = Number(schedule.paidAmount ?? 0) + alloc.amount;
       const isFull = totalPaid >= Number(schedule.amount);
 

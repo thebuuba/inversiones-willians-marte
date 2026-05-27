@@ -1,5 +1,5 @@
 import { api } from '../api';
-import type { ApiResponse, DocumentItem, CreateDocumentDto } from '@inversiones/shared';
+import type { ApiResponse, DocumentItem } from '@inversiones/shared';
 
 export async function getDocuments(clientId?: string): Promise<DocumentItem[]> {
   const params: Record<string, string> = {};
@@ -8,8 +8,8 @@ export async function getDocuments(clientId?: string): Promise<DocumentItem[]> {
   return data.data ?? [];
 }
 
-export async function createDocument(dto: CreateDocumentDto): Promise<DocumentItem> {
-  const { data } = await api.post<ApiResponse<DocumentItem>>('/documents', dto);
+export async function createDocument(formData: FormData): Promise<DocumentItem> {
+  const { data } = await api.post<ApiResponse<DocumentItem>>('/documents', formData);
   return data.data as DocumentItem;
 }
 

@@ -1,9 +1,10 @@
-import { IsString, IsNumber, IsOptional, MinLength } from 'class-validator';
+import { IsString, IsOptional, MinLength } from 'class-validator';
 
 export class CreateDocumentDto {
+  @IsOptional()
   @IsString()
   @MinLength(1)
-  name: string;
+  name?: string;
 
   @IsOptional()
   @IsString()
@@ -17,8 +18,9 @@ export class CreateDocumentDto {
   @IsString()
   loanId?: string;
 
+  @IsOptional()
   @IsString()
-  category: string;
+  category?: string;
 
   @IsOptional()
   @IsString()

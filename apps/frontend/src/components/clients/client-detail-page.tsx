@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, type ReactNode, useState } from 'react';
+import { useEffect, type ReactNode, useState, useRef } from 'react';
 import { getClient } from '@/lib/api/clients';
-import { getDocuments, deleteDocument } from '@/lib/api/documents';
+import { getDocuments, createDocument, deleteDocument } from '@/lib/api/documents';
 import type { ClientDetail, LoanSummary, DocumentItem } from '@inversiones/shared';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
@@ -61,49 +61,7 @@ function buildInfoCards(clientData: ClientDetail) {
   ];
 }
 
-interface ClientDocument {
-  title: string;
-  category: string;
-  size: string;
-  date: string;
-  tone: 'green' | 'blue' | 'yellow' | 'purple';
-  icon: typeof CreditCard;
-}
-
-const initialDocuments: ClientDocument[] = [
-  {
-    title: 'Cédula de identidad',
-    category: 'Cédula',
-    size: '1.2 MB',
-    date: '10/1/2023',
-    tone: 'green',
-    icon: CreditCard,
-  },
-  {
-    title: 'Contrato préstamo PR-2104',
-    category: 'Contrato',
-    size: '340 KB',
-    date: '15/6/2024',
-    tone: 'blue',
-    icon: FileText,
-  },
-  {
-    title: 'Comprobante de ingresos',
-    category: 'Comprobante',
-    size: '890 KB',
-    date: '14/6/2024',
-    tone: 'yellow',
-    icon: FileText,
-  },
-  {
-    title: 'Foto del local comercial',
-    category: 'Fotografía',
-    size: '2.4 MB',
-    date: '14/6/2024',
-    tone: 'purple',
-    icon: Image,
-  },
-];
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
 
 interface HistoryEvent {
   type: string;
@@ -331,71 +289,16 @@ function ClientLoansTab({ loans }: { loans: LoanSummary[] }) {
   );
 }
 
-function UploadDocumentButton() {
-  return (
-    <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full bg-[#285C43] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.18)] transition hover:-translate-y-0.5 hover:bg-[#1F4A36]">
-      <Upload className="h-4 w-4" />
-      Subir documento
-      <input className="hidden" type="file" />
-    </label>
-  );
-}
-
-function documentTone(tone: ClientDocument['tone']) {
-  const styles = {
-    green: {
-      iconBg: '#E7F4EC',
-      iconText: '#4F9B76',
-      badgeBg: '#DFF1E7',
-      badgeText: '#4F9B76',
-    },
-    blue: {
-      iconBg: '#D9ECFF',
-      iconText: '#3A75B8',
-      badgeBg: '#D9ECFF',
-      badgeText: '#3A75B8',
-    },
-    yellow: {
-      iconBg: '#FFF4C8',
-      iconText: '#A98219',
-      badgeBg: '#FFF4C8',
-      badgeText: '#A98219',
-    },
-    purple: {
-      iconBg: '#E8DDF6',
-      iconText: '#6F55A5',
-      badgeBg: '#E8DDF6',
-      badgeText: '#6F55A5',
-    },
-  };
-
-  return styles[tone];
-}
-
-function DocumentBadge({ category, tone }: { category: string; tone: ClientDocument['tone'] }) {
-  const style = documentTone(tone);
-
-  return (
-    <span
-      className="rounded-full px-3 py-1 text-xs font-bold"
-      style={{ backgroundColor: style.badgeBg, color: style.badgeText }}
-    >
-      {category}
-    </span>
-  );
-}
-
 function DocumentCard({
-  document,
+  doc,
   index,
   onDelete,
 }: {
-  document: ClientDocument;
+  doc: DocumentItem;
   index: number;
-  onDelete: () => void;
+  onDelete: (id: string) => void;
 }) {
-  const style = documentTone(document.tone);
-  const Icon = document.icon;
+  const fileUrl = doc.fileUrl ? `${API_BASE}/../uploads/${doc.fileUrl}` : null;
 
   return (
     <motion.article
@@ -406,34 +309,43 @@ function DocumentCard({
       variants={fadeUp}
     >
       <div className="flex min-w-0 items-center gap-4">
-        <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px]"
-          style={{ backgroundColor: style.iconBg, color: style.iconText }}
-        >
-          <Icon className="h-5 w-5" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px] bg-[#E7F4EC] text-[#4F9B76]">
+          <FileText className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <h3 className="truncate text-sm font-bold text-[#173D2C]">{document.title}</h3>
+          <h3 className="truncate text-sm font-bold text-[#173D2C]">
+            {fileUrl ? (
+              <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                {doc.name}
+              </a>
+            ) : (
+              doc.name
+            )}
+          </h3>
           <div className="mt-1.5 flex flex-wrap items-center gap-2.5 text-xs font-medium text-[#A7B5AD]">
-            <DocumentBadge category={document.category} tone={document.tone} />
-            <span>{document.size}</span>
-            <span>{document.date}</span>
+            <span className="rounded-full bg-[#DFF1E7] px-3 py-1 text-xs font-bold text-[#4F9B76]">{doc.category}</span>
+            {doc.fileSize ? <span>{(doc.fileSize / 1024).toFixed(1)} KB</span> : null}
+            <span>{new Date(doc.createdAt).toLocaleDateString('es-DO')}</span>
           </div>
         </div>
       </div>
 
       <div className="flex items-center gap-4 text-[#7A8A80]">
+        {fileUrl && (
+          <a
+            aria-label={`Descargar ${doc.name}`}
+            className="rounded-full p-1.5 transition hover:bg-[#EAF6EF] hover:text-[#173D2C]"
+            href={fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Download className="h-4 w-4" />
+          </a>
+        )}
         <button
-          aria-label={`Descargar ${document.title}`}
-          className="rounded-full p-1.5 transition hover:bg-[#EAF6EF] hover:text-[#173D2C]"
-          type="button"
-        >
-          <Download className="h-4 w-4" />
-        </button>
-        <button
-          aria-label={`Eliminar ${document.title}`}
+          aria-label={`Eliminar ${doc.name}`}
           className="rounded-full p-1.5 transition hover:bg-[#FFE3D2] hover:text-[#B45B38]"
-          onClick={onDelete}
+          onClick={() => onDelete(doc.id)}
           type="button"
         >
           <Trash2 className="h-4 w-4" />
@@ -445,10 +357,33 @@ function DocumentCard({
 
 function ClientDocumentsTab({ clientId }: { clientId: string }) {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     getDocuments(clientId).then(setDocuments);
   }, [clientId]);
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('name', file.name);
+      fd.append('category', 'general');
+      fd.append('clientId', clientId);
+      await createDocument(fd);
+      const docs = await getDocuments(clientId);
+      setDocuments(docs);
+    } catch {
+      alert('Error al subir el archivo');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
 
   function handleDelete(id: string) {
     deleteDocument(id).then(() => setDocuments((prev) => prev.filter((d) => d.id !== id)));
@@ -464,7 +399,18 @@ function ClientDocumentsTab({ clientId }: { clientId: string }) {
         variants={fadeUp}
       >
         <p className="text-sm font-medium text-[#7A8A80]">{documents.length} documentos archivados</p>
-        <UploadDocumentButton />
+        <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full bg-[#285C43] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.18)] transition hover:-translate-y-0.5 hover:bg-[#1F4A36]">
+          <Upload className="h-4 w-4" />
+          {uploading ? 'Subiendo...' : 'Subir documento'}
+          <input
+            ref={fileInputRef}
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+            className="hidden"
+            disabled={uploading}
+            onChange={handleFileUpload}
+            type="file"
+          />
+        </label>
       </motion.div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -474,16 +420,9 @@ function ClientDocumentsTab({ clientId }: { clientId: string }) {
           documents.map((doc, index) => (
             <DocumentCard
               key={doc.id}
-              document={{
-                title: doc.name,
-                category: doc.category,
-                size: doc.fileSize ? `${(doc.fileSize / 1024).toFixed(0)} KB` : '—',
-                date: new Date(doc.createdAt).toLocaleDateString('es-DO'),
-                tone: 'green',
-                icon: CreditCard,
-              }}
+              doc={doc}
               index={index + 3}
-              onDelete={() => handleDelete(doc.id)}
+              onDelete={handleDelete}
             />
           ))
         )}

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { CreateInvestorDto } from './dto/create-investor.dto';
 
@@ -18,7 +18,7 @@ export class InvestorsService {
 
   async findOne(id: string) {
     const investor = await prisma.investor.findUnique({ where: { id } });
-    if (!investor) throw new Error('Investor not found');
+    if (!investor) throw new NotFoundException('Investor not found');
     return investor;
   }
 }
