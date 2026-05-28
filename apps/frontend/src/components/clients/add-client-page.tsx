@@ -470,13 +470,13 @@ export function AddClientPage() {
       });
       router.push(`/clientes/${client.id}`);
     } catch (err: unknown) {
-      const message =
-        err && typeof err === 'object' && 'response' in err
-          ? (err as { response: { data?: { message?: string; error?: string } } }).response.data?.message ||
-            (err as { response: { data?: { message?: string; error?: string } } }).response.data?.error ||
-            'Error al guardar el cliente. Intenta de nuevo.'
-          : 'Error al guardar el cliente. Intenta de nuevo.';
-      setError(typeof message === 'string' ? message : 'Error al guardar el cliente. Intenta de nuevo.');
+      let message = 'Error al guardar el cliente. Intenta de nuevo.';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const data = (err as { response: { data?: Record<string, unknown> } }).response.data;
+        if (data?.message) message = String(data.message);
+        else if (data?.error) message = String(data.error);
+      }
+      setError(message);
     } finally {
       setSaving(false);
     }
