@@ -77,6 +77,7 @@ model User {
   loanRequests    LoanRequest[]
   investors       Investor[]
   uploadedDocuments Document[]
+  tasks           Task[]
 
   @@map("users")
 }
@@ -319,6 +320,37 @@ model Document {
   investor   Investor? @relation(fields: [investorId], references: [id])
 
   @@map("documents")
+}
+
+// ─── Tasks / Agenda ─────────────────────────────────────────────────────────
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  dueDate     DateTime?    @map("due_date")
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(PENDING)
+  createdById String       @map("created_by")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  @@map("tasks")
 }
 
 // ─── Audit Log ──────────────────────────────────────────────────────────────

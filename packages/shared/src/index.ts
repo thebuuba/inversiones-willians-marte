@@ -223,3 +223,45 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   page: number;
   limit: number;
 }
+
+export const TaskPriorityEnum = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT',
+} as const;
+export type TaskPriority = (typeof TaskPriorityEnum)[keyof typeof TaskPriorityEnum];
+
+export const TaskStatusEnum = {
+  PENDING: 'PENDING',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+} as const;
+export type TaskStatus = (typeof TaskStatusEnum)[keyof typeof TaskStatusEnum];
+
+export interface CreateTaskDto {
+  title: string;
+  description?: string;
+  dueDate?: string;
+  priority?: TaskPriority;
+}
+
+export interface UpdateTaskDto {
+  title?: string;
+  description?: string;
+  dueDate?: string;
+  priority?: TaskPriority;
+  status?: TaskStatus;
+}
+
+export interface TaskItem {
+  id: string;
+  title: string;
+  description?: string | null;
+  dueDate?: string | null;
+  priority: TaskPriority;
+  status: TaskStatus;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}

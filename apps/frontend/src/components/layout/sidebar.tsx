@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import {
+  Calendar,
   FileText,
   Home,
   Inbox,
@@ -23,6 +24,7 @@ const navItems = [
   { href: '/clientes', label: 'Clientes', icon: Users },
   { href: '/prestamos', label: 'Préstamos', icon: Landmark },
   { href: '/solicitudes', label: 'Solicitudes', icon: Inbox },
+  { href: '/agenda', label: 'Agenda', icon: Calendar },
   { href: '/caja', label: 'Caja', icon: Wallet },
   { href: '/inversionistas', label: 'Inversionistas', icon: TrendingUp },
   { href: '/documentos', label: 'Documentos', icon: FileText },
