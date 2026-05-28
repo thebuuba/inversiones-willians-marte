@@ -6,14 +6,9 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   Download,
   Filter,
   List,
-  MapPin,
-  MoreHorizontal,
   Plus,
   Search,
   UserRound,
@@ -168,21 +163,14 @@ export function ClientsPanel() {
 
       <PanelCard className="mb-5 p-5" index={5}>
         <div className="flex flex-col gap-3 xl:flex-row">
-          <div className="flex h-12 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-5">
-            <Search className="h-5 w-5 shrink-0 text-[#A9CDBB]" />
+          <div className="flex h-12 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F4F5F6] px-5 shadow-[0_4px_10px_rgba(40,92,67,0.06)]">
+            <Search className="h-5 w-5 shrink-0 text-[#A7B5AD]" />
             <input
-              className="flex-1 bg-transparent text-sm text-[#173D2C] outline-none placeholder:text-[#A9CDBB]"
+              className="flex-1 bg-transparent text-sm font-medium text-[#173D2C] outline-none placeholder:text-[#747882]"
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Buscar por nombre, cédula, teléfono..."
             />
           </div>
-          <button className="flex h-12 items-center justify-between gap-4 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-5 text-sm font-bold text-[#173D2C] transition hover:bg-[#F3FAF6] xl:w-[270px]">
-            <span className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-[#A9CDBB]" />
-              Todas las ciudades
-            </span>
-            <ChevronDown className="h-4 w-4 text-[#A9CDBB]" />
-          </button>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2.5">
           <Filter className="h-4 w-4 text-[#A9CDBB]" />
@@ -204,7 +192,7 @@ export function ClientsPanel() {
       </PanelCard>
 
       <PanelCard className="overflow-hidden" index={6}>
-        <div className="grid grid-cols-[2fr_1.35fr_1.55fr_1fr_0.8fr] items-center bg-[#F3FAF6] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#5FA37D]">
+        <div className="grid grid-cols-[2fr_1.35fr_1.55fr_1fr_0.8fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#777D7A]">
           <span>CLIENTE</span>
           <span>CÉDULA</span>
           <span>TELÉFONO</span>
@@ -214,11 +202,11 @@ export function ClientsPanel() {
 
         <div>
           {loading ? (
-            <div className="flex items-center justify-center py-20 text-sm font-medium text-[#A9CDBB]">
+            <div className="flex items-center justify-center py-20 text-sm font-medium text-[#777D7A]">
               Cargando clientes...
             </div>
           ) : filteredClients.length === 0 ? (
-            <div className="flex items-center justify-center py-20 text-sm font-medium text-[#A9CDBB]">
+            <div className="flex items-center justify-center py-20 text-sm font-medium text-[#A7B5AD]">
               No se encontraron clientes.
             </div>
           ) : (
@@ -279,8 +267,8 @@ export function ClientsPanel() {
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-[#DDEBE3] bg-[#F3FAF6] px-6 py-4">
-          <p className="text-sm font-semibold text-[#5FA37D]">
+        <div className="flex items-center justify-between border-t border-[#DDEBE3] bg-[#F7F7F7] px-6 py-4">
+          <p className="text-sm font-semibold text-[#777D7A]">
             {!loading && (
               <>
                 Mostrando <span className="font-bold text-[#173D2C]">{filteredClients.length}</span> de{' '}
