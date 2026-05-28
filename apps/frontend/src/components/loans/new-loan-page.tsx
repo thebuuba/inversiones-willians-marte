@@ -9,14 +9,16 @@ import {
   Calculator,
   Check,
   ChevronDown,
-  Pencil,
   Plus,
   Search,
   UserRound,
 } from 'lucide-react';
+function fmtCurrency(amount: number) {
+  return `RD$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(amount)}`;
+}
 import { getLoanProducts, type LoanProductItem } from '@/lib/api/loan-products';
 import { createLoan } from '@/lib/api/loans';
-import { getClients } from '@/lib/api/clients';
+import { getClient, getClients } from '@/lib/api/clients';
 import type { Client } from '@inversiones/shared';
 
 type WizardStep = 1 | 2 | 3;
@@ -200,6 +202,7 @@ function NewLoanStepOne({
 }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Client[]>([]);
+  const shownClients = results.length > 0 ? results : selectedClient ? [selectedClient] : [];
 
   useEffect(() => {
     if (query.length < 2) { setResults([]); return; }
@@ -219,9 +222,9 @@ function NewLoanStepOne({
       >
         <h2 className="mb-6 text-lg font-bold text-[#173D2C]">Seleccionar cliente</h2>
         <ClientSearchInput value={query} onChange={setQuery} />
-        {results.length > 0 && (
+        {shownClients.length > 0 && (
           <div className="mb-4 space-y-2">
-            {results.map((client) => (
+            {shownClients.map((client) => (
               <button
                 key={client.id}
                 className={`w-full rounded-[14px] border p-4 text-left text-sm transition ${
@@ -430,22 +433,17 @@ function LoanParametersForm({
   );
 }
 
-function SelectedClientCard() {
+function SelectedClientCard({ client }: { client: Client }) {
+  const fullName = `${client.firstName} ${client.lastName}`;
   return (
     <div className="flex min-h-[92px] items-center gap-4 rounded-[20px] border border-[#EDF2EF] bg-white px-5 shadow-[0_8px_24px_rgba(40,92,67,0.035)]">
-      <div
-        aria-label="María González Pérez"
-        className="h-14 w-14 shrink-0 rounded-full border-[3px] border-white bg-cover bg-center shadow-[0_7px_18px_rgba(40,92,67,0.14)]"
-        role="img"
-        style={{ backgroundImage: 'url(https://i.pravatar.cc/96?img=32)' }}
-      />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-lg font-bold leading-tight text-[#173D2C]">María González Pérez</p>
-        <p className="mt-1 text-sm font-medium text-[#7A8A80]">CL-0142</p>
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-[3px] border-white bg-[#EAF6EF] shadow-[0_7px_18px_rgba(40,92,67,0.14)]">
+        <UserRound className="h-7 w-7 text-[#5FA37D]" />
       </div>
-      <button className="rounded-full p-2 text-[#A7B5AD] transition hover:bg-[#EAF6EF] hover:text-[#173D2C]" type="button">
-        <Pencil className="h-5 w-5" />
-      </button>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-lg font-bold leading-tight text-[#173D2C]">{fullName}</p>
+        <p className="mt-1 text-sm font-medium text-[#7A8A80]">{client.identification ?? '—'}</p>
+      </div>
     </div>
   );
 }
@@ -457,6 +455,7 @@ function LoanSummaryPanel({
   total,
   term,
   selectedProduct,
+  selectedClient,
 }: {
   amount: number;
   payment: number;
@@ -464,12 +463,13 @@ function LoanSummaryPanel({
   total: number;
   term: number;
   selectedProduct: LoanProductItem | null;
+  selectedClient: Client | null;
 }) {
   const interestPercent = amount > 0 ? (interest / amount) * 100 : 0;
 
   return (
     <div className="space-y-7">
-      <SelectedClientCard />
+      {selectedClient && <SelectedClientCard client={selectedClient} />}
 
       <section className="rounded-[22px] border border-[#B8EBC9] bg-[#F1FAF5] p-7">
         <div className="mb-6 flex items-center gap-3 text-[#2F7654]">
@@ -530,6 +530,7 @@ function NewLoanStepTwo({
   onAmountChange,
   onTermChange,
   products,
+  selectedClient,
 }: {
   selectedProduct: LoanProductItem | null;
   onSelectProduct: (product: LoanProductItem) => void;
@@ -538,6 +539,7 @@ function NewLoanStepTwo({
   onAmountChange: (value: string) => void;
   onTermChange: (value: string) => void;
   products: LoanProductItem[];
+  selectedClient: Client | null;
 }) {
   const rate = selectedProduct ? String(selectedProduct.interestRate) : '0';
 
@@ -579,6 +581,7 @@ function NewLoanStepTwo({
         amount={summary.principal}
         interest={summary.interest}
         payment={summary.payment}
+        selectedClient={selectedClient}
         selectedProduct={currentProduct}
         term={summary.months}
         total={summary.total}
@@ -614,13 +617,26 @@ function SummaryMetricCard({
   );
 }
 
-function LoanSummaryCards() {
+function LoanSummaryCards({
+  amount,
+  payment,
+  interest,
+  total,
+  term,
+}: {
+  amount: number;
+  payment: number;
+  interest: number;
+  total: number;
+  term: number;
+}) {
+  const interestPercent = amount > 0 ? ((interest / amount) * 100).toFixed(1) : '0';
   return (
     <div className="mt-9 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-      <SummaryMetricCard label="CAPITAL" value="RD$50,000.00" />
-      <SummaryMetricCard helper="mensual" label="CUOTA" value="RD$4,874.36" />
-      <SummaryMetricCard helper="17.0% sobre capital" highlight label="TOTAL INTERESES" value="RD$8,492.28" />
-      <SummaryMetricCard helper="en 12 meses" label="TOTAL A PAGAR" value="RD$58,492.32" />
+      <SummaryMetricCard label="CAPITAL" value={`RD$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(amount)}`} />
+      <SummaryMetricCard helper="mensual" label="CUOTA" value={`RD$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(payment)}`} />
+      <SummaryMetricCard helper={`${interestPercent}% sobre capital`} highlight label="TOTAL INTERESES" value={`RD$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(interest)}`} />
+      <SummaryMetricCard helper={`en ${term} ${term === 1 ? 'mes' : 'meses'}`} label="TOTAL A PAGAR" value={`RD$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(total)}`} />
     </div>
   );
 }
@@ -676,13 +692,8 @@ function LoanClientSummary({
   );
 }
 
-function AmortizationRow({
-  row,
-  total = false,
-}: {
-  row: { number: string; payment: string; principal: string; interest: string; balance: string };
-  total?: boolean;
-}) {
+function AmortizationRow({ row, total = false }: { row: { number: number | string; payment: number | string; principal: number | string; interest: number | string; balance: number | string }; total?: boolean }) {
+  const fmt = (v: number | string) => (typeof v === 'number' ? fmtCurrency(v) : v);
   return (
     <div
       className={`grid min-w-[980px] grid-cols-[120px_1.2fr_1.2fr_1.2fr_1.2fr] items-center border-t border-[#EDF2EF] px-7 py-5 text-base ${
@@ -690,17 +701,29 @@ function AmortizationRow({
       }`}
     >
       <span className={total ? 'text-[#6F8076]' : 'font-medium text-[#7A8A80]'}>{row.number}</span>
-      <span className="text-right font-bold text-[#173D2C]">{row.payment}</span>
-      <span className="text-right font-medium text-[#2F7654]">{row.principal}</span>
-      <span className="text-right font-medium text-[#B45B38]">{row.interest}</span>
-      <span className={`text-right font-bold ${total ? 'text-[#A7B5AD]' : 'text-[#173D2C]'}`}>{row.balance}</span>
+      <span className="text-right font-bold text-[#173D2C]">{fmt(row.payment)}</span>
+      <span className="text-right font-medium text-[#2F7654]">{fmt(row.principal)}</span>
+      <span className="text-right font-medium text-[#B45B38]">{fmt(row.interest)}</span>
+      <span className={`text-right font-bold ${total ? 'text-[#A7B5AD]' : 'text-[#173D2C]'}`}>{fmt(row.balance)}</span>
     </div>
   );
 }
 
-function AmortizationTableCard() {
+function AmortizationTableCard({
+  schedule,
+  totalPayment,
+  totalPrincipal,
+  totalInterest,
+  term,
+}: {
+  schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[];
+  totalPayment: number;
+  totalPrincipal: number;
+  totalInterest: number;
+  term: number;
+}) {
   const [expanded, setExpanded] = useState(false);
-  const visibleRows = expanded ? amortizationRows : amortizationRows.slice(0, 6);
+  const visibleRows = expanded ? schedule : schedule.slice(0, 6);
 
   return (
     <motion.section
@@ -711,7 +734,7 @@ function AmortizationTableCard() {
     >
       <div className="flex items-center justify-between gap-4 px-7 py-6">
         <h2 className="text-lg font-bold text-[#173D2C]">Tabla de amortización</h2>
-        <p className="text-sm font-medium text-[#7A8A80]">12 meses en total</p>
+        <p className="text-sm font-medium text-[#7A8A80]">{term} {term === 1 ? 'mes' : 'meses'} en total</p>
       </div>
 
       <div className="overflow-x-auto">
@@ -732,10 +755,10 @@ function AmortizationTableCard() {
         <AmortizationRow
           row={{
             number: 'TOTAL',
-            payment: 'RD$58,492.32',
-            principal: 'RD$50,000.01',
-            interest: 'RD$8,492.28',
-            balance: 'RD$0.00',
+            payment: totalPayment,
+            principal: totalPrincipal,
+            interest: totalInterest,
+            balance: 0,
           }}
           total
         />
@@ -753,6 +776,34 @@ function AmortizationTableCard() {
   );
 }
 
+function computeSchedule(principal: number, annualRate: number, months: number) {
+  const monthlyRate = annualRate / 100 / 12;
+  const payment = monthlyRate > 0
+    ? principal * monthlyRate * Math.pow(1 + monthlyRate, months) / (Math.pow(1 + monthlyRate, months) - 1)
+    : principal / months;
+
+  let balance = principal;
+  let totalInterest = 0;
+  const schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[] = [];
+
+  for (let i = 1; i <= months; i++) {
+    const interest = balance * monthlyRate;
+    const princ = payment - interest;
+    balance -= princ;
+    totalInterest += interest;
+    schedule.push({
+      number: i,
+      payment: Math.round(payment * 100) / 100,
+      principal: Math.round(princ * 100) / 100,
+      interest: Math.round(interest * 100) / 100,
+      balance: Math.round(Math.max(balance, 0) * 100) / 100,
+    });
+  }
+
+  const totalPayment = Math.round((principal + totalInterest) * 100) / 100;
+  return { schedule, totalPayment, totalPrincipal: principal, totalInterest: Math.round(totalInterest * 100) / 100, payment: Math.round(payment * 100) / 100 };
+}
+
 function NewLoanStepThree({
   selectedClient,
   selectedProduct,
@@ -764,11 +815,20 @@ function NewLoanStepThree({
   amount: string;
   term: string;
 }) {
+  const parsedAmount = Number.parseFloat(amount) || 0;
+  const parsedTerm = Number.parseInt(term, 10) || 1;
+  const annualRate = selectedProduct?.interestRate ?? 0;
+
+  const { schedule, totalPayment, totalPrincipal, totalInterest, payment } = useMemo(
+    () => computeSchedule(parsedAmount, annualRate, parsedTerm),
+    [parsedAmount, annualRate, parsedTerm],
+  );
+
   return (
     <>
-      <LoanSummaryCards />
+      <LoanSummaryCards amount={parsedAmount} interest={totalInterest} payment={payment} term={parsedTerm} total={totalPayment} />
       {selectedClient && <LoanClientSummary client={selectedClient} product={selectedProduct} amount={amount} term={term} />}
-      <p className="mt-6 text-center text-sm font-medium text-[#A9CDBB]">La tabla de amortización se generará al crear el préstamo.</p>
+      <AmortizationTableCard schedule={schedule} totalPayment={totalPayment} totalPrincipal={totalPrincipal} totalInterest={totalInterest} term={parsedTerm} />
     </>
   );
 }
@@ -879,7 +939,7 @@ function WizardActions({
   );
 }
 
-export function NewLoanPage() {
+export function NewLoanPage({ initialClientId }: { initialClientId?: string }) {
   const router = useRouter();
   const [step, setStep] = useState<WizardStep>(1);
   const [products, setProducts] = useState<LoanProductItem[]>([]);
@@ -892,6 +952,13 @@ export function NewLoanPage() {
   useEffect(() => {
     getLoanProducts().then(setProducts);
   }, []);
+
+  useEffect(() => {
+    if (!initialClientId) return;
+    getClient(initialClientId)
+      .then(setSelectedClient)
+      .catch(() => setSelectedClient(null));
+  }, [initialClientId]);
 
   async function handleCreate() {
     if (!selectedClient || !selectedProduct || !amount || !term) return;
@@ -927,6 +994,7 @@ export function NewLoanPage() {
             onSelectProduct={setSelectedProduct}
             onTermChange={setTerm}
             products={products}
+            selectedClient={selectedClient}
             selectedProduct={selectedProduct}
             term={term}
           />

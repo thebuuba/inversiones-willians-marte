@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, type ReactNode, useState, useRef } from 'react';
-import { getClient } from '@/lib/api/clients';
+import { useCallback, useEffect, useMemo, type ReactNode, useState, useRef } from 'react';
+import { getClient, updateClient } from '@/lib/api/clients';
 import { getDocuments, createDocument, deleteDocument } from '@/lib/api/documents';
-import type { ClientDetail, LoanSummary, DocumentItem } from '@inversiones/shared';
+import { useAuth } from '@/lib/auth-context';
+import { api } from '@/lib/api';
+import type { ClientDetail, LoanSummary, DocumentItem, ApiResponse } from '@inversiones/shared';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -78,14 +80,6 @@ type ClientNote = {
   date: string;
 };
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: (index = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: index * 0.045 },
-  }),
-};
 
 function StatusBadge({ active }: { active: boolean }) {
   return active ? (
@@ -105,7 +99,7 @@ function ClientHeader({ clientData }: { clientData: ClientDetail }) {
   const fullName = `${clientData.firstName} ${clientData.lastName}`;
 
   return (
-    <motion.header animate="visible" className="mb-4" initial="hidden" variants={fadeUp}>
+    <motion.header animate={{ opacity: 1, y: 0 }} className="mb-4" initial={{ opacity: 0, y: 16 }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}>
       <Link
         className="inline-flex items-center gap-2 text-sm font-semibold text-[#5C6D63] transition hover:text-[#173D2C]"
         href="/clientes"
@@ -140,13 +134,21 @@ function ClientHeader({ clientData }: { clientData: ClientDetail }) {
   );
 }
 
-function ClientTabs({ activeTab, onTabChange }: { activeTab: ClientTab; onTabChange: (tab: ClientTab) => void }) {
+function ClientTabs({
+  activeTab,
+  clientId,
+  onTabChange,
+}: {
+  activeTab: ClientTab;
+  clientId: string;
+  onTabChange: (tab: ClientTab) => void;
+}) {
   return (
-    <motion.div animate="visible" className="mb-5" custom={1} initial="hidden" variants={fadeUp}>
+    <motion.div animate={{ opacity: 1, y: 0 }} className="mb-5" initial={{ opacity: 0, y: 16 }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.045 }}>
       <div className="mb-3 flex justify-end">
         <Link
           className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#285C43] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.18)] transition hover:-translate-y-0.5 hover:bg-[#1F4A36]"
-          href="/prestamos/nuevo"
+          href={`/prestamos/nuevo?cliente=${clientId}`}
         >
           <Plus className="h-4 w-4" />
           Nuevo préstamo
@@ -236,11 +238,10 @@ function LoanCard({ loan, index }: { loan: LoanSummary; index: number }) {
 
   return (
     <motion.article
-      animate="visible"
+      animate={{ opacity: 1, y: 0 }}
       className="rounded-[18px] border border-[#DDEBE3] bg-white p-5 shadow-[0_7px_22px_rgba(40,92,67,0.035)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(40,92,67,0.06)]"
-      custom={index}
-      initial="hidden"
-      variants={fadeUp}
+      initial={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: index * 0.045 }}
     >
       <div className="mb-5 flex items-start justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -302,11 +303,10 @@ function DocumentCard({
 
   return (
     <motion.article
-      animate="visible"
+      animate={{ opacity: 1, y: 0 }}
       className="flex min-h-[78px] items-center justify-between gap-4 rounded-[16px] border border-[#DDEBE3] bg-white p-4 shadow-[0_7px_22px_rgba(40,92,67,0.035)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(40,92,67,0.055)]"
-      custom={index}
-      initial="hidden"
-      variants={fadeUp}
+      initial={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: index * 0.045 }}
     >
       <div className="flex min-w-0 items-center gap-4">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px] bg-[#E7F4EC] text-[#4F9B76]">
@@ -392,11 +392,10 @@ function ClientDocumentsTab({ clientId }: { clientId: string }) {
   return (
     <section>
       <motion.div
-        animate="visible"
+        animate={{ opacity: 1, y: 0 }}
         className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
-        custom={2}
-        initial="hidden"
-        variants={fadeUp}
+        initial={{ opacity: 0, y: 16 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.09 }}
       >
         <p className="text-sm font-medium text-[#7A8A80]">{documents.length} documentos archivados</p>
         <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full bg-[#285C43] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.18)] transition hover:-translate-y-0.5 hover:bg-[#1F4A36]">
@@ -485,11 +484,10 @@ function TimelineItem({ event, index }: { event: HistoryEvent; index: number }) 
 
   return (
     <motion.div
-      animate="visible"
+      animate={{ opacity: 1, y: 0 }}
       className="relative grid grid-cols-[30px_1fr] gap-5"
-      custom={index}
-      initial="hidden"
-      variants={fadeUp}
+      initial={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: index * 0.045 }}
     >
       <div className="relative flex justify-center">
         <span
@@ -547,11 +545,10 @@ function ClientHistoryTab({ events }: { events: HistoryEvent[] }) {
 function NotesToolbar({ count, onNewNote }: { count: number; onNewNote: () => void }) {
   return (
     <motion.div
-      animate="visible"
+      animate={{ opacity: 1, y: 0 }}
       className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
-      custom={2}
-      initial="hidden"
-      variants={fadeUp}
+      initial={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.09 }}
     >
       <p className="text-sm font-medium text-[#7A8A80]">{count} notas</p>
       <button
@@ -632,11 +629,10 @@ function EditableNoteCard({
 }) {
   return (
     <motion.article
-      animate="visible"
+      animate={{ opacity: 1, y: 0 }}
       className="rounded-[16px] border border-[#B8EBC9] bg-white p-4 shadow-[0_7px_22px_rgba(40,92,67,0.035)]"
-      custom={index}
-      initial="hidden"
-      variants={fadeUp}
+      initial={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: index * 0.045 }}
     >
       <div className="grid grid-cols-[36px_1fr] gap-4">
         <NoteIcon />
@@ -667,11 +663,10 @@ function NoteCard({
 }) {
   return (
     <motion.article
-      animate="visible"
+      animate={{ opacity: 1, y: 0 }}
       className="flex min-h-[76px] items-center justify-between gap-4 rounded-[16px] border border-transparent bg-white p-4 shadow-[0_7px_22px_rgba(40,92,67,0.025)] transition hover:border-[#DDEBE3] hover:shadow-[0_14px_32px_rgba(40,92,67,0.045)]"
-      custom={index}
-      initial="hidden"
-      variants={fadeUp}
+      initial={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: index * 0.045 }}
     >
       <div className="flex min-w-0 items-center gap-4">
         <NoteIcon />
@@ -726,12 +721,40 @@ function NewNoteCard({
   );
 }
 
-function ClientNotesTab({ initialNotes = [] }: { initialNotes?: ClientNote[] }) {
-  const [notes, setNotes] = useState<ClientNote[]>(initialNotes);
+function ClientNotesTab({ clientId, clientNotes }: { clientId: string; clientNotes?: string | null }) {
+  const { user } = useAuth();
+  const parsed = useMemo(() => {
+    if (!clientNotes) return [];
+    try {
+      const arr = JSON.parse(clientNotes);
+      return Array.isArray(arr) ? arr : [];
+    } catch {
+      return [];
+    }
+  }, [clientNotes]);
+  const [notes, setNotes] = useState<ClientNote[]>(parsed);
   const [isCreating, setIsCreating] = useState(false);
   const [draft, setDraft] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState('');
+
+  useEffect(() => {
+    if (!clientNotes) return;
+    try {
+      const arr = JSON.parse(clientNotes);
+      if (Array.isArray(arr)) setNotes(arr);
+    } catch {}
+  }, [clientNotes]);
+
+  const persistNotes = useCallback(
+    async (updated: ClientNote[]) => {
+      setNotes(updated);
+      try {
+        await updateClient(clientId, { notes: JSON.stringify(updated) });
+      } catch {}
+    },
+    [clientId],
+  );
 
   const startCreate = () => {
     setEditingId(null);
@@ -743,16 +766,11 @@ function ClientNotesTab({ initialNotes = [] }: { initialNotes?: ClientNote[] }) 
   const saveNewNote = () => {
     const text = draft.trim();
     if (!text) return;
-
-    setNotes((current) => [
-      ...current,
-      {
-        id: Math.max(...current.map((note) => note.id), 0) + 1,
-        text,
-        author: 'Willians Marte',
-        date: '26 de mayo de 2026',
-      },
-    ]);
+    const now = new Date();
+    const author = user?.name ?? 'Sistema';
+    const date = now.toLocaleDateString('es-DO', { dateStyle: 'long' });
+    const nextId = notes.length > 0 ? Math.max(...notes.map((n) => n.id)) + 1 : 1;
+    persistNotes([...notes, { id: nextId, text, author, date }]);
     setDraft('');
     setIsCreating(false);
   };
@@ -767,10 +785,13 @@ function ClientNotesTab({ initialNotes = [] }: { initialNotes?: ClientNote[] }) 
   const saveEdit = () => {
     const text = editingText.trim();
     if (!editingId || !text) return;
-
-    setNotes((current) => current.map((note) => (note.id === editingId ? { ...note, text } : note)));
+    persistNotes(notes.map((note) => (note.id === editingId ? { ...note, text } : note)));
     setEditingId(null);
     setEditingText('');
+  };
+
+  const deleteNote = (id: number) => {
+    persistNotes(notes.filter((item) => item.id !== id));
   };
 
   return (
@@ -797,7 +818,7 @@ function ClientNotesTab({ initialNotes = [] }: { initialNotes?: ClientNote[] }) 
               index={index + 3}
               key={note.id}
               note={note}
-              onDelete={() => setNotes((current) => current.filter((item) => item.id !== note.id))}
+              onDelete={() => deleteNote(note.id)}
               onEdit={() => startEdit(note)}
             />
           ),
@@ -836,11 +857,10 @@ function ClientSummaryCard({ clientData }: { clientData: ClientDetail }) {
 
   return (
     <motion.section
-      animate="visible"
+      animate={{ opacity: 1, y: 0 }}
       className="mb-5 rounded-[20px] border border-[#DDEBE3] bg-[#EAF6EF] p-5 shadow-[0_7px_22px_rgba(40,92,67,0.035)]"
-      custom={2}
-      initial="hidden"
-      variants={fadeUp}
+      initial={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.09 }}
     >
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
         <div className="flex items-center gap-5">
@@ -891,11 +911,10 @@ function ClientSummaryCard({ clientData }: { clientData: ClientDetail }) {
 function ClientInfoCard({ label, value, icon, index }: { label: string; value: string; icon: ReactNode; index: number }) {
   return (
     <motion.article
-      animate="visible"
+      animate={{ opacity: 1, y: 0 }}
       className="flex min-h-[62px] items-center gap-3.5 rounded-[13px] border border-[#DDEBE3] bg-white p-3.5 shadow-[0_7px_18px_rgba(40,92,67,0.03)]"
-      custom={index}
-      initial="hidden"
-      variants={fadeUp}
+      initial={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: index * 0.045 }}
     >
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-[#E7F4EC] text-[#5FA37D]">
         {icon}
@@ -934,11 +953,26 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
   const [activeTab, setActiveTab] = useState<ClientTab>('Información');
   const [clientData, setClientData] = useState<ClientDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [auditEvents, setAuditEvents] = useState<HistoryEvent[]>([]);
 
   useEffect(() => {
     setLoading(true);
-    getClient(clientId)
-      .then(setClientData)
+    Promise.all([
+      getClient(clientId),
+      api.get<ApiResponse<AuditEntryRaw[]>>('/audit', { params: { entityType: 'Client', entityId: clientId } }),
+    ])
+      .then(([client, audit]) => {
+        setClientData(client);
+        setAuditEvents(
+          (audit.data.data ?? []).map((entry) => ({
+            type: entry.action === 'CREATE' ? 'Estado' : entry.action === 'UPDATE' ? 'Nota' : 'Estado',
+            title: entry.action === 'CREATE' ? 'Cliente creado' : entry.action === 'UPDATE' ? 'Cliente actualizado' : entry.action,
+            author: entry.user?.name ?? 'Sistema',
+            date: new Date(entry.createdAt).toLocaleDateString('es-DO', { dateStyle: 'long' }),
+            amount: undefined,
+          })),
+        );
+      })
       .catch(() => setClientData(null))
       .finally(() => setLoading(false));
   }, [clientId]);
@@ -964,15 +998,15 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
     <main className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#1F4A36]">
       <div className="mx-auto max-w-[1180px]">
         <ClientHeader clientData={clientData} />
-        <ClientTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <ClientTabs activeTab={activeTab} clientId={clientData.id} onTabChange={setActiveTab} />
         {activeTab === 'Préstamos' ? (
           <ClientLoansTab loans={clientData.loans} />
         ) : activeTab === 'Documentos' ? (
           <ClientDocumentsTab clientId={clientData.id} />
         ) : activeTab === 'Historial' ? (
-          <ClientHistoryTab events={[]} />
+          <ClientHistoryTab events={auditEvents} />
         ) : activeTab === 'Notas' ? (
-          <ClientNotesTab />
+          <ClientNotesTab clientId={clientData.id} clientNotes={clientData.notes} />
         ) : activeTab === 'Información' ? (
           <>
             <ClientSummaryCard clientData={clientData} />
@@ -982,4 +1016,15 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
       </div>
     </main>
   );
+}
+
+interface AuditEntryRaw {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
+  createdAt: string;
+  user?: { id: string; name: string };
 }
