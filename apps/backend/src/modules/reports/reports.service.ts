@@ -72,7 +72,7 @@ export class ReportsService {
       },
     });
 
-    const result = [];
+    const result: Array<{ id: string; name: string; paymentsCount: number; totalCollected: number }> = [];
     for (const collector of collectors) {
       const totalCollected = await prisma.payment.aggregate({
         where: { receivedById: collector.id },
