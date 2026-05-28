@@ -12,6 +12,7 @@ import {
   ChevronDown,
   FileText,
   ImageIcon,
+  MapPin,
   Phone,
   Save,
   Upload,
@@ -207,14 +208,21 @@ function CardHeader({
   );
 }
 
-function ClientPhotoUploader() {
+function ClientPhotoUploader({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
-  const [fileName, setFileName] = useState('');
 
   function handleFile(file?: File) {
     if (!file) return;
-    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = () => onChange(reader.result as string);
+    reader.readAsDataURL(file);
   }
 
   function handleDrop(event: DragEvent<HTMLButtonElement>) {
@@ -227,43 +235,69 @@ function ClientPhotoUploader() {
     handleFile(event.target.files?.[0]);
   }
 
+  function handleRemove() {
+    onChange('');
+    if (inputRef.current) inputRef.current.value = '';
+  }
+
   return (
     <PageCard className="p-7" index={1}>
       <CardHeader icon={<Camera className="h-5 w-5" />} title="Fotografía del cliente" />
 
-      <button
-        className={`flex h-[280px] w-full flex-col items-center justify-center rounded-[22px] border-2 border-dashed px-6 text-center transition ${
-          dragging ? 'border-[#5FA37D] bg-[#EAF6EF]' : 'border-[#B8EBC9] bg-[#F7FCF9] hover:border-[#5FA37D]'
-        }`}
-        onClick={() => inputRef.current?.click()}
-        onDragLeave={() => setDragging(false)}
-        onDragOver={(event) => {
-          event.preventDefault();
-          setDragging(true);
-        }}
-        onDrop={handleDrop}
-        type="button"
-      >
-        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#4F9B76] shadow-[0_7px_18px_rgba(40,92,67,0.1)]">
-          <ImageIcon className="h-7 w-7" />
-        </span>
-        <span className="mt-5 text-base font-bold text-[#3F4542]">{fileName || 'Arrastra una foto aquí'}</span>
-        <span className="mt-4 text-sm font-medium text-[#777D7A]">o haz click para subir</span>
-        <input accept="image/jpeg,image/png" className="hidden" onChange={handleChange} ref={inputRef} type="file" />
-      </button>
+      {value ? (
+        <div className="relative">
+          <img
+            alt="Foto del cliente"
+            className="h-[280px] w-full rounded-[22px] object-cover"
+            src={value}
+          />
+          <button
+            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
+            onClick={handleRemove}
+            type="button"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      ) : (
+        <button
+          className={`flex h-[280px] w-full flex-col items-center justify-center rounded-[22px] border-2 border-dashed px-6 text-center transition ${
+            dragging ? 'border-[#5FA37D] bg-[#EAF6EF]' : 'border-[#B8EBC9] bg-[#F7FCF9] hover:border-[#5FA37D]'
+          }`}
+          onClick={() => inputRef.current?.click()}
+          onDragLeave={() => setDragging(false)}
+          onDragOver={(event) => {
+            event.preventDefault();
+            setDragging(true);
+          }}
+          onDrop={handleDrop}
+          type="button"
+        >
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#4F9B76] shadow-[0_7px_18px_rgba(40,92,67,0.1)]">
+            <ImageIcon className="h-7 w-7" />
+          </span>
+          <span className="mt-5 text-base font-bold text-[#3F4542]">Arrastra una foto aquí</span>
+          <span className="mt-4 text-sm font-medium text-[#777D7A]">o haz click para subir</span>
+          <input accept="image/jpeg,image/png" className="hidden" onChange={handleChange} ref={inputRef} type="file" />
+        </button>
+      )}
 
-      <button
-        className="mt-6 inline-flex h-12 w-full items-center justify-center gap-3 rounded-[10px] border border-[#B8EBC9] bg-white text-sm font-bold text-[#5FA37D] shadow-[0_5px_12px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:bg-[#F7FCF9]"
-        onClick={() => inputRef.current?.click()}
-        type="button"
-      >
-        <Upload className="h-5 w-5" />
-        Subir foto
-      </button>
+      {!value && (
+        <>
+          <button
+            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-3 rounded-[10px] border border-[#B8EBC9] bg-white text-sm font-bold text-[#5FA37D] shadow-[0_5px_12px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:bg-[#F7FCF9]"
+            onClick={() => inputRef.current?.click()}
+            type="button"
+          >
+            <Upload className="h-5 w-5" />
+            Subir foto
+          </button>
 
-      <p className="mt-6 text-sm font-medium leading-7 text-[#777D7A]">
-        Formatos aceptados: JPG, PNG · Tamaño máximo 5 MB. Una foto clara del rostro ayuda a verificar la identidad del cliente.
-      </p>
+          <p className="mt-6 text-sm font-medium leading-7 text-[#777D7A]">
+            Formatos aceptados: JPG, PNG · Tamaño máximo 5 MB. Una foto clara del rostro ayuda a verificar la identidad del cliente.
+          </p>
+        </>
+      )}
     </PageCard>
   );
 }
@@ -294,6 +328,7 @@ interface FormState {
   phone: string;
   altPhone: string;
   email: string;
+  address: string;
   notes: string;
   photo: string;
 }
@@ -350,6 +385,20 @@ function ContactInfoCard({
         <div className="md:col-span-2">
           <StyledInput label="Correo electrónico" placeholder="cliente@correo.com" type="email" value={values.email} onChange={(v) => onChange('email', v)} />
         </div>
+        <div className="md:col-span-2">
+          <label className="block">
+            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">Dirección</span>
+            <div className="flex items-start gap-3 rounded-[14px] border border-[#DDEBE3] bg-white px-4 shadow-[0_4px_10px_rgba(40,92,67,0.07)] transition focus-within:border-[#5FA37D] focus-within:ring-4 focus-within:ring-[#EAF6EF]">
+              <MapPin className="mt-4 h-5 w-5 shrink-0 text-[#9DA5A0]" />
+              <input
+                className="h-[52px] w-full bg-transparent text-sm font-medium text-[#173D2C] outline-none placeholder:text-[#7E808A]"
+                placeholder="Calle, número, sector, ciudad"
+                value={values.address}
+                onChange={(e) => onChange('address', e.target.value)}
+              />
+            </div>
+          </label>
+        </div>
       </div>
     </PageCard>
   );
@@ -388,6 +437,7 @@ export function AddClientPage() {
     phone: '',
     altPhone: '',
     email: '',
+    address: '',
     notes: '',
     photo: '',
   });
@@ -409,6 +459,7 @@ export function AddClientPage() {
         phone: form.phone.trim() || undefined,
         altPhone: form.altPhone.trim() || undefined,
         email: form.email.trim() || undefined,
+        address: form.address.trim() || undefined,
         birthDate: form.birthDate || undefined,
         gender: form.gender || undefined,
         maritalStatus: form.maritalStatus || undefined,
@@ -458,7 +509,7 @@ export function AddClientPage() {
 
         <div className="grid grid-cols-1 gap-7 xl:grid-cols-[390px_minmax(0,1fr)]">
           <div className="space-y-7">
-            <ClientPhotoUploader />
+            <ClientPhotoUploader value={form.photo} onChange={(v) => updateField('photo', v)} />
             <RequiredFieldsNotice />
           </div>
 
