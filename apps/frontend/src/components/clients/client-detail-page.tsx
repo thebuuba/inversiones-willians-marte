@@ -957,12 +957,13 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([
-      getClient(clientId),
-      api.get<ApiResponse<AuditEntryRaw[]>>('/audit', { params: { entityType: 'Client', entityId: clientId } }),
-    ])
-      .then(([client, audit]) => {
-        setClientData(client);
+    getClient(clientId)
+      .then(setClientData)
+      .catch(() => setClientData(null))
+      .finally(() => setLoading(false));
+
+    api.get<ApiResponse<AuditEntryRaw[]>>('/audit', { params: { entityType: 'Client', entityId: clientId } })
+      .then((audit) =>
         setAuditEvents(
           (audit.data.data ?? []).map((entry) => ({
             type: entry.action === 'CREATE' ? 'Estado' : entry.action === 'UPDATE' ? 'Nota' : 'Estado',
@@ -971,10 +972,9 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
             date: new Date(entry.createdAt).toLocaleDateString('es-DO', { dateStyle: 'long' }),
             amount: undefined,
           })),
-        );
-      })
-      .catch(() => setClientData(null))
-      .finally(() => setLoading(false));
+        ),
+      )
+      .catch(() => {});
   }, [clientId]);
 
   if (loading) {
