@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InterestTypeEnum } from '@inversiones/shared';
 import type { InterestType, PaymentFrequency } from '@inversiones/shared';
-import { AmortizationRow } from '../dto/create-loan.dto';
+import { AmortizationRow } from './dto/create-loan.dto';
 
 @Injectable()
 export class AmortizationService {

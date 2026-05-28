@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
-import { CreateLoanDto } from '../dto/create-loan.dto';
+import { CreateLoanDto } from './dto/create-loan.dto';
 import { AmortizationService } from './amortization.service';
 
 @Injectable()

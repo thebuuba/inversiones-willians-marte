@@ -67,12 +67,18 @@ export function ClientsPanel() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('Todos');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     setLoading(true);
+    setError('');
     getClients(search || undefined)
       .then(setClients)
+      .catch((err) => {
+        if (err?.response?.status === 401) return;
+        setError('No se pudieron cargar los clientes. Verifica que el backend esté corriendo.');
+      })
       .finally(() => setLoading(false));
   }, [search]);
 
@@ -159,6 +165,12 @@ export function ClientsPanel() {
           );
         })}
       </div>
+
+      {error && (
+        <div className="mb-5 rounded-[16px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-700">
+          {error}
+        </div>
+      )}
 
       <PanelCard className="mb-5 p-5" index={5}>
         <div className="flex flex-col gap-3 xl:flex-row">

@@ -1,0 +1,114 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
+import { ClientsService } from './clients.service';
+import { prisma } from '@inversiones/database';
+import { CreateClientDto } from './dto/create-client.dto';
+import { UpdateClientDto } from './dto/update-client.dto';
+
+jest.mock('@inversiones/database', () => ({
+  prisma: {
+    client: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+  },
+}));
+
+describe('ClientsService', () => {
+  let service: ClientsService;
+
+  const mockClient = {
+    id: 'client-1',
+    firstName: 'Juan',
+    lastName: 'Pérez',
+    phone: '809-555-0101',
+    identification: '001-1234567-8',
+    active: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [ClientsService],
+    }).compile();
+
+    service = module.get<ClientsService>(ClientsService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('create', () => {
+    it('should create a client', async () => {
+      const dto: CreateClientDto = { firstName: 'Juan', lastName: 'Pérez', phone: '809-555-0101' };
+      jest.mocked(prisma.client.create).mockResolvedValue(mockClient as any);
+
+      const result = await service.create(dto, 'user-1');
+      expect(result).toEqual(mockClient);
+      expect(prisma.client.create).toHaveBeenCalledWith({
+        data: { ...dto, createdById: 'user-1' },
+      });
+    });
+  });
+
+  describe('findAll', () => {
+    it('should return all active clients', async () => {
+      jest.mocked(prisma.client.findMany).mockResolvedValue([mockClient] as any);
+
+      const result = await service.findAll();
+      expect(result).toHaveLength(1);
+      expect(prisma.client.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { active: true },
+        }),
+      );
+    });
+
+    it('should search clients by name', async () => {
+      jest.mocked(prisma.client.findMany).mockResolvedValue([mockClient] as any);
+
+      const result = await service.findAll('Juan');
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return a client by id', async () => {
+      jest.mocked(prisma.client.findUnique).mockResolvedValue({ ...mockClient, loans: [] } as any);
+
+      const result = await service.findOne('client-1');
+      expect(result).toBeDefined();
+    });
+
+    it('should throw NotFoundException when client not found', async () => {
+      jest.mocked(prisma.client.findUnique).mockResolvedValue(null);
+
+      await expect(service.findOne('invalid-id')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('update', () => {
+    it('should update a client', async () => {
+      jest.mocked(prisma.client.findUnique).mockResolvedValue(mockClient as any);
+      jest.mocked(prisma.client.update).mockResolvedValue({ ...mockClient, phone: '809-555-0202' } as any);
+
+      const dto: UpdateClientDto = { phone: '809-555-0202' };
+      const result = await service.update('client-1', dto);
+      expect(result.phone).toBe('809-555-0202');
+    });
+  });
+
+  describe('remove', () => {
+    it('should soft-delete a client', async () => {
+      jest.mocked(prisma.client.findUnique).mockResolvedValue(mockClient as any);
+      jest.mocked(prisma.client.update).mockResolvedValue({ ...mockClient, active: false } as any);
+
+      const result = await service.remove('client-1');
+      expect(result.active).toBe(false);
+    });
+  });
+});

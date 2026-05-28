@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Param, Query, UseGuards, Body } from '@nestjs/common';
-import { LoansService } from './services/loans.service';
+import { LoansService } from './loans.service';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';

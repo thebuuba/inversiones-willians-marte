@@ -4,6 +4,9 @@
   "private": true,
   "main": "./dist/index.js",
   "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "typescript": "^5.8.0"
   }

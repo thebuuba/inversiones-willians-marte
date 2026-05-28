@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoansController } from './loans.controller';
-import { LoansService } from './services/loans.service';
-import { AmortizationService } from './services/amortization.service';
+import { LoansService } from './loans.service';
+import { AmortizationService } from './amortization.service';
 
 @Module({
   controllers: [LoansController],
