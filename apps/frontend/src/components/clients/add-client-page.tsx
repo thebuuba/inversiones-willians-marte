@@ -440,6 +440,11 @@ export function AddClientPage() {
     setSaving(true);
     setError('');
     try {
+      if (form.firstName.trim().length < 2 || form.lastName.trim().length < 2) {
+        setError('Completa nombre y apellido con al menos 2 caracteres.');
+        return;
+      }
+
       const client = await createClient({
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
@@ -459,10 +464,15 @@ export function AddClientPage() {
       router.push(`/clientes/${client.id}`);
     } catch (err: unknown) {
       let message = 'Error al guardar el cliente. Intenta de nuevo.';
-      if (err && typeof err === 'object' && 'response' in err) {
-        const data = (err as { response: { data?: Record<string, unknown> } }).response.data;
-        if (data?.message) message = String(data.message);
-        else if (data?.error) message = String(data.error);
+      if (err && typeof err === 'object') {
+        if ('response' in err) {
+          const data = (err as { response?: { data?: Record<string, unknown> } }).response?.data;
+          if (Array.isArray(data?.message)) message = data.message.join(' ');
+          else if (data?.message) message = String(data.message);
+          else if (data?.error) message = String(data.error);
+        } else if ('request' in err) {
+          message = 'No se pudo conectar con la API. Verifica que el backend esté encendido en localhost:3000.';
+        }
       }
       setError(message);
     } finally {

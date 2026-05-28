@@ -106,13 +106,14 @@ export interface LoanProductSummary {
 
 export interface CreateUserDto {
   name: string;
+  username?: string;
   email: string;
   password: string;
   role: UserRole;
 }
 
 export interface LoginDto {
-  email: string;
+  username: string;
   password: string;
 }
 

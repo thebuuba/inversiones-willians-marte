@@ -7,6 +7,7 @@ async function main() {
   console.log('Seeding database...');
 
   const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@inversiones.com';
+  const adminUsername = process.env.ADMIN_USERNAME ?? 'admin';
   const adminPassword = process.env.ADMIN_PASSWORD ?? 'admin123';
   const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
 
@@ -15,6 +16,7 @@ async function main() {
     await prisma.user.create({
       data: {
         name: 'Administrador',
+        username: adminUsername,
         email: adminEmail,
         passwordHash,
         role: 'ADMIN',
@@ -22,6 +24,12 @@ async function main() {
     });
     console.log(`Admin user created: ${adminEmail}`);
   } else {
+    if (!existing.username) {
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: { username: adminUsername },
+      });
+    }
     console.log('Admin user already exists');
   }
 

@@ -14,17 +14,18 @@ export class UsersService {
     return prisma.user.create({
       data: {
         name: dto.name,
+        username: dto.username?.trim().toLowerCase(),
         email: dto.email,
         passwordHash,
         role: dto.role,
       },
-      select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },
+      select: { id: true, name: true, username: true, email: true, role: true, active: true, createdAt: true },
     });
   }
 
   async findAll() {
     return prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },
+      select: { id: true, name: true, username: true, email: true, role: true, active: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -32,7 +33,7 @@ export class UsersService {
   async findOne(id: string) {
     const user = await prisma.user.findUnique({
       where: { id },
-      select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },
+      select: { id: true, name: true, username: true, email: true, role: true, active: true, createdAt: true },
     });
     if (!user) throw new NotFoundException('User not found');
     return user;
@@ -45,7 +46,7 @@ export class UsersService {
     return prisma.user.update({
       where: { id },
       data: { active: !user.active },
-      select: { id: true, name: true, email: true, role: true, active: true },
+      select: { id: true, name: true, username: true, email: true, role: true, active: true },
     });
   }
 }

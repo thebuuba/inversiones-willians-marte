@@ -14,6 +14,7 @@ import { api } from './api';
 interface User {
   id: string;
   name: string;
+  username?: string | null;
   email: string;
   role: string;
 }
@@ -21,7 +22,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  register: (name: string, username: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -76,15 +78,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const { data } = await api.post('/auth/login', { email, password });
-    const { user, accessToken } = data.data;
-    const nextAuth = { user, token: accessToken };
+  const persistAuth = useCallback((nextAuth: StoredAuth) => {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextAuth));
     setAuth(nextAuth);
     setLoading(false);
     notifyAuthChanged();
   }, []);
+
+  const login = useCallback(async (username: string, password: string) => {
+    const { data } = await api.post('/auth/login', { username, password });
+    const { user, accessToken } = data.data;
+    persistAuth({ user, token: accessToken });
+  }, [persistAuth]);
+
+  const register = useCallback(async (name: string, username: string, password: string) => {
+    const { data } = await api.post('/auth/register', { name, username, password });
+    const { user, accessToken } = data.data;
+    persistAuth({ user, token: accessToken });
+  }, [persistAuth]);
 
   const logout = useCallback(() => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
@@ -94,8 +105,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user: auth.user, token: auth.token, login, logout, loading }),
-    [auth.token, auth.user, loading, login, logout],
+    () => ({ user: auth.user, token: auth.token, login, register, logout, loading }),
+    [auth.token, auth.user, loading, login, register, logout],
   );
 
   return (

@@ -6,6 +6,7 @@ import { prisma } from '@inversiones/database';
 
 interface JwtPayload {
   sub: string;
+  username?: string | null;
   email: string;
   role: string;
 }
@@ -23,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: JwtPayload) {
     const user = await prisma.user.findUnique({
       where: { id: payload.sub },
-      select: { id: true, name: true, email: true, role: true, active: true },
+      select: { id: true, name: true, username: true, email: true, role: true, active: true },
     });
 
     if (!user || !user.active) throw new UnauthorizedException();

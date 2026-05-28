@@ -118,7 +118,7 @@ export function Sidebar() {
                 {user?.name ?? 'Administrador'}
               </p>
               <p className="mt-1 truncate text-[13px] leading-tight text-[#7E9086]">
-                {user?.email ?? 'admin@empresa.com'}
+                {user?.username ?? user?.email ?? 'admin'}
               </p>
             </div>
           </button>
