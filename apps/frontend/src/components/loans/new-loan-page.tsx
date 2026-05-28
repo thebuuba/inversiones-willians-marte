@@ -10,6 +10,7 @@ import {
   Check,
   ChevronDown,
   Pencil,
+  Plus,
   Search,
   UserRound,
 } from 'lucide-react';
@@ -238,6 +239,13 @@ function NewLoanStepOne({
           </div>
         )}
         <ClientSelectorCard />
+        <Link
+          className="mt-4 inline-flex h-12 w-full items-center justify-center gap-3 rounded-[14px] border border-dashed border-[#A9CDBB] bg-white text-sm font-bold text-[#5FA37D] transition hover:bg-[#F7FBF9] hover:-translate-y-0.5"
+          href="/clientes/nuevo"
+        >
+          <Plus className="h-5 w-5" />
+          Agregar cliente
+        </Link>
       </motion.section>
 
       {selectedClient ? <SelectedClientPreview client={selectedClient} /> : <LoanPreviewPlaceholder />}
