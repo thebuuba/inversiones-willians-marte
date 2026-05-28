@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { useAuth } from '@/lib/auth-context';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -109,6 +110,7 @@ function SectionHeader({
 }
 
 export function DashboardHome() {
+  const { user } = useAuth();
   const [dash, setDash] = useState<DashboardData | null>(null);
   const [portfolio, setPortfolio] = useState<PortfolioGroup[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
@@ -117,12 +119,12 @@ export function DashboardHome() {
   const [upcomingPayments, setUpcomingPayments] = useState<UpcomingPayment[]>([]);
 
   useEffect(() => {
-    getDashboard().then(setDash);
-    getPortfolio().then(setPortfolio);
-    getAudit().then((rows) => setAudit(rows.slice(0, 6)));
-    getMonthlyCollections().then(setMonthlyCollections);
-    getWeeklyMovement().then(setWeeklyMovement);
-    getUpcomingPayments().then(setUpcomingPayments);
+    getDashboard().then(setDash).catch(() => {});
+    getPortfolio().then(setPortfolio).catch(() => {});
+    getAudit().then((rows) => setAudit(rows.slice(0, 6))).catch(() => {});
+    getMonthlyCollections().then(setMonthlyCollections).catch(() => {});
+    getWeeklyMovement().then(setWeeklyMovement).catch(() => {});
+    getUpcomingPayments().then(setUpcomingPayments).catch(() => {});
   }, []);
 
   const activeLoans = dash?.activeLoans ?? 0;
@@ -201,7 +203,7 @@ export function DashboardHome() {
             <span className="text-sm text-[#A9CDBB]">{today}</span>
           </div>
           <h1 className="text-[28px] font-bold leading-tight text-[#173D2C]">
-            Hola, Administrador 👋
+            Hola, {user?.name ?? 'Usuario'} 👋
           </h1>
           <p className="mt-1.5 text-base text-[#7A8A80]">Aquí tienes un resumen de tu cartera hoy.</p>
         </div>
