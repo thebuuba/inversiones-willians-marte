@@ -15,10 +15,32 @@ import {
   Phone,
   Save,
   Upload,
-  UserPlus,
   UserRound,
   X,
 } from 'lucide-react';
+
+function maskCedula(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 10) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 10)}-${digits.slice(10)}`;
+}
+
+function formatLocal(digits: string): string {
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
+function maskPhone(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (value.startsWith('+1')) {
+    const local = digits.startsWith('1') ? digits.slice(1) : digits;
+    const formatted = formatLocal(local.slice(0, 10));
+    return formatted ? `+1 ${formatted}` : '+1';
+  }
+  return formatLocal(digits.slice(0, 10));
+}
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 18 },
@@ -75,7 +97,6 @@ function FormHeaderActions({
 function StyledInput({
   label,
   placeholder,
-  required = false,
   helper,
   type = 'text',
   value,
@@ -83,7 +104,6 @@ function StyledInput({
 }: {
   label: string;
   placeholder: string;
-  required?: boolean;
   helper?: string;
   type?: string;
   value: string;
@@ -91,9 +111,7 @@ function StyledInput({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">
-        {label} {required && <span className="text-[#5FA37D]">*</span>}
-      </span>
+      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">{label}</span>
       <input
         className="h-[52px] w-full rounded-[14px] border border-[#DDEBE3] bg-white px-4 text-sm font-medium text-[#173D2C] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition placeholder:text-[#7E808A] focus:border-[#5FA37D] focus:ring-4 focus:ring-[#EAF6EF]"
         placeholder={placeholder}
@@ -109,21 +127,17 @@ function StyledInput({
 function StyledSelect({
   label,
   options,
-  required = false,
   value,
   onChange,
 }: {
   label: string;
   options: string[];
-  required?: boolean;
   value: string;
   onChange: (value: string) => void;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">
-        {label} {required && <span className="text-[#5FA37D]">*</span>}
-      </span>
+      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">{label}</span>
       <div className="relative">
         <select
           className="h-[52px] w-full appearance-none rounded-[14px] border border-[#DDEBE3] bg-white px-4 pr-12 text-sm font-medium text-[#151918] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition focus:border-[#5FA37D] focus:ring-4 focus:ring-[#EAF6EF]"
@@ -258,12 +272,12 @@ function RequiredFieldsNotice() {
   return (
     <motion.aside
       animate="visible"
-      className="rounded-[22px] border border-[#D2E8D9] bg-[#EAF6EF] p-7 text-sm font-medium leading-7 text-[#5FA37D]"
+      className="rounded-[22px] border border-[#E8EDE9] bg-[#F5F7F6] p-7 text-sm font-medium leading-7 text-[#777D7A]"
       custom={2}
       initial="hidden"
       variants={fadeUp}
     >
-      Los campos marcados con * son obligatorios para crear el perfil del cliente.
+      Todos los campos son opcionales. Completa solo la información disponible del cliente.
     </motion.aside>
   );
 }
@@ -300,10 +314,10 @@ function PersonalInfoCard({
       />
 
       <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-        <StyledInput label="Nombres" placeholder="María Isabel" required value={values.firstName} onChange={(v) => onChange('firstName', v)} />
-        <StyledInput label="Apellidos" placeholder="González Pérez" required value={values.lastName} onChange={(v) => onChange('lastName', v)} />
-        <StyledInput label="Cédula / Documento" placeholder="402-1234567-8" required value={values.identification} onChange={(v) => onChange('identification', v)} />
-        <StyledInput label="Fecha de nacimiento" placeholder="dd/mm/aaaa" required value={values.birthDate} onChange={(v) => onChange('birthDate', v)} />
+        <StyledInput label="Nombres" placeholder="María Isabel" value={values.firstName} onChange={(v) => onChange('firstName', v)} />
+        <StyledInput label="Apellidos" placeholder="González Pérez" value={values.lastName} onChange={(v) => onChange('lastName', v)} />
+        <StyledInput label="Cédula / Documento" placeholder="000-000000-0" value={values.identification} onChange={(v) => onChange('identification', maskCedula(v))} />
+        <StyledInput label="Fecha de nacimiento" placeholder="" type="date" value={values.birthDate} onChange={(v) => onChange('birthDate', v)} />
         <StyledSelect label="Género" options={['', 'Femenino', 'Masculino', 'Otro']} value={values.gender} onChange={(v) => onChange('gender', v)} />
         <StyledSelect label="Estado civil" options={['', 'Soltero/a', 'Casado/a', 'Unión libre']} value={values.maritalStatus} onChange={(v) => onChange('maritalStatus', v)} />
         <StyledInput label="Nacionalidad" placeholder="Dominicana" value={values.nationality} onChange={(v) => onChange('nationality', v)} />
@@ -331,10 +345,10 @@ function ContactInfoCard({
       />
 
       <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-        <StyledInput label="Teléfono móvil" placeholder="+1 (809) 555-0142" required value={values.phone} onChange={(v) => onChange('phone', v)} />
-        <StyledInput label="Teléfono alternativo" placeholder="+1 (829) 555-0000" value={values.altPhone} onChange={(v) => onChange('altPhone', v)} />
+        <StyledInput label="Teléfono móvil" placeholder="(809) 555-0142" value={values.phone} onChange={(v) => onChange('phone', maskPhone(v))} />
+        <StyledInput label="Teléfono alternativo" placeholder="(809) 555-0000" value={values.altPhone} onChange={(v) => onChange('altPhone', maskPhone(v))} />
         <div className="md:col-span-2">
-          <StyledInput label="Correo electrónico" placeholder="cliente@correo.com" required type="email" value={values.email} onChange={(v) => onChange('email', v)} />
+          <StyledInput label="Correo electrónico" placeholder="cliente@correo.com" type="email" value={values.email} onChange={(v) => onChange('email', v)} />
         </div>
       </div>
     </PageCard>
@@ -385,10 +399,6 @@ export function AddClientPage() {
   }
 
   async function handleSave() {
-    if (!form.firstName.trim() || !form.lastName.trim()) {
-      setError('Nombre y apellidos son obligatorios');
-      return;
-    }
     setSaving(true);
     setError('');
     try {

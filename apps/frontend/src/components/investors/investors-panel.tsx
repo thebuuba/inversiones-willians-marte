@@ -14,7 +14,6 @@ import {
   DollarSign,
   Download,
   Filter,
-  List,
   MoreHorizontal,
   PiggyBank,
   Plus,
@@ -270,9 +269,6 @@ export function InvestorsPanel() {
         </div>
       </PanelCard>
 
-      <button className="fixed bottom-5 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#FF6A00] text-white shadow-[0_12px_24px_rgba(255,106,0,0.28)]">
-        <List className="h-6 w-6" strokeWidth={3} />
-      </button>
     </div>
   );
 }
