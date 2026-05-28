@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from 'react';
 import { createClient } from '@/lib/api/clients';
 import { motion } from 'framer-motion';
-import type { Variants } from 'framer-motion';
 import {
   ArrowLeft,
   Camera,
@@ -43,23 +42,13 @@ function maskPhone(value: string): string {
   return formatLocal(digits.slice(0, 10));
 }
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 18 },
-  visible: (index = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.38, ease: [0.16, 1, 0.3, 1], delay: index * 0.055 },
-  }),
-};
-
 function PageCard({ children, className = '', index = 0 }: { children: ReactNode; className?: string; index?: number }) {
   return (
     <motion.section
-      animate="visible"
+      animate={{ opacity: 1, y: 0 }}
       className={`rounded-[24px] border border-[#DDEBE3] bg-white shadow-[0_8px_24px_rgba(40,92,67,0.045)] ${className}`}
-      custom={index}
-      initial="hidden"
-      variants={fadeUp}
+      initial={{ opacity: 0, y: 18 }}
+      transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1], delay: index * 0.055 }}
     >
       {children}
     </motion.section>
@@ -305,11 +294,10 @@ function ClientPhotoUploader({
 function RequiredFieldsNotice() {
   return (
     <motion.aside
-      animate="visible"
+      animate={{ opacity: 1, y: 0 }}
       className="rounded-[22px] border border-[#E8EDE9] bg-[#F5F7F6] p-7 text-sm font-medium leading-7 text-[#777D7A]"
-      custom={2}
-      initial="hidden"
-      variants={fadeUp}
+      initial={{ opacity: 0, y: 18 }}
+      transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1], delay: 0.11 }}
     >
       Todos los campos son opcionales. Completa solo la información disponible del cliente.
     </motion.aside>
@@ -486,10 +474,10 @@ export function AddClientPage() {
     <main className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C] lg:p-7">
       <div className="mx-auto max-w-[1640px]">
         <motion.header
-          animate="visible"
+          animate={{ opacity: 1, y: 0 }}
           className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end"
-          initial="hidden"
-          variants={fadeUp}
+          initial={{ opacity: 0, y: 18 }}
+          transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
         >
           <div>
             <Link
