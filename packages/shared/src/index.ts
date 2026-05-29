@@ -137,9 +137,18 @@ export interface CreateInvestorDto {
   name: string;
   email?: string;
   phone?: string;
+  phone2?: string;
+  cedula?: string;
+  birthDate?: string;
+  nationality?: string;
+  type?: string;
+  photo?: string;
   capital: number;
   monthlyPayment: number;
   rate: number;
+  startDate?: string;
+  term?: string;
+  bank?: string;
   notes?: string;
 }
 

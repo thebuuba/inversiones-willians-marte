@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, Min, MinLength } from 'class-validator';
+import { IsString, IsNumber, IsOptional, Min, MinLength, IsDateString, IsEnum } from 'class-validator';
 
 export class CreateInvestorDto {
   @IsString()
@@ -13,6 +13,30 @@ export class CreateInvestorDto {
   @IsString()
   phone?: string;
 
+  @IsOptional()
+  @IsString()
+  phone2?: string;
+
+  @IsOptional()
+  @IsString()
+  cedula?: string;
+
+  @IsOptional()
+  @IsDateString()
+  birthDate?: string;
+
+  @IsOptional()
+  @IsString()
+  nationality?: string;
+
+  @IsOptional()
+  @IsString()
+  type?: string;
+
+  @IsOptional()
+  @IsString()
+  photo?: string;
+
   @IsNumber()
   @Min(0)
   capital: number;
@@ -24,6 +48,18 @@ export class CreateInvestorDto {
   @IsNumber()
   @Min(0)
   rate: number;
+
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsString()
+  term?: string;
+
+  @IsOptional()
+  @IsString()
+  bank?: string;
 
   @IsOptional()
   @IsString()

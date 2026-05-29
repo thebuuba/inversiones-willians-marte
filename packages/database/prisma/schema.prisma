@@ -283,9 +283,18 @@ model Investor {
   name            String
   email           String?
   phone           String?
+  phone2          String?       @map("phone_2")
+  cedula          String?
+  birthDate       DateTime?     @map("birth_date")
+  nationality     String?
+  type            String        @default("individual")
+  photo           String?
   capital         Decimal       @default(0)
   monthlyPayment  Decimal       @default(0) @map("monthly_payment")
   rate            Decimal       @default(0)
+  startDate       DateTime?     @map("start_date")
+  term            String?
+  bank            String?
   status          InvestorStatus @default(ACTIVE)
   notes           String?
   createdById     String        @map("created_by")

@@ -8,7 +8,26 @@ export class InvestorsService {
     const count = await prisma.investor.count();
     const code = `INV-${String(count + 1).padStart(4, '0')}`;
     return prisma.investor.create({
-      data: { ...dto, code, createdById: userId },
+      data: {
+        name: dto.name,
+        email: dto.email,
+        phone: dto.phone,
+        phone2: dto.phone2,
+        cedula: dto.cedula,
+        birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
+        nationality: dto.nationality,
+        type: dto.type ?? 'individual',
+        photo: dto.photo,
+        capital: dto.capital,
+        monthlyPayment: dto.monthlyPayment,
+        rate: dto.rate,
+        startDate: dto.startDate ? new Date(dto.startDate) : null,
+        term: dto.term,
+        bank: dto.bank,
+        notes: dto.notes,
+        code,
+        createdById: userId,
+      },
     });
   }
 
