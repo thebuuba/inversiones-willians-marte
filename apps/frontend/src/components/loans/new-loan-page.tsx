@@ -216,7 +216,7 @@ function NewLoanStepOne({
     <div className="mt-9 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(400px,0.75fr)]">
       <motion.section
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-[22px] border border-[#DDEBE3] bg-white p-6 shadow-[0_8px_24px_rgba(40,92,67,0.035)] lg:p-8"
+      className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-8"
         initial={{ opacity: 0, y: 14 }}
         transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
       >
@@ -295,13 +295,13 @@ function LoanTypeSelector({
   selectedProduct: LoanProductItem | null;
   onSelectProduct: (product: LoanProductItem) => void;
 }) {
-  return (
-    <motion.section
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-[22px] border border-[#DDEBE3] bg-white p-6 shadow-[0_8px_24px_rgba(40,92,67,0.035)] lg:p-8"
-      initial={{ opacity: 0, y: 14 }}
-      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-    >
+    return (
+      <motion.section
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-8"
+        initial={{ opacity: 0, y: 14 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+      >
       <h2 className="mb-7 text-xl font-bold text-[#173D2C]">Producto de préstamo</h2>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {products.map((product) => (
@@ -388,13 +388,13 @@ function LoanParametersForm({
   onTermChange: (value: string) => void;
   selectedProduct: LoanProductItem | null;
 }) {
-  return (
-    <motion.section
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-[22px] border border-[#DDEBE3] bg-white p-6 shadow-[0_8px_24px_rgba(40,92,67,0.035)] lg:p-8"
-      initial={{ opacity: 0, y: 14 }}
-      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
-    >
+    return (
+      <motion.section
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-8"
+        initial={{ opacity: 0, y: 14 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
+      >
       <h2 className="mb-7 text-xl font-bold text-[#173D2C]">Parámetros del préstamo</h2>
       <div className="space-y-6">
         <TextInput label="Monto a desembolsar" onChange={onAmountChange} prefix="RD$" value={amount} />
@@ -604,7 +604,7 @@ function SummaryMetricCard({
   return (
     <motion.section
       animate={{ opacity: 1, y: 0 }}
-      className="min-h-[136px] rounded-[22px] border border-[#DDEBE3] bg-white p-6 shadow-[0_8px_24px_rgba(40,92,67,0.035)]"
+      className="min-h-[136px] rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm"
       initial={{ opacity: 0, y: 14 }}
       transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
     >
@@ -660,7 +660,7 @@ function LoanClientSummary({
   return (
     <motion.section
       animate={{ opacity: 1, y: 0 }}
-      className="mt-8 rounded-[22px] border border-[#DDEBE3] bg-white px-7 py-7 shadow-[0_8px_24px_rgba(40,92,67,0.035)]"
+      className="mt-8 rounded-2xl border border-neutral-100 bg-white px-7 py-7 shadow-sm"
       initial={{ opacity: 0, y: 14 }}
       transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
     >
@@ -728,7 +728,7 @@ function AmortizationTableCard({
   return (
     <motion.section
       animate={{ opacity: 1, y: 0 }}
-      className="mt-8 overflow-hidden rounded-[22px] border border-[#DDEBE3] bg-white shadow-[0_8px_24px_rgba(40,92,67,0.035)]"
+      className="mt-8 overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm"
       initial={{ opacity: 0, y: 14 }}
       transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
     >
