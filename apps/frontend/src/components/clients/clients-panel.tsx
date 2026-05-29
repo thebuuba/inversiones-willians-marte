@@ -102,7 +102,6 @@ export function ClientsPanel() {
         className="mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end"
       >
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-400">GESTIÓN</p>
           <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#173D2C]">Clientes</h1>
           <p className="mt-1.5 text-base text-neutral-500">
             Administra tu cartera de clientes — {clients.length} registrados en total.
