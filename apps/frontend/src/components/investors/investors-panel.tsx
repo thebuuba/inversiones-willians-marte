@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -114,10 +115,10 @@ export function InvestorsPanel() {
             <Download className="h-4 w-4" />
             Exportar
           </button>
-          <button className="flex h-11 items-center gap-2 rounded-full bg-[#5FA37D] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.22)] transition hover:-translate-y-0.5">
+          <Link href="/inversionistas/nuevo" className="flex h-11 items-center gap-2 rounded-full bg-[#5FA37D] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.22)] transition hover:-translate-y-0.5">
             <Plus className="h-4 w-4" />
             Nuevo inversionista
-          </button>
+          </Link>
         </div>
       </motion.header>
 
