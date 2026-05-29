@@ -240,7 +240,7 @@ export function ClientsPanel() {
                 </div>
                 <span className="font-mono text-sm text-[#7A8A80]">{client.identification ?? '—'}</span>
                 <span className="text-sm text-[#7A8A80]">{client.phone ?? '—'}</span>
-                <span className="text-right font-bold text-[#173D2C]">{client._count?.loans ?? 0}</span>
+                <span className="inline-flex min-w-[28px] items-center justify-center justify-self-end rounded-md bg-[#E7F4EC] px-2 py-1 text-xs font-bold text-[#5FA37D]">{client._count?.loans ?? 0}</span>
               </motion.div>
             ))
           )}
