@@ -941,7 +941,8 @@ function WizardActions({
 
 export function NewLoanPage({ initialClientId }: { initialClientId?: string }) {
   const router = useRouter();
-  const [step, setStep] = useState<WizardStep>(1);
+  const [step, setStep] = useState<WizardStep>(initialClientId ? 2 : 1);
+  const [loadingClient, setLoadingClient] = useState(!!initialClientId);
   const [products, setProducts] = useState<LoanProductItem[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<LoanProductItem | null>(null);
@@ -957,7 +958,8 @@ export function NewLoanPage({ initialClientId }: { initialClientId?: string }) {
     if (!initialClientId) return;
     getClient(initialClientId)
       .then(setSelectedClient)
-      .catch(() => setSelectedClient(null));
+      .catch(() => setSelectedClient(null))
+      .finally(() => setLoadingClient(false));
   }, [initialClientId]);
 
   async function handleCreate() {
@@ -982,7 +984,9 @@ export function NewLoanPage({ initialClientId }: { initialClientId?: string }) {
       <div className="mx-auto max-w-[1720px]">
         <Header step={step} />
 
-        {step === 1 ? (
+        {loadingClient ? (
+          <div className="flex items-center justify-center py-20 text-sm text-neutral-400">Cargando cliente...</div>
+        ) : step === 1 ? (
           <NewLoanStepOne
             selectedClient={selectedClient}
             onSelectClient={setSelectedClient}
