@@ -203,7 +203,8 @@ export function ClientsPanel() {
       </PanelCard>
 
       <PanelCard className="overflow-hidden" index={6}>
-        <div className="grid grid-cols-[2fr_1.35fr_1.55fr_1fr_0.8fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#777D7A]">
+        <div className="grid grid-cols-[0.5fr_2fr_1.35fr_1.55fr_1fr_0.8fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#777D7A]">
+          <span>ID</span>
           <span>CLIENTE</span>
           <span>CÉDULA</span>
           <span>TELÉFONO</span>
@@ -228,9 +229,10 @@ export function ClientsPanel() {
                 initial="hidden"
                 animate="visible"
                 custom={index + 7}
-                className="grid min-h-[74px] cursor-pointer grid-cols-[2fr_1.35fr_1.55fr_1fr_0.8fr] items-center border-t border-[#EDF2EF] px-6 text-[#5FA37D] transition hover:bg-[#F4FAF6] bg-white"
+                className="grid min-h-[74px] cursor-pointer grid-cols-[0.5fr_2fr_1.35fr_1.55fr_1fr_0.8fr] items-center border-t border-[#EDF2EF] px-6 text-[#5FA37D] transition hover:bg-[#F4FAF6] bg-white"
                 onClick={() => router.push(`/clientes/${client.id}`)}
               >
+                <span className="font-mono text-xs text-[#A9CDBB]">{client.id}</span>
                 <div className="flex items-center gap-4">
                   <div className="relative h-12 w-12 shrink-0">
                     {client.photo ? (
