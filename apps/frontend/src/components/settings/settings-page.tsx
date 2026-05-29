@@ -52,7 +52,7 @@ function SectionCard({
   return (
     <motion.section
       animate="visible"
-      className={`rounded-[18px] border border-[#DDEBE3] bg-white shadow-[0_7px_22px_rgba(40,92,67,0.035)] ${className}`}
+      className={`rounded-2xl border border-neutral-100 bg-white shadow-sm ${className}`}
       custom={index}
       initial="hidden"
       variants={fadeUp}
@@ -110,7 +110,7 @@ function SettingsTabs({
   return (
     <motion.nav
       animate="visible"
-      className="mb-6 overflow-x-auto rounded-[18px] border border-[#DDEBE3] bg-white p-2 shadow-[0_7px_22px_rgba(40,92,67,0.035)]"
+      className="mb-6 overflow-x-auto rounded-2xl border border-neutral-100 bg-white p-2 shadow-sm"
       custom={1}
       initial="hidden"
       variants={fadeUp}
@@ -1030,7 +1030,7 @@ function EmptySettingsTab({ tab }: { tab: string }) {
   return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-[18px] border border-[#DDEBE3] bg-white p-6 text-sm font-medium text-[#7A8A80] shadow-[0_7px_22px_rgba(40,92,67,0.035)]"
+      className="rounded-2xl border border-neutral-100 bg-white p-6 text-sm font-medium text-neutral-500 shadow-sm"
       initial={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
     >

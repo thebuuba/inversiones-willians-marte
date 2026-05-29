@@ -67,7 +67,7 @@ function PanelCard({ children, className = '', index = 0 }: { children: ReactNod
   return (
     <motion.section
       animate="visible"
-      className={`rounded-[18px] border border-[#DDEBE3] bg-white shadow-[0_7px_22px_rgba(40,92,67,0.035)] ${className}`}
+      className={`rounded-2xl border border-neutral-100 bg-white shadow-sm ${className}`}
       custom={index}
       initial="hidden"
       variants={fadeUp}

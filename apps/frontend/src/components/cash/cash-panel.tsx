@@ -255,7 +255,7 @@ function ShellCard({ children, className = '', index = 0 }: { children: ReactNod
   return (
     <motion.section
       animate="visible"
-      className={`rounded-[18px] border border-[#DDEBE3] bg-white shadow-[0_7px_22px_rgba(40,92,67,0.035)] ${className}`}
+      className={`rounded-2xl border border-neutral-100 bg-white shadow-sm ${className}`}
       custom={index}
       initial="hidden"
       variants={fadeUp}
@@ -464,7 +464,7 @@ function TransactionGroup({ group, index }: { group: MovementGroup; index: numbe
           <span className="text-[#A65B3D]">{group.expense}</span>
         </div>
       </div>
-      <div className="overflow-hidden rounded-[18px] border border-[#DDEBE3] bg-white shadow-[0_7px_22px_rgba(40,92,67,0.035)]">
+      <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
         {group.movements.map((movement) => (
           <TransactionItem key={movement.code} movement={movement} />
         ))}

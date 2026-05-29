@@ -265,7 +265,7 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
         >
           <motion.form
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-full max-w-[680px] overflow-hidden rounded-[18px] border border-[#DDEBE3] bg-white shadow-[0_28px_80px_rgba(0,0,0,0.26)]"
+            className="w-full max-w-[680px] overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-[0_28px_80px_rgba(0,0,0,0.26)]"
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             initial={{ opacity: 0, scale: 0.96, y: 10 }}
             onClick={(event) => event.stopPropagation()}
