@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import {
   Plus, ListTodo, CircleCheck, Circle, LoaderCircle, Clock,
   Banknote, CalendarDays, ChevronRight, Flag, Users, Phone,
@@ -8,6 +10,19 @@ import {
 } from 'lucide-react';
 import { getTasks, createTask, updateTask, deleteTask } from '@/lib/api/tasks';
 import type { TaskItem, TaskPriority, TaskStatus } from '@inversiones/shared';
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: i * 0.05 } }),
+};
+
+function MotionCard({ children, className = '', index = 0 }: { children: React.ReactNode; className?: string; index?: number }) {
+  return (
+    <motion.div variants={cardVariants} initial="hidden" animate="visible" custom={index} className={className}>
+      {children}
+    </motion.div>
+  );
+}
 
 type FilterKey = 'todas' | 'pendiente' | 'en-progreso' | 'completada';
 
@@ -247,8 +262,8 @@ export default function AgendaPage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr_300px]">
           <aside className="space-y-5">
-            <MiniCalendar />
-            <div className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100 space-y-3">
+            <MotionCard index={0}><MiniCalendar /></MotionCard>
+            <MotionCard index={1} className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100 space-y-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Resumen de hoy</p>
               {[
                 { label: 'Tareas completadas', value: `${doneCount}/${tasks.length}`, color: '#7fb89a', bg: '#eaf5ed' },
@@ -260,11 +275,11 @@ export default function AgendaPage() {
                   <span className="text-sm font-bold" style={{ color: s.color }}>{s.value}</span>
                 </div>
               ))}
-            </div>
+            </MotionCard>
           </aside>
 
           <main className="space-y-5">
-            <div className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100">
+            <MotionCard index={2} className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ListTodo className="h-5 w-5 text-[#5a9a7a]" />
@@ -293,68 +308,66 @@ export default function AgendaPage() {
                   </button>
                 ))}
               </div>
-            </div>
+            </MotionCard>
 
+            <MotionCard index={3} className="overflow-hidden rounded-2xl bg-white shadow-sm border border-neutral-100 divide-y divide-neutral-100">
             {loading ? (
               <div className="flex items-center justify-center py-20"><p className="text-sm text-neutral-400">Cargando...</p></div>
-            ) : (
-              <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-neutral-100 divide-y divide-neutral-100">
-                {visibleTasks.length === 0 ? (
-                  <div className="flex flex-col items-center gap-2 py-12 text-center">
-                    <CircleCheck className="h-10 w-10 text-[#c2dfcb]" />
-                    <p className="text-sm font-semibold text-neutral-700">¡Todo al día!</p>
-                    <p className="text-xs text-neutral-400">No hay tareas en esta categoría.</p>
-                  </div>
-                ) : (
-                  visibleTasks.map((task) => {
-                    const pri = priorityConfig[task.priority] ?? priorityConfig.MEDIUM;
-                    const cat = categoryConfig[task.category] ?? categoryConfig.oficina;
-                    const done = task.status === 'COMPLETED';
-
-                    return (
-                      <div
-                        key={task.id}
-                        className={`group flex items-start gap-3 rounded-xl px-4 py-3 transition hover:bg-[#eaf5ed]/50 ${done ? 'opacity-60' : ''}`}
-                      >
-                        <button onClick={() => toggleTask(task.id)} className="mt-0.5 shrink-0 transition">
-                          {done ? <CircleCheck className="h-5 w-5 text-[#7fb89a]" /> : <Circle className="h-5 w-5 text-neutral-300 group-hover:text-[#7fb89a]" />}
-                        </button>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className={`text-sm font-medium max-w-[350px] truncate ${done ? 'line-through text-neutral-400' : 'text-neutral-800'}`}>
-                              {task.title}
-                            </p>
-                            {task.time && (
-                              <span className="inline-flex items-center gap-0.5 rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-semibold text-neutral-500">
-                                <Clock className="h-3 w-3" />{task.time}
-                              </span>
-                            )}
-                          </div>
-                          {task.description && <p className="mt-0.5 text-xs text-neutral-500 line-clamp-1">{task.description}</p>}
-                          <div className="mt-1.5 flex flex-wrap gap-1.5">
-                            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: cat.bg, color: cat.text }}>
-                              {cat.label}
-                            </span>
-                            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: pri.bg, color: pri.text }}>
-                              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: pri.dot }} />
-                              {task.priority === 'URGENT' ? 'Urgente' : task.priority === 'HIGH' ? 'Alta' : task.priority === 'MEDIUM' ? 'Media' : 'Baja'}
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleDelete(task.id)}
-                          className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5"
-                        >
-                          <X className="h-4 w-4 text-neutral-300 hover:text-red-500" />
-                        </button>
-                      </div>
-                    );
-                  })
-                )}
+            ) : visibleTasks.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-12 text-center">
+                <CircleCheck className="h-10 w-10 text-[#c2dfcb]" />
+                <p className="text-sm font-semibold text-neutral-700">¡Todo al día!</p>
+                <p className="text-xs text-neutral-400">No hay tareas en esta categoría.</p>
               </div>
-            )}
+            ) : (
+              visibleTasks.map((task) => {
+                const pri = priorityConfig[task.priority] ?? priorityConfig.MEDIUM;
+                const cat = categoryConfig[task.category] ?? categoryConfig.oficina;
+                const done = task.status === 'COMPLETED';
 
-            <div className="rounded-2xl bg-white shadow-sm border border-neutral-100 overflow-hidden">
+                return (
+                  <div
+                    key={task.id}
+                    className={`group flex items-start gap-3 rounded-xl px-4 py-3 transition hover:bg-[#eaf5ed]/50 ${done ? 'opacity-60' : ''}`}
+                  >
+                    <button onClick={() => toggleTask(task.id)} className="mt-0.5 shrink-0 transition">
+                      {done ? <CircleCheck className="h-5 w-5 text-[#7fb89a]" /> : <Circle className="h-5 w-5 text-neutral-300 group-hover:text-[#7fb89a]" />}
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className={`text-sm font-medium max-w-[350px] truncate ${done ? 'line-through text-neutral-400' : 'text-neutral-800'}`}>
+                          {task.title}
+                        </p>
+                        {task.time && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-semibold text-neutral-500">
+                            <Clock className="h-3 w-3" />{task.time}
+                          </span>
+                        )}
+                      </div>
+                      {task.description && <p className="mt-0.5 text-xs text-neutral-500 line-clamp-1">{task.description}</p>}
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: cat.bg, color: cat.text }}>
+                          {cat.label}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: pri.bg, color: pri.text }}>
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: pri.dot }} />
+                          {task.priority === 'URGENT' ? 'Urgente' : task.priority === 'HIGH' ? 'Alta' : task.priority === 'MEDIUM' ? 'Media' : 'Baja'}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDelete(task.id)}
+                      className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5"
+                    >
+                      <X className="h-4 w-4 text-neutral-300 hover:text-red-500" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+            </MotionCard>
+
+            <MotionCard index={4} className="rounded-2xl bg-white shadow-sm border border-neutral-100 overflow-hidden">
               <div className="flex items-center gap-3 border-b border-neutral-100 bg-[#fafafa] px-5 py-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#fef3c7]"><Banknote className="h-4 w-4 text-[#a16207]" /></div>
                 <div>
@@ -389,11 +402,11 @@ export default function AgendaPage() {
                   })
                 )}
               </div>
-            </div>
+            </MotionCard>
           </main>
 
           <aside className="space-y-5">
-            <div className="rounded-2xl bg-white shadow-sm border border-neutral-100 overflow-hidden">
+            <MotionCard index={5} className="rounded-2xl bg-white shadow-sm border border-neutral-100 overflow-hidden">
               <div className="flex items-center gap-3 border-b border-neutral-100 bg-[#fafafa] px-5 py-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#dbeafe]"><CalendarDays className="h-4 w-4 text-[#1d4ed8]" /></div>
                 <p className="text-sm font-semibold text-neutral-900">Citas de hoy</p>
@@ -429,7 +442,7 @@ export default function AgendaPage() {
                   )}
                 </div>
               </div>
-            </div>
+            </MotionCard>
           </aside>
         </div>
       </div>
