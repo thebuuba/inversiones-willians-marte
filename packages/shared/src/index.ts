@@ -243,14 +243,18 @@ export interface CreateTaskDto {
   title: string;
   description?: string;
   dueDate?: string;
+  time?: string;
   priority?: TaskPriority;
+  category?: string;
 }
 
 export interface UpdateTaskDto {
   title?: string;
   description?: string;
   dueDate?: string;
+  time?: string;
   priority?: TaskPriority;
+  category?: string;
   status?: TaskStatus;
 }
 
@@ -259,7 +263,9 @@ export interface TaskItem {
   title: string;
   description?: string | null;
   dueDate?: string | null;
+  time?: string | null;
   priority: TaskPriority;
+  category: string;
   status: TaskStatus;
   createdById: string;
   createdAt: string;

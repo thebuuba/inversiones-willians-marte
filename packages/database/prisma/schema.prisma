@@ -342,7 +342,9 @@ model Task {
   title       String
   description String?
   dueDate     DateTime?    @map("due_date")
+  time        String?
   priority    TaskPriority @default(MEDIUM)
+  category    String       @default("oficina")
   status      TaskStatus   @default(PENDING)
   createdById String       @map("created_by")
   createdAt   DateTime     @default(now()) @map("created_at")

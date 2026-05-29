@@ -15,6 +15,14 @@ export class CreateTaskDto {
   dueDate?: string;
 
   @IsOptional()
+  @IsString()
+  time?: string;
+
+  @IsOptional()
   @IsEnum(TaskPriorityEnum)
   priority?: TaskPriority;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
 }

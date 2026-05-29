@@ -11,7 +11,9 @@ export class TasksService {
         title: dto.title,
         description: dto.description,
         dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
+        time: dto.time,
         priority: dto.priority ?? 'MEDIUM',
+        category: dto.category ?? 'oficina',
         createdById: userId,
       },
     });
@@ -19,7 +21,7 @@ export class TasksService {
 
   async findAll() {
     return prisma.task.findMany({
-      orderBy: [{ dueDate: 'asc' }, { priority: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [{ status: 'asc' }, { priority: 'desc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
     });
   }
 
