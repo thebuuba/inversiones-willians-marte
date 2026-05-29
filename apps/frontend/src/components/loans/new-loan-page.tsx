@@ -13,9 +13,6 @@ import {
   Search,
   UserRound,
 } from 'lucide-react';
-function fmtCurrency(amount: number) {
-  return `RD$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(amount)}`;
-}
 import { getLoanProducts, type LoanProductItem } from '@/lib/api/loan-products';
 import { createLoan } from '@/lib/api/loans';
 import { getClient, getClients } from '@/lib/api/clients';
@@ -23,31 +20,16 @@ import type { Client } from '@inversiones/shared';
 
 type WizardStep = 1 | 2 | 3;
 
-const amortizationRows = [
-  { number: '1', payment: 'RD$4,874.36', principal: 'RD$3,624.36', interest: 'RD$1,250.00', balance: 'RD$46,375.64' },
-  { number: '2', payment: 'RD$4,874.36', principal: 'RD$3,714.97', interest: 'RD$1,159.39', balance: 'RD$42,660.68' },
-  { number: '3', payment: 'RD$4,874.36', principal: 'RD$3,807.84', interest: 'RD$1,066.52', balance: 'RD$38,852.84' },
-  { number: '4', payment: 'RD$4,874.36', principal: 'RD$3,903.04', interest: 'RD$971.32', balance: 'RD$34,949.80' },
-  { number: '5', payment: 'RD$4,874.36', principal: 'RD$4,000.61', interest: 'RD$873.75', balance: 'RD$30,949.19' },
-  { number: '6', payment: 'RD$4,874.36', principal: 'RD$4,100.63', interest: 'RD$773.73', balance: 'RD$26,848.57' },
-  { number: '7', payment: 'RD$4,874.36', principal: 'RD$4,203.15', interest: 'RD$671.21', balance: 'RD$22,645.42' },
-  { number: '8', payment: 'RD$4,874.36', principal: 'RD$4,308.23', interest: 'RD$566.13', balance: 'RD$18,337.19' },
-  { number: '9', payment: 'RD$4,874.36', principal: 'RD$4,415.94', interest: 'RD$458.42', balance: 'RD$13,921.25' },
-  { number: '10', payment: 'RD$4,874.36', principal: 'RD$4,526.34', interest: 'RD$348.03', balance: 'RD$9,394.91' },
-  { number: '11', payment: 'RD$4,874.36', principal: 'RD$4,639.50', interest: 'RD$234.87', balance: 'RD$4,755.41' },
-  { number: '12', payment: 'RD$4,874.36', principal: 'RD$4,755.41', interest: 'RD$118.89', balance: 'RD$0.00' },
-];
-
-function parseNumber(value: string) {
-  const parsed = Number(value.replace(/[^\d.]/g, ''));
-  return Number.isFinite(parsed) ? parsed : 0;
+function formatCurrency(value: number): string {
+  return `RD$${new Intl.NumberFormat('es-DO', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)}`;
 }
 
-function formatCurrency(value: number) {
-  return `RD$${new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  }).format(value)}`;
+function parseNumber(value: string): number {
+  const parsed = Number(value.replace(/[^\d.]/g, ''));
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function LoanWizardStepper({ step }: { step: WizardStep }) {
@@ -324,12 +306,14 @@ function TextInput({
   onChange,
   prefix,
   className = '',
+  readOnly = false,
 }: {
   label: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   prefix?: string;
   className?: string;
+  readOnly?: boolean;
 }) {
   return (
     <label className={`block ${className}`}>
@@ -338,8 +322,9 @@ function TextInput({
         {prefix && <span className="mr-3 shrink-0 text-[#7A8A80]">{prefix}</span>}
         <input
           className="h-full min-w-0 flex-1 bg-transparent outline-none"
-          onChange={(event) => onChange(event.target.value)}
+          onChange={onChange ? (event) => onChange(event.target.value) : undefined}
           value={value}
+          readOnly={readOnly}
         />
       </div>
     </label>
@@ -350,11 +335,13 @@ function SelectInput({
   label,
   value,
   options,
+  onChange,
   className = '',
 }: {
   label?: string;
   value: string;
   options: string[];
+  onChange?: (v: string) => void;
   className?: string;
 }) {
   return (
@@ -363,7 +350,8 @@ function SelectInput({
       <div className="relative">
         <select
           className="h-[52px] w-full appearance-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 pr-9 text-base font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
-          defaultValue={value}
+          value={value}
+          onChange={(e) => onChange?.(e.target.value)}
         >
           {options.map((option) => (
             <option key={option}>{option}</option>
@@ -372,64 +360,6 @@ function SelectInput({
         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A7B5AD]" />
       </div>
     </label>
-  );
-}
-
-function LoanParametersForm({
-  amount,
-  term,
-  onAmountChange,
-  onTermChange,
-  selectedProduct,
-}: {
-  amount: string;
-  term: string;
-  onAmountChange: (value: string) => void;
-  onTermChange: (value: string) => void;
-  selectedProduct: LoanProductItem | null;
-}) {
-    return (
-      <motion.section
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-8"
-        initial={{ opacity: 0, y: 14 }}
-        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
-      >
-      <h2 className="mb-7 text-xl font-bold text-[#173D2C]">Parámetros del préstamo</h2>
-      <div className="space-y-6">
-        <TextInput label="Monto a desembolsar" onChange={onAmountChange} prefix="RD$" value={amount} />
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div>
-            <span className="mb-2 block text-sm font-bold text-[#6F8076]">Tasa de interés</span>
-            <TextInput label="" value={selectedProduct ? `${selectedProduct.interestRate}%` : '—'} onChange={() => {}} />
-          </div>
-          <div>
-            <span className="mb-2 block text-sm font-bold text-[#6F8076]">Plazo</span>
-            <div className="grid grid-cols-[minmax(0,1fr)_135px] gap-3">
-              <TextInput label="" onChange={onTermChange} value={term} />
-              <SelectInput options={['meses']} value="meses" />
-              <SelectInput options={['Meses', 'Semanas']} value="Meses" />
-            </div>
-          </div>
-        </div>
-
-        <SelectInput
-          className="max-w-[460px]"
-          label="Frecuencia de pago"
-          options={['Mensual', 'Quincenal', 'Semanal']}
-          value="Mensual"
-        />
-
-        <label className="block">
-          <span className="mb-2 block text-sm font-bold text-[#6F8076]">Descripción / propósito</span>
-          <textarea
-            className="h-[104px] w-full resize-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 py-4 text-base font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
-            placeholder="Ej. Capital de trabajo para negocio familiar..."
-          />
-        </label>
-      </div>
-    </motion.section>
   );
 }
 
@@ -531,6 +461,12 @@ function NewLoanStepTwo({
   onTermChange,
   products,
   selectedClient,
+  termUnit,
+  onTermUnitChange,
+  paymentFrequency,
+  onPaymentFrequencyChange,
+  purpose,
+  onPurposeChange,
 }: {
   selectedProduct: LoanProductItem | null;
   onSelectProduct: (product: LoanProductItem) => void;
@@ -540,6 +476,12 @@ function NewLoanStepTwo({
   onTermChange: (value: string) => void;
   products: LoanProductItem[];
   selectedClient: Client | null;
+  termUnit: 'months' | 'weeks';
+  onTermUnitChange: (v: 'months' | 'weeks') => void;
+  paymentFrequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY';
+  onPaymentFrequencyChange: (v: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY') => void;
+  purpose: string;
+  onPurposeChange: (v: string) => void;
 }) {
   const rate = selectedProduct ? String(selectedProduct.interestRate) : '0';
 
@@ -547,10 +489,7 @@ function NewLoanStepTwo({
     const principal = parseNumber(amount);
     const monthlyRate = parseNumber(rate) / 100;
     const months = Math.max(1, Math.round(parseNumber(term)));
-    const payment =
-      monthlyRate > 0
-        ? (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months))
-        : principal / months;
+    const payment = monthlyRate > 0 ? (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months)) : principal / months;
     const total = payment * months;
 
     return {
@@ -562,19 +501,63 @@ function NewLoanStepTwo({
     };
   }, [amount, rate, term]);
 
-  const currentProduct = selectedProduct;
+  const freqOptions: { label: string; value: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY' }[] = [
+    { label: 'Mensual', value: 'MONTHLY' },
+    { label: 'Quincenal', value: 'FORTNIGHTLY' },
+    { label: 'Semanal', value: 'WEEKLY' },
+  ];
 
   return (
     <div className="mt-9 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(400px,0.75fr)]">
       <div className="space-y-8">
         <LoanTypeSelector products={products} selectedProduct={selectedProduct} onSelectProduct={onSelectProduct} />
-        <LoanParametersForm
-          amount={amount}
-          onAmountChange={onAmountChange}
-          onTermChange={onTermChange}
-          term={term}
-          selectedProduct={selectedProduct}
-        />
+        <motion.section
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-8"
+          initial={{ opacity: 0, y: 14 }}
+          transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
+        >
+          <h2 className="mb-7 text-xl font-bold text-[#173D2C]">Parámetros del préstamo</h2>
+          <div className="space-y-6">
+            <TextInput label="Monto a desembolsar" onChange={onAmountChange} prefix="RD$" value={amount} />
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div>
+                <span className="mb-2 block text-sm font-bold text-[#6F8076]">Tasa de interés</span>
+                <TextInput label="" value={selectedProduct ? `${selectedProduct.interestRate}%` : '—'} readOnly />
+              </div>
+              <div>
+                <span className="mb-2 block text-sm font-bold text-[#6F8076]">Plazo</span>
+                <div className="grid grid-cols-[minmax(0,1fr)_135px] gap-3">
+                  <TextInput label="" onChange={onTermChange} value={term} />
+                  <SelectInput
+                    options={['meses', 'semanas']}
+                    value={termUnit === 'months' ? 'meses' : 'semanas'}
+                    onChange={(v) => onTermUnitChange(v === 'meses' ? 'months' : 'weeks')}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <SelectInput
+              className="max-w-[460px]"
+              label="Frecuencia de pago"
+              options={freqOptions.map((o) => o.label)}
+              value={freqOptions.find((o) => o.value === paymentFrequency)?.label ?? 'Mensual'}
+              onChange={(v) => onPaymentFrequencyChange(freqOptions.find((o) => o.label === v)?.value ?? 'MONTHLY')}
+            />
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-[#6F8076]">Descripción / propósito</span>
+              <textarea
+                className="h-[104px] w-full resize-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 py-4 text-base font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
+                placeholder="Ej. Capital de trabajo para negocio familiar..."
+                value={purpose}
+                onChange={(e) => onPurposeChange(e.target.value)}
+              />
+            </label>
+          </div>
+        </motion.section>
       </div>
 
       <LoanSummaryPanel
@@ -582,7 +565,7 @@ function NewLoanStepTwo({
         interest={summary.interest}
         payment={summary.payment}
         selectedClient={selectedClient}
-        selectedProduct={currentProduct}
+        selectedProduct={selectedProduct}
         term={summary.months}
         total={summary.total}
       />
@@ -633,10 +616,10 @@ function LoanSummaryCards({
   const interestPercent = amount > 0 ? ((interest / amount) * 100).toFixed(1) : '0';
   return (
     <div className="mt-9 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-      <SummaryMetricCard label="CAPITAL" value={`RD$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(amount)}`} />
-      <SummaryMetricCard helper="mensual" label="CUOTA" value={`RD$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(payment)}`} />
-      <SummaryMetricCard helper={`${interestPercent}% sobre capital`} highlight label="TOTAL INTERESES" value={`RD$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(interest)}`} />
-      <SummaryMetricCard helper={`en ${term} ${term === 1 ? 'mes' : 'meses'}`} label="TOTAL A PAGAR" value={`RD$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(total)}`} />
+      <SummaryMetricCard label="CAPITAL" value={formatCurrency(amount)} />
+      <SummaryMetricCard helper="mensual" label="CUOTA" value={formatCurrency(payment)} />
+      <SummaryMetricCard helper={`${interestPercent}% sobre capital`} highlight label="TOTAL INTERESES" value={formatCurrency(interest)} />
+      <SummaryMetricCard helper={`en ${term} ${term === 1 ? 'mes' : 'meses'}`} label="TOTAL A PAGAR" value={formatCurrency(total)} />
     </div>
   );
 }
@@ -693,11 +676,11 @@ function LoanClientSummary({
 }
 
 function AmortizationRow({ row, total = false }: { row: { number: number | string; payment: number | string; principal: number | string; interest: number | string; balance: number | string }; total?: boolean }) {
-  const fmt = (v: number | string) => (typeof v === 'number' ? fmtCurrency(v) : v);
+  const fmt = (v: number | string) => (typeof v === 'number' ? formatCurrency(v) : v);
   return (
     <div
       className={`grid min-w-[980px] grid-cols-[120px_1.2fr_1.2fr_1.2fr_1.2fr] items-center border-t border-[#EDF2EF] px-7 py-5 text-base ${
-        total ? 'bg-[#F3FAF6] font-bold' : row.number === '5' ? 'bg-[#F6FAF7]' : 'bg-white'
+        total ? 'bg-[#F3FAF6] font-bold' : row.number === 5 ? 'bg-[#F6FAF7]' : 'bg-white'
       }`}
     >
       <span className={total ? 'text-[#6F8076]' : 'font-medium text-[#7A8A80]'}>{row.number}</span>
@@ -809,14 +792,16 @@ function NewLoanStepThree({
   selectedProduct,
   amount,
   term,
+  termUnit,
 }: {
   selectedClient: Client | null;
   selectedProduct: LoanProductItem | null;
   amount: string;
   term: string;
+  termUnit: 'months' | 'weeks';
 }) {
   const parsedAmount = Number.parseFloat(amount) || 0;
-  const parsedTerm = Number.parseInt(term, 10) || 1;
+  const parsedTerm = termUnit === 'weeks' ? Math.max(1, Math.round(Number.parseFloat(term) / 4)) : Number.parseInt(term, 10) || 1;
   const annualRate = selectedProduct?.interestRate ?? 0;
 
   const { schedule, totalPayment, totalPrincipal, totalInterest, payment } = useMemo(
@@ -948,6 +933,9 @@ export function NewLoanPage({ initialClientId }: { initialClientId?: string }) {
   const [selectedProduct, setSelectedProduct] = useState<LoanProductItem | null>(null);
   const [amount, setAmount] = useState('');
   const [term, setTerm] = useState('');
+  const [termUnit, setTermUnit] = useState<'months' | 'weeks'>('months');
+  const [paymentFrequency, setPaymentFrequency] = useState<'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY'>('MONTHLY');
+  const [purpose, setPurpose] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -966,11 +954,12 @@ export function NewLoanPage({ initialClientId }: { initialClientId?: string }) {
     if (!selectedClient || !selectedProduct || !amount || !term) return;
     setSaving(true);
     try {
-      const loan = await createLoan({
+      const totalTerm = termUnit === 'weeks' ? Math.round(Number(term) / 4) : Number(term);
+      await createLoan({
         clientId: selectedClient.id,
         productId: selectedProduct.id,
         principal: Number(amount),
-        term: Number(term),
+        term: totalTerm,
         startDate: new Date().toISOString(),
       });
       router.push(`/clientes/${selectedClient.id}`);
@@ -1001,6 +990,12 @@ export function NewLoanPage({ initialClientId }: { initialClientId?: string }) {
             selectedClient={selectedClient}
             selectedProduct={selectedProduct}
             term={term}
+            termUnit={termUnit}
+            onTermUnitChange={setTermUnit}
+            paymentFrequency={paymentFrequency}
+            onPaymentFrequencyChange={setPaymentFrequency}
+            purpose={purpose}
+            onPurposeChange={setPurpose}
           />
         ) : (
           <NewLoanStepThree
@@ -1008,6 +1003,7 @@ export function NewLoanPage({ initialClientId }: { initialClientId?: string }) {
             selectedProduct={selectedProduct}
             amount={amount}
             term={term}
+            termUnit={termUnit}
           />
         )}
 
