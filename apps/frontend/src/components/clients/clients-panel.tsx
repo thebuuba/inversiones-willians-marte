@@ -18,12 +18,6 @@ import type { Client } from '@inversiones/shared';
 
 const filters = ['Todos', 'Activos', 'Inactivos'];
 
-const statusStyles = {
-  Activo: { bg: '#E7F4EC', text: '#5FA37D', dot: '#7CC99B' },
-  Moroso: { bg: '#FFE3D2', text: '#C96F4A', dot: '#FFB174' },
-  Inactivo: { bg: '#EEF3EF', text: '#7A8A80', dot: '#A9CDBB' },
-};
-
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 16 },
   visible: (index = 0) => ({
@@ -44,20 +38,6 @@ function PanelCard({ children, className = '', index = 0 }: { children: ReactNod
     >
       {children}
     </motion.section>
-  );
-}
-
-function StatusPill({ status }: { status: keyof typeof statusStyles }) {
-  const style = statusStyles[status];
-
-  return (
-    <span
-      className="inline-flex min-w-[82px] items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
-      style={{ backgroundColor: style.bg, color: style.text }}
-    >
-      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
-      {status}
-    </span>
   );
 }
 
@@ -107,7 +87,6 @@ export function ClientsPanel() {
   }, [clients, filter]);
 
   const fullName = (c: Client) => `${c.firstName} ${c.lastName}`;
-  const clientStatus = (c: Client) => (c.active ? 'Activo' : 'Inactivo') as keyof typeof statusStyles;
 
   function handleSearch(value: string) {
     clearTimeout(searchTimer.current);
@@ -203,13 +182,12 @@ export function ClientsPanel() {
       </PanelCard>
 
       <PanelCard className="overflow-hidden" index={6}>
-        <div className="grid grid-cols-[0.5fr_2fr_1.35fr_1.55fr_1fr_0.8fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#777D7A]">
+        <div className="grid grid-cols-[0.5fr_2fr_1.2fr_1.4fr_0.7fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#777D7A]">
           <span>ID</span>
           <span>CLIENTE</span>
           <span>CÉDULA</span>
           <span>TELÉFONO</span>
-          <span>ESTADO</span>
-          <span className="text-right">ACCIÓN</span>
+          <span className="text-right">PRÉSTAMOS</span>
         </div>
 
         <div>
@@ -229,7 +207,7 @@ export function ClientsPanel() {
                 initial="hidden"
                 animate="visible"
                 custom={index + 7}
-                className="grid min-h-[74px] cursor-pointer grid-cols-[0.5fr_2fr_1.35fr_1.55fr_1fr_0.8fr] items-center border-t border-[#EDF2EF] px-6 text-[#5FA37D] transition hover:bg-[#F4FAF6] bg-white"
+                className="grid min-h-[74px] cursor-pointer grid-cols-[0.5fr_2fr_1.2fr_1.4fr_0.7fr] items-center border-t border-[#EDF2EF] px-6 text-[#5FA37D] transition hover:bg-[#F4FAF6] bg-white"
                 onClick={() => router.push(`/clientes/${client.id}`)}
               >
                 <span className="font-mono text-xs text-[#A9CDBB]">{client.id}</span>
@@ -262,19 +240,7 @@ export function ClientsPanel() {
                 </div>
                 <span className="font-mono text-sm text-[#7A8A80]">{client.identification ?? '—'}</span>
                 <span className="text-sm text-[#7A8A80]">{client.phone ?? '—'}</span>
-                <StatusPill status={clientStatus(client)} />
-                <div className="flex items-center justify-end gap-3">
-                  <button
-                    className="rounded-full bg-[#E7F4EC] px-4 py-1.5 text-sm font-bold text-[#5FA37D] transition hover:bg-[#DDEFE5]"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      router.push(`/clientes/${client.id}`);
-                    }}
-                    type="button"
-                  >
-                    Ver
-                  </button>
-                </div>
+                <span className="text-right font-bold text-[#173D2C]">{client._count?.loans ?? 0}</span>
               </motion.div>
             ))
           )}
