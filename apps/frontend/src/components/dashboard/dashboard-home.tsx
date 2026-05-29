@@ -30,8 +30,6 @@ import {
   FileText,
   Plus,
   ShieldCheck,
-  TrendingDown,
-  TrendingUp,
   UserPlus,
   Users,
   Wallet,
@@ -82,7 +80,7 @@ function Card({ children, className = '', index = 0 }: { children: ReactNode; cl
       initial="hidden"
       animate="visible"
       custom={index}
-      className={`rounded-[18px] border border-[#DDEBE3] bg-white shadow-[0_7px_22px_rgba(40,92,67,0.035)] ${className}`}
+      className={`rounded-2xl border border-neutral-100 bg-white shadow-sm ${className}`}
     >
       {children}
     </motion.section>
@@ -134,10 +132,10 @@ export function DashboardHome() {
   const overdueLoans = dash?.overdueLoans ?? 0;
 
   const metricCards = [
-    { title: 'PRÉSTAMOS ACTIVOS', value: String(activeLoans), note: 'en cartera actual', badge: '', trend: 'up' as const, icon: BriefcaseBusiness, iconBg: '#E7F4EC', iconColor: '#5FA37D' },
-    { title: 'CLIENTES REGISTRADOS', value: String(totalClients), note: 'clientes activos', badge: '', trend: 'up' as const, icon: Users, iconBg: '#FFE8D8', iconColor: '#C96F4A' },
-    { title: 'COBRADO HOY', value: formatCurrency(collectionsToday), note: 'pagos registrados hoy', badge: '', trend: 'up' as const, icon: DollarSign, iconBg: '#FFF2B8', iconColor: '#A98219' },
-    { title: 'SALDO CARTERA', value: formatCompact(portfolioBalance), note: 'balance total pendiente', badge: '', trend: 'up' as const, icon: Wallet, iconBg: '#CFE4FF', iconColor: '#4E7CAD' },
+    { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, accent: '#eaf5ed', color: '#5a9a7a' },
+    { label: 'Clientes registrados', value: String(totalClients), icon: Users, accent: '#fde4d4', color: '#c2410c' },
+    { label: 'Cobrado hoy', value: formatCurrency(collectionsToday), icon: DollarSign, accent: '#fef3c7', color: '#a16207' },
+    { label: 'Saldo cartera', value: formatCompact(portfolioBalance), icon: Wallet, accent: '#dbeafe', color: '#1d4ed8' },
   ];
 
   const portfolioPie = portfolio.length > 0
@@ -221,31 +219,24 @@ export function DashboardHome() {
         </div>
       </div>
 
-      <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-4">
-        {metricCards.map((metric, index) => {
-          const Icon = metric.icon;
-          const Trend = TrendingUp;
-
+      <div className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+        {metricCards.map((k) => {
+          const Icon = k.icon;
           return (
-            <Card key={metric.title} className="min-h-[148px] p-5" index={index}>
-              <div className="mb-4 flex items-start justify-between">
+            <div key={k.label} className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
+              <div className="flex items-center gap-4">
                 <div
-                  className="flex h-11 w-11 items-center justify-center rounded-[14px]"
-                  style={{ backgroundColor: metric.iconBg, color: metric.iconColor }}
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
+                  style={{ backgroundColor: k.accent, color: k.color }}
                 >
-                  <Icon className="h-5 w-5" strokeWidth={2} />
+                  <Icon className="h-6 w-6" />
                 </div>
-                {metric.badge && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#E7F4EC] px-2.5 py-1 text-xs font-bold text-[#5FA37D]">
-                    <Trend className="h-3.5 w-3.5" />
-                    {metric.badge}
-                  </span>
-                )}
+                <div>
+                  <p className="text-sm font-semibold text-neutral-500">{k.label}</p>
+                  <p className="mt-1 text-xl font-bold text-neutral-900">{k.value}</p>
+                </div>
               </div>
-              <p className="text-xs font-bold uppercase tracking-wide text-[#7A8A80]">{metric.title}</p>
-              <p className="mt-1.5 text-[24px] font-bold leading-tight text-[#173D2C]">{metric.value}</p>
-              <p className="mt-1.5 text-sm text-[#A9CDBB]">{metric.note}</p>
-            </Card>
+            </div>
           );
         })}
       </div>
