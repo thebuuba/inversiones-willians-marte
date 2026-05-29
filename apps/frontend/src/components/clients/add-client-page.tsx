@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from 'react';
 import { createClient } from '@/lib/api/clients';
+import { compressImage } from '@/lib/compress-image';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -207,11 +208,12 @@ function ClientPhotoUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
-  function handleFile(file?: File) {
+  async function handleFile(file?: File) {
     if (!file) return;
+    const compressed = await compressImage(file, 800, 0.7);
     const reader = new FileReader();
     reader.onload = () => onChange(reader.result as string);
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(compressed);
   }
 
   function handleDrop(event: DragEvent<HTMLButtonElement>) {

@@ -1,18 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getClient, updateClient } from '@/lib/api/clients';
 import { getDocuments, createDocument, deleteDocument } from '@/lib/api/documents';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
+import { compressImage } from '@/lib/compress-image';
 import type { ClientDetail, LoanSummary, DocumentItem, ApiResponse } from '@inversiones/shared';
 import {
   ArrowLeft,
   Activity,
   Banknote,
   BriefcaseBusiness,
-  Building2,
   CalendarDays,
   CreditCard,
   Download,
@@ -21,7 +21,6 @@ import {
   Check,
   Plus,
   Mail,
-  MapPin,
   NotebookPen,
   Pencil,
   StickyNote,
@@ -52,22 +51,25 @@ const fmtLong = (s: string | Date) => new Date(s).toLocaleDateString('es-DO', { 
 
 function buildInfoCards(clientData: ClientDetail) {
   return [
-    { label: 'Cédula', value: clientData.identification ?? '—', icon: CreditCard },
-    { label: 'Teléfono', value: clientData.phone ?? '—', icon: Phone },
-    { label: 'Tel. alternativo', value: clientData.altPhone ?? '—', icon: Phone },
-    { label: 'Correo electrónico', value: clientData.email ?? '—', icon: Mail },
-    { label: 'Dirección', value: clientData.address ?? '—', icon: Building2 },
-    { label: 'Género', value: clientData.gender ?? '—', icon: UserRound },
-    { label: 'Estado civil', value: clientData.maritalStatus ?? '—', icon: UserRound },
-    { label: 'Nacionalidad', value: clientData.nationality ?? '—', icon: MapPin },
-    { label: 'Fecha de nacimiento', value: clientData.birthDate ? fmtLong(clientData.birthDate) : '—', icon: CalendarDays },
-    { label: 'Dependientes', value: clientData.dependents != null ? String(clientData.dependents) : '—', icon: UserRound },
-    { label: 'Cliente desde', value: fmtLong(clientData.createdAt), icon: CalendarDays },
-    { label: 'Notas', value: clientData.notes ?? '—', icon: StickyNote },
+    { label: 'Cédula', value: clientData.identification ?? '—' },
+    { label: 'Teléfono', value: clientData.phone ?? '—' },
+    { label: 'Tel. alternativo', value: clientData.altPhone ?? '—' },
+    { label: 'Correo electrónico', value: clientData.email ?? '—' },
+    { label: 'Dirección', value: clientData.address ?? '—' },
+    { label: 'Género', value: clientData.gender ?? '—' },
+    { label: 'Estado civil', value: clientData.maritalStatus ?? '—' },
+    { label: 'Nacionalidad', value: clientData.nationality ?? '—' },
+    { label: 'Fecha de nacimiento', value: clientData.birthDate ? fmtLong(clientData.birthDate) : '—' },
+    { label: 'Dependientes', value: clientData.dependents != null ? String(clientData.dependents) : '—' },
+    { label: 'Cliente desde', value: fmtLong(clientData.createdAt) },
+    { label: 'Notas', value: clientData.notes ?? '—' },
   ];
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
+const UPLOADS_BASE = (() => {
+  try { return new URL(API_BASE).origin + '/uploads'; } catch { return 'http://localhost:3000/uploads'; }
+})();
 
 interface HistoryEvent {
   type: string;
@@ -198,23 +200,20 @@ function DocumentCard({
   doc: DocumentItem;
   onDelete: (id: string) => void;
 }) {
-  const fileUrl = doc.fileUrl ? `${API_BASE}/../uploads/${doc.fileUrl}` : null;
+  const fileUrl = doc.fileUrl ? `${UPLOADS_BASE}/${doc.fileUrl}` : null;
 
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-neutral-100 bg-white px-5 py-4 shadow-sm transition hover:bg-[#eaf5ed]/30">
+    <div
+      className="flex cursor-pointer items-center justify-between rounded-2xl border border-neutral-100 bg-white px-5 py-4 shadow-sm transition hover:bg-[#eaf5ed]/30"
+      onClick={() => fileUrl && window.open(fileUrl, '_blank')}
+    >
       <div className="flex min-w-0 items-center gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf5ed]">
           <FileText className="h-5 w-5 text-[#5a9a7a]" />
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-neutral-900">
-            {fileUrl ? (
-              <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                {doc.name}
-              </a>
-            ) : (
-              doc.name
-            )}
+            {doc.name}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
             <span className="rounded-full bg-[#eaf5ed] px-2.5 py-0.5 text-xs font-semibold text-[#5a9a7a]">{doc.category}</span>
@@ -232,6 +231,7 @@ function DocumentCard({
             href={fileUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
           >
             <Download className="h-4 w-4" />
           </a>
@@ -239,7 +239,7 @@ function DocumentCard({
         <button
           aria-label={`Eliminar ${doc.name}`}
           className="rounded-full p-1.5 transition hover:bg-[#fde4d4] hover:text-[#c2410c]"
-          onClick={() => onDelete(doc.id)}
+          onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }}
           type="button"
         >
           <Trash2 className="h-4 w-4" />
@@ -249,57 +249,159 @@ function DocumentCard({
   );
 }
 
+function UploadModal({
+  open,
+  onClose,
+  onUpload,
+  uploading,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onUpload: (file: File, name: string) => Promise<void>;
+  uploading: boolean;
+}) {
+  const [file, setFile] = useState<File | null>(null);
+  const [name, setName] = useState('');
+
+  useEffect(() => {
+    if (!open) {
+      setFile(null);
+      setName('');
+    }
+  }, [open]);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (f) {
+      setFile(f);
+      setName(f.name.replace(/\.[^/.]+$/, ''));
+    }
+  }
+
+  async function handleSubmit() {
+    if (!file) return;
+    await onUpload(file, name || file.name);
+    onClose();
+  }
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="mb-1 text-lg font-bold text-neutral-900">Subir documento</h3>
+        <p className="mb-5 text-sm text-neutral-500">Selecciona un archivo y asigna un nombre opcional.</p>
+
+        <div className="mb-4">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            Archivo
+          </label>
+          <label className="flex h-24 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50 text-sm text-neutral-400 transition hover:border-[#5a9a7a] hover:bg-[#eaf5ed]/30">
+            {file ? (
+              <span className="font-medium text-neutral-700">{file.name}</span>
+            ) : (
+              <span>Haz clic para seleccionar un archivo</span>
+            )}
+            <input
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+              className="hidden"
+              onChange={handleFileChange}
+              type="file"
+            />
+          </label>
+        </div>
+
+        <div className="mb-6">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            Nombre <span className="text-neutral-300">(opcional)</span>
+          </label>
+          <input
+            className="h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-[#5a9a7a] focus:ring-2 focus:ring-[#eaf5ed]"
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nombre del documento"
+            value={name}
+          />
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button
+            className="h-10 rounded-full border border-neutral-200 bg-white px-5 text-sm font-semibold text-neutral-600 transition hover:bg-neutral-50"
+            disabled={uploading}
+            onClick={onClose}
+            type="button"
+          >
+            Cancelar
+          </button>
+          <button
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm font-semibold text-white transition hover:bg-[#4a866a] disabled:opacity-50"
+            disabled={!file || uploading}
+            onClick={handleSubmit}
+            type="button"
+          >
+            {uploading ? 'Subiendo...' : 'Subir'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ClientDocumentsTab({ clientId }: { clientId: number }) {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     getDocuments(clientId).then(setDocuments);
   }, [clientId]);
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleUpload(file: File, name: string) {
     setUploading(true);
     try {
+      const compressed = file.type.startsWith('image/') ? await compressImage(file) : file;
       const fd = new FormData();
-      fd.append('file', file);
-      fd.append('name', file.name);
+      fd.append('file', compressed);
+      fd.append('name', name);
       fd.append('category', 'general');
       fd.append('clientId', String(clientId));
       await createDocument(fd);
       const docs = await getDocuments(clientId);
       setDocuments(docs);
-    } catch {
-      alert('Error al subir el archivo');
+    } catch (err) {
+      console.error('Error al subir archivo:', err);
+      alert('Error al subir el archivo. Verifica que el archivo no exceda 10 MB.');
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }
 
   function handleDelete(id: string) {
-    deleteDocument(id).then(() => setDocuments((prev) => prev.filter((d) => d.id !== id)));
+    deleteDocument(id).then(() => setDocuments((prev) => prev.filter((d) => d.id !== id))).catch(console.error);
   }
 
   return (
     <div>
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <p className="text-sm text-neutral-500">{documents.length} documentos archivados</p>
-        <label className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm text-white hover:bg-[#4a866a]">
+        <button
+          className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm text-white hover:bg-[#4a866a]"
+          onClick={() => setShowModal(true)}
+          type="button"
+        >
           <Upload className="h-4 w-4" />
-          {uploading ? 'Subiendo...' : 'Subir documento'}
-          <input
-            ref={fileInputRef}
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
-            className="hidden"
-            disabled={uploading}
-            onChange={handleFileUpload}
-            type="file"
-          />
-        </label>
+          Subir documento
+        </button>
       </div>
+
+      <UploadModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        onUpload={handleUpload}
+        uploading={uploading}
+      />
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {documents.length === 0 ? (
@@ -654,38 +756,20 @@ function ClientNotesTab({ clientId, clientNotes }: { clientId: number; clientNot
   );
 }
 
-function ClientInfoCard({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl border border-neutral-100 bg-white px-5 py-4 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eaf5ed] text-[#5a9a7a]">
-          {icon}
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{label}</p>
-          <p className="mt-0.5 truncate text-sm font-semibold text-neutral-900">{value}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ClientInfoGrid({ clientData }: { clientData: ClientDetail }) {
   const cards = buildInfoCards(clientData);
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-      {cards.map((card) => {
-        const Icon = card.icon;
-        return (
-          <ClientInfoCard
-            icon={<Icon className="h-4 w-4" />}
-            key={card.label}
-            label={card.label}
-            value={card.value}
-          />
-        );
-      })}
+    <div className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
+      <h3 className="mb-5 text-base font-semibold text-neutral-900">Información personal</h3>
+      <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2 xl:grid-cols-3">
+        {cards.map((card) => (
+          <div key={card.label}>
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{card.label}</p>
+            <p className="mt-1 text-sm font-semibold text-neutral-900">{card.value}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -846,7 +930,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                 key={t.label}
                 onClick={() => setActiveTab(t.label)}
                 className={`flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold transition ${
-                  active ? 'bg-[#1f3b2c] text-white shadow-sm' : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#5a9a7a]'
+                  active ? 'bg-[#5a9a7a] text-white shadow-sm' : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#5a9a7a]'
                 }`}
               >
                 <Icon className="h-4 w-4" />

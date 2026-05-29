@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { IsInt, IsString, IsOptional, MinLength } from 'class-validator';
 
 export class CreateDocumentDto {
@@ -8,6 +9,7 @@ export class CreateDocumentDto {
 
   @IsOptional()
   @IsInt()
+  @Type(() => Number)
   clientId?: number;
 
   @IsOptional()

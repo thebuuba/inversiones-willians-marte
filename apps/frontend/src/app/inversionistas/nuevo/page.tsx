@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, User, Phone, FileText, TrendingUp, Calendar, Camera, Upload, Trash2, Save, UserPlus, X, Image } from 'lucide-react';
 import { createInvestor } from '@/lib/api/investors';
+import { compressImage } from '@/lib/compress-image';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 
@@ -54,9 +55,10 @@ const inputClass = 'h-11 w-full rounded-xl border-neutral-200 bg-white px-4 text
 
 function PhotoUpload({ photo, onPhotoChange }: { photo: string | null; onPhotoChange: (url: string | null) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const handleFile = (file: File | undefined) => {
+  const handleFile = async (file: File | undefined) => {
     if (!file) return;
-    onPhotoChange(URL.createObjectURL(file));
+    const compressed = await compressImage(file, 800, 0.7);
+    onPhotoChange(URL.createObjectURL(compressed));
   };
 
   return (

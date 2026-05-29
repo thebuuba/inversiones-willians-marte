@@ -231,7 +231,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
               key={t}
               onClick={() => setTab(i)}
               className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${
-                tab === i ? 'bg-[#1f3b2c] text-white shadow-sm' : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#5a9a7a]'
+                tab === i ? 'bg-[#5a9a7a] text-white shadow-sm' : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#5a9a7a]'
               }`}
             >
               {t}
