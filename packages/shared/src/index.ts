@@ -65,7 +65,7 @@ export interface CreateClientDto {
 }
 
 export interface Client extends CreateClientDto {
-  id: string;
+  id: number;
   createdById: string;
   active: boolean;
   createdAt: string;
@@ -79,7 +79,7 @@ export interface ClientDetail extends Client {
 
 export interface LoanSummary {
   id: string;
-  clientId: string;
+  clientId: number;
   productId: string;
   principal: number;
   interestRate: number;
@@ -118,7 +118,7 @@ export interface LoginDto {
 }
 
 export interface CreateLoanDto {
-  clientId: string;
+  clientId: number;
   productId: string;
   principal: number;
   term: number;
@@ -162,7 +162,7 @@ export interface InvestorItem extends CreateInvestorDto {
 }
 
 export interface CreateDocumentDto {
-  clientId?: string;
+  clientId?: number;
   investorId?: string;
   loanId?: string;
   name: string;
@@ -196,7 +196,7 @@ export interface CreateRequestDto {
   amount: number;
   description?: string;
   reference?: string;
-  clientId?: string;
+  clientId?: number;
 }
 
 export interface LoanRequestItem extends CreateRequestDto {
@@ -207,12 +207,12 @@ export interface LoanRequestItem extends CreateRequestDto {
   createdAt: string;
   updatedAt: string;
   createdByName?: string;
-  client?: { id: string; firstName: string; lastName: string };
+  client?: { id: number; firstName: string; lastName: string };
 }
 
 export interface CreatePaymentDto {
   loanId: string;
-  clientId: string;
+  clientId: number;
   amount: number;
   paymentDate: string;
   paymentMethod?: string;

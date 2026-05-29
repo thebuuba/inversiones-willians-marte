@@ -85,7 +85,7 @@ model User {
 // ─── Clients ────────────────────────────────────────────────────────────────
 
 model Client {
-  id             String   @id @default(uuid())
+  id             Int      @id @default(autoincrement())
   firstName      String   @map("first_name")
   lastName       String   @map("last_name")
   phone          String?
@@ -128,7 +128,7 @@ model LoanRequest {
   reference      String?
   status         RequestStatus @default(PENDING)
   createdById    String        @map("created_by")
-  clientId       String?       @map("client_id")
+  clientId       Int?       @map("client_id")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
@@ -165,7 +165,7 @@ model LoanProduct {
 
 model Loan {
   id            String         @id @default(uuid())
-  clientId      String         @map("client_id")
+  clientId      Int         @map("client_id")
   productId     String         @map("product_id")
   principal     Decimal
   interestRate  Decimal        @map("interest_rate")
@@ -220,7 +220,7 @@ model PaymentSchedule {
 model Payment {
   id            String   @id @default(uuid())
   loanId        String   @map("loan_id")
-  clientId      String   @map("client_id")
+  clientId      Int   @map("client_id")
   amount        Decimal
   paymentDate   DateTime @map("payment_date")
   paymentMethod String?  @map("payment_method")
@@ -311,7 +311,7 @@ model Investor {
 
 model Document {
   id         String   @id @default(uuid())
-  clientId   String?  @map("client_id")
+  clientId   Int?  @map("client_id")
   investorId String?  @map("investor_id")
   loanId     String?  @map("loan_id")
   name       String

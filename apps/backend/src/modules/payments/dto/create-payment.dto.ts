@@ -1,4 +1,5 @@
 import {
+  IsInt,
   IsString,
   IsNumber,
   IsOptional,
@@ -9,8 +10,8 @@ export class CreatePaymentDto {
   @IsString()
   loanId: string;
 
-  @IsString()
-  clientId: string;
+  @IsInt()
+  clientId: number;
 
   @IsNumber()
   @Min(0.01)

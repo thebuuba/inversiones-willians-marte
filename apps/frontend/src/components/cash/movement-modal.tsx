@@ -23,7 +23,7 @@ export interface MovementFormValues {
   category: string;
   method: string;
   description: string;
-  clientId?: string;
+  clientId?: number;
   loanId?: string;
 }
 

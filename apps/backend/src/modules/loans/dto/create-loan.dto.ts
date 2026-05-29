@@ -1,4 +1,5 @@
 import {
+  IsInt,
   IsString,
   IsNumber,
   IsEnum,
@@ -13,8 +14,8 @@ import {
 } from '@inversiones/shared';
 
 export class CreateLoanDto {
-  @IsString()
-  clientId: string;
+  @IsInt()
+  clientId: number;
 
   @IsString()
   productId: string;

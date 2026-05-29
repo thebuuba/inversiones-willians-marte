@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Delete, Param, Body, Query, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -22,19 +22,19 @@ export class ClientsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.clients.findOne(id);
   }
 
   @Patch(':id')
   @Roles('ADMIN', 'MANAGER')
-  update(@Param('id') id: string, @Body() dto: UpdateClientDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateClientDto) {
     return this.clients.update(id, dto);
   }
 
   @Delete(':id')
   @Roles('ADMIN')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.clients.remove(id);
   }
 }

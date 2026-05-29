@@ -7,7 +7,7 @@ export async function getClients(search?: string): Promise<Client[]> {
   return data.data ?? [];
 }
 
-export async function getClient(id: string): Promise<ClientDetail> {
+export async function getClient(id: number | string): Promise<ClientDetail> {
   const { data } = await api.get<ApiResponse<ClientDetail>>(`/clients/${id}`);
   return data.data as ClientDetail;
 }
@@ -17,11 +17,11 @@ export async function createClient(dto: CreateClientDto): Promise<Client> {
   return data.data as Client;
 }
 
-export async function updateClient(id: string, dto: Partial<CreateClientDto>): Promise<Client> {
+export async function updateClient(id: number | string, dto: Partial<CreateClientDto>): Promise<Client> {
   const { data } = await api.patch<ApiResponse<Client>>(`/clients/${id}`, dto);
   return data.data as Client;
 }
 
-export async function deleteClient(id: string): Promise<void> {
+export async function deleteClient(id: number | string): Promise<void> {
   await api.delete(`/clients/${id}`);
 }

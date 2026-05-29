@@ -1,9 +1,10 @@
 import { api } from '../api';
 import type { ApiResponse, DocumentItem } from '@inversiones/shared';
 
-export async function getDocuments(clientId?: string): Promise<DocumentItem[]> {
+export async function getDocuments(clientId?: number, investorId?: string): Promise<DocumentItem[]> {
   const params: Record<string, string> = {};
-  if (clientId) params.clientId = clientId;
+  if (clientId) params.clientId = String(clientId);
+  if (investorId) params.investorId = investorId;
   const { data } = await api.get<ApiResponse<DocumentItem[]>>('/documents', { params });
   return data.data ?? [];
 }

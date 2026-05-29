@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, MinLength, Min } from 'class-validator';
+import { IsInt, IsString, IsNumber, IsOptional, MinLength, Min } from 'class-validator';
 
 export class CreateRequestDto {
   @IsString()
@@ -30,6 +30,6 @@ export class CreateRequestDto {
   reference?: string;
 
   @IsOptional()
-  @IsString()
-  clientId?: string;
+  @IsInt()
+  clientId?: number;
 }

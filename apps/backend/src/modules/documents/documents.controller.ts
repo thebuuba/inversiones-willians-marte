@@ -50,7 +50,7 @@ export class DocumentsController {
 
   @Get()
   findAll(@Query('clientId') clientId?: string, @Query('investorId') investorId?: string) {
-    return this.documents.findAll(clientId, investorId);
+    return this.documents.findAll(clientId ? Number(clientId) : undefined, investorId);
   }
 
   @Delete(':id')

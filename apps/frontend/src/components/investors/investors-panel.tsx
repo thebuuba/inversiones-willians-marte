@@ -1,25 +1,16 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
-  ArrowUpRight,
-  Calendar,
-  CalendarClock,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  DollarSign,
   Download,
   Filter,
-  MoreHorizontal,
-  PiggyBank,
   Plus,
   Search,
-  SlidersHorizontal,
+  TrendingUp,
   UsersRound,
 } from 'lucide-react';
 import { getInvestors } from '@/lib/api/investors';
@@ -27,10 +18,10 @@ import type { InvestorItem } from '@inversiones/shared';
 
 const filters = ['Todos', 'Activos', 'Pausados', 'Retirados'];
 
-const statusStyles: Record<string, { bg: string; text: string; dot: string; ring: string }> = {
-  ACTIVE: { bg: '#E7F4EC', text: '#5FA37D', dot: '#7CC99B', ring: '#7CC99B' },
-  PAUSED: { bg: '#FFF4C8', text: '#A98219', dot: '#E2C64F', ring: '#E2C64F' },
-  WITHDRAWN: { bg: '#EEF3EF', text: '#7A8A80', dot: '#A9CDBB', ring: '#A9CDBB' },
+const statusStyles: Record<string, { bg: string; text: string; dot: string }> = {
+  ACTIVE: { bg: '#E7F4EC', text: '#5FA37D', dot: '#7CC99B' },
+  PAUSED: { bg: '#FFF4C8', text: '#A98219', dot: '#E2C64F' },
+  WITHDRAWN: { bg: '#EEF3EF', text: '#7A8A80', dot: '#A9CDBB' },
 };
 
 const statusLabels: Record<string, string> = {
@@ -68,7 +59,7 @@ function StatusPill({ status }: { status: string }) {
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
+      className="inline-flex min-w-[82px] items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
       style={{ backgroundColor: style.bg, color: style.text }}
     >
       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
@@ -82,18 +73,45 @@ function formatCurrency(n: number): string {
 }
 
 export function InvestorsPanel() {
+  const router = useRouter();
   const [investors, setInvestors] = useState<InvestorItem[]>([]);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('Todos');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getInvestors().then(setInvestors);
+    setLoading(true);
+    getInvestors()
+      .then(setInvestors)
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  const totalCapital = investors.reduce((s, i) => s + i.capital, 0);
-  const totalMonthly = investors.reduce((s, i) => s + i.monthlyPayment, 0);
-  const activeCount = investors.filter((i) => i.status === 'ACTIVE').length;
-  const avgRate = investors.length > 0
-    ? (investors.reduce((s, i) => s + i.rate, 0) / investors.length).toFixed(2)
-    : '0';
+  const stats = useMemo(() => {
+    const total = investors.length;
+    const activos = investors.filter((i) => i.status === 'ACTIVE').length;
+    const capitalTotal = investors.reduce((s, i) => s + i.capital, 0);
+    const tasaPromedio = total > 0 ? (investors.reduce((s, i) => s + i.rate, 0) / total).toFixed(1) : '0';
+    return [
+      { label: 'Total inversionistas', value: String(total), icon: UsersRound, bg: '#E7F4EC', color: '#5FA37D' },
+      { label: 'Activos', value: String(activos), icon: UsersRound, bg: '#DDEFE5', color: '#285C43' },
+      { label: 'Capital total', value: formatCurrency(capitalTotal), icon: TrendingUp, bg: '#FFF4C8', color: '#A98219' },
+      { label: 'Tasa promedio', value: `${tasaPromedio}%`, icon: TrendingUp, bg: '#D8E9FF', color: '#4E7CAD' },
+    ];
+  }, [investors]);
+
+  const filteredInvestors = useMemo(() => {
+    const lower = search.toLowerCase();
+    return investors.filter((i) => {
+      if (filter === 'Activos') return i.status === 'ACTIVE';
+      if (filter === 'Pausados') return i.status === 'PAUSED';
+      if (filter === 'Retirados') return i.status === 'WITHDRAWN';
+      return true;
+    }).filter((i) => {
+      if (!search) return true;
+      return i.name.toLowerCase().includes(lower) || i.code.toLowerCase().includes(lower) || (i.cedula ?? '').toLowerCase().includes(lower);
+    });
+  }, [investors, filter, search]);
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
@@ -106,8 +124,8 @@ export function InvestorsPanel() {
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#A9CDBB]">CAPITAL</p>
           <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#173D2C]">Inversionistas</h1>
-          <p className="mt-1.5 text-base text-[#5FA37D]">
-            Personas que aportan capital a la empresa y reciben rendimiento mensual.
+          <p className="mt-1.5 text-base text-[#7A8A80]">
+            Administra tu cartera de capital — {investors.length} inversionistas registrados.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -115,161 +133,157 @@ export function InvestorsPanel() {
             <Download className="h-4 w-4" />
             Exportar
           </button>
-          <Link href="/inversionistas/nuevo" className="flex h-11 items-center gap-2 rounded-full bg-[#5FA37D] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.22)] transition hover:-translate-y-0.5">
+          <Link
+            className="flex h-11 items-center gap-2 rounded-full bg-[#5FA37D] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.22)] transition hover:-translate-y-0.5"
+            href="/inversionistas/nuevo"
+          >
             <Plus className="h-4 w-4" />
-            Nuevo inversionista
+            Agregar inversionista
           </Link>
         </div>
       </motion.header>
 
-      <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[2.05fr_1fr_1fr]">
-        <PanelCard className="relative overflow-hidden border-0 bg-gradient-to-br from-[#D5EDDD] to-[#B8DCC5] p-7" index={1}>
-          <div className="absolute right-7 top-7 flex h-14 w-14 items-center justify-center rounded-full bg-white/58 text-[#173D2C]">
-            <PiggyBank className="h-7 w-7" />
-          </div>
-          <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#173D2C]">CAPITAL INVERTIDO TOTAL</p>
-          <p className="mt-8 text-[38px] font-bold leading-none text-[#173D2C]">{formatCurrency(totalCapital)}</p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/76 px-3 py-1.5 text-sm font-bold text-[#173D2C]">
-              <UsersRound className="h-4 w-4" />
-              {activeCount} activos
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/76 px-3 py-1.5 text-sm font-bold text-[#173D2C]">
-              <ArrowUpRight className="h-4 w-4" />
-              {avgRate}% promedio
-            </span>
-          </div>
-        </PanelCard>
-
-        <PanelCard className="border-[#F2DE9B] p-7" index={2}>
-          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF4C8] text-[#B89A22]">
-            <DollarSign className="h-6 w-6" />
-          </div>
-          <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#A9CDBB]">PAGO MENSUAL</p>
-          <p className="mt-3 text-[30px] font-bold leading-none text-[#173D2C]">{formatCurrency(totalMonthly)}</p>
-          <p className="mt-4 text-sm font-bold text-[#A98219]">a distribuir este mes</p>
-        </PanelCard>
-
-        <PanelCard className="border-[#D8E9FF] p-7" index={3}>
-          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-[#E4F0FF] text-[#5C82B7]">
-            <CalendarClock className="h-6 w-6" />
-          </div>
-          <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#A9CDBB]">PAGADO HISTÓRICO</p>
-          <p className="mt-3 text-[30px] font-bold leading-none text-[#173D2C]">—</p>
-          <p className="mt-4 text-sm font-bold text-[#5C82B7]">desde el inicio</p>
-        </PanelCard>
-      </div>
-
-      <PanelCard className="mb-5 p-5" index={4}>
-        <div className="flex flex-col gap-3 xl:flex-row">
-          <div className="flex h-12 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-5 text-[#A9CDBB]">
-            <Search className="h-5 w-5 shrink-0" />
-            <span className="truncate text-sm">Buscar por nombre, ID o cédula...</span>
-          </div>
-          <button className="flex h-12 items-center justify-between gap-4 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-5 text-sm font-bold text-[#173D2C] transition hover:bg-[#F3FAF6] xl:w-[300px]">
-            <span className="flex items-center gap-3">
-              <SlidersHorizontal className="h-5 w-5 text-[#A9CDBB]" />
-              Ordenar: Mayor capital
-            </span>
-            <ChevronDown className="h-4 w-4 text-[#A9CDBB]" />
-          </button>
-        </div>
-        <div className="mt-4 flex flex-wrap items-center gap-2.5">
-          <Filter className="h-4 w-4 text-[#A9CDBB]" />
-          <span className="text-sm font-bold text-[#A9CDBB]">Estado:</span>
-          {filters.map((filter) => (
-            <button
-              key={filter}
-              className={`h-9 rounded-full px-4 text-sm font-bold transition hover:-translate-y-0.5 ${
-                filter === 'Todos'
-                  ? 'bg-[#B89A22] text-white shadow-[0_10px_18px_rgba(184,154,34,0.22)]'
-                  : 'border border-[#DDEBE3] bg-[#F3FAF6] text-[#5FA37D]'
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
-      </PanelCard>
-
-      <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
-        {investors.map((investor, index) => {
-          const style = statusStyles[investor.status] ?? statusStyles.WITHDRAWN;
-
+      <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
           return (
-            <PanelCard
-              key={investor.id}
-              className="p-5 transition hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(40,92,67,0.08)]"
-              index={index + 5}
-            >
-              <div className="mb-5 flex items-start justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#E7F4EC] text-sm font-bold text-[#5FA37D]">
-                    {investor.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold leading-tight text-[#173D2C]">{investor.name}</p>
-                    <p className="mt-1 text-xs font-medium text-[#A9CDBB]">
-                      {investor.code} <span className="mx-2 text-[#DDEBE3]">•</span> desde {new Date(investor.createdAt).toLocaleDateString('es-DO', { month: 'short', year: 'numeric' })}
-                    </p>
-                  </div>
-                </div>
-                <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F3FAF6] text-[#5FA37D] transition hover:bg-[#E7F4EC]">
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
+            <PanelCard key={stat.label} className="flex items-center gap-4 p-5" index={index + 1}>
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: stat.bg, color: stat.color }}
+              >
+                <Icon className="h-5 w-5" />
               </div>
-
-              <div className="rounded-[18px] bg-gradient-to-br from-[#E4F4E9] to-[#D9EFE0] p-5">
-                <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#5FA37D]">CAPITAL INVERTIDO</p>
-                <p className="mt-3 text-[26px] font-bold leading-none text-[#173D2C]">{formatCurrency(investor.capital)}</p>
-                <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-bold text-[#5FA37D]">
-                  <ArrowUpRight className="h-4 w-4" />
-                  {investor.rate}% / mes
-                </span>
+              <div>
+                <p className="text-sm font-semibold text-[#7A8A80]">{stat.label}</p>
+                <p className="mt-1 text-[24px] font-bold leading-none text-[#173D2C]">
+                  {loading ? '...' : stat.value}
+                </p>
               </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="rounded-[16px] border border-[#F2DE9B] bg-[#FFF8DA] p-4">
-                  <p className="text-xs font-bold uppercase text-[#B89A22]">PAGO MENSUAL</p>
-                  <p className="mt-3 text-lg font-bold text-[#A98219]">{formatCurrency(investor.monthlyPayment)}</p>
-                </div>
-                <div className="rounded-[16px] border border-[#D8E9FF] bg-[#E4F0FF] p-4">
-                  <p className="text-xs font-bold uppercase text-[#789DD0]">TOTAL GANADO</p>
-                  <p className="mt-3 text-lg font-bold text-[#5C82B7]">—</p>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between border-t border-[#EDF2EF] pt-4">
-                <StatusPill status={investor.status} />
-                <span className="flex items-center gap-2 text-sm font-medium text-[#A9CDBB]">
-                  <Calendar className="h-4 w-4" />
-                  {investor.status === 'ACTIVE' ? 'Activo' : investor.status === 'PAUSED' ? 'Pausado' : 'Retirado'}
-                </span>
-              </div>
-
-              <button className="mt-4 h-11 w-full rounded-full border border-[#DDEBE3] bg-[#F3FAF6] text-sm font-bold text-[#5FA37D] transition hover:bg-[#E7F4EC]">
-                Ver detalle
-              </button>
             </PanelCard>
           );
         })}
       </div>
 
-      <PanelCard className="flex items-center justify-between p-5" index={12}>
-        <p className="text-sm font-semibold text-[#5FA37D]">
-          Mostrando <span className="font-bold text-[#173D2C]">{investors.length}</span> inversionistas
-        </p>
-        <div className="flex items-center gap-2">
-          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#A9CDBB] shadow-sm transition hover:text-[#5FA37D]">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#B89A22] text-sm font-bold text-white shadow-[0_10px_18px_rgba(184,154,34,0.22)]">1</button>
-          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#5FA37D] shadow-sm transition hover:bg-[#E7F4EC]">
-            <ChevronRight className="h-4 w-4" />
-          </button>
+      <PanelCard className="mb-5 p-5" index={5}>
+        <div className="flex flex-col gap-3 xl:flex-row">
+          <div className="flex h-12 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F4F5F6] px-5 shadow-[0_4px_10px_rgba(40,92,67,0.06)]">
+            <Search className="h-5 w-5 shrink-0 text-[#A7B5AD]" />
+            <input
+              className="flex-1 bg-transparent text-sm font-medium text-[#173D2C] outline-none placeholder:text-[#747882]"
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por nombre, código o cédula..."
+            />
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-2.5">
+          <Filter className="h-4 w-4 text-[#A9CDBB]" />
+          <span className="text-sm font-bold text-[#A9CDBB]">Estado:</span>
+          {filters.map((f) => (
+            <button
+              key={f}
+              className={`h-9 rounded-full px-4 text-sm font-bold transition hover:-translate-y-0.5 ${
+                filter === f
+                  ? 'bg-[#285C43] text-white shadow-[0_10px_18px_rgba(40,92,67,0.18)]'
+                  : 'border border-[#DDEBE3] bg-[#F3FAF6] text-[#5FA37D]'
+              }`}
+              onClick={() => setFilter(f)}
+            >
+              {f}
+            </button>
+          ))}
         </div>
       </PanelCard>
 
+      <PanelCard className="overflow-hidden" index={6}>
+        <div className="grid grid-cols-[2fr_1.2fr_1.2fr_1fr_1fr_0.7fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#777D7A]">
+          <span>INVERSIONISTA</span>
+          <span>CÓDIGO</span>
+          <span>CAPITAL</span>
+          <span>TASA</span>
+          <span>ESTADO</span>
+          <span className="text-right">ACCIÓN</span>
+        </div>
+
+        <div>
+          {loading ? (
+            <div className="flex items-center justify-center py-20 text-sm font-medium text-[#777D7A]">
+              Cargando inversionistas...
+            </div>
+          ) : filteredInvestors.length === 0 ? (
+            <div className="flex items-center justify-center py-20 text-sm font-medium text-[#A7B5AD]">
+              No se encontraron inversionistas.
+            </div>
+          ) : (
+            filteredInvestors.map((investor, index) => (
+              <motion.div
+                key={investor.id}
+                variants={fadeUp}
+                initial="hidden"
+                animate="visible"
+                custom={index + 7}
+                className="grid min-h-[74px] cursor-pointer grid-cols-[2fr_1.2fr_1.2fr_1fr_1fr_0.7fr] items-center border-t border-[#EDF2EF] px-6 text-[#5FA37D] transition hover:bg-[#F4FAF6] bg-white"
+                onClick={() => router.push(`/inversionistas/${investor.id}`)}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="relative h-12 w-12 shrink-0">
+                    {investor.photo ? (
+                      <div
+                        aria-label={investor.name}
+                        className="h-full w-full rounded-full border-[3px] border-white bg-cover bg-center shadow-[0_6px_14px_rgba(40,92,67,0.12)]"
+                        role="img"
+                        style={{ backgroundImage: `url(${investor.photo})` }}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center rounded-full border-[3px] border-white bg-[#EAF6EF] shadow-[0_6px_14px_rgba(40,92,67,0.12)]">
+                        <TrendingUp className="h-5 w-5 text-[#5FA37D]" />
+                      </div>
+                    )}
+                    <span
+                      className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white ${
+                        investor.status === 'ACTIVE' ? 'bg-[#7CC99B]' : investor.status === 'PAUSED' ? 'bg-[#E2C64F]' : 'bg-[#A9CDBB]'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold leading-tight text-[#173D2C]">{investor.name}</p>
+                    <p className="mt-0.5 text-xs font-medium text-[#A9CDBB]">
+                      {investor.cedula ? `Cédula: ${investor.cedula}` : '—'}
+                    </p>
+                  </div>
+                </div>
+                <span className="font-mono text-sm text-[#7A8A80]">{investor.code}</span>
+                <span className="text-sm font-bold text-[#173D2C]">{formatCurrency(investor.capital)}</span>
+                <span className="text-sm text-[#7A8A80]">{investor.rate}%</span>
+                <StatusPill status={investor.status} />
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    className="rounded-full bg-[#E7F4EC] px-4 py-1.5 text-sm font-bold text-[#5FA37D] transition hover:bg-[#DDEFE5]"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      router.push(`/inversionistas/${investor.id}`);
+                    }}
+                    type="button"
+                  >
+                    Ver
+                  </button>
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-[#DDEBE3] bg-[#F7F7F7] px-6 py-4">
+          <p className="text-sm font-semibold text-[#777D7A]">
+            {!loading && (
+              <>
+                Mostrando <span className="font-bold text-[#173D2C]">{filteredInvestors.length}</span> de{' '}
+                <span className="font-bold text-[#173D2C]">{investors.length}</span> inversionistas
+              </>
+            )}
+          </p>
+        </div>
+      </PanelCard>
     </div>
   );
 }

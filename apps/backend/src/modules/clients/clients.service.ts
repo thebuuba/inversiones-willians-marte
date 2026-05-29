@@ -30,7 +30,7 @@ export class ClientsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     const client = await prisma.client.findUnique({
       where: { id },
       include: {
@@ -44,12 +44,12 @@ export class ClientsService {
     return client;
   }
 
-  async update(id: string, dto: UpdateClientDto) {
+  async update(id: number, dto: UpdateClientDto) {
     await this.findOne(id);
     return prisma.client.update({ where: { id }, data: dto });
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     await this.findOne(id);
     return prisma.client.update({ where: { id }, data: { active: false } });
   }

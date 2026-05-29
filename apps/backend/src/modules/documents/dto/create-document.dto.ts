@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MinLength } from 'class-validator';
+import { IsInt, IsString, IsOptional, MinLength } from 'class-validator';
 
 export class CreateDocumentDto {
   @IsOptional()
@@ -7,8 +7,8 @@ export class CreateDocumentDto {
   name?: string;
 
   @IsOptional()
-  @IsString()
-  clientId?: string;
+  @IsInt()
+  clientId?: number;
 
   @IsOptional()
   @IsString()

@@ -140,7 +140,7 @@ function ClientTabs({
   onTabChange,
 }: {
   activeTab: ClientTab;
-  clientId: string;
+  clientId: number;
   onTabChange: (tab: ClientTab) => void;
 }) {
   return (
@@ -355,7 +355,7 @@ function DocumentCard({
   );
 }
 
-function ClientDocumentsTab({ clientId }: { clientId: string }) {
+function ClientDocumentsTab({ clientId }: { clientId: number }) {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -373,7 +373,7 @@ function ClientDocumentsTab({ clientId }: { clientId: string }) {
       fd.append('file', file);
       fd.append('name', file.name);
       fd.append('category', 'general');
-      fd.append('clientId', clientId);
+      fd.append('clientId', String(clientId));
       await createDocument(fd);
       const docs = await getDocuments(clientId);
       setDocuments(docs);
@@ -721,7 +721,7 @@ function NewNoteCard({
   );
 }
 
-function ClientNotesTab({ clientId, clientNotes }: { clientId: string; clientNotes?: string | null }) {
+function ClientNotesTab({ clientId, clientNotes }: { clientId: number; clientNotes?: string | null }) {
   const { user } = useAuth();
   const parsed = useMemo(() => {
     if (!clientNotes) return [];
@@ -949,7 +949,7 @@ function ClientInfoGrid({ clientData }: { clientData: ClientDetail }) {
   );
 }
 
-export function ClientDetailPage({ clientId }: { clientId: string }) {
+export function ClientDetailPage({ clientId }: { clientId: number }) {
   const [activeTab, setActiveTab] = useState<ClientTab>('Información');
   const [clientData, setClientData] = useState<ClientDetail | null>(null);
   const [loading, setLoading] = useState(true);

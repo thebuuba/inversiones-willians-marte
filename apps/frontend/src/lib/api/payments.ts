@@ -4,7 +4,7 @@ import type { ApiResponse, CreatePaymentDto } from '@inversiones/shared';
 export interface Payment {
   id: string;
   loanId: string;
-  clientId: string;
+  clientId: number;
   amount: number;
   paymentDate: string;
   paymentMethod?: string;

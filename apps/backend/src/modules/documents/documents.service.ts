@@ -5,7 +5,7 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 interface CreateDocumentInput {
   name: string;
   category: string;
-  clientId?: string;
+  clientId?: number;
   investorId?: string;
   loanId?: string;
   notes?: string;
@@ -33,7 +33,7 @@ export class DocumentsService {
     });
   }
 
-  async findAll(clientId?: string, investorId?: string) {
+  async findAll(clientId?: number, investorId?: string) {
     const where: Record<string, unknown> = {};
     if (clientId) where.clientId = clientId;
     if (investorId) where.investorId = investorId;

@@ -16,7 +16,7 @@ export interface LoanListProduct {
 
 export interface LoanListItem {
   id: string;
-  clientId: string;
+  clientId: number;
   productId: string;
   principal: number;
   interestRate: number;
