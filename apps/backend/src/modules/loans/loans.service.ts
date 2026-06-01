@@ -44,6 +44,7 @@ export class LoansService {
         endDate: lastRow?.dueDate ?? null,
         balance: Math.round(totalAmount * 100) / 100,
         notes: dto.notes,
+        portfolioId: dto.portfolioId ?? null,
         createdById: userId,
         schedule: {
           create: schedule.map((row) => ({

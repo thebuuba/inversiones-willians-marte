@@ -78,6 +78,7 @@ model User {
   investors       Investor[]
   uploadedDocuments Document[]
   tasks           Task[]
+  portfolios      Portfolio[]
 
   @@map("users")
 }
@@ -185,9 +186,11 @@ model Loan {
   client          Client          @relation(fields: [clientId], references: [id])
   product         LoanProduct     @relation(fields: [productId], references: [id])
   createdBy       User            @relation("LoanCreatedBy", fields: [createdById], references: [id])
+  portfolioId   String?         @map("portfolio_id")
   schedule        PaymentSchedule[]
   payments        Payment[]
   lateFees        LateFee[]
+  portfolio       Portfolio?      @relation(fields: [portfolioId], references: [id])
 
   @@map("loans")
 }
@@ -362,6 +365,23 @@ model Task {
   createdBy User @relation(fields: [createdById], references: [id])
 
   @@map("tasks")
+}
+
+// ─── Portfolios (Carteras) ──────────────────────────────────────────────────
+
+model Portfolio {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  color       String   @default("#5FA37D")
+  createdById String   @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  createdBy User  @relation(fields: [createdById], references: [id])
+  loans     Loan[]
+
+  @@map("portfolios")
 }
 
 // ─── Audit Log ──────────────────────────────────────────────────────────────

@@ -34,6 +34,10 @@ export class CreateLoanDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsString()
+  portfolioId?: string;
 }
 
 export interface AmortizationRow {

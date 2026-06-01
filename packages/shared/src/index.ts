@@ -124,6 +124,7 @@ export interface CreateLoanDto {
   term: number;
   startDate: string;
   notes?: string;
+  portfolioId?: string;
 }
 
 export const InvestorStatusEnum = {

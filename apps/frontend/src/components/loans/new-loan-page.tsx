@@ -23,6 +23,7 @@ import {
   parseStrictNumber,
   type AmortizationType,
 } from './new-loan-form.helpers';
+import { CarterasCard } from './carteras-card';
 import type { Client } from '@inversiones/shared';
 
 function formatCurrency(value: number): string {
@@ -426,6 +427,8 @@ function NewLoanStepTwo({
   onAmortizationTypeChange,
   firstPaymentDate,
   onFirstPaymentDateChange,
+  selectedPortfolioId,
+  onSelectPortfolio,
 }: {
   amount: string;
   term: string;
@@ -447,6 +450,8 @@ function NewLoanStepTwo({
   onAmortizationTypeChange: (v: AmortizationType) => void;
   firstPaymentDate: string;
   onFirstPaymentDateChange: (v: string) => void;
+  selectedPortfolioId: string | null;
+  onSelectPortfolio: (id: string | null) => void;
 }) {
   const rate = customInterestRate || '0';
 
@@ -504,26 +509,32 @@ function NewLoanStepTwo({
       {selectedClient && (
         <SelectableClientCard client={selectedClient} onSelectClient={onSelectClient} />
       )}
-      <MainInfoCard
-        amount={amount}
-        onAmountChange={onAmountChange}
-        customInterestRate={customInterestRate}
-        onCustomInterestRateChange={onCustomInterestRateChange}
-        term={term}
-        onTermChange={onTermChange}
-        termUnit={termUnit}
-        onTermUnitChange={onTermUnitChange}
-        amortizationType={amortizationType}
-        onAmortizationTypeChange={onAmortizationTypeChange}
-        paymentFrequency={paymentFrequency}
-        onPaymentFrequencyChange={onPaymentFrequencyChange}
-        firstPaymentDate={firstPaymentDate}
-        onFirstPaymentDateChange={onFirstPaymentDateChange}
-        customPayment={customPayment}
-        onCustomPaymentChange={onCustomPaymentChange}
-        purpose={purpose}
-        onPurposeChange={onPurposeChange}
-      />
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
+        <MainInfoCard
+          amount={amount}
+          onAmountChange={onAmountChange}
+          customInterestRate={customInterestRate}
+          onCustomInterestRateChange={onCustomInterestRateChange}
+          term={term}
+          onTermChange={onTermChange}
+          termUnit={termUnit}
+          onTermUnitChange={onTermUnitChange}
+          amortizationType={amortizationType}
+          onAmortizationTypeChange={onAmortizationTypeChange}
+          paymentFrequency={paymentFrequency}
+          onPaymentFrequencyChange={onPaymentFrequencyChange}
+          firstPaymentDate={firstPaymentDate}
+          onFirstPaymentDateChange={onFirstPaymentDateChange}
+          customPayment={customPayment}
+          onCustomPaymentChange={onCustomPaymentChange}
+          purpose={purpose}
+          onPurposeChange={onPurposeChange}
+        />
+        <CarterasCard
+          selectedPortfolioId={selectedPortfolioId}
+          onSelectPortfolio={onSelectPortfolio}
+        />
+      </div>
 
       <button
         className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#2F7654] text-sm font-bold text-white shadow-[0_6px_16px_rgba(47,118,84,0.15)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
@@ -799,6 +810,7 @@ export function NewLoanPage() {
   const [customPayment, setCustomPayment] = useState('');
   const [amortizationType, setAmortizationType] = useState<AmortizationType>('SIMPLE');
   const [firstPaymentDate, setFirstPaymentDate] = useState('');
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -835,6 +847,7 @@ export function NewLoanPage() {
         principal,
         term: totalTerm,
         startDate: firstPaymentDate || new Date().toISOString(),
+        portfolioId: selectedPortfolioId ?? undefined,
       });
       router.push(`/clientes/${selectedClient.id}`);
     } finally {
@@ -874,6 +887,8 @@ export function NewLoanPage() {
           onAmortizationTypeChange={setAmortizationType}
           firstPaymentDate={firstPaymentDate}
           onFirstPaymentDateChange={setFirstPaymentDate}
+          selectedPortfolioId={selectedPortfolioId}
+          onSelectPortfolio={setSelectedPortfolioId}
         />
 
         {selectedClient && (

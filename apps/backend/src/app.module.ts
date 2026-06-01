@@ -13,6 +13,7 @@ import { RequestsModule } from './modules/requests/requests.module';
 import { InvestorsModule } from './modules/investors/investors.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { TasksModule } from './modules/tasks/tasks.module';
+import { PortfoliosModule } from './modules/portfolios/portfolios.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
     InvestorsModule,
     DocumentsModule,
     TasksModule,
+    PortfoliosModule,
   ],
 })
 export class AppModule {}
