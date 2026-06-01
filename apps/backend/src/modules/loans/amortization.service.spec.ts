@@ -35,11 +35,11 @@ describe('AmortizationService', () => {
       expect(totalInterest).toBeCloseTo(1200, 0);
     });
 
-    it('each installment should have same amount in flat rate', () => {
+    it('each installment (except last) should have same amount in flat rate', () => {
       const schedule = service.calculate({ ...baseParams, interestType: 'FLAT' });
       const amounts = schedule.map((r) => r.amount);
 
-      for (let i = 1; i < amounts.length; i++) {
+      for (let i = 1; i < amounts.length - 1; i++) {
         expect(amounts[i]).toBeCloseTo(amounts[0], 1);
       }
     });

@@ -9,7 +9,6 @@ import {
   Calculator,
   Check,
   ChevronDown,
-  Plus,
   Search,
   UserRound,
 } from 'lucide-react';
@@ -284,11 +283,9 @@ const freqOptions: { label: string; value: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY' 
   { label: 'Semanal', value: 'WEEKLY' },
 ];
 
-function LoanParametersCard({
+function MainInfoCard({
   amount,
   onAmountChange,
-  customPayment,
-  onCustomPaymentChange,
   customInterestRate,
   onCustomInterestRateChange,
   term,
@@ -296,18 +293,11 @@ function LoanParametersCard({
   termUnit,
   onTermUnitChange,
   amortizationType,
-  onAmortizationTypeChange,
-  paymentFrequency,
-  onPaymentFrequencyChange,
-  firstPaymentDate,
-  onFirstPaymentDateChange,
   purpose,
   onPurposeChange,
 }: {
   amount: string;
   onAmountChange: (v: string) => void;
-  customPayment: string;
-  onCustomPaymentChange: (v: string) => void;
   customInterestRate: string;
   onCustomInterestRateChange: (v: string) => void;
   term: string;
@@ -315,169 +305,139 @@ function LoanParametersCard({
   termUnit: 'months' | 'fortnights' | 'weeks';
   onTermUnitChange: (v: 'months' | 'fortnights' | 'weeks') => void;
   amortizationType: AmortizationType;
-  onAmortizationTypeChange: (v: AmortizationType) => void;
-  paymentFrequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY';
-  onPaymentFrequencyChange: (v: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY') => void;
-  firstPaymentDate: string;
-  onFirstPaymentDateChange: (v: string) => void;
   purpose: string;
   onPurposeChange: (v: string) => void;
 }) {
   return (
-    <motion.section
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-neutral-100 bg-white p-4 shadow-sm lg:p-5"
-      initial={{ opacity: 0, y: 14 }}
-      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
-    >
-      <h2 className="mb-4 text-base font-bold text-[#173D2C]">Parámetros del préstamo</h2>
-      <div className="space-y-3">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+    <div className="relative">
+      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-[#E7F4EC] px-3 py-1.5 text-sm font-bold text-[#2F7654] shadow-sm">
+        Información Principal
+      </span>
+      <motion.section
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-xl border border-neutral-100 bg-white p-4 pt-6 shadow-sm lg:p-5 lg:pt-7"
+        initial={{ opacity: 0, y: 14 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
+      >
+        <div className="space-y-3">
           <TextInput
             label="Monto a prestar"
             value={formatNumberInput(amount)}
             onChange={(v) => onAmountChange(v.replace(/,/g, ''))}
             prefix="RD$"
           />
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <TextInput
+              label="Porcentaje de interés"
+              value={customInterestRate}
+              onChange={onCustomInterestRateChange}
+              suffix="%"
+            />
+            {amortizationType !== 'INDEFINITE' && (
+              <div>
+                <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Plazo</span>
+                <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-2">
+                  <TextInput label="" onChange={onTermChange} value={term} />
+                  <SelectInput
+                    options={termUnitOptions.map((o) => o.label)}
+                    value={termUnitOptions.find((o) => o.value === termUnit)?.label ?? 'Meses'}
+                    onChange={(v) => onTermUnitChange(termUnitOptions.find((o) => o.label === v)?.value ?? 'months')}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Descripción / propósito</span>
+            <textarea
+              className="h-[72px] w-full resize-none rounded-[8px] border border-[#DDEBE3] bg-white px-3 py-2.5 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition placeholder:text-[#8F9691] focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
+              placeholder="Ej. Capital de trabajo para negocio familiar..."
+              value={purpose}
+              onChange={(e) => onPurposeChange(e.target.value)}
+            />
+          </label>
+        </div>
+      </motion.section>
+    </div>
+  );
+}
+
+function PaymentConfigCard({
+  customPayment,
+  onCustomPaymentChange,
+  amortizationType,
+  onAmortizationTypeChange,
+  paymentFrequency,
+  onPaymentFrequencyChange,
+  firstPaymentDate,
+  onFirstPaymentDateChange,
+}: {
+  customPayment: string;
+  onCustomPaymentChange: (v: string) => void;
+  amortizationType: AmortizationType;
+  onAmortizationTypeChange: (v: AmortizationType) => void;
+  paymentFrequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY';
+  onPaymentFrequencyChange: (v: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY') => void;
+  firstPaymentDate: string;
+  onFirstPaymentDateChange: (v: string) => void;
+}) {
+  return (
+    <div className="relative">
+      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-[#E7F4EC] px-3 py-1.5 text-sm font-bold text-[#2F7654] shadow-sm">
+        Configuración de pago
+      </span>
+      <motion.section
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-xl border border-neutral-100 bg-white p-4 pt-6 shadow-sm lg:p-5 lg:pt-7"
+        initial={{ opacity: 0, y: 14 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
+      >
+        <div className="space-y-3">
           <TextInput
             label="Monto de cuota"
             value={formatNumberInput(customPayment)}
             onChange={(v) => onCustomPaymentChange(v.replace(/,/g, ''))}
             prefix="RD$"
           />
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <TextInput
-            label="Porcentaje de interés"
-            value={customInterestRate}
-            onChange={onCustomInterestRateChange}
-            suffix="%"
-          />
-          {amortizationType !== 'INDEFINITE' && (
-            <div>
-              <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Plazo</span>
-              <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-2">
-                <TextInput label="" onChange={onTermChange} value={term} />
-                <SelectInput
-                  options={termUnitOptions.map((o) => o.label)}
-                  value={termUnitOptions.find((o) => o.value === termUnit)?.label ?? 'Meses'}
-                  onChange={(v) => onTermUnitChange(termUnitOptions.find((o) => o.label === v)?.value ?? 'months')}
-                />
-              </div>
+          <div>
+            <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Amortización</span>
+            <div className="flex gap-1.5">
+              {amortizationOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  className={`min-h-[34px] flex-1 rounded-[8px] border px-3 text-xs font-bold transition ${
+                    amortizationType === opt.value
+                      ? 'border-[#5FA37D] bg-[#EAF6EF] text-[#2F7654]'
+                      : 'border-[#DDEBE3] bg-white text-[#6F8076] hover:border-[#C6D9CE]'
+                  }`}
+                  onClick={() => onAmortizationTypeChange(opt.value)}
+                  type="button"
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
-          )}
-        </div>
-
-        <div>
-          <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Amortización</span>
-          <div className="flex gap-1.5">
-            {amortizationOptions.map((opt) => (
-              <button
-                key={opt.value}
-                className={`min-h-[34px] flex-1 rounded-[8px] border px-3 text-xs font-bold transition ${
-                  amortizationType === opt.value
-                    ? 'border-[#5FA37D] bg-[#EAF6EF] text-[#2F7654]'
-                    : 'border-[#DDEBE3] bg-white text-[#6F8076] hover:border-[#C6D9CE]'
-                }`}
-                onClick={() => onAmortizationTypeChange(opt.value)}
-                type="button"
-              >
-                {opt.label}
-              </button>
-            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <SelectInput
+              label="Frecuencia"
+              options={freqOptions.map((o) => o.label)}
+              value={freqOptions.find((o) => o.value === paymentFrequency)?.label ?? 'Mensual'}
+              onChange={(v) => onPaymentFrequencyChange(freqOptions.find((o) => o.label === v)?.value ?? 'MONTHLY')}
+            />
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Primera cuota</span>
+              <input
+                type="date"
+                value={firstPaymentDate}
+                onChange={(e) => onFirstPaymentDateChange(e.target.value)}
+                className="h-[42px] w-full rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
+              />
+            </label>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <SelectInput
-            label="Frecuencia"
-            options={freqOptions.map((o) => o.label)}
-            value={freqOptions.find((o) => o.value === paymentFrequency)?.label ?? 'Mensual'}
-            onChange={(v) => onPaymentFrequencyChange(freqOptions.find((o) => o.label === v)?.value ?? 'MONTHLY')}
-          />
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Primera cuota</span>
-            <input
-              type="date"
-              value={firstPaymentDate}
-              onChange={(e) => onFirstPaymentDateChange(e.target.value)}
-              className="h-[42px] w-full rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
-            />
-          </label>
-        </div>
-
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Descripción / propósito</span>
-          <textarea
-            className="h-[72px] w-full resize-none rounded-[8px] border border-[#DDEBE3] bg-white px-3 py-2.5 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition placeholder:text-[#8F9691] focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
-            placeholder="Ej. Capital de trabajo para negocio familiar..."
-            value={purpose}
-            onChange={(e) => onPurposeChange(e.target.value)}
-          />
-        </label>
-      </div>
-    </motion.section>
-  );
-}
-
-function ClientSearchSection({
-  onSelectClient,
-}: {
-  onSelectClient: (client: Client) => void;
-}) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Client[]>([]);
-
-  useEffect(() => {
-    if (query.length < 2) { setResults([]); return; }
-    const timer = setTimeout(() => {
-      getClients(query).then(setResults);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  return (
-    <motion.section
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-neutral-100 bg-white p-4 shadow-sm lg:p-5"
-      initial={{ opacity: 0, y: 14 }}
-      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-    >
-      <h2 className="mb-4 text-base font-bold text-[#173D2C]">Seleccionar cliente</h2>
-      <div className="relative mb-4">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A9CDBB]" />
-        <input
-          className="h-[44px] w-full rounded-[12px] border border-[#DDEBE3] bg-[#F8FBF9] pl-11 pr-4 text-sm font-medium text-[#173D2C] outline-none transition placeholder:text-[#A0AFA8] focus:border-[#285C43] focus:bg-white focus:shadow-[0_0_0_4px_rgba(95,163,125,0.12)]"
-          placeholder="Buscar cliente por nombre, cédula o teléfono…"
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </div>
-      {results.length > 0 && (
-        <div className="mb-3 space-y-1.5">
-          {results.map((client) => (
-            <button
-              key={client.id}
-              className="w-full rounded-[10px] border border-[#DDEBE3] bg-white p-3 text-left text-xs transition hover:bg-[#F6FAF7]"
-              onClick={() => onSelectClient(client)}
-              type="button"
-            >
-              <p className="font-bold text-[#173D2C]">{client.firstName} {client.lastName}</p>
-              <p className="mt-0.5 text-[#777D7A]">{client.identification ?? '—'} · {client.phone ?? '—'}</p>
-            </button>
-          ))}
-        </div>
-      )}
-      <Link
-        className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-dashed border-[#A9CDBB] bg-white text-xs font-bold text-[#5FA37D] transition hover:bg-[#F7FBF9] hover:-translate-y-0.5"
-        href="/clientes/nuevo"
-      >
-        <Plus className="h-4 w-4" />
-        Agregar cliente
-      </Link>
-    </motion.section>
+      </motion.section>
+    </div>
   );
 }
 
@@ -558,41 +518,40 @@ function NewLoanStepTwo({
   }, [amount, rate, term, customPayment, amortizationType]);
 
   const scheduleData = useMemo(
-    () => computeSchedule(summary.principal, parseNumber(rate), summary.months, amortizationType),
-    [summary.principal, rate, summary.months, amortizationType],
+    () => computeSchedule(summary.principal, parseNumber(rate), summary.months, amortizationType, customPayment),
+    [summary.principal, rate, summary.months, amortizationType, customPayment],
   );
 
-  if (!selectedClient) {
-    return (
-      <div className="mt-5">
-        <ClientSearchSection onSelectClient={onSelectClient} />
-      </div>
-    );
-  }
-
   return (
-    <div className="mt-5 space-y-5">
-      <SelectableClientCard client={selectedClient} onSelectClient={onSelectClient} />
-      <LoanParametersCard
-        amount={amount}
-        onAmountChange={onAmountChange}
-        customPayment={customPayment}
-        onCustomPaymentChange={onCustomPaymentChange}
-        customInterestRate={customInterestRate}
-        onCustomInterestRateChange={onCustomInterestRateChange}
-        term={term}
-        onTermChange={onTermChange}
-        termUnit={termUnit}
-        onTermUnitChange={onTermUnitChange}
-        amortizationType={amortizationType}
-        onAmortizationTypeChange={onAmortizationTypeChange}
-        paymentFrequency={paymentFrequency}
-        onPaymentFrequencyChange={onPaymentFrequencyChange}
-        firstPaymentDate={firstPaymentDate}
-        onFirstPaymentDateChange={onFirstPaymentDateChange}
-        purpose={purpose}
-        onPurposeChange={onPurposeChange}
-      />
+    <div className="mt-8 space-y-5">
+      {selectedClient && (
+        <SelectableClientCard client={selectedClient} onSelectClient={onSelectClient} />
+      )}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <MainInfoCard
+          amount={amount}
+          onAmountChange={onAmountChange}
+          customInterestRate={customInterestRate}
+          onCustomInterestRateChange={onCustomInterestRateChange}
+          term={term}
+          onTermChange={onTermChange}
+          termUnit={termUnit}
+          onTermUnitChange={onTermUnitChange}
+          amortizationType={amortizationType}
+          purpose={purpose}
+          onPurposeChange={onPurposeChange}
+        />
+        <PaymentConfigCard
+          customPayment={customPayment}
+          onCustomPaymentChange={onCustomPaymentChange}
+          amortizationType={amortizationType}
+          onAmortizationTypeChange={onAmortizationTypeChange}
+          paymentFrequency={paymentFrequency}
+          onPaymentFrequencyChange={onPaymentFrequencyChange}
+          firstPaymentDate={firstPaymentDate}
+          onFirstPaymentDateChange={onFirstPaymentDateChange}
+        />
+      </div>
 
       <button
         className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#2F7654] text-sm font-bold text-white shadow-[0_6px_16px_rgba(47,118,84,0.15)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
@@ -812,8 +771,13 @@ function AmortizationTableCard({
   );
 }
 
-function computeSchedule(principal: number, annualRate: number, months: number, amortizationType: AmortizationType = 'SIMPLE') {
+function roundToNearestHundred(value: number): number {
+  return Math.round(value / 100) * 100;
+}
+
+function computeSchedule(principal: number, annualRate: number, months: number, amortizationType: AmortizationType = 'SIMPLE', customPayment?: string) {
   const monthlyRate = annualRate / 100 / 12;
+  const useCustomPayment = customPayment && parseNumber(customPayment) > 0;
 
   if (amortizationType === 'NO_INTEREST') {
     const payment = months > 0 ? principal / months : 0;
@@ -836,55 +800,103 @@ function computeSchedule(principal: number, annualRate: number, months: number, 
   }
 
   if (amortizationType === 'INDEFINITE') {
+    const rawInterest = principal * monthlyRate;
+    const roundedPayment = useCustomPayment ? Math.round(rawInterest * 100) / 100 : roundToNearestHundred(rawInterest);
     let totalInterest = 0;
     const schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[] = [];
 
     for (let i = 1; i <= months; i++) {
-      const interest = principal * monthlyRate;
-      totalInterest += interest;
+      totalInterest += roundedPayment;
       schedule.push({
         number: i,
-        payment: Math.round(interest * 100) / 100,
+        payment: roundedPayment,
         principal: 0,
-        interest: Math.round(interest * 100) / 100,
+        interest: roundedPayment,
         balance: Math.round(principal * 100) / 100,
       });
     }
 
     const totalInterestRounded = Math.round(totalInterest * 100) / 100;
-    return { schedule, totalPayment: totalInterestRounded, totalPrincipal: 0, totalInterest: totalInterestRounded, payment: Math.round(principal * monthlyRate * 100) / 100 };
+    return { schedule, totalPayment: totalInterestRounded, totalPrincipal: 0, totalInterest: totalInterestRounded, payment: roundedPayment };
   }
 
-  const payment = monthlyRate > 0
+  if (useCustomPayment) {
+    const payment = parseNumber(customPayment);
+    let balance = principal;
+    let totalInterest = 0;
+    const schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[] = [];
+
+    for (let i = 1; i <= months; i++) {
+      const interest = balance * monthlyRate;
+      const princ = Math.min(payment - interest, balance);
+      balance -= princ;
+      totalInterest += interest;
+      schedule.push({
+        number: i,
+        payment: Math.round(payment * 100) / 100,
+        principal: Math.round(princ * 100) / 100,
+        interest: Math.round(interest * 100) / 100,
+        balance: Math.round(Math.max(balance, 0) * 100) / 100,
+      });
+    }
+
+    return {
+      schedule,
+      totalPayment: Math.round((principal + totalInterest) * 100) / 100,
+      totalPrincipal: principal,
+      totalInterest: Math.round(totalInterest * 100) / 100,
+      payment,
+    };
+  }
+
+  const rawPayment = monthlyRate > 0
     ? principal * monthlyRate * Math.pow(1 + monthlyRate, months) / (Math.pow(1 + monthlyRate, months) - 1)
     : months > 0 ? principal / months : 0;
 
+  const payment = roundToNearestHundred(rawPayment);
   let balance = principal;
   let totalInterest = 0;
   const schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[] = [];
 
-  for (let i = 1; i <= months; i++) {
+  for (let i = 1; i < months; i++) {
     const interest = balance * monthlyRate;
     const princ = payment - interest;
-    balance -= princ;
-    totalInterest += interest;
-    schedule.push({
-      number: i,
-      payment: Math.round(payment * 100) / 100,
-      principal: Math.round(princ * 100) / 100,
-      interest: Math.round(interest * 100) / 100,
-      balance: Math.round(Math.max(balance, 0) * 100) / 100,
-    });
-  }
 
-  if (schedule.length > 0) {
-    const last = schedule[schedule.length - 1];
-    if (last.balance !== 0) {
-      last.principal += last.balance;
-      last.payment = last.principal + last.interest;
-      last.balance = 0;
+    if (princ < 0) {
+      const safePrincipal = Math.max(balance * 0.01, 0);
+      balance -= safePrincipal;
+      totalInterest += interest;
+      schedule.push({
+        number: i,
+        payment: Math.round((safePrincipal + interest) * 100) / 100,
+        principal: Math.round(safePrincipal * 100) / 100,
+        interest: Math.round(interest * 100) / 100,
+        balance: Math.round(Math.max(balance, 0) * 100) / 100,
+      });
+    } else {
+      balance -= princ;
+      totalInterest += interest;
+      schedule.push({
+        number: i,
+        payment: Math.round(payment * 100) / 100,
+        principal: Math.round(princ * 100) / 100,
+        interest: Math.round(interest * 100) / 100,
+        balance: Math.round(Math.max(balance, 0) * 100) / 100,
+      });
     }
   }
+
+  const lastInterest = balance * monthlyRate;
+  const lastPayment = balance + lastInterest;
+  totalInterest += lastInterest;
+
+  schedule.push({
+    number: months,
+    payment: Math.round(lastPayment * 100) / 100,
+    principal: Math.round(balance * 100) / 100,
+    interest: Math.round(lastInterest * 100) / 100,
+    balance: 0,
+  });
 
   const totalPayment = Math.round((principal + totalInterest) * 100) / 100;
   return { schedule, totalPayment, totalPrincipal: principal, totalInterest: Math.round(totalInterest * 100) / 100, payment: Math.round(payment * 100) / 100 };
@@ -894,23 +906,23 @@ function Header() {
   return (
     <>
       <Link
-        className="inline-flex items-center gap-2 text-xs font-bold text-[#5C6D63] transition hover:text-[#173D2C]"
+        className="inline-flex items-center gap-3 text-sm font-bold text-[#5C6D63] transition hover:text-[#173D2C]"
         href="/inicio"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-5 w-5" />
         Volver
       </Link>
 
-      <div className="mt-3 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
+      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E7F4EC] px-2.5 py-0.5 text-[10px] font-bold text-[#2F7654]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#5FA37D]" />
+          <span className="inline-flex items-center gap-2 rounded-full bg-[#E7F4EC] px-3 py-1 text-sm font-bold text-[#2F7654]">
+            <span className="h-2 w-2 rounded-full bg-[#5FA37D]" />
             Nuevo préstamo
           </span>
-          <h1 className="mt-3 text-[24px] font-bold leading-none text-[#173D2C] sm:text-[28px]">
+          <h1 className="mt-6 text-[36px] font-bold leading-none text-[#173D2C] sm:text-[42px]">
             Crear préstamo
           </h1>
-          <p className="mt-1.5 max-w-[720px] text-xs font-medium leading-5 text-[#7A8A80]">
+          <p className="mt-4 max-w-[720px] text-base font-medium leading-7 text-[#7A8A80]">
             Configura los parámetros y revisa el cálculo antes de confirmar.
           </p>
         </div>
@@ -929,7 +941,7 @@ function WizardActions({
   onConfirm: () => void;
 }) {
   return (
-    <div className="sticky bottom-0 -mx-4 mt-5 flex justify-end bg-[#F3F4F6]/92 px-4 py-3 backdrop-blur-sm lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
+    <div className="sticky bottom-0 -mx-5 mt-8 flex justify-end bg-[#F3F4F6]/92 px-5 py-4 backdrop-blur-sm lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
       <button
         className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2F7654] px-7 text-sm font-bold text-white shadow-[0_10px_20px_rgba(47,118,84,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:cursor-not-allowed disabled:opacity-50"
         disabled={!canConfirm || saving}
@@ -990,12 +1002,12 @@ export function NewLoanPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F3F4F6] px-4 py-4 font-sans text-[#173D2C] lg:px-6 lg:py-5">
-      <div className="mx-auto max-w-[1200px]">
+    <main className="min-h-screen bg-[#F3F4F6] px-5 py-7 font-sans text-[#173D2C] lg:px-9 lg:py-8">
+      <div className="mx-auto max-w-[1720px]">
         <Header />
 
         {productsError && (
-          <p className="mt-4 rounded-[10px] border border-[#F1C9B7] bg-[#FFF4EE] px-3 py-2.5 text-xs font-medium text-[#B45B38]">
+          <p className="mt-6 rounded-[14px] border border-[#F1C9B7] bg-[#FFF4EE] px-4 py-3 text-sm font-medium text-[#B45B38]">
             {productsError}
           </p>
         )}
