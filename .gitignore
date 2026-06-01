@@ -9,3 +9,4 @@ dist/
 *.log
 *.pid
 .superpowers/
+.worktrees/
