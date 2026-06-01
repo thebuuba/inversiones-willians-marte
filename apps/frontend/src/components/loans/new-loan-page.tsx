@@ -441,6 +441,8 @@ function NewLoanStepTwo({
   onFirstPaymentDateChange,
   selectedPortfolioId,
   onSelectPortfolio,
+  saving,
+  onSave,
 }: {
   amount: string;
   term: string;
@@ -464,6 +466,8 @@ function NewLoanStepTwo({
   onFirstPaymentDateChange: (v: string) => void;
   selectedPortfolioId: string | null;
   onSelectPortfolio: (id: string | null) => void;
+  saving: boolean;
+  onSave: () => void;
 }) {
   const rate = customInterestRate || '0';
 
@@ -577,6 +581,16 @@ function NewLoanStepTwo({
         paymentFrequency={paymentFrequency}
         firstPaymentDate={firstPaymentDate}
       />
+
+      <button
+        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#2F7654] text-sm font-bold text-white shadow-[0_8px_20px_rgba(47,118,84,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+        disabled={!calculationReady || !selectedClient || saving}
+        onClick={onSave}
+        type="button"
+      >
+        <Check className="h-4 w-4" />
+        {saving ? 'Guardando...' : 'Guardar préstamo'}
+      </button>
     </div>
   );
 }
@@ -784,30 +798,6 @@ function Header() {
   );
 }
 
-function WizardActions({
-  canConfirm,
-  saving,
-  onConfirm,
-}: {
-  canConfirm: boolean;
-  saving: boolean;
-  onConfirm: () => void;
-}) {
-  return (
-    <div className="sticky bottom-0 -mx-5 mt-8 flex justify-end bg-[#F3F4F6]/92 px-5 py-4 backdrop-blur-sm lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
-      <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2F7654] px-7 text-sm font-bold text-white shadow-[0_10px_20px_rgba(47,118,84,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:cursor-not-allowed disabled:opacity-50"
-        disabled={!canConfirm || saving}
-        onClick={onConfirm}
-        type="button"
-      >
-        <Check className="h-4 w-4" />
-        {saving ? 'Creando...' : 'Confirmar y crear préstamo'}
-      </button>
-    </div>
-  );
-}
-
 export function NewLoanPage() {
   const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState<LoanProductItem | null>(null);
@@ -867,6 +857,7 @@ export function NewLoanPage() {
         startDate: firstPaymentDate || new Date().toISOString(),
         portfolioId: selectedPortfolioId ?? undefined,
         amortizationType: amortizationType === 'INDEFINITE' ? 'INDEFINITE' : undefined,
+        notes: purpose || undefined,
       });
       router.push(`/clientes/${selectedClient.id}`);
     } finally {
@@ -908,15 +899,9 @@ export function NewLoanPage() {
           onFirstPaymentDateChange={setFirstPaymentDate}
           selectedPortfolioId={selectedPortfolioId}
           onSelectPortfolio={setSelectedPortfolioId}
+          saving={saving}
+          onSave={handleCreate}
         />
-
-        {selectedClient && (
-          <WizardActions
-            onConfirm={handleCreate}
-            canConfirm={!!selectedClient && !!selectedProduct && calculationReady}
-            saving={saving}
-          />
-        )}
       </div>
     </main>
   );
