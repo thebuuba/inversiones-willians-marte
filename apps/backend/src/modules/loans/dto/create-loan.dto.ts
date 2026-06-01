@@ -7,11 +7,10 @@ import {
   Min,
 } from 'class-validator';
 import {
-  InterestType,
   InterestTypeEnum,
-  PaymentFrequency,
   PaymentFrequencyEnum,
 } from '@inversiones/shared';
+import type { InterestType, PaymentFrequency } from '@inversiones/shared';
 
 export class CreateLoanDto {
   @IsInt()
@@ -38,6 +37,10 @@ export class CreateLoanDto {
   @IsOptional()
   @IsString()
   portfolioId?: string;
+
+  @IsOptional()
+  @IsEnum(InterestTypeEnum)
+  amortizationType?: InterestType;
 }
 
 export interface AmortizationRow {

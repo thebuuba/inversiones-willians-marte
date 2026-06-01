@@ -18,10 +18,12 @@ export class LoansService {
       throw new BadRequestException(`Term exceeds maximum of ${product.maxTerm}`);
     }
 
+    const interestType = dto.amortizationType ?? product.interestType;
+
     const schedule = this.amortization.calculate({
       principal: dto.principal,
       interestRate: Number(product.interestRate),
-      interestType: product.interestType,
+      interestType,
       paymentFrequency: product.paymentFrequency,
       term: dto.term,
       startDate: new Date(dto.startDate),
@@ -30,19 +32,21 @@ export class LoansService {
     const totalAmount = schedule.reduce((sum, row) => sum + row.amount, 0);
     const lastRow = schedule[schedule.length - 1];
 
+    const balance = interestType === 'INDEFINITE' ? dto.principal : Math.round(totalAmount * 100) / 100;
+
     const loan = await prisma.loan.create({
       data: {
         clientId: dto.clientId,
         productId: dto.productId,
         principal: dto.principal,
         interestRate: product.interestRate,
-        interestType: product.interestType,
+        interestType,
         totalAmount: Math.round(totalAmount * 100) / 100,
         paymentFreq: product.paymentFrequency,
         term: dto.term,
         startDate: new Date(dto.startDate),
         endDate: lastRow?.dueDate ?? null,
-        balance: Math.round(totalAmount * 100) / 100,
+        balance,
         notes: dto.notes,
         portfolioId: dto.portfolioId ?? null,
         createdById: userId,

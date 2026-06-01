@@ -12,6 +12,7 @@ export const InterestTypeEnum = {
   REDUCING: 'REDUCING',
   COMPOUND: 'COMPOUND',
   FIXED: 'FIXED',
+  INDEFINITE: 'INDEFINITE',
 } as const;
 export type InterestType = (typeof InterestTypeEnum)[keyof typeof InterestTypeEnum];
 
@@ -123,6 +124,7 @@ export interface CreateLoanDto {
   startDate: string;
   notes?: string;
   portfolioId?: string;
+  amortizationType?: InterestType;
 }
 
 export const InvestorStatusEnum = {

@@ -184,6 +184,17 @@ export class AmortizationService {
         interestPart: Math.round(fixedInterest * 100) / 100,
         balanceAfter: 0,
       });
+    } else if (interestType === InterestTypeEnum.INDEFINITE) {
+      const interestAmount = principal * periodicRate;
+      dueDate = this.addPaymentInterval(dueDate, paymentFrequency);
+      schedule.push({
+        installment: 1,
+        dueDate: new Date(dueDate),
+        amount: Math.round(interestAmount * 100) / 100,
+        principalPart: 0,
+        interestPart: Math.round(interestAmount * 100) / 100,
+        balanceAfter: Math.round(principal * 100) / 100,
+      });
     }
 
     return schedule;

@@ -1,5 +1,5 @@
 import { api } from '../api';
-import type { ApiResponse, CreateLoanDto } from '@inversiones/shared';
+import type { ApiResponse, CreateLoanDto, InterestType } from '@inversiones/shared';
 
 export interface LoanListClient {
   id: string;

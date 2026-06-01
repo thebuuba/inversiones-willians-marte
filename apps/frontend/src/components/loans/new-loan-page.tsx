@@ -26,6 +26,16 @@ import {
 import { CarterasCard } from './carteras-card';
 import type { Client } from '@inversiones/shared';
 
+function getDefaultFirstPaymentDate(): string {
+  const today = new Date();
+  const day = today.getDate();
+  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, day);
+  if (nextMonth.getDate() !== day) {
+    nextMonth.setDate(0);
+  }
+  return nextMonth.toISOString().split('T')[0];
+}
+
 function formatCurrency(value: number): string {
   return `RD$${new Intl.NumberFormat('es-DO', {
     minimumFractionDigits: 2,
@@ -352,17 +362,19 @@ function MainInfoCard({
               onChange={onCustomInterestRateChange}
               suffix="%"
             />
-            <div>
-              <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Plazo</span>
-              <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-2">
-                <TextInput label="" onChange={onTermChange} value={term} />
-                <SelectInput
-                  options={termUnitOptions.map((o) => o.label)}
-                  value={termUnitOptions.find((o) => o.value === termUnit)?.label ?? 'Meses'}
-                  onChange={(v) => onTermUnitChange(termUnitOptions.find((o) => o.label === v)?.value ?? 'months')}
-                />
+            {amortizationType !== 'INDEFINITE' && (
+              <div>
+                <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Plazo</span>
+                <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-2">
+                  <TextInput label="" onChange={onTermChange} value={term} />
+                  <SelectInput
+                    options={termUnitOptions.map((o) => o.label)}
+                    value={termUnitOptions.find((o) => o.value === termUnit)?.label ?? 'Meses'}
+                    onChange={(v) => onTermUnitChange(termUnitOptions.find((o) => o.label === v)?.value ?? 'months')}
+                  />
+                </div>
               </div>
-            </div>
+            )}
             <SelectInput
               label="Amortización"
               options={amortizationOptions.map((option) => option.label)}
@@ -470,7 +482,7 @@ function NewLoanStepTwo({
 
     if (amortizationType === 'INDEFINITE') {
       const payment = principal * monthlyRate;
-      return { principal, months, payment, total: payment * months, interest: payment * months };
+      return { principal, months: 1, payment, total: payment, interest: payment };
     }
 
     const calcPayment = months > 0
@@ -825,6 +837,12 @@ export function NewLoanPage() {
       });
   }, []);
 
+  useEffect(() => {
+    if (amortizationType === 'INDEFINITE' && !firstPaymentDate) {
+      setFirstPaymentDate(getDefaultFirstPaymentDate());
+    }
+  }, [amortizationType, firstPaymentDate]);
+
   const calculationReady = canCalculateLoan({
     amount,
     interestRate: customInterestRate,
@@ -840,7 +858,7 @@ export function NewLoanPage() {
     if (!selectedClient || !selectedProduct || !calculationReady || principal === null) return;
     setSaving(true);
     try {
-      const totalTerm = normalizeLoanTerm(term, termUnit);
+      const totalTerm = amortizationType === 'INDEFINITE' ? 1 : normalizeLoanTerm(term, termUnit);
       await createLoan({
         clientId: selectedClient.id,
         productId: selectedProduct.id,
@@ -848,6 +866,7 @@ export function NewLoanPage() {
         term: totalTerm,
         startDate: firstPaymentDate || new Date().toISOString(),
         portfolioId: selectedPortfolioId ?? undefined,
+        amortizationType: amortizationType === 'INDEFINITE' ? 'INDEFINITE' : undefined,
       });
       router.push(`/clientes/${selectedClient.id}`);
     } finally {

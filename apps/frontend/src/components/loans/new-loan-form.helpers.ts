@@ -40,12 +40,14 @@ export function canCalculateLoan(fields: LoanCalculationFields): boolean {
   const firstPaymentDate = fields.firstPaymentDate.trim();
   const parsedFirstPaymentDate = new Date(`${firstPaymentDate}T00:00:00Z`);
 
+  const isIndefinite = fields.amortizationType === 'INDEFINITE';
+
   return (
     amount !== null &&
     amount > 0 &&
     interestRate !== null &&
     interestRate >= 0 &&
-    term > 0 &&
+    (isIndefinite || term > 0) &&
     fields.amortizationType.trim().length > 0 &&
     fields.paymentFrequency.trim().length > 0 &&
     /^\d{4}-\d{2}-\d{2}$/.test(firstPaymentDate) &&
@@ -58,12 +60,12 @@ function roundToNearestHundred(value: number): number {
   return Math.round(value / 100) * 100;
 }
 
-export function computeSchedule(principal: number, annualRate: number, months: number, amortizationType: AmortizationType = 'SIMPLE', customPayment?: string) {
+export function computeSchedule(principal: number, periodicRate: number, months: number, amortizationType: AmortizationType = 'SIMPLE', customPayment?: string) {
   if (months <= 0) {
     return { schedule: [], totalPayment: 0, totalPrincipal: 0, totalInterest: 0, payment: 0 };
   }
 
-  const monthlyRate = annualRate / 100 / 12;
+  const rate = periodicRate / 100;
   const useCustomPayment = customPayment && parseNumber(customPayment) > 0;
 
   if (amortizationType === 'NO_INTEREST') {
@@ -87,24 +89,19 @@ export function computeSchedule(principal: number, annualRate: number, months: n
   }
 
   if (amortizationType === 'INDEFINITE') {
-    const rawInterest = principal * monthlyRate;
+    const rawInterest = principal * rate;
     const roundedPayment = useCustomPayment ? Math.round(rawInterest * 100) / 100 : roundToNearestHundred(rawInterest);
-    let totalInterest = 0;
-    const schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[] = [];
-
-    for (let i = 1; i <= months; i++) {
-      totalInterest += roundedPayment;
-      schedule.push({
-        number: i,
+    const schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[] = [
+      {
+        number: 1,
         payment: roundedPayment,
         principal: 0,
         interest: roundedPayment,
         balance: Math.round(principal * 100) / 100,
-      });
-    }
+      },
+    ];
 
-    const totalInterestRounded = Math.round(totalInterest * 100) / 100;
-    return { schedule, totalPayment: totalInterestRounded, totalPrincipal: 0, totalInterest: totalInterestRounded, payment: roundedPayment };
+    return { schedule, totalPayment: roundedPayment, totalPrincipal: 0, totalInterest: roundedPayment, payment: roundedPayment };
   }
 
   if (useCustomPayment) {
@@ -114,7 +111,7 @@ export function computeSchedule(principal: number, annualRate: number, months: n
     const schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[] = [];
 
     for (let i = 1; i <= months; i++) {
-      const interest = balance * monthlyRate;
+      const interest = balance * rate;
       const princ = Math.min(payment - interest, balance);
       balance -= princ;
       totalInterest += interest;
@@ -136,8 +133,8 @@ export function computeSchedule(principal: number, annualRate: number, months: n
     };
   }
 
-  const rawPayment = monthlyRate > 0
-    ? principal * monthlyRate * Math.pow(1 + monthlyRate, months) / (Math.pow(1 + monthlyRate, months) - 1)
+  const rawPayment = rate > 0
+    ? principal * rate * Math.pow(1 + rate, months) / (Math.pow(1 + rate, months) - 1)
     : months > 0 ? principal / months : 0;
 
   const payment = roundToNearestHundred(rawPayment);
@@ -146,7 +143,7 @@ export function computeSchedule(principal: number, annualRate: number, months: n
   const schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[] = [];
 
   for (let i = 1; i < months; i++) {
-    const interest = balance * monthlyRate;
+    const interest = balance * rate;
     const princ = payment - interest;
 
     if (princ < 0) {
@@ -173,7 +170,7 @@ export function computeSchedule(principal: number, annualRate: number, months: n
     }
   }
 
-  const lastInterest = balance * monthlyRate;
+  const lastInterest = balance * rate;
   const lastPayment = balance + lastInterest;
   totalInterest += lastInterest;
 

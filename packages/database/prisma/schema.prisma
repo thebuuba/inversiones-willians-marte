@@ -25,6 +25,7 @@ enum InterestType {
   REDUCING
   COMPOUND
   FIXED
+  INDEFINITE
 }
 
 enum PaymentFrequency {
