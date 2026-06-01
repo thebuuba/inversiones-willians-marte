@@ -15,10 +15,8 @@ import {
 } from 'lucide-react';
 import { getLoanProducts, type LoanProductItem } from '@/lib/api/loan-products';
 import { createLoan } from '@/lib/api/loans';
-import { getClient, getClients } from '@/lib/api/clients';
+import { getClients } from '@/lib/api/clients';
 import type { Client } from '@inversiones/shared';
-
-type WizardStep = 1 | 2;
 
 function formatCurrency(value: number): string {
   return `RD$${new Intl.NumberFormat('es-DO', {
@@ -36,275 +34,6 @@ function formatNumberInput(value: string): string {
   const digits = value.replace(/\D/g, '');
   if (!digits) return '';
   return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-function LoanWizardStepper({ step }: { step: WizardStep }) {
-  const totalSteps = 2;
-  return (
-    <div className="flex items-center justify-end gap-2.5">
-      {Array.from({ length: totalSteps }, (_, i) => i + 1).map((item, index) => {
-        const completed = item < step;
-        const active = item === step;
-
-        return (
-          <div className="flex items-center gap-2.5" key={item}>
-            <span
-              className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition ${
-                completed
-                  ? 'bg-[#B8DCC5] text-[#2F7654]'
-                  : active
-                    ? 'bg-[#2F7654] text-white shadow-[0_10px_20px_rgba(47,118,84,0.18)]'
-                    : 'bg-[#EEF3EF] text-[#B9C8BD]'
-              }`}
-            >
-              {completed ? <Check className="h-[18px] w-[18px]" /> : item}
-            </span>
-            {index < totalSteps - 1 && (
-              <span className={`h-px w-10 ${completed ? 'bg-[#5FA37D]' : 'bg-[#E4ECE7]'}`} />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function ClientSearchInput({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="relative mb-5">
-      <Search className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#A9CDBB]" />
-      <input
-        className="h-[52px] w-full rounded-[16px] border border-[#DDEBE3] bg-[#F8FBF9] pl-14 pr-5 text-base font-medium text-[#173D2C] outline-none transition placeholder:text-[#A0AFA8] focus:border-[#285C43] focus:bg-white focus:shadow-[0_0_0_4px_rgba(95,163,125,0.12)]"
-        placeholder="Buscar cliente por nombre, cédula o teléfono…"
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    </div>
-  );
-}
-
-function ClientSelectorCard() {
-  return (
-    <div className="w-full rounded-[16px] border border-dashed border-[#A9CDBB] bg-[#F7FBF9] p-5 text-left">
-      <div className="flex items-center gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-[#285C43] text-white">
-          <UserRound className="h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-sm font-bold text-[#173D2C]">Seleccionar cliente</p>
-          <p className="mt-1 text-sm text-[#7A8A80]">Escribe el nombre, cédula o teléfono arriba</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LoanPreviewPlaceholder() {
-  return (
-    <motion.section
-      animate={{ opacity: 1, y: 0 }}
-      className="flex min-h-[360px] items-center justify-center rounded-[22px] border border-dashed border-[#DDEBE3] bg-white px-6 text-center"
-      initial={{ opacity: 0, y: 14 }}
-      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
-    >
-      <div>
-        <div className="mx-auto flex h-[74px] w-[74px] items-center justify-center rounded-[22px] bg-[#EAF6EF] text-[#4F9B76]">
-          <UserRound className="h-9 w-9" strokeWidth={2} />
-        </div>
-        <h2 className="mt-6 text-lg font-bold text-[#173D2C]">Selecciona un cliente</h2>
-        <p className="mt-2 text-sm font-medium text-[#7A8A80]">Busca y selecciona el solicitante del préstamo.</p>
-      </div>
-    </motion.section>
-  );
-}
-
-function SelectedClientPreview({ client }: { client: Client }) {
-  const fullName = `${client.firstName} ${client.lastName}`;
-
-  return (
-    <motion.aside
-      animate={{ opacity: 1, x: 0 }}
-      className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-8"
-      initial={{ opacity: 0, x: 18 }}
-      transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
-    >
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[#EAF6EF]">
-          <UserRound className="h-6 w-6 text-[#5FA37D]" />
-        </div>
-        <h2 className="text-sm font-bold uppercase tracking-[0.1em] text-[#7A8A80]">CLIENTE SELECCIONADO</h2>
-      </div>
-
-      <div className="flex items-center gap-5">
-        <div className="relative h-[70px] w-[70px] shrink-0">
-          <div className="flex h-full w-full items-center justify-center rounded-[18px] border-[3px] border-white bg-[#EAF6EF] shadow-[0_8px_18px_rgba(40,92,67,0.12)]">
-            <UserRound className="h-8 w-8 text-[#5FA37D]" />
-          </div>
-          <span className="absolute bottom-0 right-0 h-4 w-4 rounded-full border-[3px] border-white bg-[#5FA37D]" />
-        </div>
-        <div>
-          <p className="text-xl font-bold leading-tight text-[#173D2C]">{fullName}</p>
-          <p className="mt-1.5 text-sm font-medium text-[#7A8A80]">{client.identification ?? '—'}</p>
-          <p className="mt-0.5 text-sm font-medium text-[#7A8A80]">{client.phone ?? '—'}</p>
-        </div>
-      </div>
-
-      <div className="mt-5 flex items-center gap-2 rounded-[14px] bg-[#DDEBE3] px-4 py-2.5 text-xs font-bold text-[#5FA37D]">
-        <Check className="h-4 w-4" />
-        Cliente verificado
-      </div>
-    </motion.aside>
-  );
-}
-
-function ContinueButton({ enabled, onClick }: { enabled: boolean; onClick: () => void }) {
-  return (
-    <button
-      className={`inline-flex h-14 items-center justify-center gap-3 rounded-full px-8 text-sm font-bold transition ${
-        enabled
-          ? 'bg-[#2F7654] text-white shadow-[0_14px_26px_rgba(47,118,84,0.22)] hover:-translate-y-0.5 hover:bg-[#285C43]'
-          : 'cursor-not-allowed bg-[#EEF3EF] text-[#B9C8BD]'
-      }`}
-      disabled={!enabled}
-      onClick={onClick}
-      type="button"
-    >
-      Continuar
-      <ChevronDown className="h-5 w-5 -rotate-90" />
-    </button>
-  );
-}
-
-function NewLoanStepOne({
-  selectedClient,
-  onSelectClient,
-}: {
-  selectedClient: Client | null;
-  onSelectClient: (client: Client) => void;
-}) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Client[]>([]);
-  const shownClients = results.length > 0 ? results : selectedClient ? [selectedClient] : [];
-
-  useEffect(() => {
-    if (query.length < 2) { setResults([]); return; }
-    const timer = setTimeout(() => {
-      getClients(query).then(setResults);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  return (
-    <div className="mt-9 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(400px,0.75fr)]">
-      <motion.section
-        animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-8"
-        initial={{ opacity: 0, y: 14 }}
-        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <h2 className="mb-6 text-lg font-bold text-[#173D2C]">Seleccionar cliente</h2>
-        <ClientSearchInput value={query} onChange={setQuery} />
-        {shownClients.length > 0 && (
-          <div className="mb-4 space-y-2">
-            {shownClients.map((client) => (
-              <button
-                key={client.id}
-                className={`w-full rounded-[14px] border p-4 text-left text-sm transition ${
-                  selectedClient?.id === client.id
-                    ? 'border-[#5FA37D] bg-[#EAF6EF]'
-                    : 'border-[#DDEBE3] bg-white hover:bg-[#F6FAF7]'
-                }`}
-                onClick={() => onSelectClient(client)}
-                type="button"
-              >
-                <p className="font-bold text-[#173D2C]">{client.firstName} {client.lastName}</p>
-                <p className="mt-1 text-[#777D7A]">{client.identification ?? '—'} · {client.phone ?? '—'}</p>
-              </button>
-            ))}
-          </div>
-        )}
-        <ClientSelectorCard />
-        <Link
-          className="mt-4 inline-flex h-12 w-full items-center justify-center gap-3 rounded-[14px] border border-dashed border-[#A9CDBB] bg-white text-sm font-bold text-[#5FA37D] transition hover:bg-[#F7FBF9] hover:-translate-y-0.5"
-          href="/clientes/nuevo"
-        >
-          <Plus className="h-5 w-5" />
-          Agregar cliente
-        </Link>
-      </motion.section>
-
-      {selectedClient ? <SelectedClientPreview client={selectedClient} /> : <LoanPreviewPlaceholder />}
-    </div>
-  );
-}
-
-function LoanTypeOption({
-  title,
-  description,
-  active,
-  onClick,
-}: {
-  title: string;
-  description: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      className={`flex min-h-[92px] items-start gap-4 rounded-[18px] border px-5 py-5 text-left transition hover:-translate-y-0.5 ${
-        active
-          ? 'border-[#5FA37D] bg-[#EAF6EF] shadow-[0_8px_18px_rgba(95,163,125,0.08)]'
-          : 'border-[#EDF2EF] bg-white shadow-[0_5px_14px_rgba(40,92,67,0.025)] hover:border-[#DDEBE3]'
-      }`}
-      onClick={onClick}
-      type="button"
-    >
-      <span className={`mt-1 h-3 w-3 shrink-0 rounded-full ${active ? 'bg-[#5FA37D]' : 'bg-[#C7CCC9]'}`} />
-      <span>
-        <span className={`block text-base font-bold ${active ? 'text-[#2F7654]' : 'text-[#173D2C]'}`}>{title}</span>
-        <span className="mt-2 block text-sm font-medium text-[#7A8A80]">{description}</span>
-      </span>
-    </button>
-  );
-}
-
-function LoanTypeSelector({
-  products,
-  selectedProduct,
-  onSelectProduct,
-}: {
-  products: LoanProductItem[];
-  selectedProduct: LoanProductItem | null;
-  onSelectProduct: (product: LoanProductItem) => void;
-}) {
-    return (
-      <motion.section
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-8"
-        initial={{ opacity: 0, y: 14 }}
-        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-      >
-      <h2 className="mb-7 text-xl font-bold text-[#173D2C]">Producto de préstamo</h2>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {products.map((product) => (
-          <LoanTypeOption
-            active={selectedProduct?.id === product.id}
-            description={`${product.interestRate}% · ${product.paymentFrequency === 'MONTHLY' ? 'Mensual' : product.paymentFrequency}`}
-            key={product.id}
-            onClick={() => onSelectProduct(product)}
-            title={product.name}
-          />
-        ))}
-      </div>
-    </motion.section>
-  );
 }
 
 function TextInput({
@@ -326,16 +55,16 @@ function TextInput({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-2 block text-sm font-bold text-[#6F8076]">{label}</span>
-      <div className="flex h-[52px] items-center rounded-[10px] border border-[#DDEBE3] bg-white px-4 text-base font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] transition focus-within:border-[#4F9B76] focus-within:ring-2 focus-within:ring-[#EAF6EF]">
-        {prefix && <span className="mr-3 shrink-0 text-[#7A8A80]">{prefix}</span>}
+      {label && <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">{label}</span>}
+      <div className="flex h-[42px] items-center rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] transition focus-within:border-[#4F9B76] focus-within:ring-2 focus-within:ring-[#EAF6EF]">
+        {prefix && <span className="mr-2 shrink-0 text-xs text-[#7A8A80]">{prefix}</span>}
         <input
           className="h-full min-w-0 flex-1 bg-transparent outline-none"
           onChange={onChange ? (event) => onChange(event.target.value) : undefined}
           value={value}
           readOnly={readOnly}
         />
-        {suffix && <span className="ml-3 shrink-0 text-[#7A8A80]">{suffix}</span>}
+        {suffix && <span className="ml-2 shrink-0 text-xs text-[#7A8A80]">{suffix}</span>}
       </div>
     </label>
   );
@@ -356,10 +85,10 @@ function SelectInput({
 }) {
   return (
     <label className={`block ${className}`}>
-      {label && <span className="mb-2 block text-sm font-bold text-[#6F8076]">{label}</span>}
+      {label && <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">{label}</span>}
       <div className="relative">
         <select
-          className="h-[52px] w-full appearance-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 pr-9 text-base font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
+          className="h-[42px] w-full appearance-none rounded-[8px] border border-[#DDEBE3] bg-white px-3 pr-8 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
         >
@@ -367,7 +96,7 @@ function SelectInput({
             <option key={option}>{option}</option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A7B5AD]" />
+        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#A7B5AD]" />
       </div>
     </label>
   );
@@ -401,17 +130,17 @@ function SelectableClientCard({
   }
 
   return (
-    <div className="rounded-[20px] border border-[#EDF2EF] bg-white shadow-[0_8px_24px_rgba(40,92,67,0.035)]">
-      <div className="flex min-h-[92px] items-center gap-4 px-5">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-[3px] border-white bg-[#EAF6EF] shadow-[0_7px_18px_rgba(40,92,67,0.14)]">
-          <UserRound className="h-7 w-7 text-[#5FA37D]" />
+    <div className="rounded-[14px] border border-[#EDF2EF] bg-white shadow-[0_4px_14px_rgba(40,92,67,0.03)]">
+      <div className="flex min-h-[72px] items-center gap-3 px-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[2px] border-white bg-[#EAF6EF] shadow-[0_4px_12px_rgba(40,92,67,0.1)]">
+          <UserRound className="h-5 w-5 text-[#5FA37D]" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-lg font-bold leading-tight text-[#173D2C]">{fullName}</p>
-          <p className="mt-1 text-sm font-medium text-[#7A8A80]">{client.identification ?? '—'}</p>
+          <p className="truncate text-base font-bold leading-tight text-[#173D2C]">{fullName}</p>
+          <p className="mt-0.5 text-xs font-medium text-[#7A8A80]">{client.identification ?? '—'}</p>
         </div>
         <button
-          className="shrink-0 rounded-lg border border-[#DDEBE3] px-3 py-1.5 text-xs font-bold text-[#5FA37D] transition hover:bg-[#F0F7F3]"
+          className="shrink-0 rounded-lg border border-[#DDEBE3] px-2.5 py-1 text-xs font-bold text-[#5FA37D] transition hover:bg-[#F0F7F3]"
           onClick={() => setShowSearch(!showSearch)}
           type="button"
         >
@@ -420,12 +149,12 @@ function SelectableClientCard({
       </div>
 
       {showSearch && (
-        <div className="border-t border-[#EDF2EF] px-5 py-4">
-          <div className="relative mb-3">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A9CDBB]" />
+        <div className="border-t border-[#EDF2EF] px-4 py-3">
+          <div className="relative mb-2">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#A9CDBB]" />
             <input
               autoFocus
-              className="h-[44px] w-full rounded-[12px] border border-[#DDEBE3] bg-[#F8FBF9] pl-10 pr-4 text-sm font-medium text-[#173D2C] outline-none transition placeholder:text-[#A0AFA8] focus:border-[#285C43] focus:bg-white"
+              className="h-[38px] w-full rounded-[10px] border border-[#DDEBE3] bg-[#F8FBF9] pl-9 pr-3 text-sm font-medium text-[#173D2C] outline-none transition placeholder:text-[#A0AFA8] focus:border-[#285C43] focus:bg-white"
               placeholder="Buscar cliente por nombre, cédula o teléfono…"
               type="text"
               value={query}
@@ -433,22 +162,22 @@ function SelectableClientCard({
             />
           </div>
           {results.length > 0 && (
-            <div className="max-h-[200px] space-y-1 overflow-y-auto">
+            <div className="max-h-[180px] space-y-1 overflow-y-auto">
               {results.map((c) => (
                 <button
                   key={c.id}
-                  className="w-full rounded-[10px] border border-[#EDF2EF] p-3 text-left text-sm transition hover:bg-[#F6FAF7]"
+                  className="w-full rounded-[8px] border border-[#EDF2EF] p-2.5 text-left text-xs transition hover:bg-[#F6FAF7]"
                   onClick={() => handleSelect(c)}
                   type="button"
                 >
                   <p className="font-bold text-[#173D2C]">{c.firstName} {c.lastName}</p>
-                  <p className="mt-0.5 text-xs text-[#777D7A]">{c.identification ?? '—'} · {c.phone ?? '—'}</p>
+                  <p className="mt-0.5 text-[#777D7A]">{c.identification ?? '—'} · {c.phone ?? '—'}</p>
                 </button>
               ))}
             </div>
           )}
           {query.length >= 2 && results.length === 0 && (
-            <p className="text-sm text-[#777D7A]">Sin resultados</p>
+            <p className="text-xs text-[#777D7A]">Sin resultados</p>
           )}
         </div>
       )}
@@ -488,31 +217,31 @@ function LoanSummaryPanel({
   };
 
   return (
-    <section className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-8">
-      <div className="mb-6 flex items-center gap-3 text-[#173D2C]">
-        <Calculator className="h-5 w-5 text-[#5FA37D]" />
-        <h2 className="text-lg font-bold">Resumen del préstamo</h2>
+    <section className="rounded-xl border border-neutral-100 bg-white p-4 shadow-sm lg:p-5">
+      <div className="mb-4 flex items-center gap-2 text-[#173D2C]">
+        <Calculator className="h-4 w-4 text-[#5FA37D]" />
+        <h2 className="text-sm font-bold">Resumen del préstamo</h2>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-        <div className="rounded-xl border border-[#EDF2EF] bg-[#F8FBF9] p-5">
-          <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#7A8A80]">Capital</p>
-          <p className="mt-2 text-2xl font-bold text-[#173D2C]">{formatCurrency(amount)}</p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-lg border border-[#EDF2EF] bg-[#F8FBF9] p-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8A80]">Capital</p>
+          <p className="mt-1 text-lg font-bold text-[#173D2C]">{formatCurrency(amount)}</p>
         </div>
-        <div className="rounded-xl border border-[#EDF2EF] bg-[#F8FBF9] p-5">
-          <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#7A8A80]">Interés generado</p>
-          <p className="mt-2 text-2xl font-bold text-[#B45B38]">{formatCurrency(interest)}</p>
-          <p className="mt-1 text-xs text-[#7A8A80]">{interestPercent.toFixed(1)}% del capital</p>
+        <div className="rounded-lg border border-[#EDF2EF] bg-[#F8FBF9] p-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8A80]">Interés generado</p>
+          <p className="mt-1 text-lg font-bold text-[#B45B38]">{formatCurrency(interest)}</p>
+          <p className="mt-0.5 text-[10px] text-[#7A8A80]">{interestPercent.toFixed(1)}% del capital</p>
         </div>
-        <div className="rounded-xl border border-[#EDF2EF] bg-[#F8FBF9] p-5">
-          <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#7A8A80]">Total a pagar</p>
-          <p className="mt-2 text-2xl font-bold text-[#2F7654]">{formatCurrency(total)}</p>
+        <div className="rounded-lg border border-[#EDF2EF] bg-[#F8FBF9] p-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8A80]">Total a pagar</p>
+          <p className="mt-1 text-lg font-bold text-[#2F7654]">{formatCurrency(total)}</p>
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-[#EDF2EF] bg-[#FAFBFA] p-5">
-        <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-[#7A8A80]">Datos del préstamo</p>
-        <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+      <div className="mt-4 rounded-lg border border-[#EDF2EF] bg-[#FAFBFA] p-3">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8A80]">Datos del préstamo</p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
           <div className="flex justify-between">
             <span className="text-[#7A8A80]">Amortización</span>
             <span className="font-medium text-[#173D2C]">{amortLabels[amortizationType]}</span>
@@ -597,13 +326,13 @@ function LoanParametersCard({
   return (
     <motion.section
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-8"
+      className="rounded-xl border border-neutral-100 bg-white p-4 shadow-sm lg:p-5"
       initial={{ opacity: 0, y: 14 }}
       transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
     >
-      <h2 className="mb-7 text-xl font-bold text-[#173D2C]">Parámetros del préstamo</h2>
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <h2 className="mb-4 text-base font-bold text-[#173D2C]">Parámetros del préstamo</h2>
+      <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <TextInput
             label="Monto a prestar"
             value={formatNumberInput(amount)}
@@ -618,7 +347,7 @@ function LoanParametersCard({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <TextInput
             label="Porcentaje de interés"
             value={customInterestRate}
@@ -627,8 +356,8 @@ function LoanParametersCard({
           />
           {amortizationType !== 'INDEFINITE' && (
             <div>
-              <span className="mb-2 block text-sm font-bold text-[#6F8076]">Plazo</span>
-              <div className="grid grid-cols-[minmax(0,1fr)_135px] gap-3">
+              <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Plazo</span>
+              <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-2">
                 <TextInput label="" onChange={onTermChange} value={term} />
                 <SelectInput
                   options={termUnitOptions.map((o) => o.label)}
@@ -641,12 +370,12 @@ function LoanParametersCard({
         </div>
 
         <div>
-          <span className="mb-2 block text-sm font-bold text-[#6F8076]">Amortización</span>
-          <div className="flex gap-2">
+          <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Amortización</span>
+          <div className="flex gap-1.5">
             {amortizationOptions.map((opt) => (
               <button
                 key={opt.value}
-                className={`min-h-[42px] flex-1 rounded-[10px] border px-4 text-sm font-bold transition ${
+                className={`min-h-[34px] flex-1 rounded-[8px] border px-3 text-xs font-bold transition ${
                   amortizationType === opt.value
                     ? 'border-[#5FA37D] bg-[#EAF6EF] text-[#2F7654]'
                     : 'border-[#DDEBE3] bg-white text-[#6F8076] hover:border-[#C6D9CE]'
@@ -660,7 +389,7 @@ function LoanParametersCard({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <SelectInput
             label="Frecuencia"
             options={freqOptions.map((o) => o.label)}
@@ -668,20 +397,20 @@ function LoanParametersCard({
             onChange={(v) => onPaymentFrequencyChange(freqOptions.find((o) => o.label === v)?.value ?? 'MONTHLY')}
           />
           <label className="block">
-            <span className="mb-2 block text-sm font-bold text-[#6F8076]">Primera cuota</span>
+            <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Primera cuota</span>
             <input
               type="date"
               value={firstPaymentDate}
               onChange={(e) => onFirstPaymentDateChange(e.target.value)}
-              className="h-[52px] w-full rounded-[10px] border border-[#DDEBE3] bg-white px-4 text-base font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
+              className="h-[42px] w-full rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
             />
           </label>
         </div>
 
         <label className="block">
-          <span className="mb-2 block text-sm font-bold text-[#6F8076]">Descripción / propósito</span>
+          <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Descripción / propósito</span>
           <textarea
-            className="h-[104px] w-full resize-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 py-4 text-base font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
+            className="h-[72px] w-full resize-none rounded-[8px] border border-[#DDEBE3] bg-white px-3 py-2.5 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition placeholder:text-[#8F9691] focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
             placeholder="Ej. Capital de trabajo para negocio familiar..."
             value={purpose}
             onChange={(e) => onPurposeChange(e.target.value)}
@@ -692,14 +421,71 @@ function LoanParametersCard({
   );
 }
 
+function ClientSearchSection({
+  onSelectClient,
+}: {
+  onSelectClient: (client: Client) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<Client[]>([]);
+
+  useEffect(() => {
+    if (query.length < 2) { setResults([]); return; }
+    const timer = setTimeout(() => {
+      getClients(query).then(setResults);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  return (
+    <motion.section
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-xl border border-neutral-100 bg-white p-4 shadow-sm lg:p-5"
+      initial={{ opacity: 0, y: 14 }}
+      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <h2 className="mb-4 text-base font-bold text-[#173D2C]">Seleccionar cliente</h2>
+      <div className="relative mb-4">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A9CDBB]" />
+        <input
+          className="h-[44px] w-full rounded-[12px] border border-[#DDEBE3] bg-[#F8FBF9] pl-11 pr-4 text-sm font-medium text-[#173D2C] outline-none transition placeholder:text-[#A0AFA8] focus:border-[#285C43] focus:bg-white focus:shadow-[0_0_0_4px_rgba(95,163,125,0.12)]"
+          placeholder="Buscar cliente por nombre, cédula o teléfono…"
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+      {results.length > 0 && (
+        <div className="mb-3 space-y-1.5">
+          {results.map((client) => (
+            <button
+              key={client.id}
+              className="w-full rounded-[10px] border border-[#DDEBE3] bg-white p-3 text-left text-xs transition hover:bg-[#F6FAF7]"
+              onClick={() => onSelectClient(client)}
+              type="button"
+            >
+              <p className="font-bold text-[#173D2C]">{client.firstName} {client.lastName}</p>
+              <p className="mt-0.5 text-[#777D7A]">{client.identification ?? '—'} · {client.phone ?? '—'}</p>
+            </button>
+          ))}
+        </div>
+      )}
+      <Link
+        className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-dashed border-[#A9CDBB] bg-white text-xs font-bold text-[#5FA37D] transition hover:bg-[#F7FBF9] hover:-translate-y-0.5"
+        href="/clientes/nuevo"
+      >
+        <Plus className="h-4 w-4" />
+        Agregar cliente
+      </Link>
+    </motion.section>
+  );
+}
+
 function NewLoanStepTwo({
-  selectedProduct,
-  onSelectProduct,
   amount,
   term,
   onAmountChange,
   onTermChange,
-  products,
   selectedClient,
   onSelectClient,
   termUnit,
@@ -717,13 +503,10 @@ function NewLoanStepTwo({
   firstPaymentDate,
   onFirstPaymentDateChange,
 }: {
-  selectedProduct: LoanProductItem | null;
-  onSelectProduct: (product: LoanProductItem) => void;
   amount: string;
   term: string;
   onAmountChange: (value: string) => void;
   onTermChange: (value: string) => void;
-  products: LoanProductItem[];
   selectedClient: Client | null;
   onSelectClient: (client: Client) => void;
   termUnit: 'months' | 'fortnights' | 'weeks';
@@ -741,7 +524,7 @@ function NewLoanStepTwo({
   firstPaymentDate: string;
   onFirstPaymentDateChange: (v: string) => void;
 }) {
-  const rate = customInterestRate || (selectedProduct ? String(selectedProduct.interestRate) : '0');
+  const rate = customInterestRate || '0';
 
   const [showSchedule, setShowSchedule] = useState(false);
 
@@ -779,65 +562,67 @@ function NewLoanStepTwo({
     [summary.principal, rate, summary.months, amortizationType],
   );
 
-  return (
-    <>
-      {selectedClient && (
-        <div className="mb-6 w-full">
-          <SelectableClientCard client={selectedClient} onSelectClient={onSelectClient} />
-        </div>
-      )}
-      <div className="space-y-8">
-        <LoanParametersCard
-          amount={amount}
-          onAmountChange={onAmountChange}
-          customPayment={customPayment}
-          onCustomPaymentChange={onCustomPaymentChange}
-          customInterestRate={customInterestRate}
-          onCustomInterestRateChange={onCustomInterestRateChange}
-          term={term}
-          onTermChange={onTermChange}
-          termUnit={termUnit}
-          onTermUnitChange={onTermUnitChange}
-          amortizationType={amortizationType}
-          onAmortizationTypeChange={onAmortizationTypeChange}
-          paymentFrequency={paymentFrequency}
-          onPaymentFrequencyChange={onPaymentFrequencyChange}
-          firstPaymentDate={firstPaymentDate}
-          onFirstPaymentDateChange={onFirstPaymentDateChange}
-          purpose={purpose}
-          onPurposeChange={onPurposeChange}
-        />
-
-        <button
-          className="inline-flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-[#2F7654] text-base font-bold text-white shadow-[0_10px_24px_rgba(47,118,84,0.18)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
-          onClick={() => setShowSchedule(!showSchedule)}
-          type="button"
-        >
-          <Calculator className="h-5 w-5" />
-          {showSchedule ? 'Ocultar cuotas' : 'Calcular préstamo'}
-        </button>
-
-        {showSchedule && (
-          <AmortizationTableCard
-            schedule={scheduleData.schedule}
-            totalPayment={scheduleData.totalPayment}
-            totalPrincipal={scheduleData.totalPrincipal}
-            totalInterest={scheduleData.totalInterest}
-            term={summary.months}
-          />
-        )}
-
-        <LoanSummaryPanel
-          amount={summary.principal}
-          interest={summary.interest}
-          total={summary.total}
-          customInterestRate={customInterestRate}
-          amortizationType={amortizationType}
-          paymentFrequency={paymentFrequency}
-          firstPaymentDate={firstPaymentDate}
-        />
+  if (!selectedClient) {
+    return (
+      <div className="mt-5">
+        <ClientSearchSection onSelectClient={onSelectClient} />
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div className="mt-5 space-y-5">
+      <SelectableClientCard client={selectedClient} onSelectClient={onSelectClient} />
+      <LoanParametersCard
+        amount={amount}
+        onAmountChange={onAmountChange}
+        customPayment={customPayment}
+        onCustomPaymentChange={onCustomPaymentChange}
+        customInterestRate={customInterestRate}
+        onCustomInterestRateChange={onCustomInterestRateChange}
+        term={term}
+        onTermChange={onTermChange}
+        termUnit={termUnit}
+        onTermUnitChange={onTermUnitChange}
+        amortizationType={amortizationType}
+        onAmortizationTypeChange={onAmortizationTypeChange}
+        paymentFrequency={paymentFrequency}
+        onPaymentFrequencyChange={onPaymentFrequencyChange}
+        firstPaymentDate={firstPaymentDate}
+        onFirstPaymentDateChange={onFirstPaymentDateChange}
+        purpose={purpose}
+        onPurposeChange={onPurposeChange}
+      />
+
+      <button
+        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#2F7654] text-sm font-bold text-white shadow-[0_6px_16px_rgba(47,118,84,0.15)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
+        onClick={() => setShowSchedule(!showSchedule)}
+        type="button"
+      >
+        <Calculator className="h-4 w-4" />
+        {showSchedule ? 'Ocultar cuotas' : 'Calcular préstamo'}
+      </button>
+
+      {showSchedule && (
+        <AmortizationTableCard
+          schedule={scheduleData.schedule}
+          totalPayment={scheduleData.totalPayment}
+          totalPrincipal={scheduleData.totalPrincipal}
+          totalInterest={scheduleData.totalInterest}
+          term={summary.months}
+        />
+      )}
+
+      <LoanSummaryPanel
+        amount={summary.principal}
+        interest={summary.interest}
+        total={summary.total}
+        customInterestRate={customInterestRate}
+        amortizationType={amortizationType}
+        paymentFrequency={paymentFrequency}
+        firstPaymentDate={firstPaymentDate}
+      />
+    </div>
   );
 }
 
@@ -855,15 +640,15 @@ function SummaryMetricCard({
   return (
     <motion.section
       animate={{ opacity: 1, y: 0 }}
-      className="min-h-[136px] rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm"
+      className="min-h-[120px] rounded-xl border border-neutral-100 bg-white p-5 shadow-sm"
       initial={{ opacity: 0, y: 14 }}
       transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
     >
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#A7B5AD]">{label}</p>
-      <p className={`mt-4 text-[30px] font-bold leading-none ${highlight ? 'text-[#B45B38]' : 'text-[#173D2C]'}`}>
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#A7B5AD]">{label}</p>
+      <p className={`mt-3 text-2xl font-bold leading-none ${highlight ? 'text-[#B45B38]' : 'text-[#173D2C]'}`}>
         {value}
       </p>
-      {helper && <p className="mt-3 text-sm font-medium text-[#6F8076]">{helper}</p>}
+      {helper && <p className="mt-2 text-xs font-medium text-[#6F8076]">{helper}</p>}
     </motion.section>
   );
 }
@@ -883,7 +668,7 @@ function LoanSummaryCards({
 }) {
   const interestPercent = amount > 0 ? ((interest / amount) * 100).toFixed(1) : '0';
   return (
-    <div className="mt-9 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+    <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
       <SummaryMetricCard label="CAPITAL" value={formatCurrency(amount)} />
       <SummaryMetricCard helper="mensual" label="CUOTA" value={formatCurrency(payment)} />
       <SummaryMetricCard helper={`${interestPercent}% sobre capital`} highlight label="TOTAL INTERESES" value={formatCurrency(interest)} />
@@ -911,25 +696,25 @@ function LoanClientSummary({
   return (
     <motion.section
       animate={{ opacity: 1, y: 0 }}
-      className="mt-8 rounded-2xl border border-neutral-100 bg-white px-7 py-7 shadow-sm"
+      className="mt-5 rounded-xl border border-neutral-100 bg-white px-5 py-5 shadow-sm"
       initial={{ opacity: 0, y: 14 }}
       transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
     >
-      <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-[3px] border-white bg-[#EAF6EF] shadow-[0_7px_18px_rgba(40,92,67,0.14)]">
-            <UserRound className="h-7 w-7 text-[#5FA37D]" />
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[2px] border-white bg-[#EAF6EF] shadow-[0_4px_12px_rgba(40,92,67,0.1)]">
+            <UserRound className="h-5 w-5 text-[#5FA37D]" />
           </div>
           <div>
-            <p className="text-lg font-bold leading-tight text-[#173D2C]">{fullName}</p>
-            <p className="mt-1 text-sm font-medium text-[#7A8A80]">{client.identification ?? '—'}</p>
+            <p className="text-base font-bold leading-tight text-[#173D2C]">{fullName}</p>
+            <p className="mt-0.5 text-xs font-medium text-[#7A8A80]">{client.identification ?? '—'}</p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {pills.map((pill, index) => (
             <span
-              className={`rounded-full px-4 py-2 text-sm font-bold ${
+              className={`rounded-full px-3 py-1.5 text-xs font-bold ${
                 index === 0 ? 'bg-[#E7F4EC] text-[#2F7654]' : 'bg-[#F3FAF6] text-[#5C6D63]'
               }`}
               key={pill}
@@ -947,7 +732,7 @@ function AmortizationRow({ row, total = false }: { row: { number: number | strin
   const fmt = (v: number | string) => (typeof v === 'number' ? formatCurrency(v) : v);
   return (
     <div
-      className={`grid min-w-[980px] grid-cols-[120px_1.2fr_1.2fr_1.2fr_1.2fr] items-center border-t border-[#EDF2EF] px-7 py-5 text-base ${
+      className={`grid min-w-[860px] grid-cols-[100px_1.2fr_1.2fr_1.2fr_1.2fr] items-center border-t border-[#EDF2EF] px-5 py-3 text-sm ${
         total ? 'bg-[#F3FAF6] font-bold' : row.number === 5 ? 'bg-[#F6FAF7]' : 'bg-white'
       }`}
     >
@@ -979,17 +764,17 @@ function AmortizationTableCard({
   return (
     <motion.section
       animate={{ opacity: 1, y: 0 }}
-      className="mt-8 overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm"
+      className="overflow-hidden rounded-xl border border-neutral-100 bg-white shadow-sm"
       initial={{ opacity: 0, y: 14 }}
       transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
     >
-      <div className="flex items-center justify-between gap-4 px-7 py-6">
-        <h2 className="text-lg font-bold text-[#173D2C]">Tabla de amortización</h2>
-        <p className="text-sm font-medium text-[#7A8A80]">{term} {term === 1 ? 'mes' : 'meses'} en total</p>
+      <div className="flex items-center justify-between gap-4 px-5 py-4">
+        <h2 className="text-sm font-bold text-[#173D2C]">Tabla de amortización</h2>
+        <p className="text-xs font-medium text-[#7A8A80]">{term} {term === 1 ? 'mes' : 'meses'} en total</p>
       </div>
 
       <div className="overflow-x-auto">
-        <div className="grid min-w-[980px] grid-cols-[120px_1.2fr_1.2fr_1.2fr_1.2fr] bg-[#F3FAF6] px-7 py-5 text-sm font-bold uppercase tracking-[0.08em] text-[#7A8A80]">
+        <div className="grid min-w-[860px] grid-cols-[100px_1.2fr_1.2fr_1.2fr_1.2fr] bg-[#F3FAF6] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8A80]">
           <span>#</span>
           <span className="text-right">CUOTA</span>
           <span className="text-right">CAPITAL</span>
@@ -1016,11 +801,11 @@ function AmortizationTableCard({
       </div>
 
       <button
-        className="flex h-16 w-full items-center justify-center gap-3 border-t border-[#EDF2EF] bg-white text-base font-medium text-[#4F9B76] transition hover:bg-[#F6FAF7]"
+        className="flex h-12 w-full items-center justify-center gap-2 border-t border-[#EDF2EF] bg-white text-sm font-medium text-[#4F9B76] transition hover:bg-[#F6FAF7]"
         onClick={() => setExpanded((current) => !current)}
         type="button"
       >
-        <ChevronDown className={`h-5 w-5 transition ${expanded ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 transition ${expanded ? 'rotate-180' : ''}`} />
         {expanded ? 'Ocultar cuotas restantes' : 'Ver las 6 cuotas restantes'}
       </button>
     </motion.section>
@@ -1105,95 +890,64 @@ function computeSchedule(principal: number, annualRate: number, months: number, 
   return { schedule, totalPayment, totalPrincipal: principal, totalInterest: Math.round(totalInterest * 100) / 100, payment: Math.round(payment * 100) / 100 };
 }
 
-function Header({ step }: { step: WizardStep }) {
+function Header() {
   return (
     <>
-      {step === 1 && (
-        <Link
-          className="inline-flex items-center gap-3 text-sm font-bold text-[#5C6D63] transition hover:text-[#173D2C]"
-          href="/inicio"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          Volver
-        </Link>
-      )}
+      <Link
+        className="inline-flex items-center gap-2 text-xs font-bold text-[#5C6D63] transition hover:text-[#173D2C]"
+        href="/inicio"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Volver
+      </Link>
 
-      <div className={`${step === 1 ? 'mt-8' : ''} grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end`}>
+      <div className="mt-3 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#E7F4EC] px-3 py-1 text-sm font-bold text-[#2F7654]">
-            <span className="h-2 w-2 rounded-full bg-[#5FA37D]" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E7F4EC] px-2.5 py-0.5 text-[10px] font-bold text-[#2F7654]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#5FA37D]" />
             Nuevo préstamo
           </span>
-          <h1 className="mt-6 text-[36px] font-bold leading-none text-[#173D2C] sm:text-[42px]">
+          <h1 className="mt-3 text-[24px] font-bold leading-none text-[#173D2C] sm:text-[28px]">
             Crear préstamo
           </h1>
-          <p className="mt-4 max-w-[720px] text-base font-medium leading-7 text-[#7A8A80]">
+          <p className="mt-1.5 max-w-[720px] text-xs font-medium leading-5 text-[#7A8A80]">
             Configura los parámetros y revisa el cálculo antes de confirmar.
           </p>
         </div>
-        <LoanWizardStepper step={step} />
       </div>
     </>
   );
 }
 
 function WizardActions({
-  step,
-  selectedClient,
-  canContinue,
   canConfirm,
   saving,
-  onBack,
   onConfirm,
-  onContinue,
 }: {
-  step: WizardStep;
-  selectedClient: boolean;
-  canContinue: boolean;
   canConfirm: boolean;
   saving: boolean;
-  onBack: () => void;
   onConfirm: () => void;
-  onContinue: () => void;
 }) {
-  if (step === 1) {
-    return (
-      <div className="sticky bottom-0 -mx-5 mt-8 flex justify-end bg-[#F3F4F6]/92 px-5 py-4 backdrop-blur-sm lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
-        <ContinueButton enabled={selectedClient} onClick={onContinue} />
-      </div>
-    );
-  }
-
   return (
-    <div className="sticky bottom-0 -mx-5 mt-9 flex flex-col justify-between gap-4 bg-[#F3F4F6]/92 px-5 py-4 backdrop-blur-sm sm:flex-row lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
+    <div className="sticky bottom-0 -mx-4 mt-5 flex justify-end bg-[#F3F4F6]/92 px-4 py-3 backdrop-blur-sm lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0">
       <button
-        className="inline-flex h-14 items-center justify-center gap-3 rounded-full border border-[#DDEBE3] bg-white px-8 text-sm font-bold text-[#173D2C] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#F6FAF7] hover:shadow-md"
-        onClick={onBack}
-        type="button"
-      >
-        <ArrowLeft className="h-5 w-5" />
-        Atrás
-      </button>
-      <button
-        className="inline-flex h-14 items-center justify-center gap-3 rounded-full bg-[#2F7654] px-9 text-sm font-bold text-white shadow-[0_14px_26px_rgba(47,118,84,0.24)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2F7654] px-7 text-sm font-bold text-white shadow-[0_10px_20px_rgba(47,118,84,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:cursor-not-allowed disabled:opacity-50"
         disabled={!canConfirm || saving}
         onClick={onConfirm}
         type="button"
       >
-        <Check className="h-5 w-5" />
+        <Check className="h-4 w-4" />
         {saving ? 'Creando...' : 'Confirmar y crear préstamo'}
       </button>
     </div>
   );
 }
 
-export function NewLoanPage({ initialClientId }: { initialClientId?: string }) {
+export function NewLoanPage() {
   const router = useRouter();
-  const [step, setStep] = useState<WizardStep>(initialClientId ? 2 : 1);
-  const [loadingClient, setLoadingClient] = useState(!!initialClientId);
-  const [products, setProducts] = useState<LoanProductItem[]>([]);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<LoanProductItem | null>(null);
+  const [productsError, setProductsError] = useState('');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [amount, setAmount] = useState('');
   const [term, setTerm] = useState('');
   const [termUnit, setTermUnit] = useState<'months' | 'fortnights' | 'weeks'>('months');
@@ -1206,16 +960,16 @@ export function NewLoanPage({ initialClientId }: { initialClientId?: string }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    getLoanProducts().then(setProducts);
+    getLoanProducts()
+      .then((data) => {
+        if (data.length > 0) setSelectedProduct(data[0]);
+      })
+      .catch(() => {
+        setProductsError(
+          'No se pudieron cargar los productos de préstamo. Verifica la conexión con el backend.',
+        );
+      });
   }, []);
-
-  useEffect(() => {
-    if (!initialClientId) return;
-    getClient(initialClientId)
-      .then(setSelectedClient)
-      .catch(() => setSelectedClient(null))
-      .finally(() => setLoadingClient(false));
-  }, [initialClientId]);
 
   async function handleCreate() {
     if (!selectedClient || !selectedProduct || !amount || !term) return;
@@ -1236,55 +990,46 @@ export function NewLoanPage({ initialClientId }: { initialClientId?: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-[#F3F4F6] px-5 py-7 font-sans text-[#173D2C] lg:px-9 lg:py-8">
-      <div className="mx-auto max-w-[1720px]">
-        <Header step={step} />
+    <main className="min-h-screen bg-[#F3F4F6] px-4 py-4 font-sans text-[#173D2C] lg:px-6 lg:py-5">
+      <div className="mx-auto max-w-[1200px]">
+        <Header />
 
-        {loadingClient ? (
-          <div className="flex items-center justify-center py-20 text-sm text-neutral-400">Cargando cliente...</div>
-        ) : step === 1 ? (
-          <NewLoanStepOne
-            selectedClient={selectedClient}
-            onSelectClient={setSelectedClient}
-          />
-        ) : (
-          <NewLoanStepTwo
-            amount={amount}
-            onAmountChange={setAmount}
-            onSelectClient={setSelectedClient}
-            onSelectProduct={setSelectedProduct}
-            onTermChange={setTerm}
-            products={products}
-            selectedClient={selectedClient}
-            selectedProduct={selectedProduct}
-            term={term}
-            termUnit={termUnit}
-            onTermUnitChange={setTermUnit}
-            paymentFrequency={paymentFrequency}
-            onPaymentFrequencyChange={setPaymentFrequency}
-            purpose={purpose}
-            onPurposeChange={setPurpose}
-            customInterestRate={customInterestRate}
-            onCustomInterestRateChange={setCustomInterestRate}
-            customPayment={customPayment}
-            onCustomPaymentChange={setCustomPayment}
-            amortizationType={amortizationType}
-            onAmortizationTypeChange={setAmortizationType}
-            firstPaymentDate={firstPaymentDate}
-            onFirstPaymentDateChange={setFirstPaymentDate}
-          />
+        {productsError && (
+          <p className="mt-4 rounded-[10px] border border-[#F1C9B7] bg-[#FFF4EE] px-3 py-2.5 text-xs font-medium text-[#B45B38]">
+            {productsError}
+          </p>
         )}
 
-        <WizardActions
-          onBack={() => setStep(1)}
-          onConfirm={handleCreate}
-          onContinue={() => setStep(2)}
-          selectedClient={!!selectedClient}
-          canContinue={!!selectedClient}
-          canConfirm={!!selectedClient && !!selectedProduct && !!amount && !!term}
-          saving={saving}
-          step={step}
+        <NewLoanStepTwo
+          amount={amount}
+          onAmountChange={setAmount}
+          onSelectClient={setSelectedClient}
+          onTermChange={setTerm}
+          selectedClient={selectedClient}
+          term={term}
+          termUnit={termUnit}
+          onTermUnitChange={setTermUnit}
+          paymentFrequency={paymentFrequency}
+          onPaymentFrequencyChange={setPaymentFrequency}
+          purpose={purpose}
+          onPurposeChange={setPurpose}
+          customInterestRate={customInterestRate}
+          onCustomInterestRateChange={setCustomInterestRate}
+          customPayment={customPayment}
+          onCustomPaymentChange={setCustomPayment}
+          amortizationType={amortizationType}
+          onAmortizationTypeChange={setAmortizationType}
+          firstPaymentDate={firstPaymentDate}
+          onFirstPaymentDateChange={setFirstPaymentDate}
         />
+
+        {selectedClient && (
+          <WizardActions
+            onConfirm={handleCreate}
+            canConfirm={!!selectedClient && !!selectedProduct && !!amount && !!term}
+            saving={saving}
+          />
+        )}
       </div>
     </main>
   );
