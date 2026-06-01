@@ -12,16 +12,19 @@ export class ClientsController {
   constructor(private clients: ClientsService) {}
 
   @Post()
+  @Roles('ADMIN', 'MANAGER')
   create(@Body() dto: CreateClientDto, @CurrentUser('id') userId: string) {
     return this.clients.create(dto, userId);
   }
 
   @Get()
+  @Roles('ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER')
   findAll(@Query('search') search?: string) {
     return this.clients.findAll(search);
   }
 
   @Get(':id')
+  @Roles('ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.clients.findOne(id);
   }

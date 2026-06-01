@@ -3,7 +3,8 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './strategies/jwt-auth.guard';
-import { CurrentUser } from '../../common/decorators';
+import { RolesGuard } from '../../common/guards';
+import { CurrentUser, Roles } from '../../common/decorators';
 
 @Controller('auth')
 export class AuthController {
@@ -15,6 +16,8 @@ export class AuthController {
   }
 
   @Post('register')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
   }

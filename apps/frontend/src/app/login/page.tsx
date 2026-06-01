@@ -202,14 +202,7 @@ export default function LoginPage() {
               {loading ? (mode === 'register' ? 'Registrando...' : 'Iniciando...') : mode === 'register' ? 'Registrarse' : 'Iniciar sesión'}
             </button>
 
-            <button
-              type="button"
-              onClick={() => switchMode(mode === 'register' ? 'login' : 'register')}
-              className="flex h-[54px] w-full items-center justify-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-white text-[18px] font-semibold text-[#173D2C] transition-colors hover:bg-[#F4FAF6]"
-            >
-              <UserPlus className="h-5 w-5 text-[#5FA37D]" aria-hidden="true" />
-              {mode === 'register' ? 'Ya tengo cuenta' : 'Registrarse'}
-            </button>
+
           </div>
         </form>
 

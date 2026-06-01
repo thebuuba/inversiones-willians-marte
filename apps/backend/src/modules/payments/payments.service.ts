@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { prisma } from '@inversiones/database';
+import { prisma, Prisma } from '@inversiones/database';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 
 @Injectable()
@@ -54,42 +54,44 @@ export class PaymentsService {
       }
     }
 
-    const payment = await prisma.payment.create({
-      data: {
-        loanId: dto.loanId,
-        clientId: dto.clientId,
-        amount: dto.amount,
-        paymentDate: new Date(dto.paymentDate),
-        paymentMethod: dto.paymentMethod,
-        reference: dto.reference,
-        notes: dto.notes,
-        receivedById: userId,
-        allocations: {
-          create: allocations,
-        },
-      },
-      include: {
-        allocations: true,
-      },
-    });
-
-    for (const alloc of allocations) {
-      const schedule = loan.schedule.find((s) => s.id === alloc.scheduleId);
-      if (!schedule) continue;
-      const totalPaid = Number(schedule.paidAmount ?? 0) + alloc.amount;
-      const isFull = totalPaid >= Number(schedule.amount);
-
-      await prisma.paymentSchedule.update({
-        where: { id: alloc.scheduleId },
+    const payment = await prisma.$transaction(async (tx) => {
+      const p = await tx.payment.create({
         data: {
-          status: isFull ? 'PAID' : 'PARTIAL',
-          paidDate: isFull ? new Date(dto.paymentDate) : undefined,
-          paidAmount: totalPaid,
+          loanId: dto.loanId,
+          clientId: dto.clientId,
+          amount: dto.amount,
+          paymentDate: new Date(dto.paymentDate),
+          paymentMethod: dto.paymentMethod,
+          reference: dto.reference,
+          notes: dto.notes,
+          receivedById: userId,
+          allocations: {
+            create: allocations,
+          },
         },
+        include: { allocations: true },
       });
-    }
 
-    await this.updateLoanBalance(loan.id);
+      for (const alloc of allocations) {
+        const schedule = loan.schedule.find((s) => s.id === alloc.scheduleId);
+        if (!schedule) continue;
+        const totalPaid = Number(schedule.paidAmount ?? 0) + alloc.amount;
+        const isFull = totalPaid >= Number(schedule.amount);
+
+        await tx.paymentSchedule.update({
+          where: { id: alloc.scheduleId },
+          data: {
+            status: isFull ? 'PAID' : 'PARTIAL',
+            paidDate: isFull ? new Date(dto.paymentDate) : undefined,
+            paidAmount: totalPaid,
+          },
+        });
+      }
+
+      await this.updateLoanBalanceTx(tx, loan.id);
+
+      return p;
+    });
 
     return payment;
   }
@@ -105,8 +107,8 @@ export class PaymentsService {
     });
   }
 
-  private async updateLoanBalance(loanId: string) {
-    const loan = await prisma.loan.findUnique({
+  private async updateLoanBalanceTx(tx: Prisma.TransactionClient, loanId: string) {
+    const loan = await tx.loan.findUnique({
       where: { id: loanId },
       include: { schedule: true },
     });
@@ -120,7 +122,7 @@ export class PaymentsService {
 
     const allPaid = loan.schedule.every((s) => s.status === 'PAID');
 
-    await prisma.loan.update({
+    await tx.loan.update({
       where: { id: loanId },
       data: {
         balance: newBalance,

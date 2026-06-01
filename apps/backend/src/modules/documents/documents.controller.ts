@@ -8,8 +8,21 @@ import { extname, join } from 'path';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
-import { CurrentUser } from '../../common/decorators';
+import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
+
+const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+  'application/rtf',
+];
 
 @Controller('documents')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -17,6 +30,7 @@ export class DocumentsController {
   constructor(private documents: DocumentsService) {}
 
   @Post()
+  @Roles('ADMIN', 'MANAGER', 'COLLECTOR')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -27,6 +41,13 @@ export class DocumentsController {
         },
       }),
       limits: { fileSize: 10 * 1024 * 1024 },
+      fileFilter: (_req, file, cb) => {
+        if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException(`Tipo de archivo no permitido: ${file.mimetype}`), false);
+        }
+      },
     }),
   )
   create(
@@ -49,11 +70,13 @@ export class DocumentsController {
   }
 
   @Get()
+  @Roles('ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER')
   findAll(@Query('clientId') clientId?: string, @Query('investorId') investorId?: string) {
     return this.documents.findAll(clientId ? Number(clientId) : undefined, investorId);
   }
 
   @Delete(':id')
+  @Roles('ADMIN')
   remove(@Param('id') id: string) {
     return this.documents.remove(id);
   }
