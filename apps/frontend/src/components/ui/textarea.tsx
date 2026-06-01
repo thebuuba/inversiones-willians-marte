@@ -1,16 +1,16 @@
 'use client';
 
-import { forwardRef, useId, type InputHTMLAttributes } from 'react';
+import { forwardRef, useId, type TextareaHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 import { controlDensities } from './visual-system';
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
   density?: keyof typeof controlDensities;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, error, density = 'default', id, 'aria-describedby': ariaDescribedBy, ...props }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
@@ -24,11 +24,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <input
+        <textarea
           ref={ref}
           id={fieldId}
           className={cn(
-            'block w-full border border-primary-border bg-white font-medium text-text-primary shadow-sm outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-primary-soft',
+            'block w-full min-h-[120px] resize-y border border-primary-border bg-white py-3 font-medium text-text-primary shadow-sm outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-primary-soft',
             controlDensities[density],
             error && 'border-state-danger focus:border-state-danger focus:ring-state-danger-bg',
             className,
@@ -46,4 +46,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     );
   },
 );
-Input.displayName = 'Input';
+Textarea.displayName = 'Textarea';

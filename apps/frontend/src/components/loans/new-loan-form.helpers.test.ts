@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  type LoanCalculationFields,
   canCalculateLoan,
   computeSchedule,
   normalizeLoanTerm,
   parseStrictNumber,
 } from './new-loan-form.helpers.ts';
 
-const validLoan = {
+const validLoan: LoanCalculationFields = {
   amount: '25000',
   interestRate: '12',
   term: '12',

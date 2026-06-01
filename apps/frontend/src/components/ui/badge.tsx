@@ -1,17 +1,25 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { getStatusTone, statusToneDots, statusTones, type StatusTone } from './visual-system';
 
-const colors: Record<string, string> = {
-  active: 'bg-success-bg text-success',
-  paid: 'bg-info-bg text-info',
-  overdue: 'bg-danger-bg text-danger',
-  pending: 'bg-warning-bg text-warning',
-  default: 'bg-surface-muted text-ink-secondary',
-};
+export type BadgeTone = StatusTone;
 
-export function Badge({ status, children }: { status?: string; children: ReactNode }) {
+interface BadgeProps {
+  tone?: BadgeTone;
+  status?: string;
+  dot?: boolean;
+  icon?: ReactNode;
+  className?: string;
+  children: ReactNode;
+}
+
+export function Badge({ tone, status, dot, icon, className, children }: BadgeProps) {
+  const resolvedTone = tone ?? getStatusTone(status);
+
   return (
-    <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', colors[status ?? 'default'] ?? colors.default)}>
+    <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold', statusTones[resolvedTone], className)}>
+      {dot && <span className={cn('h-1.5 w-1.5 rounded-full', statusToneDots[resolvedTone])} />}
+      {icon}
       {children}
     </span>
   );

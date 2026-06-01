@@ -1,17 +1,17 @@
 'use client';
 
-import { forwardRef, useId, type InputHTMLAttributes } from 'react';
+import { forwardRef, useId, type SelectHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 import { controlDensities } from './visual-system';
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
   density?: keyof typeof controlDensities;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, density = 'default', id, 'aria-describedby': ariaDescribedBy, ...props }, ref) => {
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(
+  ({ className, label, error, density = 'default', id, children, 'aria-describedby': ariaDescribedBy, ...props }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const errorId = `${fieldId}-error`;
@@ -24,7 +24,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <input
+        <select
           ref={ref}
           id={fieldId}
           className={cn(
@@ -36,7 +36,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           aria-describedby={describedBy}
           aria-invalid={error ? true : undefined}
           {...props}
-        />
+        >
+          {children}
+        </select>
         {error && (
           <p id={errorId} className="mt-1.5 text-sm font-medium text-state-danger">
             {error}
@@ -46,4 +48,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     );
   },
 );
-Input.displayName = 'Input';
+Select.displayName = 'Select';
