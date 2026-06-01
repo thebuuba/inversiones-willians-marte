@@ -12,25 +12,25 @@ export class ClientsController {
   constructor(private clients: ClientsService) {}
 
   @Post()
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('ADMIN', 'COLLECTOR')
   create(@Body() dto: CreateClientDto, @CurrentUser('id') userId: string) {
     return this.clients.create(dto, userId);
   }
 
   @Get()
-  @Roles('ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER')
+  @Roles('ADMIN', 'COLLECTOR')
   findAll(@Query('search') search?: string) {
     return this.clients.findAll(search);
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER')
+  @Roles('ADMIN', 'COLLECTOR')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.clients.findOne(id);
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('ADMIN', 'COLLECTOR')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateClientDto) {
     return this.clients.update(id, dto);
   }

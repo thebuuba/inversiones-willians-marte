@@ -11,19 +11,19 @@ export class PortfoliosController {
   constructor(private portfolios: PortfoliosService) {}
 
   @Post()
-  @Roles('ADMIN', 'MANAGER', 'COLLECTOR')
+  @Roles('ADMIN', 'COLLECTOR')
   create(@Body() dto: CreatePortfolioDto, @CurrentUser('id') userId: string) {
     return this.portfolios.create(dto, userId);
   }
 
   @Get()
-  @Roles('ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER')
+  @Roles('ADMIN', 'COLLECTOR')
   findAll() {
     return this.portfolios.findAll();
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER')
+  @Roles('ADMIN', 'COLLECTOR')
   findOne(@Param('id') id: string) {
     return this.portfolios.findOne(id);
   }

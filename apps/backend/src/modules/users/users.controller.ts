@@ -17,13 +17,13 @@ export class UsersController {
   }
 
   @Get()
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('ADMIN', 'COLLECTOR')
   findAll() {
     return this.users.findAll();
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('ADMIN', 'COLLECTOR')
   findOne(@Param('id') id: string) {
     return this.users.findOne(id);
   }

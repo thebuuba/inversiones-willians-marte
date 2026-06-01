@@ -27,8 +27,6 @@ export type PaymentFrequency = (typeof PaymentFrequencyEnum)[keyof typeof Paymen
 export const UserRoleEnum = {
   ADMIN: 'ADMIN',
   COLLECTOR: 'COLLECTOR',
-  MANAGER: 'MANAGER',
-  VIEWER: 'VIEWER',
 } as const;
 export type UserRole = (typeof UserRoleEnum)[keyof typeof UserRoleEnum];
 

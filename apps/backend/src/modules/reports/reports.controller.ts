@@ -10,37 +10,37 @@ export class ReportsController {
   constructor(private reports: ReportsService) {}
 
   @Get('dashboard')
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('ADMIN', 'COLLECTOR')
   dashboard() {
     return this.reports.dashboard();
   }
 
   @Get('portfolio')
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('ADMIN', 'COLLECTOR')
   portfolio() {
     return this.reports.portfolioByStatus();
   }
 
   @Get('collectors')
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('ADMIN', 'COLLECTOR')
   collectors() {
     return this.reports.collectorPerformance();
   }
 
   @Get('collections/monthly')
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('ADMIN', 'COLLECTOR')
   monthlyCollections() {
     return this.reports.monthlyCollections();
   }
 
   @Get('movement/weekly')
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('ADMIN', 'COLLECTOR')
   weeklyMovement() {
     return this.reports.weeklyMovement();
   }
 
   @Get('payments/upcoming')
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('ADMIN', 'COLLECTOR')
   upcomingPayments() {
     return this.reports.upcomingPayments();
   }

@@ -32,7 +32,7 @@ describe('AuthService', () => {
     name: 'Test User',
     username: 'testuser',
     email: 'testuser@usuarios.local',
-    role: 'VIEWER',
+    role: 'ADMIN',
     active: true,
   };
 
@@ -117,7 +117,7 @@ describe('AuthService', () => {
 
   describe('getProfile', () => {
     it('should return user profile without sensitive fields', async () => {
-      const profile = { id: '1', name: 'Test User', username: 'testuser', email: 'test@test.com', role: 'VIEWER', createdAt: new Date() };
+      const profile = { id: '1', name: 'Test User', username: 'testuser', email: 'test@test.com', role: 'ADMIN', createdAt: new Date() };
       jest.mocked(prisma.user.findUnique).mockResolvedValue(profile as any);
 
       const result = await service.getProfile('1');

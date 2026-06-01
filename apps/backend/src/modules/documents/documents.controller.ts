@@ -30,7 +30,7 @@ export class DocumentsController {
   constructor(private documents: DocumentsService) {}
 
   @Post()
-  @Roles('ADMIN', 'MANAGER', 'COLLECTOR')
+  @Roles('ADMIN', 'COLLECTOR')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -70,7 +70,7 @@ export class DocumentsController {
   }
 
   @Get()
-  @Roles('ADMIN', 'MANAGER', 'COLLECTOR', 'VIEWER')
+  @Roles('ADMIN', 'COLLECTOR')
   findAll(@Query('clientId') clientId?: string, @Query('investorId') investorId?: string) {
     return this.documents.findAll(clientId ? Number(clientId) : undefined, investorId);
   }

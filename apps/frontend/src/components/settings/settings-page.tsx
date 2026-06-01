@@ -553,9 +553,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
                   value={form.role}
                 >
                   <option value="ADMIN">Administrador</option>
-                  <option value="MANAGER">Gerente</option>
                   <option value="COLLECTOR">Cobrador</option>
-                  <option value="VIEWER">Solo vista</option>
                 </select>
               </div>
             </div>
@@ -587,9 +585,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
 
 const roleBadgeColors: Record<string, { bg: string; text: string }> = {
   ADMIN: { bg: '#FFE8D8', text: '#B45B38' },
-  MANAGER: { bg: '#D9ECFF', text: '#3A75B8' },
   COLLECTOR: { bg: '#E7F4EC', text: '#3E8A61' },
-  VIEWER: { bg: '#F0F0F0', text: '#7A8A80' },
 };
 
 const statusStyles = {
@@ -598,7 +594,7 @@ const statusStyles = {
 } as const;
 
 function RoleBadge({ role }: { role: string }) {
-  const style = roleBadgeColors[role] ?? roleBadgeColors.VIEWER;
+  const style = roleBadgeColors[role] ?? roleBadgeColors.ADMIN;
 
   return (
     <span
@@ -653,16 +649,12 @@ function SettingsUsersRolesTab() {
 
   const roleDot: Record<string, string> = {
     ADMIN: '#B8DCC5',
-    MANAGER: '#FFE3D2',
     COLLECTOR: '#D8E9FF',
-    VIEWER: '#E8DDF6',
   };
 
   const roleLabel: Record<string, string> = {
     ADMIN: 'Administrador',
-    MANAGER: 'Gerente',
     COLLECTOR: 'Cobrador',
-    VIEWER: 'Solo vista',
   };
 
   return (

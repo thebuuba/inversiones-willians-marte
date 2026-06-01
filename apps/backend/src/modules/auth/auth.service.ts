@@ -62,7 +62,7 @@ export class AuthService {
         username,
         email: `${username}@usuarios.local`,
         passwordHash,
-        role: 'VIEWER',
+        role: 'ADMIN',
       },
     });
 

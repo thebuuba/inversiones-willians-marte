@@ -12,13 +12,13 @@ export class PaymentsController {
   constructor(private payments: PaymentsService) {}
 
   @Post()
-  @Roles('ADMIN', 'MANAGER', 'COLLECTOR')
+  @Roles('ADMIN', 'COLLECTOR')
   create(@Body() dto: CreatePaymentDto, @CurrentUser('id') userId: string) {
     return this.payments.create(dto, userId);
   }
 
   @Get('loan/:loanId')
-  @Roles('ADMIN', 'MANAGER', 'COLLECTOR')
+  @Roles('ADMIN', 'COLLECTOR')
   findByLoan(@Param('loanId') loanId: string) {
     return this.payments.findByLoan(loanId);
   }

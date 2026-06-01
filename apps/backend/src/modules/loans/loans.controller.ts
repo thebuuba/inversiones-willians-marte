@@ -12,13 +12,13 @@ export class LoansController {
   constructor(private loans: LoansService) {}
 
   @Post()
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('ADMIN', 'COLLECTOR')
   create(@Body() dto: CreateLoanDto, @CurrentUser('id') userId: string) {
     return this.loans.create(dto, userId);
   }
 
   @Get()
-  @Roles('ADMIN', 'MANAGER', 'COLLECTOR')
+  @Roles('ADMIN', 'COLLECTOR')
   findAll(
     @Query('status') status?: string,
     @Query('search') search?: string,
@@ -27,13 +27,13 @@ export class LoansController {
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'MANAGER', 'COLLECTOR')
+  @Roles('ADMIN', 'COLLECTOR')
   findOne(@Param('id') id: string) {
     return this.loans.findOne(id);
   }
 
   @Get(':id/summary')
-  @Roles('ADMIN', 'MANAGER', 'COLLECTOR')
+  @Roles('ADMIN', 'COLLECTOR')
   getSummary(@Param('id') id: string) {
     return this.loans.getSummary(id);
   }
