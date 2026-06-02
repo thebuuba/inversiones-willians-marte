@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   clampProgress,
   getLoanCollectionStatus,
+  getClientLoanStats,
   getLoanDetailTotals,
   getLoanProgress,
   getRegularInstallment,
@@ -87,4 +88,19 @@ test('never marks indefinite loans expired', () => {
 
 test('ignores paid schedule rows when calculating collection status', () => {
   assert.equal(getLoanCollectionStatus({ ...finiteLoan, schedule: [{ dueDate: '2026-06-01T00:00:00', status: 'PAID' }, { dueDate: '2026-06-20T00:00:00', status: 'PENDING' }] }, today), 'A tiempo');
+});
+
+test('summarizes serialized loan decimals without concatenating values', () => {
+  assert.deepEqual(
+    getClientLoanStats([
+      { principal: '100000', balance: '104546.02', schedule: [{ paidAmount: null }] },
+      { principal: '25000', balance: '25000', schedule: [{ paidAmount: '300' }] },
+      { principal: '30500', balance: '30500', schedule: [{ paidAmount: 200 }] },
+    ]),
+    {
+      totalLoaned: 155_500,
+      totalBalance: 160_046.02,
+      totalPaid: 500,
+    },
+  );
 });

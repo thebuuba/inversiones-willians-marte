@@ -7,7 +7,7 @@ import { getDocuments, createDocument, deleteDocument } from '@/lib/api/document
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { compressImage } from '@/lib/compress-image';
-import { getLoanCollectionStatus, getLoanProgress, getRegularInstallment } from '@/components/loans/loan-detail.helpers';
+import { getClientLoanStats, getLoanCollectionStatus, getLoanProgress, getRegularInstallment } from '@/components/loans/loan-detail.helpers';
 import type { ClientDetail, LoanSummary, DocumentItem, ApiResponse } from '@inversiones/shared';
 import {
   ArrowLeft,
@@ -46,7 +46,7 @@ const tabs: { label: ClientTab; icon: typeof UserRound }[] = [
   { label: 'Notas', icon: StickyNote },
 ];
 
-const fmt = (n: number) => `RD$ ${n.toLocaleString('es-DO', { maximumFractionDigits: 0 })}`;
+const fmt = (n: number | string) => `RD$ ${Number(n).toLocaleString('es-DO', { maximumFractionDigits: 0 })}`;
 const fmtDate = (s: string | Date) => new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
 const fmtLong = (s: string | Date) => new Date(s).toLocaleDateString('es-DO', { dateStyle: 'long' });
 
@@ -838,9 +838,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
 
   const fullName = `${clientData.firstName} ${clientData.lastName}`;
   const activeLoans = clientData.loans.filter((l) => l.status === 'ACTIVE').length;
-  const totalLoaned = clientData.loans.reduce((s, l) => s + l.principal, 0);
-  const totalPaid = clientData.loans.reduce((s, l) => s + l.principal - l.balance, 0);
-  const totalBalance = clientData.loans.reduce((s, l) => s + l.balance, 0);
+  const { totalLoaned, totalPaid, totalBalance } = getClientLoanStats(clientData.loans);
 
   const statsCards = [
     { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, accent: '#eaf5ed', color: '#5a9a7a' },

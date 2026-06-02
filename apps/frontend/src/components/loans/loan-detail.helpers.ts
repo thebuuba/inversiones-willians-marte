@@ -26,6 +26,12 @@ export interface LoanCollectionStatusLike {
   schedule?: Array<{ dueDate: string; status: string }>;
 }
 
+export interface ClientLoanStatsLike {
+  principal: number | string;
+  balance: number | string;
+  schedule?: Array<{ paidAmount?: number | string | null }>;
+}
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function getCalendarDay(value: string | Date) {
@@ -55,6 +61,23 @@ export function getLoanCollectionStatus(loan: LoanCollectionStatusLike, now = ne
 
   const daysPastDue = Math.floor((today - oldestUnpaidDueDate) / DAY_MS);
   return daysPastDue <= 5 ? 'Pendiente' : 'Atrasado';
+}
+
+export function getClientLoanStats(loans: ClientLoanStatsLike[]) {
+  const totals = loans.reduce(
+    (totals, loan) => ({
+      totalLoaned: totals.totalLoaned + Number(loan.principal),
+      totalBalance: totals.totalBalance + Number(loan.balance),
+      totalPaid: totals.totalPaid + (loan.schedule ?? []).reduce((sum, row) => sum + Number(row.paidAmount ?? 0), 0),
+    }),
+    { totalLoaned: 0, totalBalance: 0, totalPaid: 0 },
+  );
+
+  return {
+    totalLoaned: Math.round(totals.totalLoaned * 100) / 100,
+    totalBalance: Math.round(totals.totalBalance * 100) / 100,
+    totalPaid: Math.round(totals.totalPaid * 100) / 100,
+  };
 }
 
 export function clampProgress(value: number) {
