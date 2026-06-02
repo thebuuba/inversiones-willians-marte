@@ -7,6 +7,7 @@ import { getDocuments, createDocument, deleteDocument } from '@/lib/api/document
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { compressImage } from '@/lib/compress-image';
+import { getLoanProgress, getRegularInstallment } from '@/components/loans/loan-detail.helpers';
 import type { ClientDetail, LoanSummary, DocumentItem, ApiResponse } from '@inversiones/shared';
 import {
   ArrowLeft,
@@ -102,26 +103,31 @@ function StatusBadge({ active }: { active: boolean }) {
 
 function LoanStatusBadge({ status }: { status: string }) {
   const isPaid = status === 'Pagado';
+  const isOverdue = status === 'Vencido';
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
-        isPaid ? 'bg-[#dbeafe] text-[#1d4ed8]' : 'bg-[#eaf5ed] text-[#5a9a7a]'
+        isPaid
+          ? 'bg-[#eef0f2] text-[#555a58]'
+          : isOverdue
+            ? 'bg-[#fadccb] text-[#d94e1f]'
+            : 'bg-[#eaf5ed] text-[#5a9a7a]'
       }`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-[#3b82f6]' : 'bg-[#7fb89a]'}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-[#b9bcbe]' : isOverdue ? 'bg-[#ff6a00]' : 'bg-[#7fb89a]'}`} />
       {status}
     </span>
   );
 }
 
-function ProgressBar({ value }: { value: number }) {
+function ProgressBar({ value, compact = false }: { value: number; compact?: boolean }) {
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between text-sm font-semibold">
-        <span className="text-neutral-500">Progreso de pago</span>
+      <div className={`flex items-center justify-between font-semibold ${compact ? 'mb-1.5 text-xs' : 'mb-2 text-sm'}`}>
+        <span className="text-neutral-500">{compact ? 'Progreso' : 'Progreso de pago'}</span>
         <span className="text-neutral-900">{value}%</span>
       </div>
-      <div className="h-2.5 overflow-hidden rounded-full bg-[#F3F4F6]">
+      <div className={`${compact ? 'h-1.5' : 'h-2.5'} overflow-hidden rounded-full bg-[#F3F4F6]`}>
         <div
           className="h-full rounded-full bg-gradient-to-r from-[#7fb89a] to-[#5a9a7a]"
           style={{ width: `${value}%` }}
@@ -131,62 +137,67 @@ function ProgressBar({ value }: { value: number }) {
   );
 }
 
-function LoanCard({ loan, index }: { loan: LoanSummary; index: number }) {
-  const progress = loan.principal > 0 ? Math.round(((loan.principal - loan.balance) / loan.principal) * 100) : 0;
+function LoanMetric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-400">{label}</p>
+      <p className={`mt-1 text-sm font-bold ${accent ? 'text-[#c2410c]' : 'text-neutral-900'}`}>{value}</p>
+    </div>
+  );
+}
+
+function LoanRow({ loan }: { loan: LoanSummary }) {
+  const progress = getLoanProgress(loan.totalAmount, loan.balance);
   const statusLabel = loan.status === 'ACTIVE' ? 'Activo' : loan.status === 'PAID' ? 'Pagado' : loan.status === 'OVERDUE' ? 'Vencido' : loan.status;
+  const frequency = loan.paymentFreq === 'MONTHLY' ? 'Mensual' : loan.paymentFreq === 'DAILY' ? 'Diario' : loan.paymentFreq;
 
   return (
-    <div
-      className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+    <Link
+      className="block border-b border-neutral-100 px-4 py-4 transition last:border-b-0 hover:bg-[#f8fbf9] sm:px-5"
+      href={`/prestamos/${loan.id}`}
     >
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
+      <div className="grid gap-4 lg:grid-cols-[1.55fr_.75fr_1fr_.72fr_.58fr] lg:items-center">
+        <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf5ed] text-[#5a9a7a]">
             <TrendingUp className="h-4 w-4" />
           </div>
-          <div>
-            <h3 className="text-base font-bold leading-tight text-neutral-900">{loan.product?.name ?? 'Préstamo'}</h3>
-            <p className="mt-1 text-sm font-medium text-neutral-500">
-              {loan.term} cuotas · {loan.paymentFreq === 'MONTHLY' ? 'Mensual' : loan.paymentFreq === 'DAILY' ? 'Diario' : loan.paymentFreq}
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-bold leading-tight text-neutral-900">{loan.product?.name ?? 'Préstamo'}</h3>
+            <p className="mt-1 text-xs font-medium text-neutral-500">
+              {loan.term} cuotas · {frequency}
+            </p>
+            <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-neutral-400">
+              <CalendarDays className="h-3.5 w-3.5" />
+              Inicio: {fmtDate(loan.startDate)}
             </p>
           </div>
         </div>
-        <LoanStatusBadge status={statusLabel} />
-      </div>
-
-      <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Capital</p>
-          <p className="mt-1 text-lg font-bold text-neutral-900">{fmt(loan.principal)}</p>
-        </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Saldo pendiente</p>
-          <p className="mt-1 text-lg font-bold text-[#c2410c]">{fmt(loan.balance)}</p>
-        </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Cuota</p>
-          <p className="mt-1 text-lg font-bold text-neutral-900">{fmt(Math.round(loan.totalAmount / loan.term))}</p>
+        <div className="grid grid-cols-2 gap-4 lg:contents">
+          <LoanMetric label="Capital" value={fmt(loan.principal)} />
+          <div>
+            <LoanMetric accent label="Saldo pendiente" value={fmt(loan.balance)} />
+            <div className="mt-2">
+              <ProgressBar compact value={progress} />
+            </div>
+          </div>
+          <LoanMetric label="Cuota" value={fmt(getRegularInstallment(loan.totalAmount, loan.term))} />
+          <div className="flex items-start justify-end lg:items-center">
+            <LoanStatusBadge status={statusLabel} />
+          </div>
         </div>
       </div>
-
-      <ProgressBar value={progress} />
-
-      <div className="mt-4 flex items-center gap-2 text-sm font-medium text-neutral-400">
-        <CalendarDays className="h-4 w-4" />
-        Inicio: {fmtDate(loan.startDate)}
-      </div>
-    </div>
+    </Link>
   );
 }
 
 function ClientLoansTab({ loans }: { loans: LoanSummary[] }) {
   return (
-    <div className="space-y-4">
+    <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
       {loans.length === 0 ? (
         <p className="py-12 text-center text-sm text-neutral-400">Sin préstamos registrados.</p>
       ) : (
-        loans.map((loan, index) => (
-          <LoanCard index={index} key={loan.id} loan={loan} />
+        loans.map((loan) => (
+          <LoanRow key={loan.id} loan={loan} />
         ))
       )}
     </div>

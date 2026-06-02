@@ -1,5 +1,5 @@
 import { api } from '../api';
-import type { ApiResponse, CreateLoanDto, InterestType } from '@inversiones/shared';
+import type { ApiResponse, CreateLoanDto } from '@inversiones/shared';
 
 export interface LoanListClient {
   id: string;
@@ -39,6 +39,33 @@ export interface PaginatedLoans {
   total: number;
 }
 
+export interface LoanScheduleItem {
+  id: string;
+  loanId: string;
+  dueDate: string;
+  amount: number;
+  principalPart: number;
+  interestPart: number;
+  balanceAfter: number;
+  status: string;
+  paidDate: string | null;
+  paidAmount: number | null;
+}
+
+export interface LoanDetailPayment {
+  id: string;
+  amount: number;
+  paymentDate: string;
+  paymentMethod: string | null;
+  reference: string | null;
+  notes: string | null;
+}
+
+export interface LoanDetail extends Omit<LoanListItem, '_count'> {
+  schedule: LoanScheduleItem[];
+  payments: LoanDetailPayment[];
+}
+
 export async function getLoans(status?: string, search?: string, take = 50, skip = 0): Promise<PaginatedLoans> {
   const params: Record<string, string> = {};
   if (status) params.status = status;
@@ -49,9 +76,9 @@ export async function getLoans(status?: string, search?: string, take = 50, skip
   return (data.data as PaginatedLoans) ?? { data: [], total: 0 };
 }
 
-export async function getLoan(id: string) {
-  const { data } = await api.get<ApiResponse>(`/loans/${id}`);
-  return data.data;
+export async function getLoan(id: string): Promise<LoanDetail> {
+  const { data } = await api.get<ApiResponse<LoanDetail>>(`/loans/${id}`);
+  return data.data as LoanDetail;
 }
 
 export async function createLoan(dto: CreateLoanDto) {
