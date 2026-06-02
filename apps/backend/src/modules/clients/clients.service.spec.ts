@@ -15,6 +15,7 @@ jest.mock('@inversiones/database', () => ({
       update: jest.fn(),
       count: jest.fn(),
     },
+    $queryRaw: jest.fn(),
   },
 }));
 
@@ -34,6 +35,8 @@ describe('ClientsService', () => {
   };
 
   beforeEach(async () => {
+    jest.mocked(prisma.$queryRaw).mockResolvedValue([]);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [ClientsService, { provide: AuditService, useValue: audit }],
     }).compile();
@@ -85,27 +88,15 @@ describe('ClientsService', () => {
 
   describe('findOne', () => {
     it('should return a client by id', async () => {
-      jest.mocked(prisma.client.findUnique).mockResolvedValue({ ...mockClient, loans: [] } as any);
+      jest.mocked(prisma.client.findUnique).mockResolvedValue(mockClient as any);
 
       const result = await service.findOne(1);
       expect(result).toBeDefined();
+      expect(result.loans).toEqual([]);
       expect(prisma.client.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
-        include: {
-          loans: {
-            include: {
-              product: true,
-              portfolio: { select: { id: true, name: true } },
-              schedule: {
-                select: { dueDate: true, status: true, amount: true, paidAmount: true },
-                orderBy: { dueDate: 'asc' },
-              },
-              _count: { select: { payments: true } },
-            },
-            orderBy: { createdAt: 'desc' },
-          },
-        },
       });
+      expect(prisma.$queryRaw).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when client not found', async () => {

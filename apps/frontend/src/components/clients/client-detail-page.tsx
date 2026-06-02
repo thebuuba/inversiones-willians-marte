@@ -489,12 +489,14 @@ function TimelineItem({ event }: { event: HistoryEvent }) {
   );
 }
 
-function ClientHistoryTab({ events }: { events: HistoryEvent[] }) {
+function ClientHistoryTab({ events, loading }: { events: HistoryEvent[]; loading: boolean }) {
   return (
     <div className="relative">
       <div className="absolute bottom-0 left-[14px] top-0 w-px bg-neutral-200" />
       <div className="space-y-6">
-        {events.length === 0 ? (
+        {loading ? (
+          <p className="py-12 text-center text-sm text-neutral-400">Cargando historial...</p>
+        ) : events.length === 0 ? (
           <p className="py-12 text-center text-sm text-neutral-400">Sin actividad registrada.</p>
         ) : (
           events.map((event, index) => (
@@ -801,23 +803,14 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   const [clientData, setClientData] = useState<ClientDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [auditEvents, setAuditEvents] = useState<HistoryEvent[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
-  useEffect(() => {
+  const loadHistory = useCallback(() => {
     let cancelled = false;
     queueMicrotask(() => {
-      if (!cancelled) setLoading(true);
+      if (!cancelled) setHistoryLoading(true);
     });
-    getClient(clientId)
-      .then((data) => {
-        if (!cancelled) setClientData(data);
-      })
-      .catch(() => {
-        if (!cancelled) setClientData(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
     api.get<ApiResponse<ClientHistoryEntryRaw[]>>(`/audit/client/${clientId}/history`)
       .then((audit) => {
         if (!cancelled) {
@@ -831,15 +824,54 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
               amount: entry.amount != null ? fmt(entry.amount) : undefined,
             })),
           );
+          setHistoryLoaded(true);
         }
       })
       .catch(() => {
-        if (!cancelled) setAuditEvents([]);
+        if (!cancelled) {
+          setAuditEvents([]);
+          setHistoryLoaded(true);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setHistoryLoading(false);
       });
     return () => {
       cancelled = true;
     };
   }, [clientId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setAuditEvents([]);
+        setHistoryLoaded(false);
+        setHistoryLoading(false);
+      }
+    });
+    queueMicrotask(() => {
+      if (!cancelled) setLoading(true);
+    });
+    getClient(clientId)
+      .then((data) => {
+        if (!cancelled) setClientData(data);
+      })
+      .catch(() => {
+        if (!cancelled) setClientData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [clientId]);
+
+  useEffect(() => {
+    if (activeTab !== 'Historial' || historyLoaded || historyLoading) return;
+    return loadHistory();
+  }, [activeTab, historyLoaded, historyLoading, loadHistory]);
 
   if (loading) {
     return (
@@ -983,7 +1015,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
         ) : activeTab === 'Documentos' ? (
           <ClientDocumentsTab clientId={clientData.id} />
         ) : activeTab === 'Historial' ? (
-          <ClientHistoryTab events={auditEvents} />
+          <ClientHistoryTab events={auditEvents} loading={historyLoading} />
         ) : activeTab === 'Notas' ? (
           <ClientNotesTab clientId={clientData.id} clientNotes={clientData.notes} />
         ) : activeTab === 'Información' ? (
