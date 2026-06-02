@@ -6,6 +6,7 @@ export type LoanCalculationFields = {
   amortizationType: string;
   paymentFrequency: string;
   firstPaymentDate: string;
+  customPayment?: string;
 };
 
 export type AmortizationType = 'SIMPLE' | 'INDEFINITE' | 'NO_INTEREST';
@@ -39,14 +40,15 @@ export function canCalculateLoan(fields: LoanCalculationFields): boolean {
   const term = normalizeLoanTerm(fields.term, fields.termUnit);
   const firstPaymentDate = fields.firstPaymentDate.trim();
   const parsedFirstPaymentDate = new Date(`${firstPaymentDate}T00:00:00Z`);
+  const customPayment = parseStrictNumber(fields.customPayment ?? '');
 
   const isIndefinite = fields.amortizationType === 'INDEFINITE';
+  const hasRateOrCustomPayment = (interestRate !== null && interestRate >= 0) || (customPayment !== null && customPayment > 0);
 
   return (
     amount !== null &&
     amount > 0 &&
-    interestRate !== null &&
-    interestRate >= 0 &&
+    hasRateOrCustomPayment &&
     (isIndefinite || term > 0) &&
     fields.amortizationType.trim().length > 0 &&
     fields.paymentFrequency.trim().length > 0 &&
@@ -54,6 +56,28 @@ export function canCalculateLoan(fields: LoanCalculationFields): boolean {
     !Number.isNaN(parsedFirstPaymentDate.getTime()) &&
     parsedFirstPaymentDate.toISOString().startsWith(firstPaymentDate)
   );
+}
+
+export function solveRate(principal: number, payment: number, months: number): number {
+  if (payment <= 0 || principal <= 0 || months <= 0) return 0;
+
+  let low = 0.000001;
+  let high = 0.5;
+
+  for (let i = 0; i < 100; i++) {
+    const mid = (low + high) / 2;
+    const onePlusR = 1 + mid;
+    const onePlusR_n = Math.pow(onePlusR, months);
+    const calcPayment = principal * mid * onePlusR_n / (onePlusR_n - 1);
+
+    if (calcPayment > payment) {
+      high = mid;
+    } else {
+      low = mid;
+    }
+  }
+
+  return Math.round(((low + high) / 2) * 10000) / 10000;
 }
 
 function roundToNearestHundred(value: number): number {
@@ -133,52 +157,34 @@ export function computeSchedule(principal: number, periodicRate: number, months:
     };
   }
 
-  const rawPayment = rate > 0
-    ? principal * rate * Math.pow(1 + rate, months) / (Math.pow(1 + rate, months) - 1)
-    : months > 0 ? principal / months : 0;
-
+  const fixedInterest = principal * rate;
+  const principalPartPerInstallment = principal / months;
+  const rawPayment = principalPartPerInstallment + fixedInterest;
   const payment = roundToNearestHundred(rawPayment);
+  const adjustedPrincipalPart = payment - fixedInterest;
   let balance = principal;
   let totalInterest = 0;
   const schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[] = [];
 
   for (let i = 1; i < months; i++) {
-    const interest = balance * rate;
-    const princ = payment - interest;
-
-    if (princ < 0) {
-      const safePrincipal = Math.max(balance * 0.01, 0);
-      balance -= safePrincipal;
-      totalInterest += interest;
-      schedule.push({
-        number: i,
-        payment: Math.round((safePrincipal + interest) * 100) / 100,
-        principal: Math.round(safePrincipal * 100) / 100,
-        interest: Math.round(interest * 100) / 100,
-        balance: Math.round(Math.max(balance, 0) * 100) / 100,
-      });
-    } else {
-      balance -= princ;
-      totalInterest += interest;
-      schedule.push({
-        number: i,
-        payment: Math.round(payment * 100) / 100,
-        principal: Math.round(princ * 100) / 100,
-        interest: Math.round(interest * 100) / 100,
-        balance: Math.round(Math.max(balance, 0) * 100) / 100,
-      });
-    }
+    balance -= adjustedPrincipalPart;
+    totalInterest += fixedInterest;
+    schedule.push({
+      number: i,
+      payment: Math.round(payment * 100) / 100,
+      principal: Math.round(adjustedPrincipalPart * 100) / 100,
+      interest: Math.round(fixedInterest * 100) / 100,
+      balance: Math.round(Math.max(balance, 0) * 100) / 100,
+    });
   }
 
-  const lastInterest = balance * rate;
-  const lastPayment = balance + lastInterest;
-  totalInterest += lastInterest;
-
+  const lastPrincipalPart = balance;
+  totalInterest += fixedInterest;
   schedule.push({
     number: months,
-    payment: Math.round(lastPayment * 100) / 100,
-    principal: Math.round(balance * 100) / 100,
-    interest: Math.round(lastInterest * 100) / 100,
+    payment: Math.round((lastPrincipalPart + fixedInterest) * 100) / 100,
+    principal: Math.round(lastPrincipalPart * 100) / 100,
+    interest: Math.round(fixedInterest * 100) / 100,
     balance: 0,
   });
 

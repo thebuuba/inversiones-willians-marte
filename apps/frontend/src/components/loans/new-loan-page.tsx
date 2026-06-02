@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -21,6 +21,7 @@ import {
   normalizeLoanTerm,
   parseNumber,
   parseStrictNumber,
+  solveRate,
   type AmortizationType,
 } from './new-loan-form.helpers';
 import { CarterasCard } from './carteras-card';
@@ -33,7 +34,10 @@ function getDefaultFirstPaymentDate(): string {
   if (nextMonth.getDate() !== day) {
     nextMonth.setDate(0);
   }
-  return nextMonth.toISOString().split('T')[0];
+  const y = nextMonth.getFullYear();
+  const m = String(nextMonth.getMonth() + 1).padStart(2, '0');
+  const d = String(nextMonth.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function formatCurrency(value: number): string {
@@ -115,88 +119,106 @@ function SelectInput({
   );
 }
 
-function SelectableClientCard({
-  client,
+function ClientSearchCard({
+  selectedClient,
   onSelectClient,
 }: {
-  client: Client;
+  selectedClient: Client | null;
   onSelectClient: (client: Client) => void;
 }) {
-  const [showSearch, setShowSearch] = useState(false);
+  const [showSearch, setShowSearch] = useState(!selectedClient);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Client[]>([]);
-  const fullName = `${client.firstName} ${client.lastName}`;
 
   useEffect(() => {
+    if (!showSearch) return;
     if (query.length < 2) return;
     const timer = setTimeout(() => {
       getClients(query).then(setResults);
     }, 300);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, showSearch]);
 
-  function handleSelect(newClient: Client) {
-    onSelectClient(newClient);
+  function handleSelect(client: Client) {
+    onSelectClient(client);
     setShowSearch(false);
     setQuery('');
     setResults([]);
   }
 
+  if (selectedClient && !showSearch) {
+    const fullName = `${selectedClient.firstName} ${selectedClient.lastName}`;
+    return (
+      <div className="rounded-[14px] border border-[#EDF2EF] bg-white shadow-[0_4px_14px_rgba(40,92,67,0.03)]">
+        <div className="flex min-h-[72px] items-center gap-3 px-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[2px] border-white bg-[#EAF6EF] shadow-[0_4px_12px_rgba(40,92,67,0.1)]">
+            <UserRound className="h-5 w-5 text-[#5FA37D]" />
+          </div>
+          <button
+            className="min-w-0 flex-1 text-left"
+            onClick={() => setShowSearch(true)}
+            type="button"
+          >
+            <p className="truncate text-base font-bold leading-tight text-[#173D2C]">{fullName}</p>
+            <p className="mt-0.5 text-xs font-medium text-[#7A8A80]">{selectedClient.identification ?? '—'}</p>
+          </button>
+          <button
+            className="shrink-0 rounded-lg border border-[#DDEBE3] px-2.5 py-1 text-xs font-bold text-[#5FA37D] transition hover:bg-[#F0F7F3]"
+            onClick={() => setShowSearch(true)}
+            type="button"
+          >
+            Cambiar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-[14px] border border-[#EDF2EF] bg-white shadow-[0_4px_14px_rgba(40,92,67,0.03)]">
-      <div className="flex min-h-[72px] items-center gap-3 px-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[2px] border-white bg-[#EAF6EF] shadow-[0_4px_12px_rgba(40,92,67,0.1)]">
-          <UserRound className="h-5 w-5 text-[#5FA37D]" />
+      <div className="px-4 py-3">
+        <div className="relative mb-2">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#A9CDBB]" />
+          <input
+            autoFocus
+            className="h-[42px] w-full rounded-[10px] border border-[#DDEBE3] bg-[#F8FBF9] pl-9 pr-3 text-sm font-medium text-[#173D2C] outline-none transition placeholder:text-[#A0AFA8] focus:border-[#285C43] focus:bg-white"
+            placeholder="Buscar cliente por nombre, cédula o teléfono…"
+            type="text"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              if (e.target.value.length < 2) setResults([]);
+            }}
+          />
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-bold leading-tight text-[#173D2C]">{fullName}</p>
-          <p className="mt-0.5 text-xs font-medium text-[#7A8A80]">{client.identification ?? '—'}</p>
-        </div>
-        <button
-          className="shrink-0 rounded-lg border border-[#DDEBE3] px-2.5 py-1 text-xs font-bold text-[#5FA37D] transition hover:bg-[#F0F7F3]"
-          onClick={() => setShowSearch(!showSearch)}
-          type="button"
-        >
-          Cambiar
-        </button>
-      </div>
-
-      {showSearch && (
-        <div className="border-t border-[#EDF2EF] px-4 py-3">
-          <div className="relative mb-2">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#A9CDBB]" />
-            <input
-              autoFocus
-              className="h-[38px] w-full rounded-[10px] border border-[#DDEBE3] bg-[#F8FBF9] pl-9 pr-3 text-sm font-medium text-[#173D2C] outline-none transition placeholder:text-[#A0AFA8] focus:border-[#285C43] focus:bg-white"
-              placeholder="Buscar cliente por nombre, cédula o teléfono…"
-              type="text"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                if (e.target.value.length < 2) setResults([]);
-              }}
-            />
+        {results.length > 0 && (
+          <div className="max-h-[200px] space-y-1 overflow-y-auto">
+            {results.map((c) => (
+              <button
+                key={c.id}
+                className="w-full rounded-[8px] border border-[#EDF2EF] p-2.5 text-left text-xs transition hover:bg-[#F6FAF7]"
+                onClick={() => handleSelect(c)}
+                type="button"
+              >
+                <p className="font-bold text-[#173D2C]">{c.firstName} {c.lastName}</p>
+                <p className="mt-0.5 text-[#777D7A]">{c.identification ?? '—'} · {c.phone ?? '—'}</p>
+              </button>
+            ))}
           </div>
-          {results.length > 0 && (
-            <div className="max-h-[180px] space-y-1 overflow-y-auto">
-              {results.map((c) => (
-                <button
-                  key={c.id}
-                  className="w-full rounded-[8px] border border-[#EDF2EF] p-2.5 text-left text-xs transition hover:bg-[#F6FAF7]"
-                  onClick={() => handleSelect(c)}
-                  type="button"
-                >
-                  <p className="font-bold text-[#173D2C]">{c.firstName} {c.lastName}</p>
-                  <p className="mt-0.5 text-[#777D7A]">{c.identification ?? '—'} · {c.phone ?? '—'}</p>
-                </button>
-              ))}
-            </div>
-          )}
-          {query.length >= 2 && results.length === 0 && (
-            <p className="text-xs text-[#777D7A]">Sin resultados</p>
-          )}
-        </div>
-      )}
+        )}
+        {query.length >= 2 && results.length === 0 && (
+          <p className="text-xs text-[#777D7A]">Sin resultados</p>
+        )}
+        {selectedClient && (
+          <button
+            className="mt-2 text-xs font-bold text-[#5FA37D] transition hover:text-[#285C43]"
+            onClick={() => setShowSearch(false)}
+            type="button"
+          >
+            Cancelar
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -221,7 +243,7 @@ function LoanSummaryPanel({
   const interestPercent = amount > 0 ? (interest / amount) * 100 : 0;
 
   const amortLabels: Record<AmortizationType, string> = {
-    SIMPLE: 'Simple',
+    SIMPLE: 'Fija',
     INDEFINITE: 'Plazo indefinido',
     NO_INTEREST: 'Sin intereses',
   };
@@ -281,7 +303,7 @@ function LoanSummaryPanel({
 }
 
 const amortizationOptions: { label: string; value: AmortizationType }[] = [
-  { label: 'Simple', value: 'SIMPLE' },
+  { label: 'Fija', value: 'SIMPLE' },
   { label: 'Plazo indefinido', value: 'INDEFINITE' },
   { label: 'Sin intereses', value: 'NO_INTEREST' },
 ];
@@ -378,7 +400,7 @@ function MainInfoCard({
             <SelectInput
               label="Amortización"
               options={amortizationOptions.map((option) => option.label)}
-              value={amortizationOptions.find((option) => option.value === amortizationType)?.label ?? 'Simple'}
+              value={amortizationOptions.find((option) => option.value === amortizationType)?.label ?? 'Fija'}
               onChange={(value) => onAmortizationTypeChange(amortizationOptions.find((option) => option.label === value)?.value ?? 'SIMPLE')}
             />
             <SelectInput
@@ -397,7 +419,7 @@ function MainInfoCard({
               />
             </label>
             <TextInput
-              label="Monto de cuota"
+              label="Monto de cuota (opcional)"
               value={formatNumberInput(customPayment)}
               onChange={(v) => onCustomPaymentChange(v.replace(/,/g, ''))}
               prefix="RD$"
@@ -470,45 +492,56 @@ function NewLoanStepTwo({
   onSave: () => void;
 }) {
   const rate = customInterestRate || '0';
+  const rawRate = parseStrictNumber(rate) ?? 0;
+  const customPaymentVal = parseNumber(customPayment);
 
   const [showSchedule, setShowSchedule] = useState(false);
 
-  const summary = useMemo(() => {
+  const { adjustedRate, summary } = useMemo(() => {
     const principal = parseStrictNumber(amount) ?? 0;
-    const monthlyRate = (parseStrictNumber(rate) ?? 0) / 100;
     const normalizedTerm = normalizeLoanTerm(term, termUnit);
     const months = normalizedTerm;
 
     if (amortizationType === 'NO_INTEREST') {
       const payment = months > 0 ? principal / months : 0;
-      return { principal, months, payment, total: principal, interest: 0 };
+      return { adjustedRate: 0, summary: { principal, months, payment, total: principal, interest: 0 } };
     }
 
     if (amortizationType === 'INDEFINITE') {
+      const monthlyRate = rawRate / 100;
       const payment = principal * monthlyRate;
-      return { principal, months: 1, payment, total: payment, interest: payment };
+      return { adjustedRate: rawRate, summary: { principal, months: 1, payment, total: payment, interest: payment } };
     }
 
-    const calcPayment = months > 0
-      ? monthlyRate > 0
-        ? (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months))
-        : principal / months
-      : 0;
-    const payment = parseNumber(customPayment) || calcPayment;
-    const total = payment * months;
+    const fixedInterest = principal * (rawRate / 100);
+    const principalPart = months > 0 ? principal / months : 0;
+    const calcPayment = fixedInterest + principalPart;
+    const hasCustomPayment = customPaymentVal > 0;
 
+    if (hasCustomPayment) {
+      const solvedRate = solveRate(principal, customPaymentVal, months) * 100;
+      const adjusted = solvedRate > 0 ? solvedRate : rawRate;
+      const payment = customPaymentVal;
+      const total = payment * months;
+      return {
+        adjustedRate: adjusted,
+        summary: { principal, months, payment, total, interest: Math.max(0, total - principal) },
+      };
+    }
+
+    const payment = calcPayment;
+    const total = payment * months;
     return {
-      principal,
-      months,
-      payment,
-      total,
-      interest: Math.max(0, total - principal),
+      adjustedRate: rawRate,
+      summary: { principal, months, payment, total, interest: Math.max(0, total - principal) },
     };
-  }, [amount, rate, term, termUnit, customPayment, amortizationType]);
+  }, [amount, rawRate, term, termUnit, customPayment, amortizationType, customPaymentVal]);
+
+  const effectiveRate = adjustedRate;
 
   const scheduleData = useMemo(
-    () => computeSchedule(summary.principal, parseStrictNumber(rate) ?? 0, summary.months, amortizationType, customPayment),
-    [summary.principal, rate, summary.months, amortizationType, customPayment],
+    () => computeSchedule(summary.principal, effectiveRate, summary.months, amortizationType, customPayment),
+    [summary.principal, effectiveRate, summary.months, amortizationType, customPayment],
   );
   const calculationReady = canCalculateLoan({
     amount,
@@ -518,13 +551,12 @@ function NewLoanStepTwo({
     amortizationType,
     paymentFrequency,
     firstPaymentDate,
+    customPayment,
   });
 
   return (
     <div className="mt-8 space-y-5">
-      {selectedClient && (
-        <SelectableClientCard client={selectedClient} onSelectClient={onSelectClient} />
-      )}
+      <ClientSearchCard selectedClient={selectedClient} onSelectClient={onSelectClient} />
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
         <MainInfoCard
           amount={amount}
@@ -553,8 +585,7 @@ function NewLoanStepTwo({
       </div>
 
       <button
-        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#2F7654] text-sm font-bold text-white shadow-[0_6px_16px_rgba(47,118,84,0.15)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
-        disabled={!showSchedule && !calculationReady}
+        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#2F7654] text-sm font-bold text-white shadow-[0_6px_16px_rgba(47,118,84,0.15)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
         onClick={() => setShowSchedule(!showSchedule)}
         type="button"
       >
@@ -576,7 +607,7 @@ function NewLoanStepTwo({
         amount={summary.principal}
         interest={summary.interest}
         total={summary.total}
-        customInterestRate={customInterestRate}
+        customInterestRate={effectiveRate ? String(Math.round(effectiveRate * 100) / 100) : customInterestRate}
         amortizationType={amortizationType}
         paymentFrequency={paymentFrequency}
         firstPaymentDate={firstPaymentDate}
@@ -800,6 +831,7 @@ function Header() {
 
 export function NewLoanPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedProduct, setSelectedProduct] = useState<LoanProductItem | null>(null);
   const [productsError, setProductsError] = useState('');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -828,6 +860,15 @@ export function NewLoanPage() {
   }, []);
 
   useEffect(() => {
+    const clientId = searchParams.get('cliente');
+    if (clientId) {
+      import('@/lib/api/clients').then(({ getClient }) =>
+        getClient(clientId).then((client) => setSelectedClient(client)),
+      );
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     if (amortizationType === 'INDEFINITE' && !firstPaymentDate) {
       setFirstPaymentDate(getDefaultFirstPaymentDate());
     }
@@ -841,6 +882,7 @@ export function NewLoanPage() {
     amortizationType,
     paymentFrequency,
     firstPaymentDate,
+    customPayment,
   });
 
   async function handleCreate() {
