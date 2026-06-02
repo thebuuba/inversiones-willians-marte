@@ -179,9 +179,9 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
       return;
     }
     const timer = setTimeout(async () => {
-      const clients = await getClients(values.person);
-      setSearchResults(clients);
-      setShowResults(clients.length > 0);
+      const result = await getClients(values.person);
+      setSearchResults(result.data);
+      setShowResults(result.data.length > 0);
     }, 300);
     return () => clearTimeout(timer);
   }, [values.person, isLoanPayment]);

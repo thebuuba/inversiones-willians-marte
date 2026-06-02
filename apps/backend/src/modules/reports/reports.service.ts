@@ -38,12 +38,9 @@ export class ReportsService {
     return {
       activeLoans,
       totalClients,
-      totalUsers,
       collectionsToday: Number(paymentsToday._sum.amount ?? 0),
       portfolioBalance: Number(portfolioStats._sum.balance ?? 0),
-      totalPrincipal: Number(portfolioStats._sum.principal ?? 0),
       overdueLoans,
-      totalLoans: portfolioStats._count,
     };
   }
 
@@ -114,6 +111,13 @@ export class ReportsService {
   }
 
   async weeklyMovement() {
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+
     const rows = await prisma.$queryRaw<Array<{ day: string; nuevos: string; cerrados: string }>>`
       SELECT
         d.day,
@@ -123,12 +127,14 @@ export class ReportsService {
       LEFT JOIN LATERAL (
         SELECT COUNT(*) AS count
         FROM loans
-        WHERE TO_CHAR(start_date, 'Dy') = d.day
+        WHERE start_date >= ${weekStart} AND start_date <= ${weekEnd}
+          AND TO_CHAR(start_date, 'Dy') = d.day
       ) n ON true
       LEFT JOIN LATERAL (
         SELECT COUNT(*) AS count
         FROM loans
         WHERE status = 'PAID' AND end_date IS NOT NULL
+          AND end_date >= ${weekStart} AND end_date <= ${weekEnd}
           AND TO_CHAR(end_date, 'Dy') = d.day
       ) c ON true
       GROUP BY d.day
@@ -156,9 +162,17 @@ export class ReportsService {
         dueDate: { gte: today, lte: future },
         status: { in: ['PENDING', 'PARTIAL'] },
       },
-      include: {
+      select: {
+        id: true,
+        dueDate: true,
+        amount: true,
+        status: true,
         loan: {
-          include: { client: true },
+          select: {
+            client: {
+              select: { firstName: true, lastName: true },
+            },
+          },
         },
       },
       orderBy: { dueDate: 'asc' },

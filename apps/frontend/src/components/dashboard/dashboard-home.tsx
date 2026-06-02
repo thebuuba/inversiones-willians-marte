@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useClientCache } from '@/lib/use-client-cache';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -109,21 +109,12 @@ function SectionHeader({
 
 export function DashboardHome() {
   const { user } = useAuth();
-  const [dash, setDash] = useState<DashboardData | null>(null);
-  const [portfolio, setPortfolio] = useState<PortfolioGroup[]>([]);
-  const [audit, setAudit] = useState<AuditEntry[]>([]);
-  const [monthlyCollections, setMonthlyCollections] = useState<MonthlyCollection[]>([]);
-  const [weeklyMovement, setWeeklyMovement] = useState<WeeklyMovementItem[]>([]);
-  const [upcomingPayments, setUpcomingPayments] = useState<UpcomingPayment[]>([]);
-
-  useEffect(() => {
-    getDashboard().then(setDash).catch(() => {});
-    getPortfolio().then(setPortfolio).catch(() => {});
-    getAudit().then((rows) => setAudit(rows.slice(0, 6))).catch(() => {});
-    getMonthlyCollections().then(setMonthlyCollections).catch(() => {});
-    getWeeklyMovement().then(setWeeklyMovement).catch(() => {});
-    getUpcomingPayments().then(setUpcomingPayments).catch(() => {});
-  }, []);
+  const { data: dash } = useClientCache('dashboard', getDashboard);
+  const { data: portfolio } = useClientCache('portfolio', getPortfolio);
+  const { data: audit } = useClientCache('audit', getAudit);
+  const { data: monthlyCollections } = useClientCache('monthlyCollections', getMonthlyCollections);
+  const { data: weeklyMovement } = useClientCache('weeklyMovement', getWeeklyMovement);
+  const { data: upcomingPayments } = useClientCache('upcomingPayments', getUpcomingPayments);
 
   const activeLoans = dash?.activeLoans ?? 0;
   const totalClients = dash?.totalClients ?? 0;
@@ -138,8 +129,9 @@ export function DashboardHome() {
     { label: 'Saldo cartera', value: formatCompact(portfolioBalance), icon: Wallet, accent: '#dbeafe', color: '#1d4ed8' },
   ];
 
-  const portfolioPie = portfolio.length > 0
-    ? portfolio.map((g) => ({
+  const portfolioSafe = portfolio ?? [];
+  const portfolioPie = portfolioSafe.length > 0
+    ? portfolioSafe.map((g) => ({
         name: statusConfig[g.status]?.label ?? g.status,
         value: g.count,
         color: statusConfig[g.status]?.color ?? '#ccc',
@@ -178,7 +170,8 @@ export function DashboardHome() {
     },
   ].filter(Boolean) as Array<{ title: string; detail: string; action: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; bg: string; border: string; text: string }>;
 
-  const auditRows = audit.map((entry) => ({
+  const auditSafe = audit ?? [];
+  const auditRows = auditSafe.map((entry) => ({
     name: entry.performedByName ?? 'Sistema',
     action: entry.action,
     ref: entry.entity,
@@ -246,7 +239,7 @@ export function DashboardHome() {
           <SectionHeader title="Cobros mensuales" subtitle="Ingresos vs proyección · últimos 9 meses" />
           <div className="h-[250px] min-w-0">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 720, height: 250 }}>
-              <AreaChart data={monthlyCollections} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <AreaChart data={monthlyCollections ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="cobradoGradient" x1="0" x2="0" y1="0" y2="1">
                     <stop offset="5%" stopColor="#7CC99B" stopOpacity={0.24} />
@@ -302,7 +295,7 @@ export function DashboardHome() {
           <SectionHeader title="Movimiento semanal" subtitle="Préstamos abiertos vs cerrados" />
           <div className="h-[230px] min-w-0">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 720, height: 230 }}>
-              <BarChart data={weeklyMovement} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <BarChart data={weeklyMovement ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid stroke="#DDEBE3" strokeDasharray="4 6" vertical={false} />
                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#6F7280', fontSize: 13 }} dy={10} />
                 <Tooltip cursor={{ fill: 'rgba(231,244,236,0.45)' }} contentStyle={{ border: '1px solid #DDEBE3', borderRadius: 16 }} />
@@ -372,9 +365,9 @@ export function DashboardHome() {
         <Card className="p-6" index={9}>
           <SectionHeader title="Próximos cobros" subtitle="Agenda de los próximos días" />
           <div className="space-y-3">
-            {upcomingPayments.length === 0 ? (
+            {(upcomingPayments ?? []).length === 0 ? (
               <p className="py-6 text-center text-sm text-[#A9CDBB]">No hay cobros próximos</p>
-            ) : upcomingPayments.map((payment) => {
+            ) : (upcomingPayments ?? []).map((payment) => {
               const due = new Date(payment.dueDate);
               const today2 = new Date();
               today2.setHours(0, 0, 0, 0);

@@ -1,10 +1,18 @@
 import { api } from '../api';
 import type { ApiResponse, Client, ClientDetail, CreateClientDto } from '@inversiones/shared';
 
-export async function getClients(search?: string): Promise<Client[]> {
-  const params = search ? { search } : {};
-  const { data } = await api.get<ApiResponse<Client[]>>('/clients', { params });
-  return data.data ?? [];
+export interface PaginatedClients {
+  data: Client[];
+  total: number;
+}
+
+export async function getClients(search?: string, take = 50, skip = 0): Promise<PaginatedClients> {
+  const params: Record<string, string> = {};
+  if (search) params.search = search;
+  if (take !== 50) params.take = String(take);
+  if (skip > 0) params.skip = String(skip);
+  const { data } = await api.get<ApiResponse<PaginatedClients>>('/clients', { params });
+  return (data.data as PaginatedClients) ?? { data: [], total: 0 };
 }
 
 export async function getClient(id: number | string): Promise<ClientDetail> {

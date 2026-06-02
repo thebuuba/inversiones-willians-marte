@@ -19,8 +19,12 @@ export class ClientsController {
 
   @Get()
   @Roles('ADMIN', 'COLLECTOR')
-  findAll(@Query('search') search?: string) {
-    return this.clients.findAll(search);
+  findAll(
+    @Query('search') search?: string,
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
+  ) {
+    return this.clients.findAll(search, take ? parseInt(take, 10) : 50, skip ? parseInt(skip, 10) : 0);
   }
 
   @Get('basic/:id')

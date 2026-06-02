@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
+  ChevronLeft,
+  ChevronRight,
   Download,
-  Filter,
   Plus,
   Search,
   UserRound,
@@ -16,7 +17,7 @@ import {
 import { getClients } from '@/lib/api/clients';
 import type { Client } from '@inversiones/shared';
 
-const filters = ['Todos', 'Activos', 'Inactivos'];
+const PAGE_SIZE = 50;
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 16 },
@@ -44,47 +45,50 @@ function PanelCard({ children, className = '', index = 0 }: { children: ReactNod
 export function ClientsPanel() {
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('Todos');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  useEffect(() => {
+  const fetchClients = useCallback(async (term: string, pageNum: number) => {
     setLoading(true);
     setError('');
-    getClients(search || undefined)
-      .then(setClients)
-      .catch((err) => {
-        if (err?.response?.status === 401) return;
-        setError('No se pudieron cargar los clientes. Verifica que el backend esté corriendo.');
-      })
-      .finally(() => setLoading(false));
+    try {
+      const result = await getClients(term || undefined, PAGE_SIZE, pageNum * PAGE_SIZE);
+      setClients(result.data);
+      setTotal(result.total);
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number } };
+      if (axiosErr?.response?.status === 401) return;
+      setError('No se pudieron cargar los clientes. Verifica que el backend esté corriendo.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    setPage(0);
   }, [search]);
 
-  const stats = useMemo(() => {
-    const total = clients.length;
-    const activos = clients.filter((c) => c.active).length;
-    const inactivos = total - activos;
-    const nuevos = clients.filter((c) => {
-      const daysSinceCreation = (Date.now() - new Date(c.createdAt).getTime()) / 86400000;
-      return daysSinceCreation <= 30;
-    }).length;
-    return [
-      { label: 'Total clientes', value: String(total), icon: UsersRound, bg: '#E7F4EC', color: '#5FA37D' },
-      { label: 'Activos', value: String(activos), icon: UsersRound, bg: '#DDEFE5', color: '#285C43' },
-      { label: 'Inactivos', value: String(inactivos), icon: UsersRound, bg: '#EEF3EF', color: '#7A8A80' },
-      { label: 'Nuevos (30d)', value: String(nuevos), icon: UserRound, bg: '#D8E9FF', color: '#4E7CAD' },
-    ];
-  }, [clients]);
+  useEffect(() => {
+    fetchClients(search, page);
+  }, [page, search, fetchClients]);
 
-  const filteredClients = useMemo(() => {
-    return clients.filter((c) => {
-      if (filter === 'Activos') return c.active;
-      if (filter === 'Inactivos') return !c.active;
-      return true;
-    });
-  }, [clients, filter]);
+  const stats = [
+    { label: 'Total clientes', value: String(total), icon: UsersRound, bg: '#E7F4EC', color: '#5FA37D' },
+    { label: 'Activos', value: String(total), icon: UsersRound, bg: '#DDEFE5', color: '#285C43' },
+    { label: 'Mostrados', value: String(clients.length), icon: UsersRound, bg: '#EEF3EF', color: '#7A8A80' },
+    {
+      label: 'Nuevos (30d)',
+      value: String(clients.filter((c) => (Date.now() - new Date(c.createdAt).getTime()) / 86400000 <= 30).length),
+      icon: UserRound,
+      bg: '#D8E9FF',
+      color: '#4E7CAD',
+    },
+  ];
 
   const fullName = (c: Client) => `${c.firstName} ${c.lastName}`;
 
@@ -104,7 +108,7 @@ export function ClientsPanel() {
         <div>
           <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#173D2C]">Clientes</h1>
           <p className="mt-1.5 text-base text-neutral-500">
-            Administra tu cartera de clientes — {clients.length} registrados en total.
+            Administra tu cartera de clientes — {total} registrados en total.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -161,23 +165,6 @@ export function ClientsPanel() {
             />
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-2.5">
-          <Filter className="h-4 w-4 text-neutral-400" />
-          <span className="text-sm font-bold text-neutral-400">Estado:</span>
-          {filters.map((f) => (
-            <button
-              key={f}
-              className={`h-9 rounded-full px-4 text-sm font-bold transition hover:-translate-y-0.5 ${
-                filter === f
-                  ? 'bg-[#285C43] text-white shadow-[0_10px_18px_rgba(40,92,67,0.18)]'
-                  : 'border border-neutral-200 bg-white text-neutral-600'
-              }`}
-              onClick={() => setFilter(f)}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
       </PanelCard>
 
       <PanelCard className="overflow-hidden" index={6}>
@@ -194,12 +181,12 @@ export function ClientsPanel() {
             <div className="flex items-center justify-center py-20 text-sm font-medium text-neutral-500">
               Cargando clientes...
             </div>
-          ) : filteredClients.length === 0 ? (
+          ) : clients.length === 0 ? (
             <div className="flex items-center justify-center py-20 text-sm font-medium text-neutral-400">
               No se encontraron clientes.
             </div>
           ) : (
-            filteredClients.map((client, index) => (
+            clients.map((client, index) => (
               <motion.div
                 key={client.id}
                 variants={fadeUp}
@@ -249,11 +236,34 @@ export function ClientsPanel() {
           <p className="text-sm font-semibold text-neutral-500">
             {!loading && (
               <>
-                Mostrando <span className="font-bold text-neutral-900">{filteredClients.length}</span> de{' '}
-                <span className="font-bold text-neutral-900">{clients.length}</span> clientes
+                Mostrando <span className="font-bold text-neutral-900">{clients.length}</span> de{' '}
+                <span className="font-bold text-neutral-900">{total}</span> clientes
               </>
             )}
           </p>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 disabled:opacity-30"
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+                type="button"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-sm font-bold text-neutral-500">
+                {page + 1} / {totalPages}
+              </span>
+              <button
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 disabled:opacity-30"
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage((p) => p + 1)}
+                type="button"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       </PanelCard>
 

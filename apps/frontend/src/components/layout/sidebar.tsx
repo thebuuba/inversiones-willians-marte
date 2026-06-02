@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
-import { getRequests } from '@/lib/api/requests';
+import { getRequestsCount } from '@/lib/api/requests';
 import { navItems } from '@/components/ui/visual-system';
 
 const navIconMap = {
@@ -45,9 +45,7 @@ export function Sidebar() {
   const initial = user?.name?.charAt(0) ?? 'A';
 
   useEffect(() => {
-    getRequests().then((requests) => {
-      setPendingCount(requests.filter((r) => r.status === 'PENDING').length);
-    }).catch(() => {});
+    getRequestsCount('PENDING').then(setPendingCount).catch(() => {});
   }, []);
 
   const sidebarContent = (

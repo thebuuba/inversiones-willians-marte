@@ -11,7 +11,7 @@ export class ClientsService {
     });
   }
 
-  async findAll(search?: string) {
+  async findAll(search?: string, take = 50, skip = 0) {
     const where = search
       ? {
           OR: [
@@ -23,11 +23,20 @@ export class ClientsService {
         }
       : {};
 
-    return prisma.client.findMany({
-      where: { ...where, active: true },
-      include: { _count: { select: { loans: true } } },
-      orderBy: { createdAt: 'desc' },
-    });
+    const fullWhere = { ...where, active: true };
+
+    const [data, total] = await Promise.all([
+      prisma.client.findMany({
+        where: fullWhere,
+        include: { _count: { select: { loans: true } } },
+        orderBy: { createdAt: 'desc' },
+        take,
+        skip,
+      }),
+      prisma.client.count({ where: fullWhere }),
+    ]);
+
+    return { data, total };
   }
 
   async findBasic(id: number) {

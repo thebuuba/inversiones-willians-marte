@@ -4,12 +4,9 @@ import type { ApiResponse } from '@inversiones/shared';
 export interface DashboardData {
   activeLoans: number;
   totalClients: number;
-  totalUsers: number;
   collectionsToday: number;
   portfolioBalance: number;
-  totalPrincipal: number;
   overdueLoans: number;
-  totalLoans: number;
 }
 
 export interface PortfolioGroup {

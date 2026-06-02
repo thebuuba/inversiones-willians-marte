@@ -32,7 +32,7 @@ export class AuditService {
       where,
       include: { user: { select: { id: true, name: true } } },
       orderBy: { createdAt: 'desc' },
-      take: 100,
+      take: 6,
     });
   }
 }

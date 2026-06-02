@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
   AlertCircle,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   Download,
   Eye,
@@ -331,15 +333,36 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
   );
 }
 
-function Pagination({ count, total }: { count: number; total: number }) {
+function Pagination({ count, total, page, totalPages, onPrev, onNext }: { count: number; total: number; page: number; totalPages: number; onPrev: () => void; onNext: () => void }) {
   return (
     <div className="flex min-w-[1180px] items-center justify-between border-t border-[#EDF2EF] px-6 py-4">
       <p className="text-sm font-medium text-[#777D7A]">Mostrando {count} de {total} préstamos</p>
+      {totalPages > 1 && (
+        <div className="flex items-center gap-2">
+          <button
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#EDF2EF] bg-white text-[#777D7A] disabled:opacity-30"
+            disabled={page === 0}
+            onClick={onPrev}
+            type="button"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-sm font-bold text-[#777D7A]">{page + 1} / {totalPages}</span>
+          <button
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#EDF2EF] bg-white text-[#777D7A] disabled:opacity-30"
+            disabled={page >= totalPages - 1}
+            onClick={onNext}
+            type="button"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-function LoansTable({ rows, total }: { rows: LoanRowData[]; total: number }) {
+function LoansTable({ rows, total, page, totalPages, onPrev, onNext }: { rows: LoanRowData[]; total: number; page: number; totalPages: number; onPrev: () => void; onNext: () => void }) {
   return (
     <PanelCard className="overflow-hidden" index={6}>
       <div className="overflow-x-auto">
@@ -354,7 +377,7 @@ function LoansTable({ rows, total }: { rows: LoanRowData[]; total: number }) {
         {rows.map((loan, index) => (
           <LoanRow index={index} key={loan.id} loan={loan} />
         ))}
-        <Pagination count={rows.length} total={total} />
+        <Pagination count={rows.length} total={total} page={page} totalPages={totalPages} onPrev={onPrev} onNext={onNext} />
       </div>
     </PanelCard>
   );
@@ -369,37 +392,38 @@ function normalizeStatusFilter(status: string) {
 
 export function LoansPage() {
   const [loans, setLoans] = useState<LoanListItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
   const [sort, setSort] = useState('Más recientes');
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const PAGE_SIZE = 50;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const fetchLoans = useCallback(async (term: string, status: string, pageNum: number) => {
+    setLoading(true);
+    const statusParam = normalizeStatusFilter(status);
+    const result = await getLoans(statusParam === 'Todos' ? undefined : statusParam, term || undefined, PAGE_SIZE, pageNum * PAGE_SIZE);
+    setLoans(result.data);
+    setTotal(result.total);
+    setLoading(false);
+  }, []);
+
+  const searchKey = `${search}|${selectedStatus}`;
 
   useEffect(() => {
-    setLoading(true);
-    getLoans(undefined, search || undefined)
-      .then(setLoans)
-      .finally(() => setLoading(false));
-  }, [search]);
+    setPage(0);
+  }, [searchKey]);
+
+  useEffect(() => {
+    fetchLoans(search, selectedStatus, page);
+  }, [page, searchKey, fetchLoans]);
 
   const rows = useMemo(() => {
-    const mapped = loans.map(loanToRow);
-    const query = search.trim().toLowerCase();
-    const status = normalizeStatusFilter(selectedStatus);
-
-    return mapped
-      .filter((row) => {
-        const matchesSearch = !query || `${row.client} ${row.detail}`.toLowerCase().includes(query);
-        const matchesStatus = selectedStatus === 'Todos' || row.status === status;
-        return matchesSearch && matchesStatus;
-      })
-      .sort((a, b) => {
-        if (sort === 'Más antiguos') return a.client.localeCompare(b.client);
-        if (sort === 'Mayor monto') return b.amount - a.amount;
-        if (sort === 'Menor monto') return a.amount - b.amount;
-        return b.client.localeCompare(a.client);
-      });
-  }, [loans, search, selectedStatus, sort]);
+    return loans.map(loanToRow);
+  }, [loans]);
 
   function handleSearch(value: string) {
     clearTimeout(searchTimer.current);
@@ -409,8 +433,8 @@ export function LoansPage() {
   return (
     <main className="min-h-screen bg-[#F4F5F6] p-5 font-sans text-[#173D2C]">
       <div className="mx-auto max-w-[1640px]">
-        <LoansHeader total={loans.length} amount={
-          loans.length > 0
+        <LoansHeader total={total} amount={
+          total > 0
             ? (loans.reduce((s, l) => s + l.principal, 0) >= 1_000_000
               ? `${(loans.reduce((s, l) => s + l.principal, 0) / 1_000_000).toFixed(1)}M`
               : `${(loans.reduce((s, l) => s + l.principal, 0) / 1_000).toFixed(0)}K`)
@@ -428,7 +452,7 @@ export function LoansPage() {
         {loading ? (
           <div className="flex items-center justify-center py-20 text-sm font-medium text-[#A9CDBB]">Cargando préstamos...</div>
         ) : (
-          <LoansTable rows={rows} total={loans.length} />
+          <LoansTable rows={rows} total={total} page={page} totalPages={totalPages} onPrev={() => setPage((p) => p - 1)} onNext={() => setPage((p) => p + 1)} />
         )}
       </div>
     </main>

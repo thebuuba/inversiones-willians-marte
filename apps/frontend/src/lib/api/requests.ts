@@ -1,6 +1,12 @@
 import { api } from '../api';
 import type { ApiResponse, LoanRequestItem, CreateRequestDto } from '@inversiones/shared';
 
+export async function getRequestsCount(status?: string): Promise<number> {
+  const params = status ? { status } : {};
+  const { data } = await api.get<ApiResponse<number>>('/requests/count', { params });
+  return (data.data as number) ?? 0;
+}
+
 export async function getRequests(): Promise<LoanRequestItem[]> {
   const { data } = await api.get<ApiResponse<LoanRequestItem[]>>('/requests');
   return data.data ?? [];

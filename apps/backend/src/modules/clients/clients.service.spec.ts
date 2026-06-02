@@ -12,6 +12,7 @@ jest.mock('@inversiones/database', () => ({
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      count: jest.fn(),
     },
   },
 }));
@@ -56,11 +57,13 @@ describe('ClientsService', () => {
   });
 
   describe('findAll', () => {
-    it('should return all active clients', async () => {
+    it('should return paginated active clients', async () => {
       jest.mocked(prisma.client.findMany).mockResolvedValue([mockClient] as any);
+      jest.mocked(prisma.client.count).mockResolvedValue(1);
 
       const result = await service.findAll();
-      expect(result).toHaveLength(1);
+      expect(result.data).toHaveLength(1);
+      expect(result.total).toBe(1);
       expect(prisma.client.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { active: true },
@@ -70,9 +73,11 @@ describe('ClientsService', () => {
 
     it('should search clients by name', async () => {
       jest.mocked(prisma.client.findMany).mockResolvedValue([mockClient] as any);
+      jest.mocked(prisma.client.count).mockResolvedValue(1);
 
       const result = await service.findAll('Juan');
-      expect(result).toHaveLength(1);
+      expect(result.data).toHaveLength(1);
+      expect(result.total).toBe(1);
     });
   });
 
@@ -80,14 +85,14 @@ describe('ClientsService', () => {
     it('should return a client by id', async () => {
       jest.mocked(prisma.client.findUnique).mockResolvedValue({ ...mockClient, loans: [] } as any);
 
-      const result = await service.findOne('client-1');
+      const result = await service.findOne(1);
       expect(result).toBeDefined();
     });
 
     it('should throw NotFoundException when client not found', async () => {
       jest.mocked(prisma.client.findUnique).mockResolvedValue(null);
 
-      await expect(service.findOne('invalid-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -97,7 +102,7 @@ describe('ClientsService', () => {
       jest.mocked(prisma.client.update).mockResolvedValue({ ...mockClient, phone: '809-555-0202' } as any);
 
       const dto: UpdateClientDto = { phone: '809-555-0202' };
-      const result = await service.update('client-1', dto);
+      const result = await service.update(1, dto);
       expect(result.phone).toBe('809-555-0202');
     });
   });
@@ -107,7 +112,7 @@ describe('ClientsService', () => {
       jest.mocked(prisma.client.findUnique).mockResolvedValue(mockClient as any);
       jest.mocked(prisma.client.update).mockResolvedValue({ ...mockClient, active: false } as any);
 
-      const result = await service.remove('client-1');
+      const result = await service.remove(1);
       expect(result.active).toBe(false);
     });
   });

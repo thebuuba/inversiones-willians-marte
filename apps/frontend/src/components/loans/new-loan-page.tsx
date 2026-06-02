@@ -134,7 +134,7 @@ function ClientSearchCard({
     if (!showSearch) return;
     if (query.length < 2) return;
     const timer = setTimeout(() => {
-      getClients(query).then(setResults);
+      getClients(query).then((r) => setResults(r.data));
     }, 300);
     return () => clearTimeout(timer);
   }, [query, showSearch]);

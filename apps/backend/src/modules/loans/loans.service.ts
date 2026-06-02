@@ -70,7 +70,7 @@ export class LoansService {
     return loan;
   }
 
-  async findAll(status?: string, search?: string) {
+  async findAll(status?: string, search?: string, take = 50, skip = 0) {
     const where: any = {};
 
     if (status) where.status = status;
@@ -84,15 +84,22 @@ export class LoansService {
       };
     }
 
-    return prisma.loan.findMany({
-      where,
-      include: {
-        client: { select: { id: true, firstName: true, lastName: true, phone: true, identification: true } },
-        product: { select: { id: true, name: true } },
-        _count: { select: { payments: true, schedule: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const [data, total] = await Promise.all([
+      prisma.loan.findMany({
+        where,
+        include: {
+          client: { select: { id: true, firstName: true, lastName: true, identification: true } },
+          product: { select: { id: true, name: true } },
+          _count: { select: { schedule: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take,
+        skip,
+      }),
+      prisma.loan.count({ where }),
+    ]);
+
+    return { data, total };
   }
 
   async findOne(id: string) {

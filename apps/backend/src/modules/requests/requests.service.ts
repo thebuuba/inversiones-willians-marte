@@ -36,6 +36,12 @@ export class RequestsService {
     return request;
   }
 
+  async count(status?: string) {
+    const where: any = {};
+    if (status) where.status = status;
+    return prisma.loanRequest.count({ where });
+  }
+
   async approve(id: string) {
     const request = await this.findOne(id);
     if (request.status !== 'PENDING') throw new BadRequestException('Only pending requests can be approved');

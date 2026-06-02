@@ -22,8 +22,10 @@ export class LoansController {
   findAll(
     @Query('status') status?: string,
     @Query('search') search?: string,
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
   ) {
-    return this.loans.findAll(status, search);
+    return this.loans.findAll(status, search, take ? parseInt(take, 10) : 50, skip ? parseInt(skip, 10) : 0);
   }
 
   @Get(':id')

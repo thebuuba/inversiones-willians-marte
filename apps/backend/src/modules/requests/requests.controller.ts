@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
@@ -13,6 +13,11 @@ export class RequestsController {
   @Post()
   create(@Body() dto: CreateRequestDto, @CurrentUser('id') userId: string) {
     return this.requests.create(dto, userId);
+  }
+
+  @Get('count')
+  count(@Query('status') status?: string) {
+    return this.requests.count(status);
   }
 
   @Get()
