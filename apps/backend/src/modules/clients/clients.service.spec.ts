@@ -4,6 +4,7 @@ import { ClientsService } from './clients.service';
 import { prisma } from '@inversiones/database';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
+import { AuditService } from '../audit/audit.service';
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -19,6 +20,7 @@ jest.mock('@inversiones/database', () => ({
 
 describe('ClientsService', () => {
   let service: ClientsService;
+  const audit = { log: jest.fn() };
 
   const mockClient = {
     id: 'client-1',
@@ -33,7 +35,7 @@ describe('ClientsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ClientsService],
+      providers: [ClientsService, { provide: AuditService, useValue: audit }],
     }).compile();
 
     service = module.get<ClientsService>(ClientsService);
@@ -121,6 +123,24 @@ describe('ClientsService', () => {
       const dto: UpdateClientDto = { phone: '809-555-0202' };
       const result = await service.update(1, dto);
       expect(result.phone).toBe('809-555-0202');
+    });
+
+    it('should log changed fields and summarized note actions', async () => {
+      const previousNotes = JSON.stringify([{ id: 1, text: 'Anterior' }, { id: 2, text: 'Eliminar' }]);
+      const nextNotes = JSON.stringify([{ id: 1, text: 'Actualizada' }, { id: 3, text: 'Nueva' }]);
+      jest.mocked(prisma.client.findUnique).mockResolvedValue({ ...mockClient, notes: previousNotes, loans: [] } as any);
+      jest.mocked(prisma.client.update).mockResolvedValue({ ...mockClient, phone: '809-555-0202', notes: nextNotes } as any);
+
+      await service.update(1, { phone: '809-555-0202', notes: nextNotes }, 'user-1');
+
+      expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({
+        action: 'CLIENT_UPDATED',
+        clientId: 1,
+        newValues: { changes: [{ field: 'phone', before: '809-555-0101', after: '809-555-0202' }] },
+      }));
+      expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'NOTE_UPDATED', clientId: 1 }));
+      expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'NOTE_CREATED', clientId: 1 }));
+      expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'NOTE_DELETED', clientId: 1 }));
     });
   });
 

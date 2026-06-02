@@ -41,8 +41,8 @@ export class ClientsController {
 
   @Patch(':id')
   @Roles('ADMIN', 'COLLECTOR')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateClientDto) {
-    return this.clients.update(id, dto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateClientDto, @CurrentUser('id') userId: string) {
+    return this.clients.update(id, dto, userId);
   }
 
   @Delete(':id')

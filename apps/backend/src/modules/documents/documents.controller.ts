@@ -77,7 +77,7 @@ export class DocumentsController {
 
   @Delete(':id')
   @Roles('ADMIN')
-  remove(@Param('id') id: string) {
-    return this.documents.remove(id);
+  remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.documents.remove(id, userId);
   }
 }

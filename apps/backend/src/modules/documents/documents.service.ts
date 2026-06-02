@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { CreateDocumentDto } from './dto/create-document.dto';
+import { AuditService } from '../audit/audit.service';
 
 interface CreateDocumentInput {
   name: string;
@@ -16,6 +17,8 @@ interface CreateDocumentInput {
 
 @Injectable()
 export class DocumentsService {
+  constructor(private audit: AuditService) {}
+
   async create(dto: CreateDocumentInput, userId: string) {
     return prisma.document.create({
       data: {
@@ -43,7 +46,18 @@ export class DocumentsService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
+    const document = await prisma.document.findUnique({ where: { id } });
     await prisma.document.delete({ where: { id } });
+    if (document?.clientId) {
+      await this.audit.log({
+        userId,
+        clientId: document.clientId,
+        entityType: 'Document',
+        entityId: document.id,
+        action: 'DOCUMENT_DELETED',
+        newValues: { name: document.name },
+      });
+    }
   }
 }

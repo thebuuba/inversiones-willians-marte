@@ -110,6 +110,7 @@ model Client {
   payments     Payment[]
   loanRequests LoanRequest[]
   documents    Document[]
+  auditLogs    AuditLog[]
 
   @@map("clients")
 }
@@ -395,8 +396,11 @@ model AuditLog {
   oldValues  Json?    @map("old_values")
   newValues  Json?    @map("new_values")
   createdAt  DateTime @default(now()) @map("created_at")
+  clientId   Int?     @map("client_id")
 
-  user User @relation(fields: [userId], references: [id])
+  user   User    @relation(fields: [userId], references: [id])
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
 
+  @@index([clientId, createdAt])
   @@map("audit_logs")
 }

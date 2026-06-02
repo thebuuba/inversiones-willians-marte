@@ -11,7 +11,6 @@ import { getClientLoanStats, getLoanCollectionStatus, getLoanProgress, getRegula
 import type { ClientDetail, LoanSummary, DocumentItem, ApiResponse } from '@inversiones/shared';
 import {
   ArrowLeft,
-  Activity,
   Banknote,
   BriefcaseBusiness,
   CalendarDays,
@@ -76,6 +75,7 @@ interface HistoryEvent {
   type: string;
   amount?: string;
   title: string;
+  detail?: string;
   author: string;
   date: string;
 }
@@ -438,8 +438,9 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
 function historyTone(type: string) {
   const styles: Record<string, { bg: string; text: string; dot: string; icon: typeof CreditCard }> = {
     Pago: { bg: '#eaf5ed', text: '#5a9a7a', dot: '#7fb89a', icon: CreditCard },
+    Cliente: { bg: '#dbeafe', text: '#1d4ed8', dot: '#3b82f6', icon: UserRound },
+    Préstamo: { bg: '#e9ddfb', text: '#7c3aed', dot: '#8b5cf6', icon: TrendingUp },
     Nota: { bg: '#fef3c7', text: '#a16207', dot: '#eab308', icon: StickyNote },
-    Estado: { bg: '#dbeafe', text: '#1d4ed8', dot: '#3b82f6', icon: Activity },
     Documento: { bg: '#eaf5ed', text: '#5a9a7a', dot: '#7fb89a', icon: NotebookPen },
   };
   return styles[type] ?? styles.Nota;
@@ -475,6 +476,7 @@ function TimelineItem({ event, index }: { event: HistoryEvent; index: number }) 
               )}
             </div>
             <h3 className="text-sm font-medium text-neutral-900">{event.title}</h3>
+            {event.detail ? <p className="mt-1 text-xs text-neutral-600">{event.detail}</p> : null}
             <p className="mt-1 text-xs text-neutral-500">{event.author}</p>
           </div>
           <time className="shrink-0 text-xs text-neutral-400">{event.date}</time>
@@ -802,15 +804,16 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
       .catch(() => setClientData(null))
       .finally(() => setLoading(false));
 
-    api.get<ApiResponse<AuditEntryRaw[]>>('/audit', { params: { entityType: 'Client', entityId: clientId } })
+    api.get<ApiResponse<ClientHistoryEntryRaw[]>>(`/audit/client/${clientId}/history`)
       .then((audit) =>
         setAuditEvents(
           (audit.data.data ?? []).map((entry) => ({
-            type: entry.action === 'CREATE' ? 'Estado' : entry.action === 'UPDATE' ? 'Nota' : 'Estado',
-            title: entry.action === 'CREATE' ? 'Cliente creado' : entry.action === 'UPDATE' ? 'Cliente actualizado' : entry.action,
-            author: entry.user?.name ?? 'Sistema',
+            type: entry.type,
+            title: entry.title,
+            detail: entry.detail,
+            author: entry.author,
             date: fmtDate(entry.createdAt),
-            amount: undefined,
+            amount: entry.amount != null ? fmt(entry.amount) : undefined,
           })),
         ),
       )
@@ -969,13 +972,12 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   );
 }
 
-interface AuditEntryRaw {
+interface ClientHistoryEntryRaw {
   id: string;
-  action: string;
-  entityType: string;
-  entityId: string;
-  oldValues?: Record<string, unknown>;
-  newValues?: Record<string, unknown>;
+  type: string;
+  title: string;
+  detail?: string;
+  amount?: number;
+  author: string;
   createdAt: string;
-  user?: { id: string; name: string };
 }
