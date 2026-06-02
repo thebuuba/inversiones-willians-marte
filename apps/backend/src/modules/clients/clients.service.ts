@@ -30,6 +30,22 @@ export class ClientsService {
     });
   }
 
+  async findBasic(id: number) {
+    const client = await prisma.client.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        identification: true,
+        phone: true,
+        active: true,
+      },
+    });
+    if (!client) throw new NotFoundException('Client not found');
+    return client;
+  }
+
   async findOne(id: number) {
     const client = await prisma.client.findUnique({
       where: { id },

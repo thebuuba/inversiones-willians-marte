@@ -23,6 +23,12 @@ export class ClientsController {
     return this.clients.findAll(search);
   }
 
+  @Get('basic/:id')
+  @Roles('ADMIN', 'COLLECTOR')
+  findBasic(@Param('id', ParseIntPipe) id: number) {
+    return this.clients.findBasic(id);
+  }
+
   @Get(':id')
   @Roles('ADMIN', 'COLLECTOR')
   findOne(@Param('id', ParseIntPipe) id: number) {

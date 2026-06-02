@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { getLoanProducts, type LoanProductItem } from '@/lib/api/loan-products';
 import { createLoan } from '@/lib/api/loans';
-import { getClients } from '@/lib/api/clients';
+import { getClients, getClientBasic } from '@/lib/api/clients';
 import {
   canCalculateLoan,
   computeSchedule,
@@ -846,8 +846,10 @@ export function NewLoanPage() {
   const [firstPaymentDate, setFirstPaymentDate] = useState('');
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {
+    setLoadingProducts(true);
     getLoanProducts()
       .then((data) => {
         if (data.length > 0) setSelectedProduct(data[0]);
@@ -856,15 +858,14 @@ export function NewLoanPage() {
         setProductsError(
           'No se pudieron cargar los productos de préstamo. Verifica la conexión con el backend.',
         );
-      });
+      })
+      .finally(() => setLoadingProducts(false));
   }, []);
 
   useEffect(() => {
     const clientId = searchParams.get('cliente');
     if (clientId) {
-      import('@/lib/api/clients').then(({ getClient }) =>
-        getClient(clientId).then((client) => setSelectedClient(client)),
-      );
+      getClientBasic(clientId).then((client) => setSelectedClient(client));
     }
   }, [searchParams]);
 
@@ -912,13 +913,23 @@ export function NewLoanPage() {
       <div className="mx-auto max-w-[1720px]">
         <Header />
 
+        {loadingProducts && (
+          <div className="mt-8 space-y-5">
+            <div className="h-[72px] animate-pulse rounded-[14px] bg-white/70" />
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
+              <div className="h-[380px] animate-pulse rounded-xl bg-white/70" />
+              <div className="h-[200px] animate-pulse rounded-xl bg-white/70" />
+            </div>
+          </div>
+        )}
+
         {productsError && (
           <p className="mt-6 rounded-[14px] border border-[#F1C9B7] bg-[#FFF4EE] px-4 py-3 text-sm font-medium text-[#B45B38]">
             {productsError}
           </p>
         )}
 
-        <NewLoanStepTwo
+        {!loadingProducts && <NewLoanStepTwo
           amount={amount}
           onAmountChange={setAmount}
           onSelectClient={setSelectedClient}
@@ -943,7 +954,7 @@ export function NewLoanPage() {
           onSelectPortfolio={setSelectedPortfolioId}
           saving={saving}
           onSave={handleCreate}
-        />
+        />}
       </div>
     </main>
   );

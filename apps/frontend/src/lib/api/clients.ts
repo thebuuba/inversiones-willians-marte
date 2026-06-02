@@ -12,6 +12,11 @@ export async function getClient(id: number | string): Promise<ClientDetail> {
   return data.data as ClientDetail;
 }
 
+export async function getClientBasic(id: number | string): Promise<Client> {
+  const { data } = await api.get<ApiResponse<Client>>(`/clients/basic/${id}`);
+  return data.data as Client;
+}
+
 export async function createClient(dto: CreateClientDto): Promise<Client> {
   const { data } = await api.post<ApiResponse<Client>>('/clients', dto);
   return data.data as Client;

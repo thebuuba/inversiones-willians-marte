@@ -25,6 +25,14 @@ export class LoanProductsService {
   async findAll() {
     return prisma.loanProduct.findMany({
       where: { active: true },
+      select: {
+        id: true,
+        name: true,
+        interestType: true,
+        interestRate: true,
+        paymentFrequency: true,
+        maxTerm: true,
+      },
       orderBy: { name: 'asc' },
     });
   }
