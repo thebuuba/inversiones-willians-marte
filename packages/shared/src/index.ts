@@ -78,6 +78,7 @@ export interface ClientDetail extends Client {
 
 export interface LoanSummary {
   id: string;
+  loanNumber: number;
   clientId: number;
   productId: string;
   principal: number;
@@ -92,6 +93,13 @@ export interface LoanSummary {
   balance: number;
   notes?: string;
   product?: LoanProductSummary;
+  portfolio?: { id: string; name: string } | null;
+  schedule?: Array<{
+    dueDate: string;
+    status: ScheduleStatus;
+    amount: number;
+    paidAmount?: number | null;
+  }>;
   _count?: { payments: number };
 }
 

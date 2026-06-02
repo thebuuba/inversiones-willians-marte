@@ -60,7 +60,15 @@ export class ClientsService {
       where: { id },
       include: {
         loans: {
-          include: { product: true, _count: { select: { payments: true } } },
+          include: {
+            product: true,
+            portfolio: { select: { id: true, name: true } },
+            schedule: {
+              select: { dueDate: true, status: true, amount: true, paidAmount: true },
+              orderBy: { dueDate: 'asc' },
+            },
+            _count: { select: { payments: true } },
+          },
           orderBy: { createdAt: 'desc' },
         },
       },

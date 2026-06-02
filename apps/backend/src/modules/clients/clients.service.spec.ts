@@ -87,6 +87,23 @@ describe('ClientsService', () => {
 
       const result = await service.findOne(1);
       expect(result).toBeDefined();
+      expect(prisma.client.findUnique).toHaveBeenCalledWith({
+        where: { id: 1 },
+        include: {
+          loans: {
+            include: {
+              product: true,
+              portfolio: { select: { id: true, name: true } },
+              schedule: {
+                select: { dueDate: true, status: true, amount: true, paidAmount: true },
+                orderBy: { dueDate: 'asc' },
+              },
+              _count: { select: { payments: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+          },
+        },
+      });
     });
 
     it('should throw NotFoundException when client not found', async () => {

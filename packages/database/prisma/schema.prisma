@@ -165,6 +165,7 @@ model LoanProduct {
 
 model Loan {
   id            String         @id @default(uuid())
+  loanNumber    Int            @unique @default(autoincrement()) @map("loan_number")
   clientId      Int         @map("client_id")
   productId     String         @map("product_id")
   principal     Decimal

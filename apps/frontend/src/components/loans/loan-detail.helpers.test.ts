@@ -2,11 +2,19 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   clampProgress,
+  getLoanCollectionStatus,
   getLoanDetailTotals,
   getLoanProgress,
   getRegularInstallment,
   getScheduleRemaining,
 } from './loan-detail.helpers.ts';
+
+const today = new Date('2026-06-15T12:00:00');
+const finiteLoan = {
+  balance: 10_000,
+  interestType: 'FLAT',
+  endDate: '2026-12-15T00:00:00',
+};
 
 test('clamps progress between zero and one hundred', () => {
   assert.equal(clampProgress(-12), 0);
@@ -54,4 +62,29 @@ test('derives detail totals from payments and schedule rows', () => {
       totalInstallments: 3,
     },
   );
+});
+
+test('keeps a loan on time before the next unpaid installment arrives', () => {
+  assert.equal(getLoanCollectionStatus({ ...finiteLoan, schedule: [{ dueDate: '2026-06-16T00:00:00', status: 'PENDING' }] }, today), 'A tiempo');
+});
+
+test('marks a loan pending on its due date and through its five-day grace period', () => {
+  assert.equal(getLoanCollectionStatus({ ...finiteLoan, schedule: [{ dueDate: '2026-06-15T00:00:00', status: 'PENDING' }] }, today), 'Pendiente');
+  assert.equal(getLoanCollectionStatus({ ...finiteLoan, schedule: [{ dueDate: '2026-06-10T00:00:00', status: 'PENDING' }] }, today), 'Pendiente');
+});
+
+test('marks a loan overdue after its five-day grace period', () => {
+  assert.equal(getLoanCollectionStatus({ ...finiteLoan, schedule: [{ dueDate: '2026-06-09T00:00:00', status: 'PENDING' }] }, today), 'Atrasado');
+});
+
+test('marks finite loans expired after the final date while balance remains', () => {
+  assert.equal(getLoanCollectionStatus({ ...finiteLoan, endDate: '2026-06-14T00:00:00', schedule: [] }, today), 'Vencido');
+});
+
+test('never marks indefinite loans expired', () => {
+  assert.equal(getLoanCollectionStatus({ ...finiteLoan, interestType: 'INDEFINITE', endDate: '2026-06-01T00:00:00', schedule: [{ dueDate: '2026-06-01T00:00:00', status: 'PENDING' }] }, today), 'Atrasado');
+});
+
+test('ignores paid schedule rows when calculating collection status', () => {
+  assert.equal(getLoanCollectionStatus({ ...finiteLoan, schedule: [{ dueDate: '2026-06-01T00:00:00', status: 'PAID' }, { dueDate: '2026-06-20T00:00:00', status: 'PENDING' }] }, today), 'A tiempo');
 });

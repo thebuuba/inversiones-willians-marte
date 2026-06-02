@@ -7,7 +7,7 @@ import { getDocuments, createDocument, deleteDocument } from '@/lib/api/document
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { compressImage } from '@/lib/compress-image';
-import { getLoanProgress, getRegularInstallment } from '@/components/loans/loan-detail.helpers';
+import { getLoanCollectionStatus, getLoanProgress, getRegularInstallment } from '@/components/loans/loan-detail.helpers';
 import type { ClientDetail, LoanSummary, DocumentItem, ApiResponse } from '@inversiones/shared';
 import {
   ArrowLeft,
@@ -102,19 +102,22 @@ function StatusBadge({ active }: { active: boolean }) {
 }
 
 function LoanStatusBadge({ status }: { status: string }) {
-  const isPaid = status === 'Pagado';
+  const isPaid = status === 'A tiempo';
   const isOverdue = status === 'Vencido';
+  const isLate = status === 'Atrasado';
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
         isPaid
-          ? 'bg-[#eef0f2] text-[#555a58]'
+          ? 'bg-[#eaf5ed] text-[#5a9a7a]'
           : isOverdue
             ? 'bg-[#fadccb] text-[#d94e1f]'
-            : 'bg-[#eaf5ed] text-[#5a9a7a]'
+            : isLate
+              ? 'bg-[#fadccb] text-[#d94e1f]'
+              : 'bg-[#fff1c7] text-[#b7791f]'
       }`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-[#b9bcbe]' : isOverdue ? 'bg-[#ff6a00]' : 'bg-[#7fb89a]'}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-[#7fb89a]' : isOverdue || isLate ? 'bg-[#ff6a00]' : 'bg-[#f3b51b]'}`} />
       {status}
     </span>
   );
@@ -148,7 +151,7 @@ function LoanMetric({ label, value, accent = false }: { label: string; value: st
 
 function LoanRow({ loan }: { loan: LoanSummary }) {
   const progress = getLoanProgress(loan.totalAmount, loan.balance);
-  const statusLabel = loan.status === 'ACTIVE' ? 'Activo' : loan.status === 'PAID' ? 'Pagado' : loan.status === 'OVERDUE' ? 'Vencido' : loan.status;
+  const statusLabel = getLoanCollectionStatus(loan);
   const frequency = loan.paymentFreq === 'MONTHLY' ? 'Mensual' : loan.paymentFreq === 'DAILY' ? 'Diario' : loan.paymentFreq;
 
   return (
@@ -162,7 +165,8 @@ function LoanRow({ loan }: { loan: LoanSummary }) {
             <TrendingUp className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-bold leading-tight text-neutral-900">{loan.product?.name ?? 'Préstamo'}</h3>
+            <h3 className="truncate text-sm font-bold leading-tight text-neutral-900">Préstamo #{loan.loanNumber}</h3>
+            {loan.portfolio?.name ? <p className="mt-1 truncate text-xs font-bold text-[#5a9a7a]">{loan.portfolio.name}</p> : null}
             <p className="mt-1 text-xs font-medium text-neutral-500">
               {loan.term} cuotas · {frequency}
             </p>
