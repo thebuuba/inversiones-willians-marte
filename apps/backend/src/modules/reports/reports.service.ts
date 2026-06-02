@@ -4,7 +4,7 @@ import { prisma } from '@inversiones/database';
 @Injectable()
 export class ReportsService {
   async dashboard() {
-    const [activeLoans, totalClients, totalUsers, paymentsToday, portfolioStats] =
+    const [activeLoans, totalClients, totalUsers, paymentsToday, portfolioStats, overdueLoans] =
       await Promise.all([
         prisma.loan.count({ where: { status: 'ACTIVE' } }),
         prisma.client.count({ where: { active: true } }),
@@ -22,18 +22,17 @@ export class ReportsService {
           _sum: { balance: true, principal: true },
           _count: true,
         }),
-      ]);
-
-    const overdueLoans = await prisma.loan.count({
-      where: {
-        status: 'ACTIVE',
-        schedule: {
-          some: {
-            status: 'OVERDUE',
+        prisma.loan.count({
+          where: {
+            status: 'ACTIVE',
+            schedule: {
+              some: {
+                status: 'OVERDUE',
+              },
+            },
           },
-        },
-      },
-    });
+        }),
+      ]);
 
     return {
       activeLoans,
@@ -98,7 +97,7 @@ export class ReportsService {
       FROM payment_schedule ps
       LEFT JOIN payment_allocations pa ON pa.schedule_id = ps.id
       LEFT JOIN payments p ON p.id = pa.payment_id
-      WHERE ps.due_date >= $1
+      WHERE ps.due_date >= ${sixMonthsAgo}
       GROUP BY DATE_TRUNC('month', ps.due_date)
       ORDER BY month ASC
     `;

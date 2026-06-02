@@ -4,16 +4,16 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
-  Plus, ListTodo, CircleCheck, Circle, LoaderCircle, Clock,
-  Banknote, CalendarDays, ChevronRight, Flag, Users, Phone,
-  Building, X,
+  Plus, ListTodo, CircleCheck, Circle, Clock,
+  Banknote, CalendarDays, ChevronRight, X,
 } from 'lucide-react';
 import { getTasks, createTask, updateTask, deleteTask } from '@/lib/api/tasks';
+import { getStaggerDelay } from '@/lib/animation';
 import type { TaskItem, TaskPriority, TaskStatus } from '@inversiones/shared';
 
 const cardVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
-  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: i * 0.05 } }),
+  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: getStaggerDelay(i, 0.05) } }),
 };
 
 function MotionCard({ children, className = '', index = 0 }: { children: React.ReactNode; className?: string; index?: number }) {
@@ -43,10 +43,6 @@ const categoryConfig: Record<string, { bg: string; text: string; label: string }
   reunion: { bg: '#e9e2f5', text: '#6d28d9', label: 'Reunión' },
   admin: { bg: '#F3F4F6', text: '#525252', label: 'Admin' },
 };
-
-function fmtMoney(n: number) {
-  return 'RD$ ' + n.toLocaleString('es-DO', { maximumFractionDigits: 0 });
-}
 
 function MiniCalendar() {
   const today = new Date();
@@ -197,7 +193,6 @@ export default function AgendaPage() {
   const dateStr = today.toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   const load = useCallback(() => {
-    setLoading(true);
     getTasks().then(setTasks).catch(() => {}).finally(() => setLoading(false));
   }, []);
 

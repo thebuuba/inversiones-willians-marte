@@ -16,7 +16,6 @@ import {
   Eye,
   File,
   Plus,
-  Printer,
   TrendingUp,
   Phone,
   Mail,
@@ -34,19 +33,6 @@ const STATUS_COLOR: Record<string, { bg: string; text: string; dot: string; labe
 
 const TABS = ['Resumen', 'Historial de pagos', 'Documentos', 'Datos personales'];
 
-function StatusBadge({ status }: { status: string }) {
-  const c = STATUS_COLOR[status] ?? STATUS_COLOR.pendiente;
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
-      style={{ backgroundColor: c.bg, color: c.text }}
-    >
-      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c.dot }} />
-      {c.label}
-    </span>
-  );
-}
-
 export function InvestorDetailPage({ investorId }: { investorId: string }) {
   const [tab, setTab] = useState(0);
   const [data, setData] = useState<InvestorItem | null>(null);
@@ -54,17 +40,29 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
 
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setLoading(true);
+    });
     Promise.all([
       getInvestor(investorId),
       getDocuments(undefined, investorId).catch(() => [] as DocumentItem[]),
     ])
       .then(([investor, docs]) => {
-        setData(investor);
-        setDocuments(docs);
+        if (!cancelled) {
+          setData(investor);
+          setDocuments(docs);
+        }
       })
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (!cancelled) setData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [investorId]);
 
   const capital = data?.capital ?? 0;
@@ -152,10 +150,11 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div className="flex items-end gap-5">
                 {data.photo ? (
-                  <img
-                    src={data.photo}
-                    alt={data.name}
-                    className="h-20 w-20 shrink-0 rounded-2xl border-4 border-white object-cover shadow-md"
+                  <div
+                    aria-label={data.name}
+                    className="h-20 w-20 shrink-0 rounded-2xl border-4 border-white bg-cover bg-center shadow-md"
+                    role="img"
+                    style={{ backgroundImage: `url(${data.photo})` }}
                   />
                 ) : (
                   <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-[#eaf5ed] shadow-md">

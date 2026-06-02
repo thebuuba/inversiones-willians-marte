@@ -69,49 +69,51 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  createdClients  Client[]      @relation("ClientCreatedBy")
-  createdLoans    Loan[]        @relation("LoanCreatedBy")
-  receivedPayments Payment[]    @relation("PaymentReceivedBy")
-  auditLogs       AuditLog[]
-  loanRequests    LoanRequest[]
-  investors       Investor[]
+  createdClients    Client[]      @relation("ClientCreatedBy")
+  createdLoans      Loan[]        @relation("LoanCreatedBy")
+  receivedPayments  Payment[]     @relation("PaymentReceivedBy")
+  auditLogs         AuditLog[]
+  loanRequests      LoanRequest[]
+  investors         Investor[]
   uploadedDocuments Document[]
-  tasks           Task[]
-  portfolios      Portfolio[]
+  tasks             Task[]
+  portfolios        Portfolio[]
 
+  @@index([role, active])
   @@map("users")
 }
 
 // ─── Clients ────────────────────────────────────────────────────────────────
 
 model Client {
-  id             Int      @id @default(autoincrement())
-  firstName      String   @map("first_name")
-  lastName       String   @map("last_name")
+  id             Int       @id @default(autoincrement())
+  firstName      String    @map("first_name")
+  lastName       String    @map("last_name")
   phone          String?
-  altPhone       String?  @map("alt_phone")
+  altPhone       String?   @map("alt_phone")
   email          String?
-  identification String?  @map("identification")
+  identification String?   @map("identification")
   address        String?
-  birthDate      DateTime?  @map("birth_date")
+  birthDate      DateTime? @map("birth_date")
   gender         String?
-  maritalStatus  String?  @map("marital_status")
+  maritalStatus  String?   @map("marital_status")
   nationality    String?
   dependents     Int?
   photo          String?
   notes          String?
-  createdById    String   @map("created_by")
-  active         Boolean  @default(true)
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdById    String    @map("created_by")
+  active         Boolean   @default(true)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  createdBy    User           @relation("ClientCreatedBy", fields: [createdById], references: [id])
+  createdBy    User          @relation("ClientCreatedBy", fields: [createdById], references: [id])
   loans        Loan[]
   payments     Payment[]
   loanRequests LoanRequest[]
   documents    Document[]
   auditLogs    AuditLog[]
 
+  @@index([active, createdAt])
   @@map("clients")
 }
 
@@ -129,70 +131,79 @@ model LoanRequest {
   reference      String?
   status         RequestStatus @default(PENDING)
   createdById    String        @map("created_by")
-  clientId       Int?       @map("client_id")
+  clientId       Int?          @map("client_id")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
   createdBy User    @relation(fields: [createdById], references: [id])
   client    Client? @relation(fields: [clientId], references: [id])
 
+  @@index([status])
+  @@index([createdAt])
   @@map("loan_requests")
 }
 
 // ─── Loan Products (templates) ──────────────────────────────────────────────
 
 model LoanProduct {
-  id               String          @id @default(uuid())
-  name             String
-  interestType     InterestType    @map("interest_type")
-  interestRate     Decimal         @map("interest_rate")
+  id                String            @id @default(uuid())
+  name              String
+  interestType      InterestType      @map("interest_type")
+  interestRate      Decimal           @map("interest_rate")
   interestFrequency PaymentFrequency? @map("interest_frequency")
-  paymentFrequency PaymentFrequency @map("payment_frequency")
-  maxAmount        Decimal?        @map("max_amount")
-  minAmount        Decimal?        @map("min_amount")
-  maxTerm          Int?            @map("max_term")
-  latePenaltyType  String?         @map("late_penalty_type")
-  latePenaltyValue Decimal?        @map("late_penalty_value")
-  active           Boolean         @default(true)
-  createdAt        DateTime        @default(now()) @map("created_at")
-  updatedAt        DateTime        @updatedAt @map("updated_at")
+  paymentFrequency  PaymentFrequency  @map("payment_frequency")
+  maxAmount         Decimal?          @map("max_amount")
+  minAmount         Decimal?          @map("min_amount")
+  maxTerm           Int?              @map("max_term")
+  latePenaltyType   String?           @map("late_penalty_type")
+  latePenaltyValue  Decimal?          @map("late_penalty_value")
+  active            Boolean           @default(true)
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
 
   loans Loan[]
 
+  @@index([active, name])
   @@map("loan_products")
 }
 
 // ─── Loans ──────────────────────────────────────────────────────────────────
 
 model Loan {
-  id            String         @id @default(uuid())
-  loanNumber    Int            @unique @default(autoincrement()) @map("loan_number")
-  clientId      Int         @map("client_id")
-  productId     String         @map("product_id")
-  principal     Decimal
-  interestRate  Decimal        @map("interest_rate")
-  interestType  InterestType   @map("interest_type")
-  totalAmount   Decimal        @map("total_amount")
-  paymentFreq   PaymentFrequency @map("payment_frequency")
-  term          Int
-  startDate     DateTime       @map("start_date")
-  endDate       DateTime?      @map("end_date")
-  status        LoanStatus     @default(ACTIVE)
-  balance       Decimal
-  notes         String?
-  createdById   String         @map("created_by")
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
+  id           String           @id @default(uuid())
+  loanNumber   Int              @unique @default(autoincrement()) @map("loan_number")
+  clientId     Int              @map("client_id")
+  productId    String           @map("product_id")
+  principal    Decimal
+  interestRate Decimal          @map("interest_rate")
+  interestType InterestType     @map("interest_type")
+  totalAmount  Decimal          @map("total_amount")
+  paymentFreq  PaymentFrequency @map("payment_frequency")
+  term         Int
+  startDate    DateTime         @map("start_date")
+  endDate      DateTime?        @map("end_date")
+  status       LoanStatus       @default(ACTIVE)
+  balance      Decimal
+  notes        String?
+  createdById  String           @map("created_by")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
 
-  client          Client          @relation(fields: [clientId], references: [id])
-  product         LoanProduct     @relation(fields: [productId], references: [id])
-  createdBy       User            @relation("LoanCreatedBy", fields: [createdById], references: [id])
-  portfolioId   String?         @map("portfolio_id")
-  schedule        PaymentSchedule[]
-  payments        Payment[]
-  lateFees        LateFee[]
-  portfolio       Portfolio?      @relation(fields: [portfolioId], references: [id])
+  client      Client            @relation(fields: [clientId], references: [id])
+  product     LoanProduct       @relation(fields: [productId], references: [id])
+  createdBy   User              @relation("LoanCreatedBy", fields: [createdById], references: [id])
+  portfolioId String?           @map("portfolio_id")
+  schedule    PaymentSchedule[]
+  payments    Payment[]
+  lateFees    LateFee[]
+  portfolio   Portfolio?        @relation(fields: [portfolioId], references: [id])
 
+  @@index([clientId, createdAt])
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@index([portfolioId])
+  @@index([startDate])
+  @@index([status, endDate])
   @@map("loans")
 }
 
@@ -212,10 +223,13 @@ model PaymentSchedule {
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
 
-  loan           Loan                  @relation(fields: [loanId], references: [id])
-  lateFees       LateFee[]
-  paymentAllocs  PaymentAllocation[]
+  loan          Loan                @relation(fields: [loanId], references: [id])
+  lateFees      LateFee[]
+  paymentAllocs PaymentAllocation[]
 
+  @@index([loanId, dueDate])
+  @@index([dueDate, status])
+  @@index([status, loanId])
   @@map("payment_schedule")
 }
 
@@ -224,7 +238,7 @@ model PaymentSchedule {
 model Payment {
   id            String   @id @default(uuid())
   loanId        String   @map("loan_id")
-  clientId      Int   @map("client_id")
+  clientId      Int      @map("client_id")
   amount        Decimal
   paymentDate   DateTime @map("payment_date")
   paymentMethod String?  @map("payment_method")
@@ -233,11 +247,15 @@ model Payment {
   notes         String?
   createdAt     DateTime @default(now()) @map("created_at")
 
-  loan       Loan                @relation(fields: [loanId], references: [id])
-  client     Client              @relation(fields: [clientId], references: [id])
-  receivedBy User                @relation("PaymentReceivedBy", fields: [receivedById], references: [id])
+  loan        Loan                @relation(fields: [loanId], references: [id])
+  client      Client              @relation(fields: [clientId], references: [id])
+  receivedBy  User                @relation("PaymentReceivedBy", fields: [receivedById], references: [id])
   allocations PaymentAllocation[]
 
+  @@index([loanId, paymentDate])
+  @@index([clientId])
+  @@index([receivedById])
+  @@index([paymentDate])
   @@map("payments")
 }
 
@@ -250,26 +268,30 @@ model PaymentAllocation {
   amount     Decimal
   type       AllocationType
 
-  payment Payment        @relation(fields: [paymentId], references: [id])
+  payment  Payment         @relation(fields: [paymentId], references: [id])
   schedule PaymentSchedule @relation(fields: [scheduleId], references: [id])
 
+  @@index([paymentId])
+  @@index([scheduleId])
   @@map("payment_allocations")
 }
 
 // ─── Late Fees ──────────────────────────────────────────────────────────────
 
 model LateFee {
-  id             String    @id @default(uuid())
-  loanId         String    @map("loan_id")
-  scheduleId     String    @map("schedule_id")
+  id             String   @id @default(uuid())
+  loanId         String   @map("loan_id")
+  scheduleId     String   @map("schedule_id")
   amount         Decimal
-  calculatedDate DateTime  @map("calculated_date")
-  paid           Boolean   @default(false)
-  createdAt      DateTime  @default(now()) @map("created_at")
+  calculatedDate DateTime @map("calculated_date")
+  paid           Boolean  @default(false)
+  createdAt      DateTime @default(now()) @map("created_at")
 
   loan     Loan            @relation(fields: [loanId], references: [id])
   schedule PaymentSchedule @relation(fields: [scheduleId], references: [id])
 
+  @@index([loanId])
+  @@index([scheduleId])
   @@map("late_fees")
 }
 
@@ -282,56 +304,59 @@ enum InvestorStatus {
 }
 
 model Investor {
-  id              String        @id @default(uuid())
-  code            String        @unique
-  name            String
-  email           String?
-  phone           String?
-  phone2          String?       @map("phone_2")
-  cedula          String?
-  birthDate       DateTime?     @map("birth_date")
-  nationality     String?
-  type            String        @default("individual")
-  photo           String?
-  capital         Decimal       @default(0)
-  monthlyPayment  Decimal       @default(0) @map("monthly_payment")
-  rate            Decimal       @default(0)
-  startDate       DateTime?     @map("start_date")
-  term            String?
-  bank            String?
-  status          InvestorStatus @default(ACTIVE)
-  notes           String?
-  createdById     String        @map("created_by")
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
+  id             String         @id @default(uuid())
+  code           String         @unique
+  name           String
+  email          String?
+  phone          String?
+  phone2         String?        @map("phone_2")
+  cedula         String?
+  birthDate      DateTime?      @map("birth_date")
+  nationality    String?
+  type           String         @default("individual")
+  photo          String?
+  capital        Decimal        @default(0)
+  monthlyPayment Decimal        @default(0) @map("monthly_payment")
+  rate           Decimal        @default(0)
+  startDate      DateTime?      @map("start_date")
+  term           String?
+  bank           String?
+  status         InvestorStatus @default(ACTIVE)
+  notes          String?
+  createdById    String         @map("created_by")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
 
   createdBy User       @relation(fields: [createdById], references: [id])
   documents Document[]
 
+  @@index([createdAt])
   @@map("investors")
 }
 
 // ─── Documents ──────────────────────────────────────────────────────────────
 
 model Document {
-  id         String   @id @default(uuid())
-  clientId   Int?  @map("client_id")
-  investorId String?  @map("investor_id")
-  loanId     String?  @map("loan_id")
-  name       String
-  category   String   @default("general")
-  fileUrl    String?  @map("file_url")
-  fileSize   Int?     @map("file_size")
-  mimeType   String?  @map("mime_type")
-  notes      String?
-  uploadedById String @map("uploaded_by")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(uuid())
+  clientId     Int?     @map("client_id")
+  investorId   String?  @map("investor_id")
+  loanId       String?  @map("loan_id")
+  name         String
+  category     String   @default("general")
+  fileUrl      String?  @map("file_url")
+  fileSize     Int?     @map("file_size")
+  mimeType     String?  @map("mime_type")
+  notes        String?
+  uploadedById String   @map("uploaded_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  uploadedBy User   @relation(fields: [uploadedById], references: [id])
-  client     Client? @relation(fields: [clientId], references: [id])
+  uploadedBy User      @relation(fields: [uploadedById], references: [id])
+  client     Client?   @relation(fields: [clientId], references: [id])
   investor   Investor? @relation(fields: [investorId], references: [id])
 
+  @@index([clientId, createdAt])
+  @@index([investorId, createdAt])
   @@map("documents")
 }
 
@@ -365,6 +390,7 @@ model Task {
 
   createdBy User @relation(fields: [createdById], references: [id])
 
+  @@index([status(sort: Asc), priority(sort: Desc), dueDate(sort: Asc), createdAt(sort: Desc)])
   @@map("tasks")
 }
 
@@ -379,9 +405,10 @@ model Portfolio {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  createdBy User  @relation(fields: [createdById], references: [id])
+  createdBy User   @relation(fields: [createdById], references: [id])
   loans     Loan[]
 
+  @@index([createdAt])
   @@map("portfolios")
 }
 
@@ -402,5 +429,6 @@ model AuditLog {
   client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
 
   @@index([clientId, createdAt])
+  @@index([entityType, entityId, createdAt])
   @@map("audit_logs")
 }

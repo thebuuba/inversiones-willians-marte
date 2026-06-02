@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
-import { ArrowLeft, Eye, Lock, User, UserPlus } from 'lucide-react';
+import { ArrowLeft, Eye, Lock, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 export default function LoginPage() {

@@ -165,19 +165,16 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
 
   const isLoanPayment = values.category === 'Pago de préstamo';
 
+  const resetLoanLookup = () => {
+    setSearchResults([]);
+    setShowResults(false);
+    setSelectedClient(null);
+    setClientLoans([]);
+  };
+
   useEffect(() => {
-    if (!isLoanPayment) {
-      setSearchResults([]);
-      setShowResults(false);
-      setSelectedClient(null);
-      setClientLoans([]);
-      return;
-    }
-    if (values.person.length < 2) {
-      setSearchResults([]);
-      setShowResults(false);
-      return;
-    }
+    if (!isLoanPayment || values.person.length < 2) return;
+
     const timer = setTimeout(async () => {
       const result = await getClients(values.person);
       setSearchResults(result.data);
@@ -222,13 +219,19 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
     setValues((currentValues) => ({ ...currentValues, [key]: value }));
   };
 
+  const handleCategoryChange = (value: string) => {
+    updateValue('category', value);
+    if (value !== 'Pago de préstamo') {
+      resetLoanLookup();
+      updateValue('clientId', undefined);
+      updateValue('loanId', undefined);
+    }
+  };
+
   const closeModal = () => {
     setSubmitted(false);
     setValues(initialValues);
-    setSearchResults([]);
-    setShowResults(false);
-    setSelectedClient(null);
-    setClientLoans([]);
+    resetLoanLookup();
     onClose();
   };
 
@@ -246,10 +249,7 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
     onSubmit({ ...values, person: values.person.trim(), amount: String(amountNumber) });
     setSubmitted(false);
     setValues(initialValues);
-    setSearchResults([]);
-    setShowResults(false);
-    setSelectedClient(null);
-    setClientLoans([]);
+    resetLoanLookup();
   };
 
   return (
@@ -324,7 +324,12 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
                           autoComplete="off"
                           className={`${inputClass(errors.person)} pl-12`}
                           onChange={(event) => {
-                            updateValue('person', event.target.value);
+                            const nextPerson = event.target.value;
+                            updateValue('person', nextPerson);
+                            if (nextPerson.length < 2) {
+                              setSearchResults([]);
+                              setShowResults(false);
+                            }
                             if (selectedClient) {
                               setSelectedClient(null);
                               setClientLoans([]);
@@ -401,7 +406,7 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
                 <SelectField
                   error={errors.category}
                   label="Categoría"
-                  onChange={(value) => updateValue('category', value)}
+                  onChange={handleCategoryChange}
                   options={categories}
                   value={values.category}
                 />

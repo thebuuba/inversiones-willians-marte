@@ -3,9 +3,10 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, User, Phone, FileText, TrendingUp, Calendar, Camera, Upload, Trash2, Save, UserPlus, X, Image } from 'lucide-react';
+import { ArrowLeft, User, Phone, FileText, TrendingUp, Calendar, Camera, Upload, Trash2, Save, UserPlus, X, Image as ImageIcon } from 'lucide-react';
 import { createInvestor } from '@/lib/api/investors';
 import { compressImage } from '@/lib/compress-image';
+import { invalidateCache } from '@/lib/use-client-cache';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 
@@ -74,10 +75,15 @@ function PhotoUpload({ photo, onPhotoChange }: { photo: string | null; onPhotoCh
         className="group relative mx-auto flex aspect-square w-full max-w-[260px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-[#c2dfcb] bg-[#eaf5ed]/40 transition hover:border-[#7fb89a] hover:bg-[#eaf5ed]"
       >
         {photo ? (
-          <img src={photo} alt="Inversionista" className="h-full w-full object-cover" />
+          <div
+            aria-label="Inversionista"
+            className="h-full w-full bg-cover bg-center"
+            role="img"
+            style={{ backgroundImage: `url(${photo})` }}
+          />
         ) : (
           <div className="flex flex-col items-center justify-center gap-3 px-6 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm"><Image className="h-6 w-6 text-[#5a9a7a]" /></div>
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm"><ImageIcon className="h-6 w-6 text-[#5a9a7a]" /></div>
             <p className="text-sm font-medium text-neutral-700">Arrastra una foto aquí</p>
             <p className="text-xs text-neutral-500">o haz click para subir</p>
           </div>
@@ -142,6 +148,7 @@ export default function AddInvestorPage() {
         bank: form.bank || undefined,
         notes: form.notes || undefined,
       });
+      invalidateCache('investors');
       if (andNew) {
         setForm({ firstName: '', lastName: '', cedula: '', birthDate: '', nationality: '', type: 'individual', phone: '', phone2: '', email: '', capital: '', rate: '', frequency: 'mensual', startDate: '', term: '12m', bank: '', notes: '' });
         setPhoto(null);

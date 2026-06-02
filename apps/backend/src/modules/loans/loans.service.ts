@@ -1,7 +1,30 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { prisma } from '@inversiones/database';
+import { prisma, Prisma } from '@inversiones/database';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { AmortizationService } from './amortization.service';
+
+type LoanListRow = {
+  id: string;
+  loanNumber: number;
+  clientId: number;
+  productId: string;
+  principal: number;
+  interestRate: number;
+  interestType: string;
+  totalAmount: number;
+  paymentFreq: string;
+  term: number;
+  startDate: Date;
+  endDate: Date | null;
+  status: string;
+  balance: number;
+  notes: string | null;
+  createdAt: Date;
+  clientFirstName: string;
+  clientLastName: string;
+  clientIdentification: string | null;
+  productName: string;
+};
 
 @Injectable()
 export class LoansService {
@@ -71,35 +94,95 @@ export class LoansService {
   }
 
   async findAll(status?: string, search?: string, take = 50, skip = 0) {
-    const where: any = {};
+    const pageSize = Math.min(Math.max(take, 1), 100);
+    const offset = Math.max(skip, 0);
+    const filters: Prisma.Sql[] = [];
 
-    if (status) where.status = status;
+    if (status) filters.push(Prisma.sql`l.status::text = ${status}`);
     if (search) {
-      where.client = {
-        OR: [
-          { firstName: { contains: search, mode: 'insensitive' as const } },
-          { lastName: { contains: search, mode: 'insensitive' as const } },
-          { identification: { contains: search } },
-        ],
-      };
+      const pattern = `%${search}%`;
+      filters.push(Prisma.sql`(
+        c.first_name ILIKE ${pattern}
+        OR c.last_name ILIKE ${pattern}
+        OR c.identification ILIKE ${pattern}
+        OR l.id ILIKE ${pattern}
+        OR l.loan_number::text ILIKE ${pattern}
+      )`);
     }
 
-    const [data, total] = await Promise.all([
-      prisma.loan.findMany({
-        where,
-        include: {
-          client: { select: { id: true, firstName: true, lastName: true, identification: true } },
-          product: { select: { id: true, name: true } },
-          _count: { select: { schedule: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        take,
-        skip,
-      }),
-      prisma.loan.count({ where }),
-    ]);
+    const whereSql = filters.length > 0 ? Prisma.sql`WHERE ${Prisma.join(filters, ' AND ')}` : Prisma.empty;
+    const rows = await prisma.$queryRaw<LoanListRow[]>`
+      SELECT
+        l.id,
+        l.loan_number AS "loanNumber",
+        l.client_id AS "clientId",
+        l.product_id AS "productId",
+        l.principal::float8 AS principal,
+        l.interest_rate::float8 AS "interestRate",
+        l.interest_type::text AS "interestType",
+        l.total_amount::float8 AS "totalAmount",
+        l.payment_frequency::text AS "paymentFreq",
+        l.term,
+        l.start_date AS "startDate",
+        l.end_date AS "endDate",
+        l.status::text AS status,
+        l.balance::float8 AS balance,
+        l.notes,
+        l.created_at AS "createdAt",
+        c.first_name AS "clientFirstName",
+        c.last_name AS "clientLastName",
+        c.identification AS "clientIdentification",
+        p.name AS "productName"
+      FROM loans l
+      JOIN clients c ON c.id = l.client_id
+      JOIN loan_products p ON p.id = l.product_id
+      ${whereSql}
+      ORDER BY l.created_at DESC
+      LIMIT ${pageSize + 1}
+      OFFSET ${offset}
+    `;
+    const hasMore = rows.length > pageSize;
+    const pageRows = rows.slice(0, pageSize);
+    const total = hasMore
+      ? Number((await prisma.$queryRaw<Array<{ count: number }>>`
+          SELECT COUNT(*)::int AS count
+          FROM loans l
+          JOIN clients c ON c.id = l.client_id
+          ${whereSql}
+        `)[0]?.count ?? 0)
+      : offset + pageRows.length;
 
-    return { data, total };
+    return {
+      data: pageRows.map((row) => ({
+        id: row.id,
+        loanNumber: row.loanNumber,
+        clientId: row.clientId,
+        productId: row.productId,
+        principal: row.principal,
+        interestRate: row.interestRate,
+        interestType: row.interestType,
+        totalAmount: row.totalAmount,
+        paymentFreq: row.paymentFreq,
+        term: row.term,
+        startDate: row.startDate,
+        endDate: row.endDate,
+        status: row.status,
+        balance: row.balance,
+        notes: row.notes,
+        createdAt: row.createdAt,
+        client: {
+          id: row.clientId,
+          firstName: row.clientFirstName,
+          lastName: row.clientLastName,
+          identification: row.clientIdentification,
+        },
+        product: {
+          id: row.productId,
+          name: row.productName,
+        },
+      })),
+      total,
+    };
   }
 
   async findOne(id: string) {

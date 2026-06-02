@@ -18,6 +18,7 @@ import {
 import { NewRequestModal } from '@/components/requests/new-request-modal';
 import { RequestDetailDrawer } from '@/components/requests/request-detail-drawer';
 import { getRequests, createRequest, approveRequest, rejectRequest } from '@/lib/api/requests';
+import { getStaggerDelay } from '@/lib/animation';
 import type { LoanRequestItem, CreateRequestDto } from '@inversiones/shared';
 
 const statusMap: Record<string, { label: string; bg: string; text: string; dot: string }> = {
@@ -32,7 +33,7 @@ const fadeUp: Variants = {
   visible: (index = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1], delay: index * 0.06 },
+    transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1], delay: getStaggerDelay(index, 0.06) },
   }),
 };
 

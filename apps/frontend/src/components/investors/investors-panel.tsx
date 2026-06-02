@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
@@ -14,6 +14,8 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { getInvestors } from '@/lib/api/investors';
+import { getStaggerDelay } from '@/lib/animation';
+import { useClientCache } from '@/lib/use-client-cache';
 import type { InvestorItem } from '@inversiones/shared';
 
 const filters = ['Todos', 'Activos', 'Pausados', 'Retirados'];
@@ -35,7 +37,7 @@ const fadeUp: Variants = {
   visible: (index = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: index * 0.05 },
+    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: getStaggerDelay(index, 0.05) },
   }),
 };
 
@@ -74,18 +76,10 @@ function formatCurrency(n: number): string {
 
 export function InvestorsPanel() {
   const router = useRouter();
-  const [investors, setInvestors] = useState<InvestorItem[]>([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('Todos');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    getInvestors()
-      .then(setInvestors)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, loading } = useClientCache<InvestorItem[]>('investors', getInvestors);
+  const investors = useMemo(() => data ?? [], [data]);
 
   const stats = useMemo(() => {
     const total = investors.length;

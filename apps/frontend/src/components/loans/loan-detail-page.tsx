@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Banknote, CalendarDays, CircleDollarSign, Plus, TrendingUp, WalletCards } from 'lucide-react';
 import { getLoan, type LoanDetail } from '@/lib/api/loans';
 import { createPayment } from '@/lib/api/payments';
+import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
 import { getLoanDetailTotals, getScheduleRemaining } from './loan-detail.helpers';
 import { RegisterPaymentModal, type RegisterPaymentValues } from './register-payment-modal';
 
@@ -99,6 +100,12 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
     setPaymentError(null);
     try {
       await createPayment({ loanId: loan.id, clientId: loan.clientId, ...values });
+      invalidateCachePrefix('loans:');
+      invalidateCachePrefix('clients:');
+      invalidateCache('dashboard');
+      invalidateCache('portfolio');
+      invalidateCache('monthlyCollections');
+      invalidateCache('upcomingPayments');
       setModalOpen(false);
       await loadLoan();
     } catch {

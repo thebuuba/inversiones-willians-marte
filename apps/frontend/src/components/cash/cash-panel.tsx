@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { MovementModal, type MovementFormValues } from './movement-modal';
 import { createPayment } from '@/lib/api/payments';
+import { getStaggerDelay } from '@/lib/animation';
+import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
 
 type MovementType = 'in' | 'out';
 
@@ -52,7 +54,7 @@ const fadeUp: Variants = {
   visible: (index = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1], delay: index * 0.055 },
+    transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1], delay: getStaggerDelay(index, 0.055) },
   }),
 };
 
@@ -493,6 +495,12 @@ export function CashPanel() {
           paymentMethod: values.method,
           notes: values.description,
         });
+        invalidateCachePrefix('loans:');
+        invalidateCachePrefix('clients:');
+        invalidateCache('dashboard');
+        invalidateCache('portfolio');
+        invalidateCache('monthlyCollections');
+        invalidateCache('upcomingPayments');
       } catch {
         return;
       }

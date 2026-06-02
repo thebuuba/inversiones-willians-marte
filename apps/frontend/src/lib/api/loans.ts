@@ -15,6 +15,7 @@ export interface LoanListProduct {
 
 export interface LoanListItem {
   id: string;
+  loanNumber: number;
   clientId: number;
   productId: string;
   principal: number;
@@ -31,7 +32,6 @@ export interface LoanListItem {
   createdAt: string;
   client: LoanListClient;
   product: LoanListProduct;
-  _count: { schedule: number };
 }
 
 export interface PaginatedLoans {
@@ -61,7 +61,7 @@ export interface LoanDetailPayment {
   notes: string | null;
 }
 
-export interface LoanDetail extends Omit<LoanListItem, '_count'> {
+export interface LoanDetail extends LoanListItem {
   schedule: LoanScheduleItem[];
   payments: LoanDetailPayment[];
 }

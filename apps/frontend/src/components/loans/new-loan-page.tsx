@@ -15,6 +15,7 @@ import {
 import { getLoanProducts, type LoanProductItem } from '@/lib/api/loan-products';
 import { createLoan } from '@/lib/api/loans';
 import { getClients, getClientBasic } from '@/lib/api/clients';
+import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
 import {
   canCalculateLoan,
   computeSchedule,
@@ -535,7 +536,7 @@ function NewLoanStepTwo({
       adjustedRate: rawRate,
       summary: { principal, months, payment, total, interest: Math.max(0, total - principal) },
     };
-  }, [amount, rawRate, term, termUnit, customPayment, amortizationType, customPaymentVal]);
+  }, [amount, rawRate, term, termUnit, amortizationType, customPaymentVal]);
 
   const effectiveRate = adjustedRate;
 
@@ -623,108 +624,6 @@ function NewLoanStepTwo({
         {saving ? 'Guardando...' : 'Guardar préstamo'}
       </button>
     </div>
-  );
-}
-
-function SummaryMetricCard({
-  label,
-  value,
-  helper,
-  highlight = false,
-}: {
-  label: string;
-  value: string;
-  helper?: string;
-  highlight?: boolean;
-}) {
-  return (
-    <motion.section
-      animate={{ opacity: 1, y: 0 }}
-      className="min-h-[120px] rounded-xl border border-neutral-100 bg-white p-5 shadow-sm"
-      initial={{ opacity: 0, y: 14 }}
-      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-    >
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#A7B5AD]">{label}</p>
-      <p className={`mt-3 text-2xl font-bold leading-none ${highlight ? 'text-[#B45B38]' : 'text-[#173D2C]'}`}>
-        {value}
-      </p>
-      {helper && <p className="mt-2 text-xs font-medium text-[#6F8076]">{helper}</p>}
-    </motion.section>
-  );
-}
-
-function LoanSummaryCards({
-  amount,
-  payment,
-  interest,
-  total,
-  term,
-}: {
-  amount: number;
-  payment: number;
-  interest: number;
-  total: number;
-  term: number;
-}) {
-  const interestPercent = amount > 0 ? ((interest / amount) * 100).toFixed(1) : '0';
-  return (
-    <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <SummaryMetricCard label="CAPITAL" value={formatCurrency(amount)} />
-      <SummaryMetricCard helper="mensual" label="CUOTA" value={formatCurrency(payment)} />
-      <SummaryMetricCard helper={`${interestPercent}% sobre capital`} highlight label="TOTAL INTERESES" value={formatCurrency(interest)} />
-      <SummaryMetricCard helper={`en ${term} ${term === 1 ? 'mes' : 'meses'}`} label="TOTAL A PAGAR" value={formatCurrency(total)} />
-    </div>
-  );
-}
-
-function LoanClientSummary({
-  client,
-  product,
-  amount,
-  term,
-}: {
-  client: Client;
-  product: LoanProductItem | null;
-  amount: string;
-  term: string;
-}) {
-  const fullName = `${client.firstName} ${client.lastName}`;
-  const freqLabel = product?.paymentFrequency === 'MONTHLY' ? 'Mensual' : product?.paymentFrequency ?? '';
-  const rateLabel = product ? `${product.interestRate}%` : '';
-  const pills = [product?.name ?? '', freqLabel, rateLabel].filter(Boolean);
-
-  return (
-    <motion.section
-      animate={{ opacity: 1, y: 0 }}
-      className="mt-5 rounded-xl border border-neutral-100 bg-white px-5 py-5 shadow-sm"
-      initial={{ opacity: 0, y: 14 }}
-      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
-    >
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[2px] border-white bg-[#EAF6EF] shadow-[0_4px_12px_rgba(40,92,67,0.1)]">
-            <UserRound className="h-5 w-5 text-[#5FA37D]" />
-          </div>
-          <div>
-            <p className="text-base font-bold leading-tight text-[#173D2C]">{fullName}</p>
-            <p className="mt-0.5 text-xs font-medium text-[#7A8A80]">{client.identification ?? '—'}</p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {pills.map((pill, index) => (
-            <span
-              className={`rounded-full px-3 py-1.5 text-xs font-bold ${
-                index === 0 ? 'bg-[#E7F4EC] text-[#2F7654]' : 'bg-[#F3FAF6] text-[#5C6D63]'
-              }`}
-              key={pill}
-            >
-              {pill}
-            </span>
-          ))}
-        </div>
-      </div>
-    </motion.section>
   );
 }
 
@@ -849,7 +748,6 @@ export function NewLoanPage() {
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {
-    setLoadingProducts(true);
     getLoanProducts()
       .then((data) => {
         if (data.length > 0) setSelectedProduct(data[0]);
@@ -869,11 +767,12 @@ export function NewLoanPage() {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    if (amortizationType === 'INDEFINITE' && !firstPaymentDate) {
+  function handleAmortizationTypeChange(value: AmortizationType) {
+    setAmortizationType(value);
+    if (value === 'INDEFINITE' && !firstPaymentDate) {
       setFirstPaymentDate(getDefaultFirstPaymentDate());
     }
-  }, [amortizationType, firstPaymentDate]);
+  }
 
   const calculationReady = canCalculateLoan({
     amount,
@@ -902,6 +801,13 @@ export function NewLoanPage() {
         amortizationType: amortizationType === 'INDEFINITE' ? 'INDEFINITE' : undefined,
         notes: purpose || undefined,
       });
+      invalidateCachePrefix('loans:');
+      invalidateCachePrefix('clients:');
+      invalidateCache('dashboard');
+      invalidateCache('portfolio');
+      invalidateCache('monthlyCollections');
+      invalidateCache('weeklyMovement');
+      invalidateCache('upcomingPayments');
       router.push(`/clientes/${selectedClient.id}`);
     } finally {
       setSaving(false);
@@ -947,7 +853,7 @@ export function NewLoanPage() {
           customPayment={customPayment}
           onCustomPaymentChange={setCustomPayment}
           amortizationType={amortizationType}
-          onAmortizationTypeChange={setAmortizationType}
+          onAmortizationTypeChange={handleAmortizationTypeChange}
           firstPaymentDate={firstPaymentDate}
           onFirstPaymentDateChange={setFirstPaymentDate}
           selectedPortfolioId={selectedPortfolioId}

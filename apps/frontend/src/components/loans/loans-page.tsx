@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -19,6 +19,8 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { getLoans, type LoanListItem } from '@/lib/api/loans';
+import { getStaggerDelay } from '@/lib/animation';
+import { useClientCache } from '@/lib/use-client-cache';
 
 const statusFilters = ['Todos', 'Al día', 'Atrasados', 'Pendientes', 'Pagados'];
 const sortOptions = ['Más recientes', 'Más antiguos', 'Mayor monto', 'Menor monto'];
@@ -61,7 +63,7 @@ const fadeUp: Variants = {
   visible: (index = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.38, ease: [0.16, 1, 0.3, 1], delay: index * 0.045 },
+    transition: { duration: 0.38, ease: [0.16, 1, 0.3, 1], delay: getStaggerDelay(index, 0.045) },
   }),
 };
 
@@ -384,42 +386,33 @@ function LoansTable({ rows, total, page, totalPages, onPrev, onNext }: { rows: L
 }
 
 function normalizeStatusFilter(status: string) {
-  if (status === 'Atrasados') return 'Atrasado';
-  if (status === 'Pendientes') return 'Pendiente';
-  if (status === 'Pagados') return 'Pagado';
+  if (status === 'Al día') return 'ACTIVE';
+  if (status === 'Atrasados') return 'OVERDUE';
+  if (status === 'Pendientes') return 'RESTRUCTURED';
+  if (status === 'Pagados') return 'PAID';
   return status;
 }
 
 export function LoansPage() {
-  const [loans, setLoans] = useState<LoanListItem[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
   const [sort, setSort] = useState('Más recientes');
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const PAGE_SIZE = 50;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-
-  const fetchLoans = useCallback(async (term: string, status: string, pageNum: number) => {
-    setLoading(true);
-    const statusParam = normalizeStatusFilter(status);
-    const result = await getLoans(statusParam === 'Todos' ? undefined : statusParam, term || undefined, PAGE_SIZE, pageNum * PAGE_SIZE);
-    setLoans(result.data);
-    setTotal(result.total);
-    setLoading(false);
-  }, []);
-
   const searchKey = `${search}|${selectedStatus}`;
-
-  useEffect(() => {
-    setPage(0);
-  }, [searchKey]);
-
-  useEffect(() => {
-    fetchLoans(search, selectedStatus, page);
-  }, [page, searchKey, fetchLoans]);
+  const statusParam = normalizeStatusFilter(selectedStatus);
+  const loansFetcher = useCallback(
+    () => getLoans(statusParam === 'Todos' ? undefined : statusParam, search || undefined, PAGE_SIZE, page * PAGE_SIZE),
+    [page, search, statusParam],
+  );
+  const { data, loading } = useClientCache(
+    `loans:${searchKey}:${page}`,
+    loansFetcher,
+  );
+  const loans = useMemo(() => data?.data ?? [], [data]);
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const rows = useMemo(() => {
     return loans.map(loanToRow);
@@ -427,7 +420,15 @@ export function LoansPage() {
 
   function handleSearch(value: string) {
     clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => setSearch(value), 300);
+    searchTimer.current = setTimeout(() => {
+      setSearch(value);
+      setPage(0);
+    }, 300);
+  }
+
+  function handleStatusChange(value: string) {
+    setSelectedStatus(value);
+    setPage(0);
   }
 
   return (
@@ -444,7 +445,7 @@ export function LoansPage() {
         <LoanFilters
           onSearchChange={handleSearch}
           onSortChange={setSort}
-          onStatusChange={setSelectedStatus}
+          onStatusChange={handleStatusChange}
           search={search}
           selectedStatus={selectedStatus}
           sort={sort}

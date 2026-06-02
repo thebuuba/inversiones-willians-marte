@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useClientCache } from '@/lib/use-client-cache';
+import { getStaggerDelay } from '@/lib/animation';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -42,7 +43,6 @@ import {
   getWeeklyMovement,
   getUpcomingPayments,
 } from '@/lib/api/dashboard';
-import type { DashboardData, PortfolioGroup, AuditEntry, MonthlyCollection, WeeklyMovementItem, UpcomingPayment } from '@/lib/api/dashboard';
 
 function formatCompact(n: number): string {
   if (n >= 1_000_000) return `RD$${(n / 1_000_000).toFixed(2)}M`;
@@ -69,7 +69,7 @@ const cardVariants: Variants = {
   visible: (index = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: index * 0.06 },
+    transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: getStaggerDelay(index, 0.06) },
   }),
 };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
@@ -15,6 +15,8 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { getClients } from '@/lib/api/clients';
+import { getStaggerDelay } from '@/lib/animation';
+import { useClientCache } from '@/lib/use-client-cache';
 import type { Client } from '@inversiones/shared';
 
 const PAGE_SIZE = 50;
@@ -24,7 +26,7 @@ const fadeUp: Variants = {
   visible: (index = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: index * 0.05 },
+    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: getStaggerDelay(index, 0.05) },
   }),
 };
 
@@ -44,38 +46,23 @@ function PanelCard({ children, className = '', index = 0 }: { children: ReactNod
 
 export function ClientsPanel() {
   const router = useRouter();
-  const [clients, setClients] = useState<Client[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [recentThreshold] = useState(() => Date.now() - 30 * 86400000);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const clientsFetcher = useCallback(
+    () => getClients(search || undefined, PAGE_SIZE, page * PAGE_SIZE),
+    [page, search],
+  );
+  const { data, loading, error } = useClientCache(
+    `clients:${search}:${page}`,
+    clientsFetcher,
+    undefined,
+    'No se pudieron cargar los clientes. Verifica que el backend esté corriendo.',
+  );
+  const clients = data?.data ?? [];
+  const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
-
-  const fetchClients = useCallback(async (term: string, pageNum: number) => {
-    setLoading(true);
-    setError('');
-    try {
-      const result = await getClients(term || undefined, PAGE_SIZE, pageNum * PAGE_SIZE);
-      setClients(result.data);
-      setTotal(result.total);
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { status?: number } };
-      if (axiosErr?.response?.status === 401) return;
-      setError('No se pudieron cargar los clientes. Verifica que el backend esté corriendo.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    setPage(0);
-  }, [search]);
-
-  useEffect(() => {
-    fetchClients(search, page);
-  }, [page, search, fetchClients]);
 
   const stats = [
     { label: 'Total clientes', value: String(total), icon: UsersRound, bg: '#E7F4EC', color: '#5FA37D' },
@@ -83,7 +70,7 @@ export function ClientsPanel() {
     { label: 'Mostrados', value: String(clients.length), icon: UsersRound, bg: '#EEF3EF', color: '#7A8A80' },
     {
       label: 'Nuevos (30d)',
-      value: String(clients.filter((c) => (Date.now() - new Date(c.createdAt).getTime()) / 86400000 <= 30).length),
+      value: String(clients.filter((c) => new Date(c.createdAt).getTime() >= recentThreshold).length),
       icon: UserRound,
       bg: '#D8E9FF',
       color: '#4E7CAD',
@@ -94,7 +81,10 @@ export function ClientsPanel() {
 
   function handleSearch(value: string) {
     clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => setSearch(value), 300);
+    searchTimer.current = setTimeout(() => {
+      setSearch(value);
+      setPage(0);
+    }, 300);
   }
 
   return (

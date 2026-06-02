@@ -31,7 +31,6 @@ import {
   UserRound,
   Phone,
   CircleCheck,
-  Clock,
   CircleAlert,
 } from 'lucide-react';
 
@@ -278,12 +277,15 @@ function UploadModal({
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
 
-  useEffect(() => {
-    if (!open) {
-      setFile(null);
-      setName('');
-    }
-  }, [open]);
+  function resetForm() {
+    setFile(null);
+    setName('');
+  }
+
+  function closeModal() {
+    resetForm();
+    onClose();
+  }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -296,13 +298,14 @@ function UploadModal({
   async function handleSubmit() {
     if (!file) return;
     await onUpload(file, name || file.name);
+    resetForm();
     onClose();
   }
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={closeModal}>
       <div
         className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
@@ -345,7 +348,7 @@ function UploadModal({
           <button
             className="h-10 rounded-full border border-neutral-200 bg-white px-5 text-sm font-semibold text-neutral-600 transition hover:bg-neutral-50"
             disabled={uploading}
-            onClick={onClose}
+            onClick={closeModal}
             type="button"
           >
             Cancelar
@@ -446,7 +449,7 @@ function historyTone(type: string) {
   return styles[type] ?? styles.Nota;
 }
 
-function TimelineItem({ event, index }: { event: HistoryEvent; index: number }) {
+function TimelineItem({ event }: { event: HistoryEvent }) {
   const style = historyTone(event.type);
   const Icon = style.icon;
 
@@ -495,7 +498,7 @@ function ClientHistoryTab({ events }: { events: HistoryEvent[] }) {
           <p className="py-12 text-center text-sm text-neutral-400">Sin actividad registrada.</p>
         ) : (
           events.map((event, index) => (
-            <TimelineItem event={event} index={index} key={`${event.type}-${event.date}-${index}`} />
+            <TimelineItem event={event} key={`${event.type}-${event.date}-${index}`} />
           ))
         )}
       </div>
@@ -664,12 +667,14 @@ function ClientNotesTab({ clientId, clientNotes }: { clientId: number; clientNot
   const [editingText, setEditingText] = useState('');
 
   useEffect(() => {
-    if (!clientNotes) return;
-    try {
-      const arr = JSON.parse(clientNotes);
-      if (Array.isArray(arr)) setNotes(arr);
-    } catch {}
-  }, [clientNotes]);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setNotes(parsed);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [parsed]);
 
   const persistNotes = useCallback(
     async (updated: ClientNote[]) => {
@@ -734,7 +739,7 @@ function ClientNotesTab({ clientId, clientNotes }: { clientId: number; clientNot
       </div>
 
       <div className="space-y-3">
-        {notes.map((note, index) =>
+        {notes.map((note) =>
           editingId === note.id ? (
             <EditableNoteCard
               key={note.id}
@@ -798,26 +803,42 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   const [auditEvents, setAuditEvents] = useState<HistoryEvent[]>([]);
 
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setLoading(true);
+    });
     getClient(clientId)
-      .then(setClientData)
-      .catch(() => setClientData(null))
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (!cancelled) setClientData(data);
+      })
+      .catch(() => {
+        if (!cancelled) setClientData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
     api.get<ApiResponse<ClientHistoryEntryRaw[]>>(`/audit/client/${clientId}/history`)
-      .then((audit) =>
-        setAuditEvents(
-          (audit.data.data ?? []).map((entry) => ({
-            type: entry.type,
-            title: entry.title,
-            detail: entry.detail,
-            author: entry.author,
-            date: fmtDate(entry.createdAt),
-            amount: entry.amount != null ? fmt(entry.amount) : undefined,
-          })),
-        ),
-      )
-      .catch(() => {});
+      .then((audit) => {
+        if (!cancelled) {
+          setAuditEvents(
+            (audit.data.data ?? []).map((entry) => ({
+              type: entry.type,
+              title: entry.title,
+              detail: entry.detail,
+              author: entry.author,
+              date: fmtDate(entry.createdAt),
+              amount: entry.amount != null ? fmt(entry.amount) : undefined,
+            })),
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setAuditEvents([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [clientId]);
 
   if (loading) {
@@ -866,10 +887,11 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div className="flex items-end gap-5">
                 {clientData.photo ? (
-                  <img
-                    src={clientData.photo}
-                    alt={fullName}
-                    className="h-20 w-20 shrink-0 rounded-2xl border-4 border-white object-cover shadow-md"
+                  <div
+                    aria-label={fullName}
+                    className="h-20 w-20 shrink-0 rounded-2xl border-4 border-white bg-cover bg-center shadow-md"
+                    role="img"
+                    style={{ backgroundImage: `url(${clientData.photo})` }}
                   />
                 ) : (
                   <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-[#eaf5ed] shadow-md">
@@ -938,7 +960,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
         </div>
 
         <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-white p-1.5 shadow-sm border border-neutral-100">
-          {tabs.map((t, i) => {
+          {tabs.map((t) => {
             const Icon = t.icon;
             const active = activeTab === t.label;
             return (

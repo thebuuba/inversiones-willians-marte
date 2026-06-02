@@ -1,57 +1,82 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  fetchClientCache,
+  invalidateClientCache,
+  invalidateClientCachePrefix,
+  readClientCache,
+} from './client-cache';
 
-interface CacheEntry<T> {
-  data: T;
-  expiry: number;
-}
-
-const cache = new Map<string, CacheEntry<unknown>>();
 const defaultTTL = 30_000;
+
+interface ClientCacheState<T> {
+  key: string;
+  data: T | null;
+  loading: boolean;
+  error: string;
+}
 
 export function useClientCache<T>(
   key: string,
   fetcher: () => Promise<T>,
   ttl = defaultTTL,
+  errorMessage = 'Error al cargar datos',
 ): { data: T | null; loading: boolean; error: string } {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const mounted = useRef(true);
+  const [state, setState] = useState<ClientCacheState<T>>(() => {
+    const cached = readClientCache<T>(key);
+    return {
+      key,
+      data: cached?.data ?? null,
+      loading: !cached,
+      error: '',
+    };
+  });
 
   useEffect(() => {
-    mounted.current = true;
-    const cached = cache.get(key);
-    if (cached && Date.now() < cached.expiry) {
-      setData(cached.data as T);
-      setLoading(false);
+    let cancelled = false;
+    const cached = readClientCache<T>(key);
+
+    if (cached && !cached.stale) {
       return;
     }
 
-    setLoading(true);
-    setError('');
-
-    fetcher()
+    fetchClientCache(key, fetcher, ttl)
       .then((result) => {
-        if (!mounted.current) return;
-        cache.set(key, { data: result, expiry: Date.now() + ttl });
-        setData(result);
+        if (cancelled) return;
+        setState({ key, data: result, loading: false, error: '' });
       })
       .catch(() => {
-        if (!mounted.current) return;
-        setError('Error al cargar datos');
-      })
-      .finally(() => {
-        if (mounted.current) setLoading(false);
+        if (cancelled) return;
+        setState({
+          key,
+          data: cached?.data ?? null,
+          loading: false,
+          error: errorMessage,
+        });
       });
 
-    return () => { mounted.current = false; };
-  }, [key]);
+    return () => {
+      cancelled = true;
+    };
+  }, [errorMessage, fetcher, key, ttl]);
 
-  return { data, loading, error };
+  if (state.key === key) {
+    return state;
+  }
+
+  const cached = readClientCache<T>(key);
+  return {
+    data: cached?.data ?? null,
+    loading: !cached,
+    error: '',
+  };
 }
 
 export function invalidateCache(key: string) {
-  cache.delete(key);
+  invalidateClientCache(key);
+}
+
+export function invalidateCachePrefix(prefix: string) {
+  invalidateClientCachePrefix(prefix);
 }

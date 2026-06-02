@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from 'react';
 import { createClient } from '@/lib/api/clients';
 import { compressImage } from '@/lib/compress-image';
+import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -237,10 +238,11 @@ function ClientPhotoUploader({
 
       {value ? (
         <div className="relative">
-          <img
-            alt="Foto del cliente"
-            className="h-[280px] w-full rounded-[22px] object-cover"
-            src={value}
+          <div
+            aria-label="Foto del cliente"
+            className="h-[280px] w-full rounded-[22px] bg-cover bg-center"
+            role="img"
+            style={{ backgroundImage: `url(${value})` }}
           />
           <button
             className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
@@ -463,6 +465,8 @@ export function AddClientPage() {
         photo: form.photo || undefined,
         notes: form.notes.trim() || undefined,
       });
+      invalidateCachePrefix('clients:');
+      invalidateCache('dashboard');
       router.push(`/clientes/${client.id}`);
     } catch (err: unknown) {
       let message = 'Error al guardar el cliente. Intenta de nuevo.';
