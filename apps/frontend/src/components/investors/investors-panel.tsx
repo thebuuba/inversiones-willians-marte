@@ -16,6 +16,7 @@ import {
 import { getInvestors } from '@/lib/api/investors';
 import { getStaggerDelay } from '@/lib/animation';
 import { useClientCache } from '@/lib/use-client-cache';
+import { formatInvestorCurrency } from './investors-panel.helpers';
 import type { InvestorItem } from '@inversiones/shared';
 
 const filters = ['Todos', 'Activos', 'Pausados', 'Retirados'];
@@ -70,10 +71,6 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-function formatCurrency(n: number): string {
-  return `RD$${n.toLocaleString('es-DO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
-
 export function InvestorsPanel() {
   const router = useRouter();
   const [search, setSearch] = useState('');
@@ -89,7 +86,7 @@ export function InvestorsPanel() {
     return [
       { label: 'Total inversionistas', value: String(total), icon: UsersRound, bg: '#E7F4EC', color: '#5FA37D' },
       { label: 'Activos', value: String(activos), icon: UsersRound, bg: '#DDEFE5', color: '#285C43' },
-      { label: 'Capital total', value: formatCurrency(capitalTotal), icon: TrendingUp, bg: '#FFF4C8', color: '#A98219' },
+      { label: 'Capital total', value: formatInvestorCurrency(capitalTotal), icon: TrendingUp, bg: '#FFF4C8', color: '#A98219' },
       { label: 'Tasa promedio', value: `${tasaPromedio}%`, icon: TrendingUp, bg: '#D8E9FF', color: '#4E7CAD' },
     ];
   }, [investors]);
@@ -247,7 +244,7 @@ export function InvestorsPanel() {
                   </div>
                 </div>
                 <span className="font-mono text-sm text-[#7A8A80]">{investor.code}</span>
-                <span className="text-sm font-bold text-[#173D2C]">{formatCurrency(investor.capital)}</span>
+                <span className="text-sm font-bold text-[#173D2C]">{formatInvestorCurrency(investor.capital)}</span>
                 <span className="text-sm text-[#7A8A80]">{investor.rate}%</span>
                 <StatusPill status={investor.status} />
                 <div className="flex items-center justify-end gap-3">

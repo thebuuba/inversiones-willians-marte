@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { X } from 'lucide-react';
+import { DatePickerInput } from '@/components/ui/date-picker-input';
 
 export interface RegisterPaymentValues {
   amount: number;
@@ -61,11 +62,11 @@ export function RegisterPaymentModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-[2px]" onClick={onClose}>
       <form
-        className="w-full max-w-[560px] overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-[0_28px_80px_rgba(0,0,0,0.26)]"
+        className="w-full max-w-[560px] rounded-2xl border border-neutral-100 bg-white shadow-[0_28px_80px_rgba(0,0,0,0.26)]"
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
-        <header className="flex items-start justify-between gap-4 bg-[#f1f8f4] px-6 py-5">
+        <header className="flex items-start justify-between gap-4 rounded-t-2xl bg-[#f1f8f4] px-6 py-5">
           <div>
             <h2 className="text-xl font-bold text-[#173d2c]">Registrar cobro</h2>
             <p className="mt-1 text-sm font-medium text-[#7e9086]">El pago se aplicará a las cuotas pendientes del préstamo.</p>
@@ -85,7 +86,7 @@ export function RegisterPaymentModal({
           </label>
           <label className="block">
             <span className="mb-2 block text-sm font-bold text-[#5c6d63]">Fecha</span>
-            <input className={`${inputClass} ${invalidDate ? 'border-[#e4a58b]' : ''}`} onChange={(event) => setPaymentDate(event.target.value)} type="date" value={paymentDate} />
+            <DatePickerInput className={inputClass} invalid={invalidDate} onChange={setPaymentDate} value={paymentDate} />
           </label>
           <label className="block">
             <span className="mb-2 block text-sm font-bold text-[#5c6d63]">Método de pago</span>

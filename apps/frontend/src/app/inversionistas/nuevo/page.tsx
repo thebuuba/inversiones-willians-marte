@@ -3,12 +3,16 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Phone, FileText, TrendingUp, Calendar, Camera, Save, UserPlus, X } from 'lucide-react';
+import { ArrowLeft, Phone, FileText, TrendingUp, Calendar, Camera, Save, UserPlus, X, Calculator } from 'lucide-react';
 import { createInvestor } from '@/lib/api/investors';
 import { compressImage } from '@/lib/compress-image';
 import { invalidateCache } from '@/lib/use-client-cache';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
+import { DatePickerInput } from '@/components/ui/date-picker-input';
+import { getNextMonthIsoDate } from '@/components/ui/date-picker.helpers';
+import { calculateMonthlyInterest, formatDopCurrency } from '@/components/investors/investor-calculation.helpers';
+import { getApiErrorMessage, getInvestorNameValidationError } from '@/components/investors/investor-form.helpers';
 
 function maskCedula(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -30,6 +34,12 @@ function cleanCedula(value: string): string {
 
 function cleanPhone(value: string): string {
   return value.replace(/\D/g, '');
+}
+
+function formatIntegerAmount(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 function StepIndicator({ step, onStep }: { step: number; onStep: (s: number) => void }) {
@@ -84,7 +94,7 @@ function FormSection({
 }) {
   return (
     <div className="h-full rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-7 xl:p-8">
-      <div className="mb-6 flex items-start justify-between gap-6 xl:mb-7">
+      <div className="mb-6 flex items-center justify-between gap-6 xl:mb-7">
         <div className="flex min-w-0 items-center gap-3">
           {icon && (
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: accent }}>
@@ -132,7 +142,7 @@ function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onP
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="group relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-2 border-[#c2dfcb] bg-[#eaf5ed] shadow-sm transition hover:border-[#7fb89a] hover:shadow-md xl:h-32 xl:w-32"
+        className="group relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-[#c2dfcb] bg-[#eaf5ed] shadow-sm transition hover:border-[#7fb89a] hover:shadow-md xl:h-[72px] xl:w-[72px]"
         aria-label={photo ? 'Cambiar foto de perfil' : 'Subir foto de perfil'}
       >
         {photo ? (
@@ -143,7 +153,7 @@ function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onP
             style={{ backgroundImage: `url(${photo})` }}
           />
         ) : (
-          <Camera className="h-9 w-9 text-[#5a9a7a]" />
+          <Camera className="h-6 w-6 text-[#5a9a7a]" />
         )}
         <span className="absolute inset-x-0 bottom-0 bg-[#173D2C]/72 py-1 text-[10px] font-bold text-white opacity-0 transition group-hover:opacity-100">
           {photo ? 'Cambiar' : 'Subir'}
@@ -169,22 +179,35 @@ export default function AddInvestorPage() {
   const [photo, setPhoto] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(1);
+  const [monthlyInterest, setMonthlyInterest] = useState<number | null>(null);
 
   const [form, setForm] = useState({
     firstName: '', lastName: '', cedula: '', birthDate: '', nationality: '', type: 'individual',
     phone: '', phone2: '', email: '',
     capital: '', rate: '', frequency: 'mensual',
-    startDate: '', term: '12m', bank: '',
+    startDate: getNextMonthIsoDate(), term: '12m', bank: '',
     notes: '',
   });
 
   const set = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
 
+  const handleCalculateInterest = () => {
+    setMonthlyInterest(calculateMonthlyInterest(Number(form.capital), Number(form.rate)));
+  };
+
   const handleSave = async (andNew: boolean) => {
     const name = `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
+    const validationError = getInvestorNameValidationError(form.firstName, form.lastName);
+
+    if (validationError) {
+      setError(validationError);
+      setStep(1);
+      return;
+    }
 
     setSaving(true);
     setError(null);
+    const calculatedMonthlyInterest = calculateMonthlyInterest(Number(form.capital), Number(form.rate));
     try {
       await createInvestor({
         name,
@@ -197,7 +220,7 @@ export default function AddInvestorPage() {
         type: form.type,
         photo: photo || undefined,
         capital: Number(form.capital) || 0,
-        monthlyPayment: 0,
+        monthlyPayment: calculatedMonthlyInterest ?? 0,
         rate: Number(form.rate) || 0,
         startDate: form.startDate || undefined,
         term: form.term,
@@ -206,17 +229,14 @@ export default function AddInvestorPage() {
       });
       invalidateCache('investors');
       if (andNew) {
-        setForm({ firstName: '', lastName: '', cedula: '', birthDate: '', nationality: '', type: 'individual', phone: '', phone2: '', email: '', capital: '', rate: '', frequency: 'mensual', startDate: '', term: '12m', bank: '', notes: '' });
+        setForm({ firstName: '', lastName: '', cedula: '', birthDate: '', nationality: '', type: 'individual', phone: '', phone2: '', email: '', capital: '', rate: '', frequency: 'mensual', startDate: getNextMonthIsoDate(), term: '12m', bank: '', notes: '' });
         setPhoto(null);
+        setMonthlyInterest(null);
       } else {
         router.push('/inversionistas');
       }
     } catch (err: unknown) {
-      const msg =
-        typeof err === 'object' && err !== null && 'response' in err
-          ? String((err as { response: { data: { message?: string } } }).response.data.message ?? 'Error al guardar')
-          : 'Error al guardar el inversionista';
-      setError(msg);
+      setError(getApiErrorMessage(err, 'Error al guardar el inversionista'));
     }
     setSaving(false);
   };
@@ -226,22 +246,13 @@ export default function AddInvestorPage() {
       <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-5 lg:px-8 lg:py-6 xl:px-10">
         <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <Link href="/inversionistas" className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#5a9a7a] hover:text-[#7fb89a]">
+            <Link href="/inversionistas" className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700">
               <ArrowLeft className="h-3.5 w-3.5" />
               Volver a inversionistas
             </Link>
-            <div className="mb-1 flex flex-wrap items-center gap-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#7fb89a]">Captación</p>
-              <StepIndicator step={step} onStep={setStep} />
-            </div>
             <h1 className="text-3xl font-bold tracking-tight text-neutral-900 lg:text-[34px]">
               {step === 1 ? 'Agregar inversionista' : 'Condiciones de inversión'}
             </h1>
-            <p className="mt-1 text-sm text-neutral-500">
-              {step === 1
-                ? 'Registra un nuevo inversionista en tu cartera de capital.'
-                : 'Define el capital, plazo y condiciones de la inversión.'}
-            </p>
           </div>
           <div className="flex flex-wrap gap-2.5 md:justify-end">
             {step === 1 ? (
@@ -348,10 +359,30 @@ export default function AddInvestorPage() {
                 <MotionCard index={0}>
                   <FormSection icon={<TrendingUp className="h-5 w-5 text-[#a16207]" />} title="Condiciones" description="Capital e inversión." accent="#fef3c7">
                     <Field label="Capital inicial (RD$)" htmlFor="inv-capital" hint="Monto de inicio">
-                      <input id="inv-capital" type="number" value={form.capital} onChange={(e) => set('capital', e.target.value)} placeholder="500,000" className={inputClass} />
+                      <input
+                        id="inv-capital"
+                        inputMode="numeric"
+                        value={formatIntegerAmount(form.capital)}
+                        onChange={(e) => {
+                          set('capital', e.target.value.replace(/\D/g, ''));
+                          setMonthlyInterest(null);
+                        }}
+                        placeholder="500,000"
+                        className={inputClass}
+                      />
                     </Field>
                     <Field label="Tasa de retorno (%)" htmlFor="inv-rate">
-                      <input id="inv-rate" type="number" value={form.rate} onChange={(e) => set('rate', e.target.value)} placeholder="12" className={inputClass} />
+                      <input
+                        id="inv-rate"
+                        type="number"
+                        value={form.rate}
+                        onChange={(e) => {
+                          set('rate', e.target.value);
+                          setMonthlyInterest(null);
+                        }}
+                        placeholder="12"
+                        className={inputClass}
+                      />
                     </Field>
                     <Field label="Frecuencia de pago" htmlFor="inv-freq">
                       <select id="inv-freq" value={form.frequency} onChange={(e) => set('frequency', e.target.value)} className={inputClass}>
@@ -362,27 +393,33 @@ export default function AddInvestorPage() {
                         <option value="al-vencimiento">Al vencimiento</option>
                       </select>
                     </Field>
-                    <Field label="Banco / Cuenta" htmlFor="inv-bank">
-                      <input id="inv-bank" value={form.bank} onChange={(e) => set('bank', e.target.value)} placeholder="Banco Popular" className={inputClass} />
-                    </Field>
                   </FormSection>
                 </MotionCard>
 
                 <MotionCard index={1}>
-                  <FormSection icon={<Calendar className="h-5 w-5 text-[#6d28d9]" />} title="Plazo" description="Vigencia de la inversión." accent="#e9e2f5">
-                    <Field label="Fecha de inicio" htmlFor="inv-start">
-                      <input id="inv-start" type="date" value={form.startDate} onChange={(e) => set('startDate', e.target.value)} className={inputClass} />
-                    </Field>
-                    <Field label="Plazo pactado" htmlFor="inv-term">
-                      <select id="inv-term" value={form.term} onChange={(e) => set('term', e.target.value)} className={inputClass}>
-                        <option value="6m">6 meses</option>
-                        <option value="12m">12 meses</option>
-                        <option value="18m">18 meses</option>
-                        <option value="24m">24 meses</option>
-                        <option value="indefinido">Indefinido</option>
-                      </select>
-                    </Field>
-                  </FormSection>
+                  <div className="space-y-4">
+                    <FormSection icon={<Calendar className="h-5 w-5 text-[#6d28d9]" />} title="Plazo" description="Vigencia de la inversión." accent="#e9e2f5">
+                      <Field label="Fecha de inicio" htmlFor="inv-start">
+                        <DatePickerInput id="inv-start" value={form.startDate} onChange={(value) => set('startDate', value)} className={inputClass} />
+                      </Field>
+                    </FormSection>
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        onClick={handleCalculateInterest}
+                        className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#5a9a7a] px-8 text-base font-bold text-white shadow-sm transition hover:bg-[#4f8d6f]"
+                      >
+                        <Calculator className="h-5 w-5" />
+                        Calcular
+                      </button>
+                      {monthlyInterest !== null && (
+                        <div className="rounded-xl border border-[#c2dfcb] bg-[#f3faf6] px-5 py-3">
+                          <p className="text-xs font-bold uppercase tracking-wide text-[#6f8076]">Interés mensual</p>
+                          <p className="text-xl font-bold text-[#173D2C]">{formatDopCurrency(monthlyInterest)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </MotionCard>
 
                 <MotionCard index={2} className="lg:col-span-2">
@@ -396,6 +433,10 @@ export default function AddInvestorPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <div className="mt-6 flex justify-end">
+          <StepIndicator step={step} onStep={setStep} />
+        </div>
       </div>
     </div>
   );

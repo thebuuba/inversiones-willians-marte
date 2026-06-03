@@ -26,19 +26,12 @@ import {
   type AmortizationType,
 } from './new-loan-form.helpers';
 import { CarterasCard } from './carteras-card';
+import { DatePickerInput } from '@/components/ui/date-picker-input';
+import { getNextMonthIsoDate } from '@/components/ui/date-picker.helpers';
 import type { Client } from '@inversiones/shared';
 
 function getDefaultFirstPaymentDate(): string {
-  const today = new Date();
-  const day = today.getDate();
-  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, day);
-  if (nextMonth.getDate() !== day) {
-    nextMonth.setDate(0);
-  }
-  const y = nextMonth.getFullYear();
-  const m = String(nextMonth.getMonth() + 1).padStart(2, '0');
-  const d = String(nextMonth.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+  return getNextMonthIsoDate();
 }
 
 function formatCurrency(value: number): string {
@@ -412,10 +405,9 @@ function MainInfoCard({
             />
             <label className="block">
               <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Primera cuota</span>
-              <input
-                type="date"
+              <DatePickerInput
                 value={firstPaymentDate}
-                onChange={(e) => onFirstPaymentDateChange(e.target.value)}
+                onChange={onFirstPaymentDateChange}
                 className="h-[42px] w-full rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
               />
             </label>
@@ -742,7 +734,7 @@ export function NewLoanPage() {
   const [customInterestRate, setCustomInterestRate] = useState('');
   const [customPayment, setCustomPayment] = useState('');
   const [amortizationType, setAmortizationType] = useState<AmortizationType>('SIMPLE');
-  const [firstPaymentDate, setFirstPaymentDate] = useState('');
+  const [firstPaymentDate, setFirstPaymentDate] = useState(getDefaultFirstPaymentDate);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
