@@ -136,7 +136,7 @@ export function Sidebar() {
 
   return (
     <>
-      <div className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-[#DDEBE3] bg-white px-4 text-[#285C43] lg:hidden">
+      <div className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-end justify-between border-b border-[#DDEBE3] bg-white px-4 pb-3 pt-[env(safe-area-inset-top)] text-[#285C43] lg:hidden">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#B8DCC5] text-xs font-bold">
             WM
@@ -164,13 +164,13 @@ export function Sidebar() {
             onClick={() => setMobileOpen(false)}
             type="button"
           />
-          <aside className="relative h-screen w-[260px] rounded-r-lg border border-l-0 border-[#DDEBE3] bg-white text-[#285C43]">
+          <aside className="relative h-dvh w-[260px] rounded-r-lg border border-l-0 border-[#DDEBE3] bg-white text-[#285C43]">
             {sidebarContent}
           </aside>
         </div>
       )}
 
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[260px] rounded-r-lg border border-l-0 border-[#DDEBE3] bg-white text-[#285C43] lg:block">
+      <aside className="fixed left-0 top-0 z-40 hidden h-dvh w-[260px] rounded-r-lg border border-l-0 border-[#DDEBE3] bg-white text-[#285C43] lg:block">
         {sidebarContent}
       </aside>
     </>
