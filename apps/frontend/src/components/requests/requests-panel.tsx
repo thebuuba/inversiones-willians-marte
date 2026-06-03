@@ -19,6 +19,7 @@ import { NewRequestModal } from '@/components/requests/new-request-modal';
 import { RequestDetailDrawer } from '@/components/requests/request-detail-drawer';
 import { getRequests, createRequest, approveRequest, rejectRequest } from '@/lib/api/requests';
 import { getStaggerDelay } from '@/lib/animation';
+import { formatDop } from '@/lib/currency';
 import type { LoanRequestItem, CreateRequestDto } from '@inversiones/shared';
 
 const statusMap: Record<string, { label: string; bg: string; text: string; dot: string }> = {
@@ -220,7 +221,7 @@ export function RequestsPanel() {
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-5">
-              <p className="text-base font-bold text-[#173D2C]">RD${Number(request.amount).toLocaleString('es-DO')}</p>
+              <p className="text-base font-bold text-[#173D2C]">{formatDop(request.amount)}</p>
               <ChevronRight className="h-4 w-4 text-[#A9CDBB]" />
             </div>
           </motion.article>

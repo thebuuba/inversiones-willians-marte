@@ -2,9 +2,10 @@
 
 import { useRef } from 'react';
 import { X, Printer, Download } from 'lucide-react';
+import { formatDop } from '@/lib/currency';
 import type { InvestorItem, InvestorPaymentItem } from '@inversiones/shared';
 
-const fmt = (n: number) => `RD$${n.toLocaleString('es-DO', { maximumFractionDigits: 0 })}`;
+const fmt = (n: number | string) => formatDop(n);
 const fmtDate = (s: string | Date) =>
   new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
 

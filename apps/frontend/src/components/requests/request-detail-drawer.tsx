@@ -13,6 +13,7 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
+import { formatDop } from '@/lib/currency';
 import type { LoanRequestItem } from '@inversiones/shared';
 
 interface RequestDetailDrawerProps {
@@ -114,7 +115,7 @@ export function RequestDetailDrawer({
               >
                 <p className="text-xs font-bold uppercase tracking-wide text-[#6F8076]">MONTO SOLICITADO</p>
                 <p className="mt-3 text-[30px] font-bold leading-none text-[#173D2C]">
-                  RD${Number(data.amount).toLocaleString('es-DO')}
+                  {formatDop(data.amount)}
                 </p>
                 <p className="mt-3 text-sm text-[#6F8076]">
                   Recibido el {new Date(data.createdAt).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' })}

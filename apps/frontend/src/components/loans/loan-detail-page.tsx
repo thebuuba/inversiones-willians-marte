@@ -6,10 +6,11 @@ import { ArrowLeft, Banknote, CalendarDays, CircleDollarSign, Plus, TrendingUp, 
 import { getLoan, type LoanDetail } from '@/lib/api/loans';
 import { createPayment } from '@/lib/api/payments';
 import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
+import { formatDop } from '@/lib/currency';
 import { getLoanDetailTotals, getScheduleRemaining } from './loan-detail.helpers';
 import { RegisterPaymentModal, type RegisterPaymentValues } from './register-payment-modal';
 
-const fmt = (value: number) => `RD$ ${Number(value).toLocaleString('es-DO', { maximumFractionDigits: 2 })}`;
+const fmt = (value: number | string) => formatDop(value, { decimals: 2, space: true });
 const fmtDate = (value: string) => new Date(value).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
 
 function getStatusLabel(status: string) {

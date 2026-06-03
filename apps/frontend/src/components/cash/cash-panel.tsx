@@ -20,6 +20,7 @@ import { MovementModal, type MovementFormValues } from './movement-modal';
 import { createPayment } from '@/lib/api/payments';
 import { getStaggerDelay } from '@/lib/animation';
 import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
+import { formatDop, formatSignedDop, parseCurrencyInput } from '@/lib/currency';
 
 type MovementType = 'in' | 'out';
 
@@ -217,17 +218,15 @@ const initialTotals: CashTotals = {
 };
 
 function formatCurrency(value: number, options: { signed?: boolean; negative?: boolean } = {}) {
-  const formatted = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
-
   if (options.signed) {
-    return `${options.negative ? '−' : '+'}RD$${formatted}`;
+    return formatSignedDop(value, { negative: options.negative });
   }
 
-  return `RD$${formatted}`;
+  return formatDop(value);
 }
 
 function parseCurrency(value: string) {
-  return Number(value.replace(/[^\d.]/g, '')) || 0;
+  return parseCurrencyInput(value);
 }
 
 function categoryTone(category: string): Movement['tags'][number]['tone'] {

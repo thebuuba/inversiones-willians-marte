@@ -21,6 +21,7 @@ import {
 import { getLoans, type LoanListItem } from '@/lib/api/loans';
 import { getStaggerDelay } from '@/lib/animation';
 import { useClientCache } from '@/lib/use-client-cache';
+import { formatDop } from '@/lib/currency';
 
 const statusFilters = ['Todos', 'Al día', 'Atrasados', 'Pendientes', 'Pagados'];
 const sortOptions = ['Más recientes', 'Más antiguos', 'Mayor monto', 'Menor monto'];
@@ -119,13 +120,9 @@ function LoanSummaryCards({ items }: { items: ReturnType<typeof loanToRow>[] }) 
   const atrasados = items.filter((i) => i.status === 'Atrasado').length;
   const pendientes = items.filter((i) => i.status === 'Pendiente').length;
   const totalAmount = items.reduce((s, i) => s + i.amount, 0);
-  const totalAmountStr = totalAmount >= 1_000_000
-    ? `${(totalAmount / 1_000_000).toFixed(1)}M`
-    : totalAmount >= 1_000 ? `${(totalAmount / 1_000).toFixed(0)}K` : String(totalAmount);
-
   return (
     <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
-      <SummaryCard icon={<WalletCards className="h-6 w-6" />} iconBg="#EAF6EF" iconColor="#4F9B76" label="CARTERA TOTAL" subtext={`${total} préstamos`} value={`RD$ ${totalAmountStr}`} />
+      <SummaryCard icon={<WalletCards className="h-6 w-6" />} iconBg="#EAF6EF" iconColor="#4F9B76" label="CARTERA TOTAL" subtext={`${total} préstamos`} value={formatDop(totalAmount, { space: true })} />
       <SummaryCard icon={<CheckCircle2 className="h-6 w-6" />} iconBg="#B8DCC5" iconColor="#4F9B76" label="AL DÍA" subtext="préstamos saludables" value={String(alDia)} />
       <SummaryCard icon={<AlertCircle className="h-6 w-6" />} iconBg="#FADCCB" iconColor="#E05A1A" label="ATRASADOS" subtext="requieren atención" value={String(atrasados)} />
       <SummaryCard icon={<Clock3 className="h-6 w-6" />} iconBg="#FFF1C7" iconColor="#B7791F" label="PENDIENTES" subtext="por desembolsar" value={String(pendientes)} />
@@ -312,7 +309,7 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
       </div>
       <LoanTypeBadge type={loan.type} />
       <div>
-        <p className="text-sm font-bold text-[#151918]">RD$ {loan.amount.toLocaleString()}</p>
+        <p className="text-sm font-bold text-[#151918]">{formatDop(loan.amount, { space: true })}</p>
         <p className="mt-1 text-sm font-medium text-[#777D7A]">{loan.interest}</p>
       </div>
       <ProgressCell percent={loan.percent} progress={loan.progress} />

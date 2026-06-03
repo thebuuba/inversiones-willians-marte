@@ -3,13 +3,14 @@
 import { useEffect, useState, type FormEvent, Fragment } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, TrendingUp, Banknote, Calendar, CheckCircle2, Clock } from 'lucide-react';
+import { ArrowLeft, TrendingUp, CheckCircle2, Clock } from 'lucide-react';
 import { getInvestor } from '@/lib/api/investors';
 import { createInvestorPayment, checkInvestorPaymentPeriod, getInvestorPayments } from '@/lib/api/investor-payments';
+import { formatDop } from '@/lib/currency';
 import type { InvestorItem, InvestorPaymentItem } from '@inversiones/shared';
 import { PaymentReceiptModal } from './payment-receipt-modal';
 
-const fmt = (n: number) => `RD$${n.toLocaleString('es-DO', { maximumFractionDigits: 0 })}`;
+const fmt = (n: number | string) => formatDop(n);
 const fmtDate = (s: string | Date) =>
   new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
 
@@ -72,7 +73,7 @@ export function RegisterInvestorPaymentPage() {
 
   useEffect(() => {
     if (!investorId || !investor) return;
-    setCheckingPeriod(true);
+    queueMicrotask(() => setCheckingPeriod(true));
     checkInvestorPaymentPeriod(investorId, periodMonth, periodYear)
       .then((p) => {
         setPeriodPaid(p);

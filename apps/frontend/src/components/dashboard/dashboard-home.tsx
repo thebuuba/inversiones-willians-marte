@@ -43,15 +43,16 @@ import {
   getWeeklyMovement,
   getUpcomingPayments,
 } from '@/lib/api/dashboard';
+import { formatDop } from '@/lib/currency';
 
 function formatCompact(n: number): string {
-  if (n >= 1_000_000) return `RD$${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `RD$${(n / 1_000).toFixed(0)}K`;
-  return `RD$${n.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (n >= 1_000_000) return `RD$${(n / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}M`;
+  if (n >= 1_000) return `RD$${(n / 1_000).toLocaleString('en-US', { maximumFractionDigits: 0 })}K`;
+  return formatDop(n, { decimals: 2 });
 }
 
 function formatCurrency(n: number): string {
-  return `RD$${n.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return formatDop(n, { decimals: 2 });
 }
 
 const today = new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' });

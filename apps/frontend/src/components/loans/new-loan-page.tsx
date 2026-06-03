@@ -16,6 +16,7 @@ import { getLoanProducts, type LoanProductItem } from '@/lib/api/loan-products';
 import { createLoan } from '@/lib/api/loans';
 import { getClients, getClientBasic } from '@/lib/api/clients';
 import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
+import { formatDop } from '@/lib/currency';
 import {
   canCalculateLoan,
   computeSchedule,
@@ -35,10 +36,7 @@ function getDefaultFirstPaymentDate(): string {
 }
 
 function formatCurrency(value: number): string {
-  return `RD$${new Intl.NumberFormat('es-DO', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value)}`;
+  return formatDop(value, { decimals: 2 });
 }
 
 function formatNumberInput(value: string): string {

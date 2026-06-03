@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { getInvestor } from '@/lib/api/investors';
 import { getDocuments, createDocument } from '@/lib/api/documents';
+import { formatDop } from '@/lib/currency';
 import type { InvestorItem, DocumentItem } from '@inversiones/shared';
 import {
   ArrowLeft,
@@ -22,7 +23,7 @@ import {
   Upload,
 } from 'lucide-react';
 
-const fmt = (n: number) => `RD$ ${n.toLocaleString('es-DO', { maximumFractionDigits: 0 })}`;
+const fmt = (n: number | string) => formatDop(n, { space: true });
 const fmtDate = (s: string | Date) => new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
 
 const STATUS_COLOR: Record<string, { bg: string; text: string; dot: string; label: string }> = {

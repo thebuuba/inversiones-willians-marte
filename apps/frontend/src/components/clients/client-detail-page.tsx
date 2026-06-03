@@ -7,6 +7,7 @@ import { getDocuments, createDocument, deleteDocument } from '@/lib/api/document
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { compressImage } from '@/lib/compress-image';
+import { formatDop } from '@/lib/currency';
 import { getClientLoanStats, getLoanCollectionStatus, getLoanProgress, getRegularInstallment } from '@/components/loans/loan-detail.helpers';
 import type { ClientDetail, LoanSummary, DocumentItem, ApiResponse } from '@inversiones/shared';
 import {
@@ -44,7 +45,7 @@ const tabs: { label: ClientTab; icon: typeof UserRound }[] = [
   { label: 'Notas', icon: StickyNote },
 ];
 
-const fmt = (n: number | string) => `RD$ ${Number(n).toLocaleString('es-DO', { maximumFractionDigits: 0 })}`;
+const fmt = (n: number | string) => formatDop(n, { space: true });
 const fmtDate = (s: string | Date) => new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
 const fmtLong = (s: string | Date) => new Date(s).toLocaleDateString('es-DO', { dateStyle: 'long' });
 

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { getClients } from '@/lib/api/clients';
 import { getClient } from '@/lib/api/clients';
+import { formatDop } from '@/lib/currency';
 import type { Client, LoanSummary } from '@inversiones/shared';
 
 type MovementType = 'in' | 'out';
@@ -369,7 +370,7 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
                             {clientLoans.length === 0 && <option value="" disabled>Sin préstamos activos</option>}
                             {clientLoans.map((loan) => (
                               <option key={loan.id} value={loan.id}>
-                                {loan.product?.name ?? 'Préstamo'} · RD${Number(loan.balance).toLocaleString('es-DO')} · Cuota {loan.paymentFreq}
+                                {loan.product?.name ?? 'Préstamo'} · {formatDop(loan.balance)} · Cuota {loan.paymentFreq}
                               </option>
                             ))}
                           </select>
