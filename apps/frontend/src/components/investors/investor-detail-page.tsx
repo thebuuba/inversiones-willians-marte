@@ -11,8 +11,6 @@ import {
   Banknote,
   Calendar,
   CircleCheck,
-  CircleAlert,
-  Clock,
   Download,
   Eye,
   File,
@@ -93,7 +91,6 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
     { label: 'Capital invertido', value: fmt(capital), icon: Banknote, accent: '#eaf5ed', color: '#5a9a7a' },
     { label: 'Total pagado', value: fmt(0), icon: CircleCheck, accent: '#c2dfcb', color: '#5a9a7a' },
     { label: 'Tasa de retorno', value: `${rate}% mensual`, icon: TrendingUp, accent: '#fef3c7', color: '#a16207' },
-    { label: 'Retorno mensual', value: fmt(monthlyReturn), icon: Calendar, accent: '#dbeafe', color: '#1d4ed8' },
   ];
 
   const conditions = [
@@ -192,6 +189,13 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                   Exportar
                 </button>
                 <Link
+                  className="inline-flex h-10 items-center gap-1.5 rounded-full border border-[#5a9a7a] bg-white px-5 text-sm text-[#5a9a7a] hover:bg-[#eaf5ed]"
+                  href={`/inversionistas/nuevo?investorId=${investorId}`}
+                >
+                  <Plus className="h-4 w-4" />
+                  Nueva inversión
+                </Link>
+                <Link
                   className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm text-white hover:bg-[#4a866a]"
                   href={`/inversionistas/pago?investorId=${investorId}`}
                 >
@@ -243,26 +247,35 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
             <div className="space-y-5">
               <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-base font-semibold text-neutral-900">Estado de pagos</h3>
-                  <span className="text-sm font-bold text-[#5a9a7a]">0/0 pagados</span>
-                </div>
-                <div className="mb-4 h-2.5 w-full overflow-hidden rounded-full bg-[#F3F4F6]">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[#7fb89a] to-[#5a9a7a]" style={{ width: '0%' }} />
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  {([['pagado', CircleCheck], ['pendiente', Clock], ['atrasado', CircleAlert]] as const).map(([s, StatusIcon]) => {
-                    const c = STATUS_COLOR[s];
-                    return (
-                      <div key={s} className="flex items-center gap-2.5 rounded-xl p-3" style={{ backgroundColor: c.bg }}>
-                        <StatusIcon className="h-4 w-4 shrink-0" style={{ color: c.text }} />
-                        <div>
-                          <p className="text-xs font-medium" style={{ color: c.text }}>{c.label}</p>
-                          <p className="text-lg font-bold" style={{ color: c.text }}>0</p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <h3 className="mb-4 text-base font-semibold text-neutral-900">Inversiones</h3>
+                <div className="rounded-xl border border-neutral-100 bg-[#fafafa] p-4">
+                  <div className="flex items-center justify-between border-b border-neutral-100 pb-3 mb-3">
+                    <div>
+                      <p className="text-xs font-medium text-neutral-500">Capital invertido</p>
+                      <p className="text-lg font-bold text-neutral-900">{fmt(capital)}</p>
+                    </div>
+                    <span className="rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-semibold text-[#5a9a7a]">
+                      {data.term ?? 'Indefinido'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-xs text-neutral-400">Tasa</p>
+                      <p className="font-semibold text-neutral-900">{rate}% mensual</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-400">Retorno mensual</p>
+                      <p className="font-semibold text-neutral-900">{fmt(monthlyReturn)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-400">Inicio</p>
+                      <p className="font-semibold text-neutral-900">{data.startDate ? fmtDate(data.startDate) : '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-400">Frecuencia</p>
+                      <p className="font-semibold text-neutral-900">Mensual</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

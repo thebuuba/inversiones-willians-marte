@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Phone, FileText, TrendingUp, Calendar, Camera, Save, UserPlus, X, Calculator } from 'lucide-react';
-import { createInvestor } from '@/lib/api/investors';
+import { createInvestor, getInvestor } from '@/lib/api/investors';
 import { compressImage } from '@/lib/compress-image';
 import { invalidateCache } from '@/lib/use-client-cache';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -173,13 +173,14 @@ function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onP
   );
 }
 
-export default function AddInvestorPage() {
+function AddInvestorForm() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(1);
   const [monthlyInterest, setMonthlyInterest] = useState<number | null>(null);
+  const [prefilledId, setPrefilledId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     firstName: '', lastName: '', cedula: '', birthDate: '', nationality: '', type: 'individual',
@@ -190,6 +191,30 @@ export default function AddInvestorPage() {
   });
 
   const set = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
+
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const investorId = searchParams.get('investorId');
+    if (!investorId) return;
+    setPrefilledId(investorId);
+    getInvestor(investorId).then((inv) => {
+      if (!inv) return;
+      const [firstName = '', ...rest] = inv.name.split(' ');
+      setForm((f) => ({
+        ...f,
+        firstName,
+        lastName: rest.join(' ') || '',
+        cedula: inv.cedula || '',
+        phone: inv.phone || '',
+        phone2: inv.phone2 || '',
+        email: inv.email || '',
+        nationality: inv.nationality || '',
+        type: inv.type || 'individual',
+      }));
+      setStep(2);
+    }).catch(() => {});
+  }, [searchParams]);
 
   const handleCalculateInterest = () => {
     setMonthlyInterest(calculateMonthlyInterest(Number(form.capital), Number(form.rate)));
@@ -251,7 +276,7 @@ export default function AddInvestorPage() {
               Volver a inversionistas
             </Link>
             <h1 className="text-3xl font-bold tracking-tight text-neutral-900 lg:text-[34px]">
-              {step === 1 ? 'Agregar inversionista' : 'Condiciones de inversión'}
+              {prefilledId ? 'Nueva inversión' : step === 1 ? 'Agregar inversionista' : 'Condiciones de inversión'}
             </h1>
           </div>
           <div className="flex flex-wrap gap-2.5 md:justify-end">
@@ -439,5 +464,13 @@ export default function AddInvestorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AddInvestorPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#F3F4F6]"><p className="text-sm text-neutral-400">Cargando...</p></div>}>
+      <AddInvestorForm />
+    </Suspense>
   );
 }
