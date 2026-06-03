@@ -83,8 +83,8 @@ function FormSection({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
-      <div className="mb-5 flex items-start justify-between gap-5">
+    <div className="h-full rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-7 xl:p-8">
+      <div className="mb-6 flex items-start justify-between gap-6 xl:mb-7">
         <div className="flex min-w-0 items-center gap-3">
           {icon && (
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: accent }}>
@@ -98,14 +98,14 @@ function FormSection({
         </div>
         {action}
       </div>
-      <div className="space-y-4">{children}</div>
+      <div className="space-y-5 xl:space-y-6">{children}</div>
     </div>
   );
 }
 
 function Field({ label, htmlFor, hint, full, children }: { label: string; htmlFor: string; hint?: string; full?: boolean; children: React.ReactNode }) {
   return (
-    <div className={full ? '' : 'grid items-start gap-2 sm:grid-cols-[150px_1fr]'}>
+    <div className={full ? '' : 'grid items-start gap-3 sm:grid-cols-[170px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,1fr)]'}>
       <div className={full ? 'mb-1' : 'pt-3'}>
         <label htmlFor={htmlFor} className="text-sm font-bold text-neutral-600">
           {label}
@@ -117,7 +117,7 @@ function Field({ label, htmlFor, hint, full, children }: { label: string; htmlFo
   );
 }
 
-const inputClass = 'h-12 w-full rounded-xl border-neutral-200 bg-white px-4 text-base outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-[#7fb89a] border';
+const inputClass = 'h-14 w-full rounded-xl border border-neutral-200 bg-white px-5 text-base outline-none focus:border-[#7fb89a] focus:ring-2 focus:ring-[#c2dfcb]/60';
 
 function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onPhotoChange: (url: string | null) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -132,7 +132,7 @@ function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onP
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="group relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-[#c2dfcb] bg-[#eaf5ed] shadow-sm transition hover:border-[#7fb89a] hover:shadow-md"
+        className="group relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-2 border-[#c2dfcb] bg-[#eaf5ed] shadow-sm transition hover:border-[#7fb89a] hover:shadow-md xl:h-32 xl:w-32"
         aria-label={photo ? 'Cambiar foto de perfil' : 'Subir foto de perfil'}
       >
         {photo ? (
@@ -143,7 +143,7 @@ function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onP
             style={{ backgroundImage: `url(${photo})` }}
           />
         ) : (
-          <Camera className="h-8 w-8 text-[#5a9a7a]" />
+          <Camera className="h-9 w-9 text-[#5a9a7a]" />
         )}
         <span className="absolute inset-x-0 bottom-0 bg-[#173D2C]/72 py-1 text-[10px] font-bold text-white opacity-0 transition group-hover:opacity-100">
           {photo ? 'Cambiar' : 'Subir'}
@@ -223,8 +223,8 @@ export default function AddInvestorPage() {
 
   return (
     <div className="min-h-screen bg-[#F3F4F6]">
-      <div className="mx-auto max-w-6xl px-4 py-5 sm:px-5 lg:px-6 lg:py-6">
-        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+      <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-5 lg:px-8 lg:py-6 xl:px-10">
+        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <Link href="/inversionistas" className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#5a9a7a] hover:text-[#7fb89a]">
               <ArrowLeft className="h-3.5 w-3.5" />
@@ -286,7 +286,7 @@ export default function AddInvestorPage() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="grid items-start gap-5 lg:grid-cols-2">
+              <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] xl:gap-8">
                 <MotionCard index={0}>
                   <FormSection
                     title="Datos personales"
@@ -328,7 +328,7 @@ export default function AddInvestorPage() {
                     <Field label="Teléfono alternativo" htmlFor="inv-phone2">
                       <input id="inv-phone2" value={form.phone2} onChange={(e) => set('phone2', maskPhone(e.target.value))} placeholder="(000) 000-0000" className={inputClass} maxLength={15} />
                     </Field>
-                    <Field label="Correo electrónico" htmlFor="inv-email" full>
+                    <Field label="Correo electrónico" htmlFor="inv-email">
                       <input id="inv-email" type="email" value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="inversionista@correo.com" className={inputClass} />
                     </Field>
                   </FormSection>
