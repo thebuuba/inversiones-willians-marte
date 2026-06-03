@@ -170,6 +170,33 @@ export interface InvestorItem extends CreateInvestorDto {
   updatedAt: string;
 }
 
+export interface CreateInvestorPaymentDto {
+  investorId: string;
+  amount: number;
+  periodMonth: number;
+  periodYear: number;
+  paymentDate: string;
+  paymentMethod?: string;
+  reference?: string;
+  notes?: string;
+}
+
+export interface InvestorPaymentItem {
+  id: string;
+  receiptNumber: number;
+  investorId: string;
+  amount: number;
+  periodMonth: number;
+  periodYear: number;
+  paymentDate: string;
+  paymentMethod?: string;
+  reference?: string;
+  notes?: string;
+  receivedById: string;
+  receivedBy?: { id: string; name: string };
+  createdAt: string;
+}
+
 export interface CreateDocumentDto {
   clientId?: number;
   investorId?: string;

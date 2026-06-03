@@ -192,7 +192,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                 </button>
                 <Link
                   className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm text-white hover:bg-[#4a866a]"
-                  href="/inversionistas/pago"
+                  href={`/inversionistas/pago?investorId=${investorId}`}
                 >
                   <Plus className="h-4 w-4" />
                   Registrar pago

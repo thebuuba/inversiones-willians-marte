@@ -74,10 +74,11 @@ model User {
   receivedPayments  Payment[]     @relation("PaymentReceivedBy")
   auditLogs         AuditLog[]
   loanRequests      LoanRequest[]
-  investors         Investor[]
-  uploadedDocuments Document[]
-  tasks             Task[]
-  portfolios        Portfolio[]
+  investors              Investor[]
+  investorPayments       InvestorPayment[] @relation("InvestorPaymentReceivedBy")
+  uploadedDocuments      Document[]
+  tasks                  Task[]
+  portfolios             Portfolio[]
 
   @@index([role, active])
   @@map("users")
@@ -329,9 +330,36 @@ model Investor {
 
   createdBy User       @relation(fields: [createdById], references: [id])
   documents Document[]
+  payments  InvestorPayment[]
 
   @@index([createdAt])
   @@map("investors")
+}
+
+// ─── Investor Payments ─────────────────────────────────────────────────────
+
+model InvestorPayment {
+  id            String   @id @default(uuid())
+  receiptNumber Int      @map("receipt_number")
+  investorId    String   @map("investor_id")
+  amount        Decimal
+  periodMonth   Int      @map("period_month")
+  periodYear    Int      @map("period_year")
+  paymentDate   DateTime @map("payment_date")
+  paymentMethod String?  @map("payment_method")
+  reference     String?
+  notes         String?
+  receivedById  String   @map("received_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  investor   Investor @relation(fields: [investorId], references: [id])
+  receivedBy User     @relation("InvestorPaymentReceivedBy", fields: [receivedById], references: [id])
+
+  @@unique([investorId, periodMonth, periodYear])
+  @@index([receiptNumber])
+  @@index([investorId])
+  @@index([paymentDate])
+  @@map("investor_payments")
 }
 
 // ─── Documents ──────────────────────────────────────────────────────────────

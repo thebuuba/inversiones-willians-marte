@@ -84,7 +84,7 @@ export function InvestorsPanel() {
   const stats = useMemo(() => {
     const total = investors.length;
     const activos = investors.filter((i) => i.status === 'ACTIVE').length;
-    const capitalTotal = investors.reduce((s, i) => s + i.capital, 0);
+    const capitalTotal = investors.reduce((s, i) => s + Number(i.capital), 0);
     const tasaPromedio = total > 0 ? (investors.reduce((s, i) => s + i.rate, 0) / total).toFixed(1) : '0';
     return [
       { label: 'Total inversionistas', value: String(total), icon: UsersRound, bg: '#E7F4EC', color: '#5FA37D' },

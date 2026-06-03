@@ -11,6 +11,7 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { RequestsModule } from './modules/requests/requests.module';
 import { InvestorsModule } from './modules/investors/investors.module';
+import { InvestorPaymentsModule } from './modules/investor-payments/investor-payments.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { PortfoliosModule } from './modules/portfolios/portfolios.module';
@@ -29,6 +30,7 @@ import { PortfoliosModule } from './modules/portfolios/portfolios.module';
     AuditModule,
     RequestsModule,
     InvestorsModule,
+    InvestorPaymentsModule,
     DocumentsModule,
     TasksModule,
     PortfoliosModule,
