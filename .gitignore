@@ -10,3 +10,5 @@ dist/
 *.pid
 .superpowers/
 .worktrees/
+/derecho.png
+/izquierdo.png

@@ -900,7 +900,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] font-sans">
-      <div className="mx-auto max-w-7xl px-6 py-8">
+      <div className="mx-auto max-w-[1720px] px-6 py-8">
         <Link
           className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#5a9a7a] hover:text-[#7fb89a]"
           href="/clientes"
