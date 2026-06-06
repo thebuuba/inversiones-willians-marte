@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, Min, MinLength, IsDateString, IsEnum } from 'class-validator';
+import { IsString, IsNumber, IsOptional, Min, MinLength, IsDateString } from 'class-validator';
 
 export class CreateInvestorDto {
   @IsString()

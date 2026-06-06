@@ -55,7 +55,8 @@ export class LoansService {
     const totalAmount = schedule.reduce((sum, row) => sum + row.amount, 0);
     const lastRow = schedule[schedule.length - 1];
 
-    const balance = interestType === 'INDEFINITE' ? dto.principal : Math.round(totalAmount * 100) / 100;
+    const balance =
+      interestType === 'INDEFINITE' ? dto.principal : Math.round(totalAmount * 100) / 100;
 
     const loan = await prisma.loan.create({
       data: {
@@ -110,7 +111,8 @@ export class LoansService {
       )`);
     }
 
-    const whereSql = filters.length > 0 ? Prisma.sql`WHERE ${Prisma.join(filters, ' AND ')}` : Prisma.empty;
+    const whereSql =
+      filters.length > 0 ? Prisma.sql`WHERE ${Prisma.join(filters, ' AND ')}` : Prisma.empty;
     const rows = await prisma.$queryRaw<LoanListRow[]>`
       SELECT
         l.id,
@@ -144,12 +146,16 @@ export class LoansService {
     const hasMore = rows.length > pageSize;
     const pageRows = rows.slice(0, pageSize);
     const total = hasMore
-      ? Number((await prisma.$queryRaw<Array<{ count: number }>>`
+      ? Number(
+          (
+            await prisma.$queryRaw<Array<{ count: number }>>`
           SELECT COUNT(*)::int AS count
           FROM loans l
           JOIN clients c ON c.id = l.client_id
           ${whereSql}
-        `)[0]?.count ?? 0)
+        `
+          )[0]?.count ?? 0,
+        )
       : offset + pageRows.length;
 
     return {

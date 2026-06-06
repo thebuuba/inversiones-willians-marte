@@ -4,11 +4,10 @@ import { prisma } from '@inversiones/database';
 @Injectable()
 export class ReportsService {
   async dashboard() {
-    const [activeLoans, totalClients, totalUsers, paymentsToday, portfolioStats, overdueLoans] =
+    const [activeLoans, totalClients, paymentsToday, portfolioStats, overdueLoans] =
       await Promise.all([
         prisma.loan.count({ where: { status: 'ACTIVE' } }),
         prisma.client.count({ where: { active: true } }),
-        prisma.user.count({ where: { active: true } }),
         prisma.payment.aggregate({
           where: {
             paymentDate: {
@@ -68,7 +67,12 @@ export class ReportsService {
       },
     });
 
-    const result: Array<{ id: string; name: string; paymentsCount: number; totalCollected: number }> = [];
+    const result: Array<{
+      id: string;
+      name: string;
+      paymentsCount: number;
+      totalCollected: number;
+    }> = [];
     for (const collector of collectors) {
       const totalCollected = await prisma.payment.aggregate({
         where: { receivedById: collector.id },
@@ -89,7 +93,9 @@ export class ReportsService {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const rows = await prisma.$queryRaw<Array<{ month: Date; collected: string; expected: string }>>`
+    const rows = await prisma.$queryRaw<
+      Array<{ month: Date; collected: string; expected: string }>
+    >`
       SELECT
         DATE_TRUNC('month', ps.due_date)::date AS month,
         COALESCE(SUM(p.amount) FILTER (WHERE p.id IS NOT NULL), 0) AS collected,

@@ -157,7 +157,8 @@ export class AmortizationService {
       const roundedInstallment = this.roundToNearestHundred(rawInstallment);
 
       const principalPartDiff = roundedInstallment - fixedInterest;
-      const adjustedPrincipalPart = principalPartDiff > 0 ? principalPartDiff : principalPartPerInstallment;
+      const adjustedPrincipalPart =
+        principalPartDiff > 0 ? principalPartDiff : principalPartPerInstallment;
       let balance = principal;
 
       for (let i = 1; i < term; i++) {
@@ -203,23 +204,39 @@ export class AmortizationService {
   private getPeriodicRate(annualRate: number, frequency: PaymentFrequency): number {
     const rate = annualRate / 100;
     switch (frequency) {
-      case 'DAILY': return rate / 360;
-      case 'WEEKLY': return rate / 52;
-      case 'BIWEEKLY': return rate / 26;
-      case 'MONTHLY': return rate / 12;
-      case 'QUARTERLY': return rate / 4;
-      default: return rate / 12;
+      case 'DAILY':
+        return rate / 360;
+      case 'WEEKLY':
+        return rate / 52;
+      case 'BIWEEKLY':
+        return rate / 26;
+      case 'MONTHLY':
+        return rate / 12;
+      case 'QUARTERLY':
+        return rate / 4;
+      default:
+        return rate / 12;
     }
   }
 
   private addPaymentInterval(date: Date, frequency: PaymentFrequency): Date {
     const d = new Date(date);
     switch (frequency) {
-      case 'DAILY': d.setDate(d.getDate() + 1); break;
-      case 'WEEKLY': d.setDate(d.getDate() + 7); break;
-      case 'BIWEEKLY': d.setDate(d.getDate() + 14); break;
-      case 'MONTHLY': d.setMonth(d.getMonth() + 1); break;
-      case 'QUARTERLY': d.setMonth(d.getMonth() + 3); break;
+      case 'DAILY':
+        d.setDate(d.getDate() + 1);
+        break;
+      case 'WEEKLY':
+        d.setDate(d.getDate() + 7);
+        break;
+      case 'BIWEEKLY':
+        d.setDate(d.getDate() + 14);
+        break;
+      case 'MONTHLY':
+        d.setMonth(d.getMonth() + 1);
+        break;
+      case 'QUARTERLY':
+        d.setMonth(d.getMonth() + 3);
+        break;
     }
     return d;
   }

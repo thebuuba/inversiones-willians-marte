@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsNumber,
-  IsEnum,
-  IsOptional,
-  Min,
-} from 'class-validator';
+import { IsString, IsNumber, IsEnum, IsOptional, Min } from 'class-validator';
 import { InterestTypeEnum, PaymentFrequencyEnum } from '@inversiones/shared';
 import type { InterestType, PaymentFrequency } from '@inversiones/shared';
 

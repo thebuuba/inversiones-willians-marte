@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
-import { prisma } from '@inversiones/database';
+import { Prisma, RequestStatus, prisma } from '@inversiones/database';
 import { CreateRequestDto } from './dto/create-request.dto';
 
 @Injectable()
@@ -16,13 +16,19 @@ export class RequestsService {
         createdById: userId,
         clientId: dto.clientId ?? null,
       },
-      include: { createdBy: { select: { name: true } }, client: { select: { id: true, firstName: true, lastName: true } } },
+      include: {
+        createdBy: { select: { name: true } },
+        client: { select: { id: true, firstName: true, lastName: true } },
+      },
     });
   }
 
   async findAll() {
     return prisma.loanRequest.findMany({
-      include: { createdBy: { select: { name: true } }, client: { select: { id: true, firstName: true, lastName: true } } },
+      include: {
+        createdBy: { select: { name: true } },
+        client: { select: { id: true, firstName: true, lastName: true } },
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -30,37 +36,54 @@ export class RequestsService {
   async findOne(id: string) {
     const request = await prisma.loanRequest.findUnique({
       where: { id },
-      include: { createdBy: { select: { name: true } }, client: { select: { id: true, firstName: true, lastName: true } } },
+      include: {
+        createdBy: { select: { name: true } },
+        client: { select: { id: true, firstName: true, lastName: true } },
+      },
     });
     if (!request) throw new NotFoundException('Request not found');
     return request;
   }
 
   async count(status?: string) {
-    const where: any = {};
-    if (status) where.status = status;
+    const where: Prisma.LoanRequestWhereInput = {};
+    if (isRequestStatus(status)) where.status = status;
     return prisma.loanRequest.count({ where });
   }
 
   async approve(id: string) {
     const request = await this.findOne(id);
-    if (request.status !== 'PENDING') throw new BadRequestException('Only pending requests can be approved');
+    if (request.status !== 'PENDING')
+      throw new BadRequestException('Only pending requests can be approved');
 
     return prisma.loanRequest.update({
       where: { id },
       data: { status: 'APPROVED' },
-      include: { createdBy: { select: { name: true } }, client: { select: { id: true, firstName: true, lastName: true } } },
+      include: {
+        createdBy: { select: { name: true } },
+        client: { select: { id: true, firstName: true, lastName: true } },
+      },
     });
   }
 
   async reject(id: string) {
     const request = await this.findOne(id);
-    if (request.status !== 'PENDING') throw new BadRequestException('Only pending requests can be rejected');
+    if (request.status !== 'PENDING')
+      throw new BadRequestException('Only pending requests can be rejected');
 
     return prisma.loanRequest.update({
       where: { id },
       data: { status: 'REJECTED' },
-      include: { createdBy: { select: { name: true } }, client: { select: { id: true, firstName: true, lastName: true } } },
+      include: {
+        createdBy: { select: { name: true } },
+        client: { select: { id: true, firstName: true, lastName: true } },
+      },
     });
   }
+}
+
+function isRequestStatus(value: string | undefined): value is RequestStatus {
+  return (
+    value === 'PENDING' || value === 'UNDER_REVIEW' || value === 'APPROVED' || value === 'REJECTED'
+  );
 }

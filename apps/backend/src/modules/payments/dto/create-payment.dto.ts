@@ -1,10 +1,4 @@
-import {
-  IsInt,
-  IsString,
-  IsNumber,
-  IsOptional,
-  Min,
-} from 'class-validator';
+import { IsInt, IsString, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class CreatePaymentDto {
   @IsString()

@@ -13,7 +13,11 @@ export class PaymentsService {
     if (loan.status === 'PAID') throw new BadRequestException('Loan is already paid');
 
     let allocatedAmount = 0;
-    const allocations: { scheduleId: string; amount: number; type: 'PRINCIPAL' | 'INTEREST' | 'PENALTY' }[] = [];
+    const allocations: {
+      scheduleId: string;
+      amount: number;
+      type: 'PRINCIPAL' | 'INTEREST' | 'PENALTY';
+    }[] = [];
 
     const pendingSchedules = loan.schedule.filter(
       (s) => s.status === 'PENDING' || s.status === 'PARTIAL' || s.status === 'OVERDUE',
@@ -114,10 +118,7 @@ export class PaymentsService {
     });
     if (!loan) return;
 
-    const totalPaid = loan.schedule.reduce(
-      (sum, s) => sum + Number(s.paidAmount ?? 0),
-      0,
-    );
+    const totalPaid = loan.schedule.reduce((sum, s) => sum + Number(s.paidAmount ?? 0), 0);
     const newBalance = Math.max(0, Number(loan.totalAmount) - totalPaid);
 
     const allPaid = loan.schedule.every((s) => s.status === 'PAID');

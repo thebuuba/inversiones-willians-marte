@@ -11,10 +11,7 @@ export class AuditController {
 
   @Get()
   @Roles('ADMIN')
-  findAll(
-    @Query('entityType') entityType?: string,
-    @Query('entityId') entityId?: string,
-  ) {
+  findAll(@Query('entityType') entityType?: string, @Query('entityId') entityId?: string) {
     return this.audit.findAll(entityType, entityId);
   }
 

@@ -1,6 +1,16 @@
 import {
-  Controller, Post, Get, Delete, Param, Query, Body, UseGuards, Res,
-  UseInterceptors, UploadedFile, BadRequestException,
+  Controller,
+  Post,
+  Get,
+  Delete,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+  Res,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -57,17 +67,20 @@ export class DocumentsController {
     @CurrentUser('id') userId: string,
   ) {
     if (!file) throw new BadRequestException('File is required');
-    return this.documents.create({
-      name: dto.name || file.originalname,
-      category: dto.category || 'general',
-      clientId: dto.clientId,
-      investorId: dto.investorId,
-      loanId: dto.loanId,
-      notes: dto.notes,
-      fileUrl: file.filename,
-      fileSize: file.size,
-      mimeType: file.mimetype,
-    }, userId);
+    return this.documents.create(
+      {
+        name: dto.name || file.originalname,
+        category: dto.category || 'general',
+        clientId: dto.clientId,
+        investorId: dto.investorId,
+        loanId: dto.loanId,
+        notes: dto.notes,
+        fileUrl: file.filename,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+      },
+      userId,
+    );
   }
 
   @Get()

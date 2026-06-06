@@ -17,12 +17,6 @@ export class InvestorPaymentsController {
     return this.service.create(dto, userId);
   }
 
-  @Get(':investorId')
-  @Roles('ADMIN', 'COLLECTOR')
-  findByInvestor(@Param('investorId') investorId: string) {
-    return this.service.findByInvestor(investorId);
-  }
-
   @Get('check')
   @Roles('ADMIN', 'COLLECTOR')
   checkPeriod(
@@ -31,5 +25,11 @@ export class InvestorPaymentsController {
     @Query('periodYear') periodYear: string,
   ) {
     return this.service.checkPeriod(investorId, Number(periodMonth), Number(periodYear));
+  }
+
+  @Get(':investorId')
+  @Roles('ADMIN', 'COLLECTOR')
+  findByInvestor(@Param('investorId') investorId: string) {
+    return this.service.findByInvestor(investorId);
   }
 }

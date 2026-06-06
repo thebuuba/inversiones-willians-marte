@@ -23,7 +23,9 @@ describe('DocumentsService', () => {
   afterEach(() => jest.clearAllMocks());
 
   it('logs the client document name when deleting an attachment', async () => {
-    jest.mocked(prisma.document.findUnique).mockResolvedValue({ id: 'doc-1', clientId: 7, name: 'Cédula' } as any);
+    jest
+      .mocked(prisma.document.findUnique)
+      .mockResolvedValue({ id: 'doc-1', clientId: 7, name: 'Cédula' } as any);
     jest.mocked(prisma.document.delete).mockResolvedValue({ id: 'doc-1' } as any);
 
     await service.remove('doc-1', 'user-1');

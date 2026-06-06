@@ -9,7 +9,6 @@ import type { InvestorItem, DocumentItem } from '@inversiones/shared';
 import {
   ArrowLeft,
   Banknote,
-  Calendar,
   CircleCheck,
   Download,
   Eye,
@@ -23,12 +22,6 @@ import {
 
 const fmt = (n: number | string) => formatDop(n, { space: true });
 const fmtDate = (s: string | Date) => new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
-
-const STATUS_COLOR: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-  pagado: { bg: '#eaf5ed', text: '#5a9a7a', dot: '#7fb89a', label: 'Pagado' },
-  pendiente: { bg: '#fef3c7', text: '#a16207', dot: '#eab308', label: 'Pendiente' },
-  atrasado: { bg: '#fde4d4', text: '#c2410c', dot: '#f97316', label: 'Atrasado' },
-};
 
 const TABS = ['Resumen', 'Historial de pagos', 'Documentos', 'Datos personales'];
 

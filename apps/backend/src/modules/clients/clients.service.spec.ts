@@ -109,7 +109,9 @@ describe('ClientsService', () => {
   describe('update', () => {
     it('should update a client', async () => {
       jest.mocked(prisma.client.findUnique).mockResolvedValue(mockClient as any);
-      jest.mocked(prisma.client.update).mockResolvedValue({ ...mockClient, phone: '809-555-0202' } as any);
+      jest
+        .mocked(prisma.client.update)
+        .mockResolvedValue({ ...mockClient, phone: '809-555-0202' } as any);
 
       const dto: UpdateClientDto = { phone: '809-555-0202' };
       const result = await service.update(1, dto);
@@ -117,21 +119,41 @@ describe('ClientsService', () => {
     });
 
     it('should log changed fields and summarized note actions', async () => {
-      const previousNotes = JSON.stringify([{ id: 1, text: 'Anterior' }, { id: 2, text: 'Eliminar' }]);
-      const nextNotes = JSON.stringify([{ id: 1, text: 'Actualizada' }, { id: 3, text: 'Nueva' }]);
-      jest.mocked(prisma.client.findUnique).mockResolvedValue({ ...mockClient, notes: previousNotes, loans: [] } as any);
-      jest.mocked(prisma.client.update).mockResolvedValue({ ...mockClient, phone: '809-555-0202', notes: nextNotes } as any);
+      const previousNotes = JSON.stringify([
+        { id: 1, text: 'Anterior' },
+        { id: 2, text: 'Eliminar' },
+      ]);
+      const nextNotes = JSON.stringify([
+        { id: 1, text: 'Actualizada' },
+        { id: 3, text: 'Nueva' },
+      ]);
+      jest
+        .mocked(prisma.client.findUnique)
+        .mockResolvedValue({ ...mockClient, notes: previousNotes, loans: [] } as any);
+      jest
+        .mocked(prisma.client.update)
+        .mockResolvedValue({ ...mockClient, phone: '809-555-0202', notes: nextNotes } as any);
 
       await service.update(1, { phone: '809-555-0202', notes: nextNotes }, 'user-1');
 
-      expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({
-        action: 'CLIENT_UPDATED',
-        clientId: 1,
-        newValues: { changes: [{ field: 'phone', before: '809-555-0101', after: '809-555-0202' }] },
-      }));
-      expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'NOTE_UPDATED', clientId: 1 }));
-      expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'NOTE_CREATED', clientId: 1 }));
-      expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'NOTE_DELETED', clientId: 1 }));
+      expect(audit.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'CLIENT_UPDATED',
+          clientId: 1,
+          newValues: {
+            changes: [{ field: 'phone', before: '809-555-0101', after: '809-555-0202' }],
+          },
+        }),
+      );
+      expect(audit.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'NOTE_UPDATED', clientId: 1 }),
+      );
+      expect(audit.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'NOTE_CREATED', clientId: 1 }),
+      );
+      expect(audit.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'NOTE_DELETED', clientId: 1 }),
+      );
     });
   });
 

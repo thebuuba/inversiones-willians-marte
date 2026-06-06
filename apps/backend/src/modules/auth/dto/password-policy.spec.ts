@@ -13,7 +13,11 @@ describe('password policy', () => {
   });
 
   it('requires at least 10 characters for registered users', async () => {
-    const dto = Object.assign(new RegisterDto(), { name: 'Admin', username: 'admin', password: 'short9' });
+    const dto = Object.assign(new RegisterDto(), {
+      name: 'Admin',
+      username: 'admin',
+      password: 'short9',
+    });
 
     const errors = await validate(dto);
 

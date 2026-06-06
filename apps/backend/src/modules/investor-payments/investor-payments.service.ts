@@ -31,7 +31,12 @@ export class InvestorPaymentsService {
         include: { receivedBy: { select: { id: true, name: true } } },
       });
     } catch (error: unknown) {
-      if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code: string }).code === 'P2002'
+      ) {
         throw new BadRequestException('This period is already paid for this investor');
       }
       throw error;

@@ -25,7 +25,6 @@ import { RegisterDto } from './dto/register.dto';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let jwt: JwtService;
 
   const mockUser = {
     id: '1',
@@ -48,7 +47,6 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    jwt = module.get<JwtService>(JwtService);
   });
 
   afterEach(() => {
@@ -117,7 +115,14 @@ describe('AuthService', () => {
 
   describe('getProfile', () => {
     it('should return user profile without sensitive fields', async () => {
-      const profile = { id: '1', name: 'Test User', username: 'testuser', email: 'test@test.com', role: 'ADMIN', createdAt: new Date() };
+      const profile = {
+        id: '1',
+        name: 'Test User',
+        username: 'testuser',
+        email: 'test@test.com',
+        role: 'ADMIN',
+        createdAt: new Date(),
+      };
       jest.mocked(prisma.user.findUnique).mockResolvedValue(profile as any);
 
       const result = await service.getProfile('1');

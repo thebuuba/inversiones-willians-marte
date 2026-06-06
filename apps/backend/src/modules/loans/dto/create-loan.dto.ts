@@ -1,16 +1,6 @@
-import {
-  IsInt,
-  IsString,
-  IsNumber,
-  IsEnum,
-  IsOptional,
-  Min,
-} from 'class-validator';
-import {
-  InterestTypeEnum,
-  PaymentFrequencyEnum,
-} from '@inversiones/shared';
-import type { InterestType, PaymentFrequency } from '@inversiones/shared';
+import { IsInt, IsString, IsNumber, IsEnum, IsOptional, Min } from 'class-validator';
+import { InterestTypeEnum } from '@inversiones/shared';
+import type { InterestType } from '@inversiones/shared';
 
 export class CreateLoanDto {
   @IsInt()

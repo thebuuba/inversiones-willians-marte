@@ -31,13 +31,16 @@ describe('ReportsService', () => {
     const activeLoans = new Promise<number>((resolve) => {
       resolveActiveLoans = resolve;
     });
-    jest.mocked(prisma.loan.count)
+    jest
+      .mocked(prisma.loan.count)
       .mockReturnValueOnce(activeLoans as never)
       .mockResolvedValueOnce(2);
     jest.mocked(prisma.client.count).mockResolvedValue(3);
     jest.mocked(prisma.user.count).mockResolvedValue(1);
     jest.mocked(prisma.payment.aggregate).mockResolvedValue({ _sum: { amount: 0 } } as never);
-    jest.mocked(prisma.loan.aggregate).mockResolvedValue({ _sum: { balance: 0, principal: 0 }, _count: 0 } as never);
+    jest
+      .mocked(prisma.loan.aggregate)
+      .mockResolvedValue({ _sum: { balance: 0, principal: 0 }, _count: 0 } as never);
 
     const result = service.dashboard();
     await Promise.resolve();
@@ -45,6 +48,8 @@ describe('ReportsService', () => {
     expect(prisma.loan.count).toHaveBeenCalledTimes(2);
 
     resolveActiveLoans(4);
-    await expect(result).resolves.toEqual(expect.objectContaining({ activeLoans: 4, overdueLoans: 2 }));
+    await expect(result).resolves.toEqual(
+      expect.objectContaining({ activeLoans: 4, overdueLoans: 2 }),
+    );
   });
 });

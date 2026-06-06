@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { prisma } from '@inversiones/database';
+import { Prisma, prisma } from '@inversiones/database';
 
 export interface HistoryEvent {
   id: string;
@@ -27,6 +27,20 @@ const clientFieldLabels: Record<string, string> = {
   active: 'Estado',
 };
 
+type AuditWithUser = {
+  id: string;
+  action: string;
+  newValues: Prisma.JsonValue;
+  user?: { name: string } | null;
+  createdAt: Date;
+};
+
+type ClientChange = {
+  field: string;
+  before?: unknown;
+  after?: unknown;
+};
+
 @Injectable()
 export class AuditService {
   async log(params: {
@@ -45,14 +59,14 @@ export class AuditService {
         entityType: params.entityType,
         entityId: params.entityId,
         clientId: params.clientId,
-        oldValues: (params.oldValues ?? undefined) as any,
-        newValues: (params.newValues ?? undefined) as any,
+        oldValues: params.oldValues as Prisma.InputJsonValue | undefined,
+        newValues: params.newValues as Prisma.InputJsonValue | undefined,
       },
     });
   }
 
   async findAll(entityType?: string, entityId?: string) {
-    const where: any = {};
+    const where: Prisma.AuditLogWhereInput = {};
     if (entityType) where.entityType = entityType;
     if (entityId) where.entityId = entityId;
 
@@ -87,13 +101,15 @@ export class AuditService {
 
     if (!client) return [];
 
-    const events: HistoryEvent[] = [{
-      id: `client:${client.id}`,
-      type: 'Cliente',
-      title: 'Cliente creado',
-      author: client.createdBy.name,
-      createdAt: client.createdAt,
-    }];
+    const events: HistoryEvent[] = [
+      {
+        id: `client:${client.id}`,
+        type: 'Cliente',
+        title: 'Cliente creado',
+        author: client.createdBy.name,
+        createdAt: client.createdAt,
+      },
+    ];
 
     for (const loan of client.loans) {
       events.push({
@@ -129,19 +145,30 @@ export class AuditService {
     return events.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
-  private mapAuditEvent(audit: any): HistoryEvent {
-    const type = audit.action.startsWith('NOTE_') ? 'Nota' : audit.action.startsWith('DOCUMENT_') ? 'Documento' : 'Cliente';
+  private mapAuditEvent(audit: AuditWithUser): HistoryEvent {
+    const type = audit.action.startsWith('NOTE_')
+      ? 'Nota'
+      : audit.action.startsWith('DOCUMENT_')
+        ? 'Documento'
+        : 'Cliente';
+    const newValues = isRecord(audit.newValues) ? audit.newValues : {};
     const titles: Record<string, string> = {
       CLIENT_UPDATED: 'Cliente actualizado',
-      DOCUMENT_DELETED: `Documento eliminado: ${audit.newValues?.name ?? 'Documento'}`,
+      DOCUMENT_DELETED: `Documento eliminado: ${getStringValue(newValues.name) ?? 'Documento'}`,
       NOTE_CREATED: 'Nota creada',
       NOTE_UPDATED: 'Nota actualizada',
       NOTE_DELETED: 'Nota eliminada',
     };
-    const changes = Array.isArray(audit.newValues?.changes) ? audit.newValues.changes : [];
-    const detail = changes.length > 0
-      ? changes.map((change: any) => `${clientFieldLabels[change.field] ?? change.field}: ${change.before ?? '—'} → ${change.after ?? '—'}`).join(' · ')
-      : undefined;
+    const changes = parseClientChanges(newValues.changes);
+    const detail =
+      changes.length > 0
+        ? changes
+            .map(
+              (change) =>
+                `${clientFieldLabels[change.field] ?? change.field}: ${formatAuditValue(change.before)} → ${formatAuditValue(change.after)}`,
+            )
+            .join(' · ')
+        : undefined;
 
     return {
       id: `audit:${audit.id}`,
@@ -152,4 +179,28 @@ export class AuditService {
       createdAt: audit.createdAt,
     };
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function getStringValue(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function parseClientChanges(value: unknown): ClientChange[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((change): change is ClientChange => {
+    return isRecord(change) && typeof change.field === 'string';
+  });
+}
+
+function formatAuditValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '—';
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  if (value instanceof Date) return value.toISOString();
+  return JSON.stringify(value);
 }

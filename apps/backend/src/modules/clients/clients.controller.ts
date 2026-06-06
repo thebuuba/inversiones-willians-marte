@@ -1,4 +1,15 @@
-import { Controller, Post, Get, Patch, Delete, Param, Body, Query, UseGuards, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -24,7 +35,11 @@ export class ClientsController {
     @Query('take') take?: string,
     @Query('skip') skip?: string,
   ) {
-    return this.clients.findAll(search, take ? parseInt(take, 10) : 50, skip ? parseInt(skip, 10) : 0);
+    return this.clients.findAll(
+      search,
+      take ? parseInt(take, 10) : 50,
+      skip ? parseInt(skip, 10) : 0,
+    );
   }
 
   @Get('basic/:id')
@@ -41,7 +56,11 @@ export class ClientsController {
 
   @Patch(':id')
   @Roles('ADMIN', 'COLLECTOR')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateClientDto, @CurrentUser('id') userId: string) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateClientDto,
+    @CurrentUser('id') userId: string,
+  ) {
     return this.clients.update(id, dto, userId);
   }
 

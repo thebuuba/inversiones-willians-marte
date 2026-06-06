@@ -35,6 +35,11 @@ type ClientLoanRow = {
   }>;
 };
 
+type ClientNote = {
+  id: string | number;
+  text: string;
+};
+
 @Injectable()
 export class ClientsService {
   constructor(private audit: AuditService) {}
@@ -182,12 +187,26 @@ export class ClientsService {
     const updated = await prisma.client.update({ where: { id }, data: dto });
 
     if (userId) {
-      const changes = Object.entries(dto)
-        .filter(([field, value]) => field !== 'notes' && previous[field as keyof typeof previous] !== value)
-        .map(([field, value]) => ({ field, before: previous[field as keyof typeof previous] ?? null, after: value ?? null }));
+      const changes = (Object.entries(dto) as Array<[string, unknown]>)
+        .filter(
+          ([field, value]) =>
+            field !== 'notes' && previous[field as keyof typeof previous] !== value,
+        )
+        .map(([field, value]) => ({
+          field,
+          before: previous[field as keyof typeof previous] ?? null,
+          after: value ?? null,
+        }));
 
       if (changes.length > 0) {
-        await this.audit.log({ userId, clientId: id, entityType: 'Client', entityId: String(id), action: 'CLIENT_UPDATED', newValues: { changes } });
+        await this.audit.log({
+          userId,
+          clientId: id,
+          entityType: 'Client',
+          entityId: String(id),
+          action: 'CLIENT_UPDATED',
+          newValues: { changes },
+        });
       }
 
       if (dto.notes !== undefined && dto.notes !== previous.notes) {
@@ -198,31 +217,54 @@ export class ClientsService {
     return updated;
   }
 
-  private async logNoteChanges(clientId: number, userId: string, previousNotes?: string | null, nextNotes?: string | null) {
-    const parse = (value?: string | null) => {
+  private async logNoteChanges(
+    clientId: number,
+    userId: string,
+    previousNotes?: string | null,
+    nextNotes?: string | null,
+  ) {
+    const parse = (value?: string | null): ClientNote[] => {
       try {
-        const notes = value ? JSON.parse(value) : [];
-        return Array.isArray(notes) ? notes : [];
+        const notes: unknown = value ? JSON.parse(value) : [];
+        return Array.isArray(notes) ? notes.filter(isClientNote) : [];
       } catch {
         return [];
       }
     };
     const previous = parse(previousNotes);
     const next = parse(nextNotes);
-    const previousById = new Map(previous.map((note: any) => [note.id, note]));
-    const nextById = new Map(next.map((note: any) => [note.id, note]));
+    const previousById = new Map(previous.map((note) => [note.id, note]));
+    const nextById = new Map(next.map((note) => [note.id, note]));
 
     for (const note of next) {
       const oldNote = previousById.get(note.id);
       if (!oldNote) {
-        await this.audit.log({ userId, clientId, entityType: 'ClientNote', entityId: String(note.id), action: 'NOTE_CREATED' });
+        await this.audit.log({
+          userId,
+          clientId,
+          entityType: 'ClientNote',
+          entityId: String(note.id),
+          action: 'NOTE_CREATED',
+        });
       } else if (oldNote.text !== note.text) {
-        await this.audit.log({ userId, clientId, entityType: 'ClientNote', entityId: String(note.id), action: 'NOTE_UPDATED' });
+        await this.audit.log({
+          userId,
+          clientId,
+          entityType: 'ClientNote',
+          entityId: String(note.id),
+          action: 'NOTE_UPDATED',
+        });
       }
     }
     for (const note of previous) {
       if (!nextById.has(note.id)) {
-        await this.audit.log({ userId, clientId, entityType: 'ClientNote', entityId: String(note.id), action: 'NOTE_DELETED' });
+        await this.audit.log({
+          userId,
+          clientId,
+          entityType: 'ClientNote',
+          entityId: String(note.id),
+          action: 'NOTE_DELETED',
+        });
       }
     }
   }
@@ -231,4 +273,12 @@ export class ClientsService {
     await this.findOne(id);
     return prisma.client.update({ where: { id }, data: { active: false } });
   }
+}
+
+function isClientNote(value: unknown): value is ClientNote {
+  if (typeof value !== 'object' || value === null) return false;
+  const note = value as { id?: unknown; text?: unknown };
+  return (
+    (typeof note.id === 'string' || typeof note.id === 'number') && typeof note.text === 'string'
+  );
 }
