@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import {
@@ -36,7 +37,12 @@ const navIconMap = {
   wallet: Wallet,
 } satisfies Record<(typeof navItems)[number]['icon'], LucideIcon>;
 
-export function Sidebar() {
+interface SidebarProps {
+  collapsed: boolean;
+  onCollapsedChange: () => void;
+}
+
+export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -48,22 +54,45 @@ export function Sidebar() {
     getRequestsCount('PENDING').then(setPendingCount).catch(() => {});
   }, []);
 
-  const sidebarContent = (
+  const sidebarContent = (compact = false) => (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3.5 px-6 pb-7 pt-7">
+      <div
+        className={cn(
+          'flex pb-7 pt-7',
+          compact ? 'flex-col items-center gap-3 px-3' : 'items-center gap-3.5 px-6',
+        )}
+      >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#B8DCC5] text-sm font-bold text-[#285C43]">
           WM
         </div>
-        <div className="min-w-0">
+        <div className={cn('min-w-0 flex-1', compact && 'hidden')}>
           <h1 className="truncate text-[15px] font-bold leading-tight text-[#285C43]">Willians Marte</h1>
           <p className="mt-1 truncate text-[13px] leading-tight text-[#6F8076]">
             Sistema de Préstamos
           </p>
         </div>
+        <button
+          aria-label={collapsed ? 'Mostrar sidebar' : 'Ocultar sidebar'}
+          className={cn(
+            'flex items-center justify-center rounded-full border border-[#DDEBE3] bg-[#F8FBF9] opacity-80 transition hover:bg-[#EEF3EF] hover:opacity-100',
+            compact ? 'h-7 w-7' : 'h-7 w-7 shrink-0',
+          )}
+          onClick={onCollapsedChange}
+          type="button"
+        >
+          <Image
+            alt=""
+            aria-hidden="true"
+            className="h-4 w-4 opacity-70 grayscale"
+            height={16}
+            src={collapsed ? '/icons/sidebar-derecho.png' : '/icons/sidebar-izquierdo.png'}
+            width={16}
+          />
+        </button>
       </div>
 
-      <nav className="flex-1 overflow-hidden px-4">
-        <p className="mb-4 px-3 text-[11px] font-bold uppercase tracking-[0.32em] text-[#A9B8AE]">
+      <nav className={cn('flex-1 overflow-hidden', compact ? 'px-3' : 'px-4')}>
+        <p className={cn('mb-4 px-3 text-[11px] font-bold uppercase tracking-[0.32em] text-[#A9B8AE]', compact && 'sr-only')}>
           MENÚ
         </p>
         <div className="space-y-1.5">
@@ -76,8 +105,10 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
+                title={compact ? item.label : undefined}
                 className={cn(
-                  'relative flex h-10 items-center gap-3.5 rounded-[16px] px-3 text-[15px] font-medium transition-colors',
+                  'relative flex h-10 items-center rounded-[16px] text-[15px] font-medium transition-colors',
+                  compact ? 'justify-center px-0' : 'gap-3.5 px-3',
                   active
                     ? 'bg-[#E7F4EC] text-[#285C43]'
                     : 'text-[#5C6D63] hover:bg-[#F3FAF6]',
@@ -88,9 +119,14 @@ export function Sidebar() {
                   strokeWidth={2}
                   aria-hidden="true"
                 />
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                <span className={cn('min-w-0 flex-1 truncate', compact && 'sr-only')}>{item.label}</span>
                 {item.href === '/solicitudes' && pendingCount > 0 && (
-                  <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#FFE3D2] px-1.5 text-xs font-bold text-[#C96F4A]">
+                  <span
+                    className={cn(
+                      'flex h-6 min-w-6 items-center justify-center rounded-full bg-[#FFE3D2] px-1.5 text-xs font-bold text-[#C96F4A]',
+                      compact && 'absolute -right-1 -top-1 h-5 min-w-5 px-1 text-[10px]',
+                    )}
+                  >
                     {pendingCount}
                   </span>
                 )}
@@ -100,9 +136,14 @@ export function Sidebar() {
         </div>
       </nav>
 
-      <div className="relative border-t border-[#DDEBE3] px-6 py-5">
+      <div className={cn('relative border-t border-[#DDEBE3] py-5', compact ? 'px-3' : 'px-6')}>
         {profileOpen && (
-          <div className="absolute bottom-[78px] left-6 right-6 rounded-[16px] border border-[#DDEBE3] bg-white p-2 shadow-[0_14px_34px_rgba(40,92,67,0.12)]">
+          <div
+            className={cn(
+              'absolute rounded-[16px] border border-[#DDEBE3] bg-white p-2 shadow-[0_14px_34px_rgba(40,92,67,0.12)]',
+              compact ? 'bottom-5 left-[calc(100%+8px)] w-44' : 'bottom-[78px] left-6 right-6',
+            )}
+          >
             <button
               onClick={logout}
               className="flex h-10 w-full items-center gap-2.5 rounded-[12px] px-3 text-left text-sm font-semibold text-[#5FA37D] transition-colors hover:bg-[#F3FAF6] hover:text-[#285C43]"
@@ -115,13 +156,17 @@ export function Sidebar() {
         )}
         <button
           onClick={() => setProfileOpen((open) => !open)}
-          className="flex w-full items-center gap-3 rounded-[18px] px-0 py-0 text-left transition-opacity hover:opacity-90"
+          className={cn(
+            'flex w-full items-center rounded-[18px] text-left transition-opacity hover:opacity-90',
+            compact ? 'justify-center' : 'gap-3 px-0 py-0',
+          )}
+          title={compact ? user?.name ?? 'Administrador' : undefined}
           type="button"
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E7F4EC] text-sm font-bold text-[#285C43]">
             {initial}
           </div>
-          <div className="min-w-0 flex-1">
+          <div className={cn('min-w-0 flex-1', compact && 'hidden')}>
             <p className="truncate text-[15px] font-bold leading-tight text-[#285C43]">
               {user?.name ?? 'Administrador'}
             </p>
@@ -165,13 +210,18 @@ export function Sidebar() {
             type="button"
           />
           <aside className="relative h-dvh w-[260px] rounded-r-lg border border-l-0 border-[#DDEBE3] bg-white text-[#285C43]">
-            {sidebarContent}
+            {sidebarContent(false)}
           </aside>
         </div>
       )}
 
-      <aside className="fixed left-0 top-0 z-40 hidden h-dvh w-[260px] rounded-r-lg border border-l-0 border-[#DDEBE3] bg-white text-[#285C43] lg:block">
-        {sidebarContent}
+      <aside
+        className={cn(
+          'fixed left-0 top-0 z-40 hidden h-dvh rounded-r-lg border border-l-0 border-[#DDEBE3] bg-white text-[#285C43] transition-[width] duration-200 ease-out lg:block',
+          collapsed ? 'w-[76px]' : 'w-[260px]',
+        )}
+      >
+        {sidebarContent(collapsed)}
       </aside>
     </>
   );
