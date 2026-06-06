@@ -77,6 +77,6 @@ export const navItems = [
   { href: '/caja', label: 'Caja', icon: 'wallet' },
   { href: '/inversionistas', label: 'Inversionistas', icon: 'trending-up' },
   { href: '/documentos', label: 'Documentos', icon: 'file-text' },
-  { href: '/recordatorios', label: 'Recordatorios', icon: 'bell' },
+  { href: '/carteras', label: 'Carteras', icon: 'briefcase' },
   { href: '/configuracion', label: 'Configuración', icon: 'settings' },
 ] as const;

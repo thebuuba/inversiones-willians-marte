@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import {
-  Bell,
+  Briefcase,
   Calendar,
   FileText,
   Home,
@@ -25,7 +25,7 @@ import { getRequestsCount } from '@/lib/api/requests';
 import { navItems } from '@/components/ui/visual-system';
 
 const navIconMap = {
-  bell: Bell,
+  briefcase: Briefcase,
   calendar: Calendar,
   'file-text': FileText,
   home: Home,

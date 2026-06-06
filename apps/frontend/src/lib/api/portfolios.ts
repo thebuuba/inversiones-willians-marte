@@ -7,7 +7,35 @@ export interface PortfolioItem {
   description: string | null;
   color: string;
   createdAt: string;
+  updatedAt?: string;
   _count: { loans: number };
+  totals?: {
+    principal: number;
+    balance: number;
+  };
+  loans?: PortfolioLoan[];
+}
+
+export interface PortfolioLoan {
+  id: string;
+  loanNumber: number;
+  clientId: number;
+  principal: number;
+  totalAmount: number;
+  balance: number;
+  status: string;
+  createdAt: string;
+  client: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    identification: string | null;
+    phone: string | null;
+  };
+  product: {
+    id: string;
+    name: string;
+  };
 }
 
 export async function getPortfolios(): Promise<PortfolioItem[]> {

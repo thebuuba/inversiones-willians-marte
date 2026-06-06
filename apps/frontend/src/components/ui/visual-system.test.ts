@@ -49,9 +49,9 @@ test('normalizes Spanish status labels to semantic tones', () => {
   assert.equal(getStatusTone('Inactivo'), 'neutral');
 });
 
-test('keeps sidebar order and includes reminders before settings', () => {
+test('keeps sidebar order', () => {
   assert.deepEqual(
     navItems.map((item) => item.href),
-    ['/inicio', '/clientes', '/prestamos', '/solicitudes', '/agenda', '/caja', '/inversionistas', '/documentos', '/recordatorios', '/configuracion'],
+    ['/inicio', '/clientes', '/prestamos', '/solicitudes', '/agenda', '/caja', '/inversionistas', '/documentos', '/carteras', '/configuracion'],
   );
 });
