@@ -8,14 +8,17 @@ import type { Variants } from 'framer-motion';
 import {
   Download,
   Filter,
+  MoreHorizontal,
+  Pencil,
   Plus,
   Search,
+  Trash2,
   TrendingUp,
   UsersRound,
 } from 'lucide-react';
-import { getInvestors } from '@/lib/api/investors';
+import { deleteInvestor, getInvestors } from '@/lib/api/investors';
 import { getStaggerDelay } from '@/lib/animation';
-import { useClientCache } from '@/lib/use-client-cache';
+import { invalidateCache, useClientCache } from '@/lib/use-client-cache';
 import { formatInvestorCurrency } from './investors-panel.helpers';
 import type { InvestorItem } from '@inversiones/shared';
 
@@ -75,8 +78,30 @@ export function InvestorsPanel() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('Todos');
+  const [openActionsId, setOpenActionsId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(() => new Set());
+  const [deleteError, setDeleteError] = useState('');
   const { data, loading } = useClientCache<InvestorItem[]>('investors', getInvestors);
-  const investors = useMemo(() => data ?? [], [data]);
+  const investors = useMemo(() => (data ?? []).filter((investor) => !deletedIds.has(investor.id)), [data, deletedIds]);
+
+  const handleDeleteInvestor = async (investor: InvestorItem) => {
+    const confirmed = window.confirm(`¿Seguro que quieres borrar a ${investor.name}? Esta acción eliminará sus pagos registrados y no se puede deshacer.`);
+    if (!confirmed) return;
+
+    setDeletingId(investor.id);
+    setDeleteError('');
+    try {
+      await deleteInvestor(investor.id);
+      setDeletedIds((current) => new Set(current).add(investor.id));
+      invalidateCache('investors');
+      setOpenActionsId(null);
+    } catch {
+      setDeleteError('No se pudo borrar el inversionista. Intenta de nuevo.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const stats = useMemo(() => {
     const total = investors.length;
@@ -186,14 +211,20 @@ export function InvestorsPanel() {
         </div>
       </PanelCard>
 
-      <PanelCard className="overflow-hidden" index={6}>
+      {deleteError && (
+        <div className="mb-4 rounded-xl border border-[#F7C9C0] bg-[#FFF3F1] px-4 py-3 text-sm font-semibold text-[#B42318]">
+          {deleteError}
+        </div>
+      )}
+
+      <PanelCard className="overflow-visible" index={6}>
         <div className="grid grid-cols-[2fr_1.2fr_1.2fr_1fr_1fr_0.7fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#777D7A]">
           <span>INVERSIONISTA</span>
           <span>CÓDIGO</span>
           <span>CAPITAL</span>
           <span>TASA</span>
           <span>ESTADO</span>
-          <span className="text-right">ACCIÓN</span>
+          <span className="text-right">ACCIONES</span>
         </div>
 
         <div>
@@ -248,16 +279,46 @@ export function InvestorsPanel() {
                 <span className="text-sm text-[#7A8A80]">{investor.rate}%</span>
                 <StatusPill status={investor.status} />
                 <div className="flex items-center justify-end gap-3">
-                  <button
-                    className="rounded-full bg-[#E7F4EC] px-4 py-1.5 text-sm font-bold text-[#5FA37D] transition hover:bg-[#DDEFE5]"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      router.push(`/inversionistas/${investor.id}`);
-                    }}
-                    type="button"
-                  >
-                    Ver
-                  </button>
+                  <div className="relative">
+                    <button
+                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#E7F4EC] px-4 text-sm font-bold text-[#5FA37D] transition hover:bg-[#DDEFE5]"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenActionsId((current) => (current === investor.id ? null : investor.id));
+                      }}
+                      type="button"
+                    >
+                      Acciones
+                      <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                    {openActionsId === investor.id && (
+                      <div
+                        className="absolute right-0 top-11 z-30 w-52 rounded-xl border border-[#DDEBE3] bg-white p-2 text-left shadow-[0_18px_40px_rgba(40,92,67,0.16)]"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <button
+                          className="flex h-10 w-full items-center gap-2.5 rounded-lg px-3 text-sm font-semibold text-[#285C43] transition hover:bg-[#F3FAF6]"
+                          onClick={() => {
+                            setOpenActionsId(null);
+                            router.push(`/inversionistas/nuevo?investorId=${investor.id}`);
+                          }}
+                          type="button"
+                        >
+                          <Pencil className="h-4 w-4 text-[#5FA37D]" aria-hidden="true" />
+                          Editar inversionista
+                        </button>
+                        <button
+                          className="flex h-10 w-full items-center gap-2.5 rounded-lg px-3 text-sm font-semibold text-[#B42318] transition hover:bg-[#FFF3F1] disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={deletingId === investor.id}
+                          onClick={() => void handleDeleteInvestor(investor)}
+                          type="button"
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                          {deletingId === investor.id ? 'Borrando...' : 'Borrar'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))

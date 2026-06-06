@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Phone, FileText, TrendingUp, Calendar, Camera, Save, UserPlus, X, Calculator } from 'lucide-react';
-import { createInvestor, getInvestor } from '@/lib/api/investors';
+import { createInvestor, getInvestor, updateInvestor } from '@/lib/api/investors';
 import { compressImage } from '@/lib/compress-image';
 import { invalidateCache } from '@/lib/use-client-cache';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,6 +40,15 @@ function formatIntegerAmount(value: string): string {
   const digits = value.replace(/\D/g, '');
   if (!digits) return '';
   return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function parseIntegerAmount(value: string): number {
+  return Number(value.replace(/,/g, '')) || 0;
+}
+
+function toDateInputValue(value?: string): string {
+  if (!value) return '';
+  return value.slice(0, 10);
 }
 
 function StepIndicator({ step, onStep }: { step: number; onStep: (s: number) => void }) {
@@ -180,7 +189,6 @@ function AddInvestorForm() {
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(1);
   const [monthlyInterest, setMonthlyInterest] = useState<number | null>(null);
-  const [prefilledId, setPrefilledId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     firstName: '', lastName: '', cedula: '', birthDate: '', nationality: '', type: 'individual',
@@ -193,12 +201,11 @@ function AddInvestorForm() {
   const set = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
 
   const searchParams = useSearchParams();
+  const prefilledId = searchParams.get('investorId');
 
   useEffect(() => {
-    const investorId = searchParams.get('investorId');
-    if (!investorId) return;
-    setPrefilledId(investorId);
-    getInvestor(investorId).then((inv) => {
+    if (!prefilledId) return;
+    getInvestor(prefilledId).then((inv) => {
       if (!inv) return;
       const [firstName = '', ...rest] = inv.name.split(' ');
       setForm((f) => ({
@@ -211,13 +218,21 @@ function AddInvestorForm() {
         email: inv.email || '',
         nationality: inv.nationality || '',
         type: inv.type || 'individual',
+        birthDate: toDateInputValue(inv.birthDate),
+        capital: formatIntegerAmount(String(inv.capital ?? '')),
+        rate: String(inv.rate ?? ''),
+        startDate: toDateInputValue(inv.startDate) || getNextMonthIsoDate(),
+        term: inv.term || '12m',
+        bank: inv.bank || '',
+        notes: inv.notes || '',
       }));
+      setPhoto(inv.photo || null);
       setStep(2);
     }).catch(() => {});
-  }, [searchParams]);
+  }, [prefilledId]);
 
   const handleCalculateInterest = () => {
-    setMonthlyInterest(calculateMonthlyInterest(Number(form.capital), Number(form.rate)));
+    setMonthlyInterest(calculateMonthlyInterest(parseIntegerAmount(form.capital), Number(form.rate)));
   };
 
   const handleSave = async (andNew: boolean) => {
@@ -232,9 +247,10 @@ function AddInvestorForm() {
 
     setSaving(true);
     setError(null);
-    const calculatedMonthlyInterest = calculateMonthlyInterest(Number(form.capital), Number(form.rate));
+    const capital = parseIntegerAmount(form.capital);
+    const calculatedMonthlyInterest = calculateMonthlyInterest(capital, Number(form.rate));
     try {
-      await createInvestor({
+      const payload = {
         name,
         email: form.email || undefined,
         phone: cleanPhone(form.phone) || undefined,
@@ -244,14 +260,20 @@ function AddInvestorForm() {
         nationality: form.nationality || undefined,
         type: form.type,
         photo: photo || undefined,
-        capital: Number(form.capital) || 0,
+        capital,
         monthlyPayment: calculatedMonthlyInterest ?? 0,
         rate: Number(form.rate) || 0,
         startDate: form.startDate || undefined,
         term: form.term,
         bank: form.bank || undefined,
         notes: form.notes || undefined,
-      });
+      };
+
+      if (prefilledId) {
+        await updateInvestor(prefilledId, payload);
+      } else {
+        await createInvestor(payload);
+      }
       invalidateCache('investors');
       if (andNew) {
         setForm({ firstName: '', lastName: '', cedula: '', birthDate: '', nationality: '', type: 'individual', phone: '', phone2: '', email: '', capital: '', rate: '', frequency: 'mensual', startDate: getNextMonthIsoDate(), term: '12m', bank: '', notes: '' });
@@ -276,7 +298,7 @@ function AddInvestorForm() {
               Volver a inversionistas
             </Link>
             <h1 className="text-3xl font-bold tracking-tight text-neutral-900 lg:text-[34px]">
-              {prefilledId ? 'Nueva inversión' : step === 1 ? 'Agregar inversionista' : 'Condiciones de inversión'}
+              {prefilledId ? 'Editar inversionista' : step === 1 ? 'Agregar inversionista' : 'Condiciones de inversión'}
             </h1>
           </div>
           <div className="flex flex-wrap gap-2.5 md:justify-end">
@@ -297,11 +319,13 @@ function AddInvestorForm() {
                 <button onClick={() => setStep(1)} className="h-11 rounded-full border border-neutral-200 bg-white px-4 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 inline-flex items-center gap-1.5">
                   <ArrowLeft className="h-4 w-4" />Atrás
                 </button>
-                <button onClick={() => handleSave(true)} disabled={saving} className="h-11 rounded-full border border-[#c2dfcb] bg-[#eaf5ed] px-4 text-sm font-semibold text-[#5a9a7a] hover:bg-[#c2dfcb]/60 disabled:opacity-50 inline-flex items-center gap-1.5">
-                  <UserPlus className="h-4 w-4" />Guardar y nuevo
-                </button>
+                {!prefilledId && (
+                  <button onClick={() => handleSave(true)} disabled={saving} className="h-11 rounded-full border border-[#c2dfcb] bg-[#eaf5ed] px-4 text-sm font-semibold text-[#5a9a7a] hover:bg-[#c2dfcb]/60 disabled:opacity-50 inline-flex items-center gap-1.5">
+                    <UserPlus className="h-4 w-4" />Guardar y nuevo
+                  </button>
+                )}
                 <button onClick={() => handleSave(false)} disabled={saving} className="h-11 rounded-full bg-[#5a9a7a] px-5 text-sm font-semibold text-white shadow-sm hover:bg-[#4a866a] disabled:opacity-50 inline-flex items-center gap-1.5">
-                  <Save className="h-4 w-4" />{saving ? 'Guardando...' : 'Guardar inversionista'}
+                  <Save className="h-4 w-4" />{saving ? 'Guardando...' : prefilledId ? 'Actualizar inversionista' : 'Guardar inversionista'}
                 </button>
               </>
             )}

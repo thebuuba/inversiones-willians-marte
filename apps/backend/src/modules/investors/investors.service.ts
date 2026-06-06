@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { CreateInvestorDto } from './dto/create-investor.dto';
+import { UpdateInvestorDto } from './dto/update-investor.dto';
 
 @Injectable()
 export class InvestorsService {
@@ -39,5 +40,39 @@ export class InvestorsService {
     const investor = await prisma.investor.findUnique({ where: { id } });
     if (!investor) throw new NotFoundException('Investor not found');
     return investor;
+  }
+
+  async update(id: string, dto: UpdateInvestorDto) {
+    await this.findOne(id);
+    return prisma.investor.update({
+      where: { id },
+      data: {
+        name: dto.name,
+        email: dto.email,
+        phone: dto.phone,
+        phone2: dto.phone2,
+        cedula: dto.cedula,
+        birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
+        nationality: dto.nationality,
+        type: dto.type,
+        photo: dto.photo,
+        capital: dto.capital,
+        monthlyPayment: dto.monthlyPayment,
+        rate: dto.rate,
+        startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+        term: dto.term,
+        bank: dto.bank,
+        notes: dto.notes,
+      },
+    });
+  }
+
+  async remove(id: string) {
+    await this.findOne(id);
+    return prisma.$transaction(async (tx) => {
+      await tx.investorPayment.deleteMany({ where: { investorId: id } });
+      await tx.document.updateMany({ where: { investorId: id }, data: { investorId: null } });
+      return tx.investor.delete({ where: { id } });
+    });
   }
 }

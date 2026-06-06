@@ -15,3 +15,12 @@ export async function createInvestor(dto: CreateInvestorDto): Promise<InvestorIt
   const { data } = await api.post<ApiResponse<InvestorItem>>('/investors', dto);
   return data.data as InvestorItem;
 }
+
+export async function updateInvestor(id: string, dto: Partial<CreateInvestorDto>): Promise<InvestorItem> {
+  const { data } = await api.patch<ApiResponse<InvestorItem>>(`/investors/${id}`, dto);
+  return data.data as InvestorItem;
+}
+
+export async function deleteInvestor(id: string): Promise<void> {
+  await api.delete(`/investors/${id}`);
+}
