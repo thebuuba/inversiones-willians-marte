@@ -1,7 +1,8 @@
 import {
-  Controller, Post, Get, Delete, Param, Query, Body, UseGuards,
+  Controller, Post, Get, Delete, Param, Query, Body, UseGuards, Res,
   UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
@@ -73,6 +74,14 @@ export class DocumentsController {
   @Roles('ADMIN', 'COLLECTOR')
   findAll(@Query('clientId') clientId?: string, @Query('investorId') investorId?: string) {
     return this.documents.findAll(clientId ? Number(clientId) : undefined, investorId);
+  }
+
+  @Get(':id/file')
+  @Roles('ADMIN', 'COLLECTOR')
+  async download(@Param('id') id: string, @Res() res: Response) {
+    const file = await this.documents.getFileForDownload(id);
+    res.type(file.mimeType);
+    return res.download(file.path, file.filename);
   }
 
   @Delete(':id')

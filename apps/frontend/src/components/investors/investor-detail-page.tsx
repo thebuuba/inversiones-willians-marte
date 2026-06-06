@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { getInvestor } from '@/lib/api/investors';
-import { getDocuments, createDocument } from '@/lib/api/documents';
+import { getDocuments, createDocument, downloadDocument } from '@/lib/api/documents';
 import { formatDop } from '@/lib/currency';
 import type { InvestorItem, DocumentItem } from '@inversiones/shared';
 import {
@@ -345,15 +345,14 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                     </div>
                   </div>
                   {d.fileUrl && (
-                    <a
-                      href={`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1'}/../uploads/${d.fileUrl}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
                       className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#5a9a7a]"
+                      onClick={() => downloadDocument(d.id, d.name)}
+                      type="button"
                     >
                       <Eye className="h-4 w-4" />
                       Ver
-                    </a>
+                    </button>
                   )}
                 </div>
               ))

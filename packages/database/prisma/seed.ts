@@ -1,14 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { resolveAdminSeedConfig } from './seed-config';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding database...');
 
-  const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@inversiones.com';
-  const adminUsername = process.env.ADMIN_USERNAME ?? 'admin';
-  const adminPassword = process.env.ADMIN_PASSWORD ?? 'admin123';
+  const {
+    email: adminEmail,
+    username: adminUsername,
+    password: adminPassword,
+  } = resolveAdminSeedConfig(process.env);
   const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
 
   if (!existing) {

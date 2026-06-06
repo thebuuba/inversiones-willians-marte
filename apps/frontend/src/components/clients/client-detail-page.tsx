@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getClient, updateClient } from '@/lib/api/clients';
-import { getDocuments, createDocument, deleteDocument } from '@/lib/api/documents';
+import { getDocuments, createDocument, deleteDocument, downloadDocument } from '@/lib/api/documents';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { compressImage } from '@/lib/compress-image';
@@ -65,11 +65,6 @@ function buildInfoCards(clientData: ClientDetail) {
     { label: 'Notas', value: clientData.notes ?? '—' },
   ];
 }
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
-const UPLOADS_BASE = (() => {
-  try { return new URL(API_BASE).origin + '/uploads'; } catch { return 'http://localhost:3000/uploads'; }
-})();
 
 interface HistoryEvent {
   type: string;
@@ -215,12 +210,10 @@ function DocumentCard({
   doc: DocumentItem;
   onDelete: (id: string) => void;
 }) {
-  const fileUrl = doc.fileUrl ? `${UPLOADS_BASE}/${doc.fileUrl}` : null;
-
   return (
     <div
       className="flex cursor-pointer items-center justify-between rounded-2xl border border-neutral-100 bg-white px-5 py-4 shadow-sm transition hover:bg-[#eaf5ed]/30"
-      onClick={() => fileUrl && window.open(fileUrl, '_blank')}
+      onClick={() => doc.fileUrl && downloadDocument(doc.id, doc.name)}
     >
       <div className="flex min-w-0 items-center gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf5ed]">
@@ -239,17 +232,18 @@ function DocumentCard({
       </div>
 
       <div className="flex items-center gap-3 text-neutral-400">
-        {fileUrl && (
-          <a
+        {doc.fileUrl && (
+          <button
             aria-label={`Descargar ${doc.name}`}
             className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#5a9a7a]"
-            href={fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              downloadDocument(doc.id, doc.name);
+            }}
+            type="button"
           >
             <Download className="h-4 w-4" />
-          </a>
+          </button>
         )}
         <button
           aria-label={`Eliminar ${doc.name}`}

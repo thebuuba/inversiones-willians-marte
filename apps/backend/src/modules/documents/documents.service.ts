@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
-import { CreateDocumentDto } from './dto/create-document.dto';
+import { join, normalize } from 'path';
 import { AuditService } from '../audit/audit.service';
 
 interface CreateDocumentInput {
@@ -18,6 +18,8 @@ interface CreateDocumentInput {
 @Injectable()
 export class DocumentsService {
   constructor(private audit: AuditService) {}
+
+  private readonly uploadsDir = join(__dirname, '..', '..', '..', 'uploads');
 
   async create(dto: CreateDocumentInput, userId: string) {
     return prisma.document.create({
@@ -44,6 +46,24 @@ export class DocumentsService {
       where,
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async getFileForDownload(id: string) {
+    const document = await prisma.document.findUnique({ where: { id } });
+    if (!document?.fileUrl) throw new NotFoundException('Document file not found');
+
+    const filename = normalize(document.fileUrl).replace(/^(\.\.(\/|\\|$))+/, '');
+    const path = join(this.uploadsDir, filename);
+
+    if (!path.startsWith(this.uploadsDir)) {
+      throw new NotFoundException('Document file not found');
+    }
+
+    return {
+      path,
+      filename: document.name,
+      mimeType: document.mimeType ?? 'application/octet-stream',
+    };
   }
 
   async remove(id: string, userId: string) {

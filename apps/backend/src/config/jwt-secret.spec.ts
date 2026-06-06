@@ -23,14 +23,14 @@ describe('getJwtSecret', () => {
     expect(getJwtSecret(config)).toBe('configured-secret');
   });
 
-  it('uses Railway identifiers as a stable fallback when JWT_SECRET is missing', () => {
+  it('throws in production on Railway when JWT_SECRET is missing', () => {
     process.env.NODE_ENV = 'production';
     process.env.RAILWAY_SERVICE_ID = 'service-id';
     process.env.RAILWAY_PROJECT_ID = 'project-id';
     process.env.RAILWAY_ENVIRONMENT_ID = 'environment-id';
     const config = { get: jest.fn().mockReturnValue(undefined) };
 
-    expect(getJwtSecret(config)).toBe('railway:service-id:project-id:environment-id');
+    expect(() => getJwtSecret(config)).toThrow('JWT_SECRET is required in production');
   });
 
   it('throws in production outside Railway when JWT_SECRET is missing', () => {

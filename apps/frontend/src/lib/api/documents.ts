@@ -17,3 +17,15 @@ export async function createDocument(formData: FormData): Promise<DocumentItem> 
 export async function deleteDocument(id: string): Promise<void> {
   await api.delete(`/documents/${id}`);
 }
+
+export async function downloadDocument(id: string, filename: string): Promise<void> {
+  const { data } = await api.get<Blob>(`/documents/${id}/file`, { responseType: 'blob' });
+  const url = window.URL.createObjectURL(data);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}

@@ -12,7 +12,7 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { getDocuments, createDocument, deleteDocument } from '@/lib/api/documents';
+import { getDocuments, createDocument, deleteDocument, downloadDocument } from '@/lib/api/documents';
 import type { DocumentItem } from '@inversiones/shared';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -23,7 +23,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 function DocumentCard({ doc, onDelete }: { doc: DocumentItem; onDelete: (id: string) => void }) {
   const Icon = iconMap[doc.category] ?? FileText;
-  const fileUrl = doc.fileUrl ? `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1'}/../uploads/${doc.fileUrl}` : null;
 
   return (
     <div className="flex items-center gap-4 rounded-[16px] border border-[#DDEBE3] bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(40,92,67,0.06)]">
@@ -32,10 +31,10 @@ function DocumentCard({ doc, onDelete }: { doc: DocumentItem; onDelete: (id: str
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold text-[#173D2C]">
-          {fileUrl ? (
-            <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+          {doc.fileUrl ? (
+            <button className="truncate text-left hover:underline" onClick={() => downloadDocument(doc.id, doc.name)} type="button">
               {doc.name}
-            </a>
+            </button>
           ) : (
             doc.name
           )}

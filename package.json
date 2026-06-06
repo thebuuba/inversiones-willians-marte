@@ -21,6 +21,10 @@
     "node": ">=20"
   },
   "pnpm": {
+    "overrides": {
+      "postcss": ">=8.5.10",
+      "tar": ">=7.5.11"
+    },
     "onlyBuiltDependencies": ["@nestjs/core", "@prisma/client", "@prisma/engines", "bcrypt", "prisma", "unrs-resolver"]
   }
 }

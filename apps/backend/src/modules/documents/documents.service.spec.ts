@@ -37,4 +37,19 @@ describe('DocumentsService', () => {
       newValues: { name: 'Cédula' },
     });
   });
+
+  it('resolves a stored file path for authenticated downloads', async () => {
+    jest.mocked(prisma.document.findUnique).mockResolvedValue({
+      id: 'doc-1',
+      fileUrl: 'receipt.pdf',
+      name: 'Receipt',
+      mimeType: 'application/pdf',
+    } as any);
+
+    await expect(service.getFileForDownload('doc-1')).resolves.toMatchObject({
+      filename: 'Receipt',
+      mimeType: 'application/pdf',
+      path: expect.stringContaining('receipt.pdf'),
+    });
+  });
 });
