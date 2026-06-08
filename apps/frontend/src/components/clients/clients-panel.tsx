@@ -67,7 +67,7 @@ export function ClientsPanel() {
   const stats = [
     { label: 'Total clientes', value: String(total), icon: UsersRound, bg: '#E7F4EC', color: '#5FA37D' },
     { label: 'Activos', value: String(total), icon: UsersRound, bg: '#DDEFE5', color: '#285C43' },
-    { label: 'Mostrados', value: String(clients.length), icon: UsersRound, bg: '#EEF3EF', color: '#7A8A80' },
+      { label: 'Sin préstamos', value: String(clients.filter((c) => (c._count?.loans ?? 0) === 0).length), icon: UserRound, bg: '#FFF4C8', color: '#A98219' },
     {
       label: 'Nuevos (30d)',
       value: String(clients.filter((c) => new Date(c.createdAt).getTime() >= recentThreshold).length),
@@ -88,7 +88,7 @@ export function ClientsPanel() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-neutral-900">
+    <div className="flex h-full flex-col bg-[#F3F4F6] p-5 font-sans text-neutral-900">
       <motion.header
         variants={fadeUp}
         initial="hidden"
@@ -157,22 +157,22 @@ export function ClientsPanel() {
         </div>
       </PanelCard>
 
-      <PanelCard className="overflow-hidden" index={6}>
-        <div className="grid grid-cols-[0.5fr_2fr_1.2fr_1.4fr_0.7fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+      <PanelCard className="flex min-h-0 flex-1 flex-col overflow-hidden" index={6}>
+        <div className="sticky top-0 z-10 grid grid-cols-[0.5fr_2fr_1.2fr_1.4fr_0.9fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
           <span>ID</span>
           <span>CLIENTE</span>
           <span>CÉDULA</span>
           <span>TELÉFONO</span>
-          <span className="text-right">PRÉSTAMOS</span>
+          <span className="justify-self-end text-center">PRÉSTAMOS</span>
         </div>
 
-        <div>
+        <div className="flex-1 overflow-y-auto modal-scroll">
           {loading ? (
-            <div className="flex items-center justify-center py-20 text-sm font-medium text-neutral-500">
+            <div className="flex h-full items-center justify-center text-sm font-medium text-neutral-500">
               Cargando clientes...
             </div>
           ) : clients.length === 0 ? (
-            <div className="flex items-center justify-center py-20 text-sm font-medium text-neutral-400">
+            <div className="flex h-full items-center justify-center text-sm font-medium text-neutral-400">
               No se encontraron clientes.
             </div>
           ) : (
@@ -183,10 +183,10 @@ export function ClientsPanel() {
                 initial="hidden"
                 animate="visible"
                 custom={index + 7}
-                className="grid min-h-[74px] cursor-pointer grid-cols-[0.5fr_2fr_1.2fr_1.4fr_0.7fr] items-center border-t border-neutral-100 px-6 transition hover:bg-[#F4FAF6] bg-white"
+                className="grid min-h-[56px] cursor-pointer grid-cols-[0.5fr_2fr_1.2fr_1.4fr_0.9fr] items-center border-t border-neutral-100 px-6 transition hover:bg-[#F4FAF6] bg-white"
                 onClick={() => router.push(`/clientes/${client.id}`)}
               >
-                <span className="font-mono text-xs text-neutral-400">{client.id}</span>
+                <span className="font-mono text-xs text-neutral-600">{client.id}</span>
                 <div className="flex items-center gap-4">
                   <div className="relative h-12 w-12 shrink-0">
                     {client.photo ? (
@@ -209,14 +209,14 @@ export function ClientsPanel() {
                   </div>
                   <div>
                     <p className="text-sm font-bold leading-tight text-neutral-900">{fullName(client)}</p>
-                    <p className="mt-0.5 text-xs font-medium text-neutral-400">
-                      {client._count?.loans ?? 0} préstamo(s)
-                    </p>
+
                   </div>
                 </div>
                 <span className="font-mono text-sm text-neutral-500">{client.identification ?? '—'}</span>
                 <span className="text-sm text-neutral-500">{client.phone ?? '—'}</span>
-                <span className="inline-flex min-w-[28px] items-center justify-center justify-self-end rounded-md bg-[#E7F4EC] px-2 py-1 text-xs font-bold text-[#5FA37D]">{client._count?.loans ?? 0}</span>
+                <span className="inline-flex h-9 min-w-[46px] items-center justify-center justify-self-end rounded-xl bg-[#E7F4EC] px-3 text-base font-bold leading-none text-neutral-900">
+                  {client._count?.loans ?? 0}
+                </span>
               </motion.div>
             ))
           )}
