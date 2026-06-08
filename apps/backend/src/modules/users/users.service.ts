@@ -1,5 +1,5 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { prisma } from '@inversiones/database';
 import { CreateUserDto } from './dto/create-user.dto';
 

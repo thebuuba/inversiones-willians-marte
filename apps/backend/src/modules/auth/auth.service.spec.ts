@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
-jest.mock('bcrypt', () => ({
+jest.mock('bcryptjs', () => ({
   compare: jest.fn(),
   hash: jest.fn().mockResolvedValue('hashed-password'),
 }));
@@ -18,7 +18,7 @@ jest.mock('@inversiones/database', () => ({
   },
 }));
 
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { prisma } from '@inversiones/database';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
