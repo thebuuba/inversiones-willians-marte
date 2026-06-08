@@ -8,6 +8,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,json,prisma}\"",
     "db:generate": "pnpm --filter @inversiones/database generate",
     "db:migrate": "pnpm --filter @inversiones/database migrate",
+    "db:migrate:deploy": "pnpm --filter @inversiones/database migrate:deploy",
     "db:push": "pnpm --filter @inversiones/database push",
     "db:studio": "pnpm --filter @inversiones/database studio",
     "db:seed": "pnpm --filter @inversiones/database seed"

@@ -6,6 +6,7 @@
     "build": "prisma generate && tsc",
     "generate": "prisma generate",
     "migrate": "prisma migrate dev --schema ../../packages/database/prisma/schema.prisma",
+    "migrate:deploy": "prisma migrate deploy --schema ../../packages/database/prisma/schema.prisma",
     "push": "prisma db push --schema ../../packages/database/prisma/schema.prisma",
     "studio": "prisma studio --schema ../../packages/database/prisma/schema.prisma",
     "seed": "tsx ../../packages/database/prisma/seed.ts"

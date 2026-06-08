@@ -15,6 +15,7 @@ import { InvestorPaymentsModule } from './modules/investor-payments/investor-pay
 import { DocumentsModule } from './modules/documents/documents.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { PortfoliosModule } from './modules/portfolios/portfolios.module';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -35,5 +36,6 @@ import { PortfoliosModule } from './modules/portfolios/portfolios.module';
     TasksModule,
     PortfoliosModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}
