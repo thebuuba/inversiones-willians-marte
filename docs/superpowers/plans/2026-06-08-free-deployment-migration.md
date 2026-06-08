@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Prepare the monorepo for free deployment on Vercel, Koyeb, and Supabase.
+**Goal:** Prepare the monorepo for free deployment on Vercel, Render, and Supabase.
 
-**Architecture:** Keep the existing split app architecture. Vercel hosts `apps/frontend`; Koyeb builds the backend Dockerfile from the repository root; Supabase provides Postgres through `DATABASE_URL`.
+**Architecture:** Keep the existing split app architecture. Vercel hosts `apps/frontend`; Render builds and starts the backend from the repository root; Supabase provides Postgres through `DATABASE_URL`.
 
-**Tech Stack:** Next.js 16, NestJS 11, Prisma 6, pnpm workspaces, Docker, Vercel, Koyeb, Supabase Postgres.
+**Tech Stack:** Next.js 16, NestJS 11, Prisma 6, pnpm workspaces, Vercel, Render, Supabase Postgres.
 
 ---
 
@@ -40,11 +40,11 @@
 - Create: `apps/frontend/.env.example`
 - Modify: `apps/backend/.env.example`
 
-- [ ] Document Supabase, Koyeb, and Vercel setup with exact env var names.
-- [ ] Document that Koyeb must build from repository root with Dockerfile path `apps/backend/Dockerfile`.
-- [ ] Document that Vercel must set `NEXT_PUBLIC_API_URL` to `https://<koyeb-service>/api/v1`.
+- [ ] Document Supabase, Render, and Vercel setup with exact env var names.
+- [ ] Document that Render must build from repository root with `pnpm --filter backend build`.
+- [ ] Document that Vercel must set `NEXT_PUBLIC_API_URL` to `https://<render-service>/api/v1`.
 - [ ] Add frontend env example for local and production API URLs.
-- [ ] Keep backend env example aligned with Koyeb/Supabase variable names.
+- [ ] Keep backend env example aligned with Render/Supabase variable names.
 
 ### Task 4: Verification
 
@@ -58,4 +58,3 @@
 - [ ] Run `pnpm --filter backend test:e2e`.
 - [ ] Run frontend `node:test` files through the database package `tsx` binary.
 - [ ] Confirm `git status --short` contains only intended changes.
-

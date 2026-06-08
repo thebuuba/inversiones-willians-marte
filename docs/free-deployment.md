@@ -1,9 +1,9 @@
-# Despliegue gratis: Vercel + Koyeb + Supabase
+# Despliegue gratis: Vercel + Render + Supabase
 
 Esta guía reemplaza el trial vencido de Railway con servicios gratuitos para el stack actual:
 
 - Frontend Next.js: Vercel
-- Backend NestJS: Koyeb Free Instance
+- Backend NestJS: Render Free Web Service
 - Base de datos Postgres: Supabase Free
 
 ## 1. Supabase
@@ -25,17 +25,17 @@ pnpm db:seed
 
 Usa el connection string del pooler si Supabase lo recomienda para apps serverless o con conexiones limitadas. El backend usa Prisma directamente; no usa Supabase Auth ni el SDK del navegador.
 
-## 2. Backend en Koyeb
+## 2. Backend en Render
 
-Crea un Web Service desde GitHub.
+Crea un Web Service desde GitHub. Hazlo manualmente desde el dashboard, no con Blueprint, para evitar flujos que pidan billing antes de tiempo.
 
 Configuración importante:
 
-- Build method: Dockerfile
-- Build context: repository root
-- Dockerfile path: `apps/backend/Dockerfile`
-- Instance: Free, si está disponible
-- Port: usa la variable `$PORT`; el backend ya lee `process.env.PORT`
+- Runtime: Node
+- Root Directory: dejar vacio, usa la raiz del repositorio
+- Build Command: `pnpm install --frozen-lockfile && pnpm --filter backend build`
+- Start Command: `node apps/backend/dist/main`
+- Instance Type: Free
 - Health check path: `/api/v1/health`
 
 Variables de entorno:
@@ -53,7 +53,7 @@ ADMIN_PASSWORD=una-clave-fuerte
 Después del deploy, verifica:
 
 ```text
-https://tu-backend.koyeb.app/api/v1/health
+https://tu-backend.onrender.com/api/v1/health
 ```
 
 Debe responder:
@@ -76,24 +76,23 @@ Configuración recomendada:
 Variable de entorno:
 
 ```bash
-NEXT_PUBLIC_API_URL=https://tu-backend.koyeb.app/api/v1
+NEXT_PUBLIC_API_URL=https://tu-backend.onrender.com/api/v1
 ```
 
-Cuando Koyeb te entregue la URL real del backend, actualiza `NEXT_PUBLIC_API_URL` en Vercel y redeploya el frontend.
+Cuando Render te entregue la URL real del backend, actualiza `NEXT_PUBLIC_API_URL` en Vercel y redeploya el frontend.
 
 ## 4. Orden correcto
 
 1. Crear Supabase y obtener `DATABASE_URL`.
 2. Ejecutar `pnpm db:migrate:deploy`.
-3. Desplegar backend en Koyeb con `DATABASE_URL`, `JWT_SECRET` y `FRONTEND_URL`.
-4. Verificar `/api/v1/health` en Koyeb.
+3. Desplegar backend en Render con `DATABASE_URL`, `JWT_SECRET` y `FRONTEND_URL`.
+4. Verificar `/api/v1/health` en Render.
 5. Desplegar frontend en Vercel con `NEXT_PUBLIC_API_URL`.
-6. Volver a Koyeb y confirmar que `FRONTEND_URL` coincide con el dominio final de Vercel.
+6. Volver a Render y confirmar que `FRONTEND_URL` coincide con el dominio final de Vercel.
 
 ## 5. Límites esperados
 
-- Koyeb Free puede dormir por inactividad; la primera carga puede tardar.
+- Render Free puede dormir por inactividad; la primera carga puede tardar.
 - Supabase Free puede pausarse tras inactividad.
 - Vercel Hobby tiene límites de uso mensuales.
 - Para producción real con usuarios diarios, conviene pasar al menos el backend o la base de datos a un plan pago.
-
