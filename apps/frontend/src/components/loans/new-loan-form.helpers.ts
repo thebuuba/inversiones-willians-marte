@@ -11,6 +11,7 @@ export type LoanCalculationFields = {
 
 export type AmortizationType = 'SIMPLE' | 'INDEFINITE' | 'NO_INTEREST';
 export type LoanTermUnit = 'months' | 'fortnights' | 'weeks';
+export type LoanPaymentFrequency = 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY';
 
 export function parseNumber(value: string): number {
   const parsed = Number(value.replace(/[^\d.]/g, ''));
@@ -25,13 +26,82 @@ export function parseStrictNumber(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function normalizeLoanTerm(term: string, termUnit: LoanTermUnit): number {
+export function normalizeLoanTerm(term: string, _termUnit: LoanTermUnit): number {
+  void _termUnit;
   const parsedTerm = parseStrictNumber(term);
   if (parsedTerm === null) return 0;
 
-  if (termUnit === 'weeks') return Math.round(parsedTerm / 4);
-  if (termUnit === 'fortnights') return Math.round(parsedTerm / 2.17);
-  return parsedTerm;
+  return Math.round(parsedTerm);
+}
+
+export function getPeriodicInterestRate(monthlyRate: number, frequency: LoanPaymentFrequency): number {
+  if (frequency === 'FORTNIGHTLY') return monthlyRate / 2;
+  if (frequency === 'WEEKLY') return monthlyRate / 4;
+  return monthlyRate;
+}
+
+function toIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseIsoDate(value: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  return date;
+}
+
+function addMonthsPreservingEndOfMonth(date: Date, months: number): Date {
+  const day = date.getDate();
+  const next = new Date(date.getFullYear(), date.getMonth() + months, day);
+  if (next.getDate() !== day) next.setDate(0);
+  return next;
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function buildLocalDate(year: number, month: number, day: number): Date {
+  return new Date(year, month, Math.min(day, daysInMonth(year, month)));
+}
+
+function addFortnightByMonthHalves(date: Date, fortnights: number): Date {
+  let year = date.getFullYear();
+  let month = date.getMonth();
+  const day = date.getDate();
+
+  if (day <= 15) {
+    month += Math.floor(fortnights / 2);
+    const targetDay = fortnights % 2 === 0 ? day : day + 15;
+    return buildLocalDate(year, month, targetDay);
+  }
+
+  const firstHalfDay = day - 15;
+  const monthOffset = Math.ceil(fortnights / 2);
+  month += monthOffset;
+  const targetDay = fortnights % 2 === 1 ? firstHalfDay : day;
+  year += Math.floor(month / 12);
+  month %= 12;
+
+  return buildLocalDate(year, month, targetDay);
+}
+
+export function getInstallmentIsoDate(firstPaymentDate: string, installmentNumber: number, frequency: LoanPaymentFrequency): string {
+  const start = parseIsoDate(firstPaymentDate);
+  if (!start || installmentNumber <= 0) return firstPaymentDate || '—';
+
+  const offset = installmentNumber - 1;
+  if (frequency === 'MONTHLY') return toIsoDate(addMonthsPreservingEndOfMonth(start, offset));
+  if (frequency === 'FORTNIGHTLY') return toIsoDate(addFortnightByMonthHalves(start, offset));
+
+  const next = new Date(start);
+  next.setDate(start.getDate() + offset * 7);
+  return toIsoDate(next);
 }
 
 export function canCalculateLoan(fields: LoanCalculationFields): boolean {

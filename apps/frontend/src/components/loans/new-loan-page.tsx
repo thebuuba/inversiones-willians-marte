@@ -20,11 +20,14 @@ import { formatDop } from '@/lib/currency';
 import {
   canCalculateLoan,
   computeSchedule,
+  getInstallmentIsoDate,
+  getPeriodicInterestRate,
   normalizeLoanTerm,
   parseNumber,
   parseStrictNumber,
   solveRate,
   type AmortizationType,
+  type LoanTermUnit,
 } from './new-loan-form.helpers';
 import { CarterasCard } from './carteras-card';
 import { DatePickerInput } from '@/components/ui/date-picker-input';
@@ -300,17 +303,17 @@ const amortizationOptions: { label: string; value: AmortizationType }[] = [
   { label: 'Sin intereses', value: 'NO_INTEREST' },
 ];
 
-const termUnitOptions = [
-  { label: 'Meses', value: 'months' as const },
-  { label: 'Quincenas', value: 'fortnights' as const },
-  { label: 'Semanas', value: 'weeks' as const },
-];
-
 const freqOptions: { label: string; value: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY' }[] = [
   { label: 'Mensual', value: 'MONTHLY' },
   { label: 'Quincenal', value: 'FORTNIGHTLY' },
   { label: 'Semanal', value: 'WEEKLY' },
 ];
+
+function getTermUnitForFrequency(frequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY'): LoanTermUnit {
+  if (frequency === 'WEEKLY') return 'weeks';
+  if (frequency === 'FORTNIGHTLY') return 'fortnights';
+  return 'months';
+}
 
 function MainInfoCard({
   amount,
@@ -319,8 +322,6 @@ function MainInfoCard({
   onCustomInterestRateChange,
   term,
   onTermChange,
-  termUnit,
-  onTermUnitChange,
   amortizationType,
   onAmortizationTypeChange,
   paymentFrequency,
@@ -338,8 +339,6 @@ function MainInfoCard({
   onCustomInterestRateChange: (v: string) => void;
   term: string;
   onTermChange: (v: string) => void;
-  termUnit: 'months' | 'fortnights' | 'weeks';
-  onTermUnitChange: (v: 'months' | 'fortnights' | 'weeks') => void;
   amortizationType: AmortizationType;
   onAmortizationTypeChange: (v: AmortizationType) => void;
   paymentFrequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY';
@@ -379,14 +378,7 @@ function MainInfoCard({
             {amortizationType !== 'INDEFINITE' && (
               <div>
                 <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Plazo</span>
-                <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-2">
-                  <TextInput label="" onChange={onTermChange} value={term} />
-                  <SelectInput
-                    options={termUnitOptions.map((o) => o.label)}
-                    value={termUnitOptions.find((o) => o.value === termUnit)?.label ?? 'Meses'}
-                    onChange={(v) => onTermUnitChange(termUnitOptions.find((o) => o.label === v)?.value ?? 'months')}
-                  />
-                </div>
+                <TextInput label="" onChange={onTermChange} value={term} />
               </div>
             )}
             <SelectInput
@@ -438,8 +430,6 @@ function NewLoanStepTwo({
   onTermChange,
   selectedClient,
   onSelectClient,
-  termUnit,
-  onTermUnitChange,
   paymentFrequency,
   onPaymentFrequencyChange,
   purpose,
@@ -463,8 +453,6 @@ function NewLoanStepTwo({
   onTermChange: (value: string) => void;
   selectedClient: Client | null;
   onSelectClient: (client: Client) => void;
-  termUnit: 'months' | 'fortnights' | 'weeks';
-  onTermUnitChange: (v: 'months' | 'fortnights' | 'weeks') => void;
   paymentFrequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY';
   onPaymentFrequencyChange: (v: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY') => void;
   purpose: string;
@@ -485,6 +473,7 @@ function NewLoanStepTwo({
   const rate = customInterestRate || '0';
   const rawRate = parseStrictNumber(rate) ?? 0;
   const customPaymentVal = parseNumber(customPayment);
+  const termUnit = getTermUnitForFrequency(paymentFrequency);
 
   const [showSchedule, setShowSchedule] = useState(false);
 
@@ -492,6 +481,7 @@ function NewLoanStepTwo({
     const principal = parseStrictNumber(amount) ?? 0;
     const normalizedTerm = normalizeLoanTerm(term, termUnit);
     const months = normalizedTerm;
+    const periodicRate = getPeriodicInterestRate(rawRate, paymentFrequency);
 
     if (amortizationType === 'NO_INTEREST') {
       const payment = months > 0 ? principal / months : 0;
@@ -499,12 +489,12 @@ function NewLoanStepTwo({
     }
 
     if (amortizationType === 'INDEFINITE') {
-      const monthlyRate = rawRate / 100;
-      const payment = principal * monthlyRate;
-      return { adjustedRate: rawRate, summary: { principal, months: 1, payment, total: payment, interest: payment } };
+      const rate = periodicRate / 100;
+      const payment = principal * rate;
+      return { adjustedRate: periodicRate, summary: { principal, months: 1, payment, total: payment, interest: payment } };
     }
 
-    const fixedInterest = principal * (rawRate / 100);
+    const fixedInterest = principal * (periodicRate / 100);
     const principalPart = months > 0 ? principal / months : 0;
     const calcPayment = fixedInterest + principalPart;
     const hasCustomPayment = customPaymentVal > 0;
@@ -523,10 +513,10 @@ function NewLoanStepTwo({
     const payment = calcPayment;
     const total = payment * months;
     return {
-      adjustedRate: rawRate,
+      adjustedRate: periodicRate,
       summary: { principal, months, payment, total, interest: Math.max(0, total - principal) },
     };
-  }, [amount, rawRate, term, termUnit, amortizationType, customPaymentVal]);
+  }, [amount, rawRate, term, termUnit, paymentFrequency, amortizationType, customPaymentVal]);
 
   const effectiveRate = adjustedRate;
 
@@ -556,8 +546,6 @@ function NewLoanStepTwo({
           onCustomInterestRateChange={onCustomInterestRateChange}
           term={term}
           onTermChange={onTermChange}
-          termUnit={termUnit}
-          onTermUnitChange={onTermUnitChange}
           amortizationType={amortizationType}
           onAmortizationTypeChange={onAmortizationTypeChange}
           paymentFrequency={paymentFrequency}
@@ -591,6 +579,8 @@ function NewLoanStepTwo({
           totalPrincipal={scheduleData.totalPrincipal}
           totalInterest={scheduleData.totalInterest}
           term={summary.months}
+          firstPaymentDate={firstPaymentDate}
+          paymentFrequency={paymentFrequency}
         />
       )}
 
@@ -617,18 +607,29 @@ function NewLoanStepTwo({
   );
 }
 
-function AmortizationRow({ row, total = false }: { row: { number: number | string; payment: number | string; principal: number | string; interest: number | string; balance: number | string }; total?: boolean }) {
+function AmortizationRow({
+  row,
+  total = false,
+  totalInstallments,
+}: {
+  row: { number: number | string; date?: string; payment: number | string; principal: number | string; interest: number | string; balance: number | string };
+  total?: boolean;
+  totalInstallments: number;
+}) {
   const fmt = (v: number | string) => (typeof v === 'number' ? formatCurrency(v) : v);
+  const installmentLabel = typeof row.number === 'number' ? `${row.number}/${totalInstallments}` : row.number;
+
   return (
     <div
-      className={`grid min-w-[860px] grid-cols-[100px_1.2fr_1.2fr_1.2fr_1.2fr] items-center border-t border-[#EDF2EF] px-5 py-3 text-sm ${
+      className={`grid min-w-[980px] grid-cols-[90px_1.2fr_1.2fr_1.2fr_1.2fr_1.2fr] items-center border-t border-[#EDF2EF] px-5 py-3 text-sm ${
         total ? 'bg-[#F3FAF6] font-bold' : row.number === 5 ? 'bg-[#F6FAF7]' : 'bg-white'
       }`}
     >
-      <span className={total ? 'text-[#6F8076]' : 'font-medium text-[#7A8A80]'}>{row.number}</span>
-      <span className="text-right font-bold text-[#173D2C]">{fmt(row.payment)}</span>
-      <span className="text-right font-medium text-[#2F7654]">{fmt(row.principal)}</span>
+      <span className={total ? 'text-[#6F8076]' : 'font-medium text-[#7A8A80]'}>{installmentLabel}</span>
+      <span className="font-medium text-[#173D2C]">{row.date ?? '—'}</span>
       <span className="text-right font-medium text-[#B45B38]">{fmt(row.interest)}</span>
+      <span className="text-right font-medium text-[#2F7654]">{fmt(row.principal)}</span>
+      <span className="text-right font-bold text-[#173D2C]">{fmt(row.payment)}</span>
       <span className={`text-right font-bold ${total ? 'text-[#A7B5AD]' : 'text-[#173D2C]'}`}>{fmt(row.balance)}</span>
     </div>
   );
@@ -640,12 +641,16 @@ function AmortizationTableCard({
   totalPrincipal,
   totalInterest,
   term,
+  firstPaymentDate,
+  paymentFrequency,
 }: {
   schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[];
   totalPayment: number;
   totalPrincipal: number;
   totalInterest: number;
   term: number;
+  firstPaymentDate: string;
+  paymentFrequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY';
 }) {
   return (
     <motion.section
@@ -656,23 +661,31 @@ function AmortizationTableCard({
     >
       <div className="flex items-center justify-between gap-4 px-5 py-4">
         <h2 className="text-sm font-bold text-[#173D2C]">Tabla de amortización</h2>
-        <p className="text-xs font-medium text-[#7A8A80]">{term} {term === 1 ? 'mes' : 'meses'} en total</p>
+        <p className="text-xs font-medium text-[#7A8A80]">{term} {term === 1 ? 'cuota' : 'cuotas'} en total</p>
       </div>
 
       <div className="max-h-[400px] overflow-y-auto">
         <div className="overflow-x-auto">
-          <div className="min-w-[860px]">
-            <div className="grid grid-cols-[100px_1.2fr_1.2fr_1.2fr_1.2fr] bg-[#F3FAF6] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8A80]">
-              <span>#</span>
-              <span className="text-right">CUOTA</span>
-              <span className="text-right">CAPITAL</span>
+          <div className="min-w-[980px]">
+            <div className="grid grid-cols-[90px_1.2fr_1.2fr_1.2fr_1.2fr_1.2fr] bg-[#F3FAF6] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8A80]">
+              <span>CUOTA</span>
+              <span>FECHA</span>
               <span className="text-right">INTERÉS</span>
-              <span className="text-right">SALDO</span>
+              <span className="text-right">CAPITAL</span>
+              <span className="text-right">A PAGAR</span>
+              <span className="text-right">CAPITAL RESTANTE</span>
             </div>
 
             <motion.div layout>
               {schedule.map((row) => (
-                <AmortizationRow key={row.number} row={row} />
+                <AmortizationRow
+                  key={row.number}
+                  row={{
+                    ...row,
+                    date: getInstallmentIsoDate(firstPaymentDate, row.number, paymentFrequency),
+                  }}
+                  totalInstallments={term}
+                />
               ))}
             </motion.div>
 
@@ -685,6 +698,7 @@ function AmortizationTableCard({
                 balance: 0,
               }}
               total
+              totalInstallments={term}
             />
           </div>
         </div>
@@ -726,7 +740,6 @@ export function NewLoanPage() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [amount, setAmount] = useState('');
   const [term, setTerm] = useState('');
-  const [termUnit, setTermUnit] = useState<'months' | 'fortnights' | 'weeks'>('months');
   const [paymentFrequency, setPaymentFrequency] = useState<'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY'>('MONTHLY');
   const [purpose, setPurpose] = useState('');
   const [customInterestRate, setCustomInterestRate] = useState('');
@@ -763,6 +776,8 @@ export function NewLoanPage() {
       setFirstPaymentDate(getDefaultFirstPaymentDate());
     }
   }
+
+  const termUnit = getTermUnitForFrequency(paymentFrequency);
 
   const calculationReady = canCalculateLoan({
     amount,
@@ -832,8 +847,6 @@ export function NewLoanPage() {
           onTermChange={setTerm}
           selectedClient={selectedClient}
           term={term}
-          termUnit={termUnit}
-          onTermUnitChange={setTermUnit}
           paymentFrequency={paymentFrequency}
           onPaymentFrequencyChange={setPaymentFrequency}
           purpose={purpose}

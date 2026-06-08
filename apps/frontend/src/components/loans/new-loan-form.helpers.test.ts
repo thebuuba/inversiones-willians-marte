@@ -4,6 +4,8 @@ import {
   type LoanCalculationFields,
   canCalculateLoan,
   computeSchedule,
+  getInstallmentIsoDate,
+  getPeriodicInterestRate,
   normalizeLoanTerm,
   parseStrictNumber,
 } from './new-loan-form.helpers.ts';
@@ -29,17 +31,17 @@ test('enables calculation only when every required loan field is valid', () => {
   assert.equal(canCalculateLoan({ ...validLoan, interestRate: '1e2' }), false);
   assert.equal(canCalculateLoan({ ...validLoan, term: '0' }), false);
   assert.equal(canCalculateLoan({ ...validLoan, term: '1e2' }), false);
-  assert.equal(canCalculateLoan({ ...validLoan, term: '1', termUnit: 'weeks' }), false);
+  assert.equal(canCalculateLoan({ ...validLoan, term: '1', termUnit: 'weeks', paymentFrequency: 'WEEKLY' }), true);
   assert.equal(canCalculateLoan({ ...validLoan, amortizationType: '' }), false);
   assert.equal(canCalculateLoan({ ...validLoan, paymentFrequency: '' }), false);
   assert.equal(canCalculateLoan({ ...validLoan, firstPaymentDate: '' }), false);
   assert.equal(canCalculateLoan({ ...validLoan, firstPaymentDate: 'fecha-invalida' }), false);
 });
 
-test('normalizes the visible loan term with the submit conversion', () => {
-  assert.equal(normalizeLoanTerm('1', 'weeks'), 0);
-  assert.equal(normalizeLoanTerm('4', 'weeks'), 1);
-  assert.equal(normalizeLoanTerm('2.17', 'fortnights'), 1);
+test('normalizes the visible loan term as an installment count', () => {
+  assert.equal(normalizeLoanTerm('1', 'weeks'), 1);
+  assert.equal(normalizeLoanTerm('4', 'weeks'), 4);
+  assert.equal(normalizeLoanTerm('24', 'fortnights'), 24);
   assert.equal(normalizeLoanTerm('12', 'months'), 12);
 });
 
@@ -53,8 +55,45 @@ test('generates one schedule row for every installment in the term', () => {
   assert.equal(result.schedule.length, 12);
 });
 
-test('does not generate schedule rows for a term normalized to zero', () => {
-  const result = computeSchedule(25000, 12, normalizeLoanTerm('1', 'weeks'));
+test('keeps fortnightly terms as the requested number of installments', () => {
+  const result = computeSchedule(25000, 6, normalizeLoanTerm('24', 'fortnights'));
+
+  assert.equal(result.schedule.length, 24);
+});
+
+test('converts monthly interest to the selected payment frequency', () => {
+  assert.equal(getPeriodicInterestRate(6, 'MONTHLY'), 6);
+  assert.equal(getPeriodicInterestRate(6, 'FORTNIGHTLY'), 3);
+  assert.equal(getPeriodicInterestRate(6, 'WEEKLY'), 1.5);
+});
+
+test('uses lower per-installment interest for fortnightly schedules', () => {
+  const monthlySchedule = computeSchedule(25000, getPeriodicInterestRate(6, 'MONTHLY'), 24);
+  const fortnightlySchedule = computeSchedule(25000, getPeriodicInterestRate(6, 'FORTNIGHTLY'), 24);
+
+  assert.equal(monthlySchedule.schedule[0].interest, 1500);
+  assert.equal(fortnightlySchedule.schedule[0].interest, 750);
+  assert.ok(fortnightlySchedule.schedule[0].payment < monthlySchedule.schedule[0].payment);
+});
+
+test('derives installment dates from first payment date and payment frequency', () => {
+  assert.equal(getInstallmentIsoDate('2026-06-08', 1, 'MONTHLY'), '2026-06-08');
+  assert.equal(getInstallmentIsoDate('2026-06-08', 2, 'MONTHLY'), '2026-07-08');
+  assert.equal(getInstallmentIsoDate('2026-01-31', 2, 'MONTHLY'), '2026-02-28');
+  assert.equal(getInstallmentIsoDate('2026-06-08', 2, 'FORTNIGHTLY'), '2026-06-23');
+  assert.equal(getInstallmentIsoDate('2026-06-08', 2, 'WEEKLY'), '2026-06-15');
+});
+
+test('alternates fortnightly dates by month halves from the first payment day', () => {
+  assert.equal(getInstallmentIsoDate('2026-06-30', 1, 'FORTNIGHTLY'), '2026-06-30');
+  assert.equal(getInstallmentIsoDate('2026-06-30', 2, 'FORTNIGHTLY'), '2026-07-15');
+  assert.equal(getInstallmentIsoDate('2026-06-30', 3, 'FORTNIGHTLY'), '2026-07-30');
+  assert.equal(getInstallmentIsoDate('2026-06-30', 4, 'FORTNIGHTLY'), '2026-08-15');
+  assert.equal(getInstallmentIsoDate('2026-06-30', 5, 'FORTNIGHTLY'), '2026-08-30');
+});
+
+test('does not generate schedule rows for an empty normalized term', () => {
+  const result = computeSchedule(25000, 12, normalizeLoanTerm('', 'weeks'));
 
   assert.equal(result.schedule.length, 0);
 });
