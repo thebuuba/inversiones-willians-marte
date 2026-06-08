@@ -21,19 +21,44 @@ const Field = memo(function Field({
   name,
   value,
   onChange,
+  maxLength,
 }: {
   label: string;
   name: FormField;
   value: string;
   onChange: (field: FormField, value: string) => void;
+  maxLength?: number;
 }) {
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-bold text-[#6F8076]">{label}</span>
-      <input className={fieldClass} value={value} onChange={(event) => onChange(name, event.target.value)} />
+      <input className={fieldClass} maxLength={maxLength} value={value} onChange={(event) => onChange(name, event.target.value)} />
     </label>
   );
 });
+
+function formatCurrency(value: string): string {
+  const cleaned = value.replace(/[^\d.]/g, '');
+  if (!cleaned) return '';
+  const parts = cleaned.split('.');
+  const integer = parts[0].replace(/^0+/, '') || '0';
+  const formatted = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return parts.length > 1 ? `${formatted}.${parts.slice(1).join('')}` : formatted;
+}
+
+function formatCedula(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 10) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 10)}-${digits.slice(10)}`;
+}
+
+function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 10);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
 
 function parseAmount(raw: string): number {
   return Number(raw.replace(/[^0-9.]/g, '')) || 0;
@@ -51,7 +76,8 @@ export function NewRequestModal({ open, onClose, onSubmit }: NewRequestModalProp
   });
 
   const updateField = useCallback((field: FormField, value: string) => {
-    setForm((current) => ({ ...current, [field]: value }));
+    const sanitized = field === 'identification' ? formatCedula(value) : field === 'phone' ? formatPhone(value) : value;
+    setForm((current) => ({ ...current, [field]: sanitized }));
   }, []);
 
   const handleSubmit = () => {
@@ -111,9 +137,20 @@ export function NewRequestModal({ open, onClose, onSubmit }: NewRequestModalProp
               <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
                 <Field label="Nombre" name="firstName" value={form.firstName} onChange={updateField} />
                 <Field label="Apellido" name="lastName" value={form.lastName} onChange={updateField} />
-                <Field label="Cédula" name="identification" value={form.identification} onChange={updateField} />
-                <Field label="Número de teléfono" name="phone" value={form.phone} onChange={updateField} />
-                <Field label="Monto solicitado" name="amount" value={form.amount} onChange={updateField} />
+                <Field label="Cédula" maxLength={13} name="identification" value={form.identification} onChange={updateField} />
+                <Field label="Número de teléfono" maxLength={14} name="phone" value={form.phone} onChange={updateField} />
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-[#6F8076]">Monto solicitado</span>
+                  <div className="flex h-11 items-center rounded-[12px] border border-[#DDEBE3] bg-white shadow-[0_3px_10px_rgba(40,92,67,0.04)] transition has-[input:focus]:border-[#285C43] has-[input:focus]:shadow-[0_0_0_3px_rgba(95,163,125,0.12)]">
+                    <span className="pl-4 text-sm font-bold text-[#5FA37D]">RD$</span>
+                    <input
+                      className="h-full flex-1 bg-transparent px-2 text-sm font-medium text-[#173D2C] outline-none placeholder:text-[#8E929B]"
+                      placeholder="0"
+                      value={form.amount}
+                      onChange={(event) => updateField('amount', formatCurrency(event.target.value))}
+                    />
+                  </div>
+                </label>
                 <div>
                   <Field label="Referente" name="reference" value={form.reference} onChange={updateField} />
                   <p className="mt-2 text-sm text-[#9CB5A6]">Nombre y contacto.</p>

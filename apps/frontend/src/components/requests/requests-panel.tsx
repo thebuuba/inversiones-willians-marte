@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
   CheckCircle2,
-  ChevronDown,
   ChevronRight,
   Clock3,
   History,
@@ -80,6 +79,7 @@ export function RequestsPanel() {
   const [requests, setRequests] = useState<LoanRequestItem[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<LoanRequestItem | null>(null);
+  const [filter, setFilter] = useState<'all' | 'pending' | 'history'>('all');
 
   useEffect(() => {
     getRequests().then(setRequests);
@@ -89,6 +89,20 @@ export function RequestsPanel() {
     getRequests().then(setRequests);
     setSelectedRequest(null);
   }
+
+  function sortAndFilter(list: LoanRequestItem[]) {
+    const sorted = [...list].sort((a, b) => {
+      if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
+      if (a.status !== 'PENDING' && b.status === 'PENDING') return 1;
+      if (a.status === 'PENDING') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    if (filter === 'pending') return sorted.filter((r) => r.status === 'PENDING');
+    if (filter === 'history') return sorted.filter((r) => r.status !== 'PENDING');
+    return sorted;
+  }
+
+  const filteredRequests = sortAndFilter(requests);
 
   async function handleCreate(dto: CreateRequestDto) {
     try {
@@ -158,15 +172,27 @@ export function RequestsPanel() {
       <PanelCard className="mb-5 p-3.5" index={5}>
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
           <div className="flex shrink-0 items-center gap-2">
-            <button className="flex h-10 items-center gap-2 rounded-[14px] bg-[#E7F4EC] px-3.5 text-sm font-bold text-[#173D2C] shadow-[0_8px_18px_rgba(40,92,67,0.05)] transition hover:-translate-y-0.5">
-              <Inbox className="h-4 w-4 text-[#5FA37D]" />
+            <button
+              className={`flex h-10 items-center gap-2 rounded-[14px] px-3.5 text-sm font-bold transition ${
+                filter === 'pending' ? 'bg-[#E7F4EC] text-[#173D2C] shadow-[0_8px_18px_rgba(40,92,67,0.05)]' : 'text-[#5C6D63] hover:bg-[#F3FAF6]'
+              }`}
+              onClick={() => setFilter('pending')}
+              type="button"
+            >
+              <Inbox className={`h-4 w-4 ${filter === 'pending' ? 'text-[#5FA37D]' : 'text-[#8CA096]'}`} />
               Activas
               <span className="flex h-6 min-w-6 items-center justify-center rounded-full border border-[#A9CDBB] bg-white px-1.5 text-xs text-[#5FA37D]">
                 {pending}
               </span>
             </button>
-            <button className="flex h-10 items-center gap-2 rounded-[14px] px-3.5 text-sm font-bold text-[#5C6D63] transition hover:bg-[#F3FAF6]">
-              <History className="h-4 w-4 text-[#8CA096]" />
+            <button
+              className={`flex h-10 items-center gap-2 rounded-[14px] px-3.5 text-sm font-bold transition ${
+                filter === 'history' ? 'bg-[#E7F4EC] text-[#173D2C] shadow-[0_8px_18px_rgba(40,92,67,0.05)]' : 'text-[#5C6D63] hover:bg-[#F3FAF6]'
+              }`}
+              onClick={() => setFilter('history')}
+              type="button"
+            >
+              <History className={`h-4 w-4 ${filter === 'history' ? 'text-[#5FA37D]' : 'text-[#8CA096]'}`} />
               Historial
             </button>
           </div>
@@ -177,24 +203,26 @@ export function RequestsPanel() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 xl:w-[330px]">
-            {['Todas', 'Más recientes'].map((label) => (
-              <button
-                key={label}
-                className="flex h-10 items-center justify-between rounded-full border border-[#DDEBE3] bg-white px-4 text-sm font-semibold text-[#173D2C] shadow-sm transition hover:bg-[#F3FAF6]"
-              >
-                {label}
-                <ChevronDown className="h-4 w-4 text-[#A9CDBB]" />
-              </button>
-            ))}
+            <button
+              className={`flex h-10 items-center justify-center rounded-full border px-4 text-sm font-semibold transition ${
+                filter === 'all' ? 'border-[#285C43] bg-[#E7F4EC] text-[#173D2C]' : 'border-[#DDEBE3] bg-white text-[#173D2C] hover:bg-[#F3FAF6]'
+              }`}
+              onClick={() => setFilter('all')}
+              type="button"
+            >
+              Todas
+            </button>
           </div>
         </div>
       </PanelCard>
 
       <div className="space-y-3.5">
-        {requests.length === 0 && (
-          <p className="py-12 text-center text-sm font-medium text-[#A9CDBB]">No hay solicitudes registradas</p>
+        {filteredRequests.length === 0 && (
+          <p className="py-12 text-center text-sm font-medium text-[#A9CDBB]">
+            {filter === 'pending' ? 'No hay solicitudes pendientes' : filter === 'history' ? 'No hay historial' : 'No hay solicitudes registradas'}
+          </p>
         )}
-        {requests.map((request, index) => (
+        {filteredRequests.map((request, index) => (
           <motion.article
             key={request.id}
             variants={fadeUp}

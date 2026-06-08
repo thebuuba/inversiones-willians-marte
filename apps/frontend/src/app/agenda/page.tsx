@@ -44,9 +44,8 @@ const categoryConfig: Record<string, { bg: string; text: string; label: string }
   admin: { bg: '#F3F4F6', text: '#525252', label: 'Admin' },
 };
 
-function MiniCalendar() {
-  const today = new Date();
-  const [viewing, setViewing] = useState(today);
+function MiniCalendar({ selectedDate, onDateChange }: { selectedDate: Date; onDateChange: (d: Date) => void }) {
+  const [viewing, setViewing] = useState(selectedDate);
   const year = viewing.getFullYear();
   const month = viewing.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
@@ -59,6 +58,15 @@ function MiniCalendar() {
 
   const prevMonth = () => setViewing(new Date(year, month - 1, 1));
   const nextMonth = () => setViewing(new Date(year, month + 1, 1));
+
+  function isSelected(day: number) {
+    return day === selectedDate.getDate() && month === selectedDate.getMonth() && year === selectedDate.getFullYear();
+  }
+
+  function isToday(day: number) {
+    const t = new Date();
+    return day === t.getDate() && month === t.getMonth() && year === t.getFullYear();
+  }
 
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100">
@@ -74,12 +82,14 @@ function MiniCalendar() {
           <div key={d} className="pb-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-400">{d}</div>
         ))}
         {cells.map((day, i) => {
-          const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+          const sel = day ? isSelected(day) : false;
+          const tod = day ? isToday(day) : false;
           return (
             <div
               key={i}
+              onClick={() => day && onDateChange(new Date(year, month, day))}
               className={`relative flex h-8 w-full items-center justify-center rounded-xl text-sm transition cursor-pointer ${
-                isToday ? 'bg-[#5a9a7a] font-bold text-white shadow-sm' : day ? 'text-neutral-700 hover:bg-[#eaf5ed]' : ''
+                sel ? 'bg-[#5a9a7a] font-bold text-white shadow-sm' : tod ? 'border border-[#5a9a7a] font-bold text-[#5a9a7a]' : day ? 'text-neutral-700 hover:bg-[#eaf5ed]' : ''
               }`}
             >
               {day}
@@ -188,8 +198,9 @@ export default function AgendaPage() {
   const [filter, setFilter] = useState<FilterKey>('todas');
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const today = new Date();
+  const today = selectedDate;
   const dateStr = today.toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   const load = useCallback(() => {
@@ -257,7 +268,7 @@ export default function AgendaPage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr_300px]">
           <aside className="space-y-5">
-            <MotionCard index={0}><MiniCalendar /></MotionCard>
+            <MotionCard index={0}><MiniCalendar selectedDate={selectedDate} onDateChange={setSelectedDate} /></MotionCard>
             <MotionCard index={1} className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100 space-y-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Resumen de hoy</p>
               {[

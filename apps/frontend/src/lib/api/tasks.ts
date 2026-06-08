@@ -1,6 +1,12 @@
 import { api } from '../api';
 import type { ApiResponse, TaskItem, CreateTaskDto, UpdateTaskDto } from '@inversiones/shared';
 
+export async function getTasksCount(status?: string): Promise<number> {
+  const params = status ? { status } : {};
+  const { data } = await api.get<ApiResponse<number>>('/tasks/count', { params });
+  return (data.data as number) ?? 0;
+}
+
 export async function getTasks(): Promise<TaskItem[]> {
   const { data } = await api.get<ApiResponse<TaskItem[]>>('/tasks');
   return data.data ?? [];

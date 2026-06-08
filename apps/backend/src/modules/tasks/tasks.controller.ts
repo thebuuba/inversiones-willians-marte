@@ -1,4 +1,16 @@
-import { Controller, Post, Get, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { TaskStatusEnum } from '@inversiones/shared';
+import type { TaskStatus } from '@inversiones/shared';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -13,6 +25,15 @@ export class TasksController {
   @Post()
   create(@Body() dto: CreateTaskDto, @CurrentUser('id') userId: string) {
     return this.tasks.create(dto, userId);
+  }
+
+  @Get('count')
+  count(@Query('status') status?: string) {
+    const validStatuses = Object.values(TaskStatusEnum) as TaskStatus[];
+    if (status && validStatuses.includes(status as TaskStatus)) {
+      return this.tasks.count(status as TaskStatus);
+    }
+    return this.tasks.count();
   }
 
   @Get()

@@ -22,6 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import { getRequestsCount } from '@/lib/api/requests';
+import { getTasksCount } from '@/lib/api/tasks';
 import { navItems } from '@/components/ui/visual-system';
 
 const navIconMap = {
@@ -47,11 +48,24 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingRequests, setPendingRequests] = useState(0);
+  const [pendingTasks, setPendingTasks] = useState(0);
   const initial = user?.name?.charAt(0) ?? 'A';
 
   useEffect(() => {
-    getRequestsCount('PENDING').then(setPendingCount).catch(() => {});
+    function refresh() {
+      getRequestsCount('PENDING').then(setPendingRequests).catch(() => {});
+      getTasksCount('PENDING').then(setPendingTasks).catch(() => {});
+    }
+    refresh();
+    const interval = setInterval(refresh, 10000);
+    addEventListener('visibilitychange', refresh);
+    addEventListener('focus', refresh);
+    return () => {
+      clearInterval(interval);
+      removeEventListener('visibilitychange', refresh);
+      removeEventListener('focus', refresh);
+    };
   }, []);
 
   const sidebarContent = (compact = false) => (
@@ -120,16 +134,18 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                   aria-hidden="true"
                 />
                 <span className={cn('min-w-0 flex-1 truncate', compact && 'sr-only')}>{item.label}</span>
-                {item.href === '/solicitudes' && pendingCount > 0 && (
+                {(item.href === '/solicitudes' && pendingRequests > 0) ||
+                (item.href === '/agenda' && pendingTasks > 0) ? (
                   <span
                     className={cn(
-                      'flex h-6 min-w-6 items-center justify-center rounded-full bg-[#FFE3D2] px-1.5 text-xs font-bold text-[#C96F4A]',
+                      'flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold',
+                      item.href === '/solicitudes' ? 'bg-[#FFE3D2] text-[#C96F4A]' : 'bg-[#E4F0FF] text-[#5C82B7]',
                       compact && 'absolute -right-1 -top-1 h-5 min-w-5 px-1 text-[10px]',
                     )}
                   >
-                    {pendingCount}
+                    {item.href === '/solicitudes' ? pendingRequests : pendingTasks}
                   </span>
-                )}
+                ) : null}
               </Link>
             );
           })}

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { prisma } from '@inversiones/database';
+import { prisma, type TaskStatus } from '@inversiones/database';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
@@ -17,6 +17,11 @@ export class TasksService {
         createdById: userId,
       },
     });
+  }
+
+  async count(status?: TaskStatus): Promise<number> {
+    const args = status ? { where: { status } } : undefined;
+    return prisma.task.count(args);
   }
 
   async findAll() {
