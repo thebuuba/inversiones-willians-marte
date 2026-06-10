@@ -59,162 +59,10 @@ const fadeUp: Variants = {
   }),
 };
 
-const initialGroups: MovementGroup[] = [
-  {
-    date: 'sábado, 24 de mayo',
-    count: '3 movimientos',
-    income: '+RD$62,500',
-    expense: '−RD$85,000',
-    movements: [
-      {
-        type: 'in',
-        name: 'Carmen Reyes Polanco',
-        code: 'MOV-1042',
-        description: 'Cuota mensual préstamo PR-2104',
-        amount: '+RD$12,500',
-        time: '07:32 a. m.',
-        avatar: 'https://i.pravatar.cc/96?img=32',
-        tags: [
-          { label: 'Pago de préstamo', tone: 'green' },
-          { label: 'Efectivo', tone: 'gray', icon: 'cash' },
-        ],
-      },
-      {
-        type: 'out',
-        name: 'Patricia Gómez Then',
-        code: 'MOV-1041',
-        description: 'Desembolso préstamo aprobado SOL-2039',
-        amount: '−RD$85,000',
-        time: '06:05 a. m.',
-        avatar: 'https://i.pravatar.cc/96?img=56',
-        tags: [
-          { label: 'Desembolso', tone: 'orange' },
-          { label: 'Transferencia', tone: 'gray', icon: 'transfer' },
-        ],
-      },
-      {
-        type: 'in',
-        name: 'Marcos Inversora SRL',
-        code: 'MOV-1040',
-        description: 'Capital nuevo del inversionista',
-        amount: '+RD$50,000',
-        time: '05:14 a. m.',
-        initials: 'MI',
-        tags: [
-          { label: 'Ingreso de inversionista', tone: 'purple' },
-          { label: 'Transferencia', tone: 'gray', icon: 'transfer' },
-        ],
-      },
-    ],
-  },
-  {
-    date: 'viernes, 23 de mayo',
-    count: '3 movimientos',
-    income: '+RD$7,800',
-    expense: '−RD$22,500',
-    movements: [
-      {
-        type: 'out',
-        name: 'Servicios Eléctricos del Caribe',
-        code: 'MOV-1039',
-        description: 'Pago factura de electricidad mayo',
-        amount: '−RD$4,500',
-        time: '12:42 p. m.',
-        initials: 'SE',
-        tags: [
-          { label: 'Gasto operativo', tone: 'blue' },
-          { label: 'Transferencia', tone: 'gray', icon: 'transfer' },
-        ],
-      },
-      {
-        type: 'in',
-        name: 'Luis Martínez Cruz',
-        code: 'MOV-1038',
-        description: 'Pago parcial cuota PR-2098',
-        amount: '+RD$7,800',
-        time: '10:20 a. m.',
-        avatar: 'https://i.pravatar.cc/96?img=13',
-        tags: [
-          { label: 'Pago de préstamo', tone: 'green' },
-          { label: 'Efectivo', tone: 'gray', icon: 'cash' },
-        ],
-      },
-      {
-        type: 'out',
-        name: 'Willians Marte',
-        code: 'MOV-1037',
-        description: 'Retiro mensual del socio',
-        amount: '−RD$18,000',
-        time: '06:00 a. m.',
-        avatar: 'https://i.pravatar.cc/96?img=12',
-        tags: [
-          { label: 'Retiro de socio', tone: 'yellow' },
-          { label: 'Transferencia', tone: 'gray', icon: 'transfer' },
-        ],
-      },
-    ],
-  },
-  {
-    date: 'jueves, 22 de mayo',
-    count: '2 movimientos',
-    income: '+RD$9,200',
-    expense: '−RD$2,100',
-    movements: [
-      {
-        type: 'in',
-        name: 'Roberto Severino Díaz',
-        code: 'MOV-1036',
-        description: 'Cuota PR-2087',
-        amount: '+RD$9,200',
-        time: '11:50 a. m.',
-        avatar: 'https://i.pravatar.cc/96?img=5',
-        tags: [
-          { label: 'Pago de préstamo', tone: 'green' },
-          { label: 'Efectivo', tone: 'gray', icon: 'cash' },
-        ],
-      },
-      {
-        type: 'out',
-        name: 'Papelería Central',
-        code: 'MOV-1035',
-        description: 'Materiales de oficina',
-        amount: '−RD$2,100',
-        time: '08:10 a. m.',
-        initials: 'PC',
-        tags: [
-          { label: 'Gasto operativo', tone: 'blue' },
-          { label: 'Tarjeta', tone: 'gray', icon: 'card' },
-        ],
-      },
-    ],
-  },
-  {
-    date: 'miércoles, 21 de mayo',
-    count: '1 movimientos',
-    income: '+RD$15,600',
-    expense: '−RD$0',
-    movements: [
-      {
-        type: 'in',
-        name: 'Yulissa Encarnación',
-        code: 'MOV-1034',
-        description: 'Cuota mensual PR-2076',
-        amount: '+RD$15,600',
-        time: '07:30 a. m.',
-        avatar: 'https://i.pravatar.cc/96?img=12',
-        tags: [
-          { label: 'Pago de préstamo', tone: 'green' },
-          { label: 'Transferencia', tone: 'gray', icon: 'transfer' },
-        ],
-      },
-    ],
-  },
-];
-
-const initialTotals: CashTotals = {
-  balance: 830700,
-  income: 95100,
-  expense: 109600,
+const emptyTotals: CashTotals = {
+  balance: 0,
+  income: 0,
+  expense: 0,
 };
 
 function formatCurrency(value: number, options: { signed?: boolean; negative?: boolean } = {}) {
@@ -475,8 +323,8 @@ function TransactionGroup({ group, index }: { group: MovementGroup; index: numbe
 }
 
 export function CashPanel() {
-  const [groups, setGroups] = useState<MovementGroup[]>(initialGroups);
-  const [totals, setTotals] = useState<CashTotals>(initialTotals);
+  const [groups, setGroups] = useState<MovementGroup[]>([]);
+  const [totals, setTotals] = useState<CashTotals>(emptyTotals);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCreateMovement = async (values: MovementFormValues) => {

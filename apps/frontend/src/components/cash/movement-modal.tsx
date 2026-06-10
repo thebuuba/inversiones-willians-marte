@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowDownLeft,
@@ -10,8 +10,7 @@ import {
   Wallet,
   X,
 } from 'lucide-react';
-import { getClients } from '@/lib/api/clients';
-import { getClient } from '@/lib/api/clients';
+import { getClient, getClients } from '@/lib/api/clients';
 import { formatDop } from '@/lib/currency';
 import type { Client, LoanSummary } from '@inversiones/shared';
 
@@ -166,7 +165,9 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
 
   const isLoanPayment = values.category === 'Pago de préstamo';
 
-  const resetLoanLookup = () => {
+  const resetState = () => {
+    setSubmitted(false);
+    setValues(initialValues);
     setSearchResults([]);
     setShowResults(false);
     setSelectedClient(null);
@@ -194,7 +195,7 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  function handleSelectClient(client: Client) {
+  async function handleSelectClient(client: Client) {
     setSelectedClient(client);
     setShowResults(false);
     setValues((prev) => ({
@@ -203,18 +204,24 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
       clientId: client.id,
       loanId: undefined,
     }));
-    getClient(client.id).then((detail) => {
-      setClientLoans(detail.loans.filter((l) => l.status === 'ACTIVE'));
-    });
+    const detail = await getClient(client.id);
+    setClientLoans(detail.loans.filter((l) => l.status === 'ACTIVE'));
   }
 
-  const amountNumber = Number(values.amount.replace(/[^\d.]/g, '')) || 0;
-  const errors = {
-    person: submitted && values.person.trim().length === 0,
-    amount: submitted && amountNumber <= 0,
-    category: submitted && values.category.trim().length === 0,
-    loan: submitted && isLoanPayment && !values.loanId,
-  };
+  const amountNumber = useMemo(
+    () => Number(values.amount.replace(/[^\d.]/g, '')) || 0,
+    [values.amount],
+  );
+
+  const errors = useMemo(
+    () => ({
+      person: submitted && values.person.trim().length === 0,
+      amount: submitted && amountNumber <= 0,
+      category: submitted && values.category.trim().length === 0,
+      loan: submitted && isLoanPayment && !values.loanId,
+    }),
+    [submitted, values.person, values.category, amountNumber, isLoanPayment, values.loanId],
+  );
 
   const updateValue = <Key extends keyof MovementFormValues>(key: Key, value: MovementFormValues[Key]) => {
     setValues((currentValues) => ({ ...currentValues, [key]: value }));
@@ -223,16 +230,17 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
   const handleCategoryChange = (value: string) => {
     updateValue('category', value);
     if (value !== 'Pago de préstamo') {
-      resetLoanLookup();
       updateValue('clientId', undefined);
       updateValue('loanId', undefined);
+      setSearchResults([]);
+      setShowResults(false);
+      setSelectedClient(null);
+      setClientLoans([]);
     }
   };
 
   const closeModal = () => {
-    setSubmitted(false);
-    setValues(initialValues);
-    resetLoanLookup();
+    resetState();
     onClose();
   };
 
@@ -248,9 +256,7 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
     }
 
     onSubmit({ ...values, person: values.person.trim(), amount: String(amountNumber) });
-    setSubmitted(false);
-    setValues(initialValues);
-    resetLoanLookup();
+    resetState();
   };
 
   return (
