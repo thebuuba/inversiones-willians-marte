@@ -1,4 +1,4 @@
-import { formatDop } from '../../lib/currency';
+import { formatDop } from '../../lib/currency.ts';
 
 export function calculateMonthlyInterest(capital: number, portfolioRate: number): number | null {
   if (!Number.isFinite(capital) || !Number.isFinite(portfolioRate) || capital <= 0 || portfolioRate <= 0) {
