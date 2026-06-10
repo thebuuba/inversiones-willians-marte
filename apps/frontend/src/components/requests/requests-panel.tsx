@@ -216,7 +216,7 @@ export function RequestsPanel() {
       )}
 
       {history.length > 0 && (
-        <PanelCard className="overflow-hidden" style={{ backgroundColor: '#F3F4F6' }}>
+        <div className="overflow-hidden" style={{ backgroundColor: '#F3F4F6' }}>
           <button
             onClick={() => setHistoryOpen((v) => !v)}
             className="flex w-full items-center justify-between px-5 py-4 text-left"
@@ -262,7 +262,7 @@ export function RequestsPanel() {
               ))}
             </div>
           )}
-        </PanelCard>
+        </div>
       )}
 
       <NewRequestModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleCreate} />

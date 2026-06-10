@@ -1,7 +1,6 @@
 'use client';
 
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -260,200 +259,195 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-[2px]"
-          exit={{ opacity: 0 }}
-          initial={{ opacity: 0 }}
-          onClick={closeModal}
-          transition={{ duration: 0.18 }}
-        >
-          <motion.form
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-full max-w-[680px] overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-[0_28px_80px_rgba(0,0,0,0.26)]"
-            exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            initial={{ opacity: 0, scale: 0.96, y: 10 }}
-            onClick={(event) => event.stopPropagation()}
-            onSubmit={handleSubmit}
-            transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-6 transition-all duration-200 ${
+        isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+      }`}
+    >
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-[2px]"
+        onClick={closeModal}
+      />
+      <form
+        className={`w-full max-w-[680px] overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-[0_28px_80px_rgba(0,0,0,0.26)] transition-all duration-200 ${
+          isOpen ? 'scale-100 opacity-100' : 'scale-[0.96] opacity-0'
+        }`}
+        onClick={(event) => event.stopPropagation()}
+        onSubmit={handleSubmit}
+      >
+        <header className="flex items-start justify-between gap-5 bg-[#F1F8F4] px-7 py-5">
+          <div className="flex items-center gap-4">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-[#B8DCC5] text-[#173D2C]">
+              <Wallet className="h-6 w-6" />
+            </span>
+            <div>
+              <h2 className="text-xl font-bold leading-tight text-[#173D2C]">Registrar movimiento</h2>
+              <p className="mt-1 text-sm font-medium text-[#7E9086]">
+                Las entradas suman al saldo y las salidas lo descuentan.
+              </p>
+            </div>
+          </div>
+          <button
+            aria-label="Cerrar modal"
+            className="rounded-full p-1.5 text-[#3D443F] transition hover:bg-white hover:text-[#173D2C]"
+            onClick={closeModal}
+            type="button"
           >
-            <header className="flex items-start justify-between gap-5 bg-[#F1F8F4] px-7 py-5">
-              <div className="flex items-center gap-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-[#B8DCC5] text-[#173D2C]">
-                  <Wallet className="h-6 w-6" />
-                </span>
-                <div>
-                  <h2 className="text-xl font-bold leading-tight text-[#173D2C]">Registrar movimiento</h2>
-                  <p className="mt-1 text-sm font-medium text-[#7E9086]">
-                    Las entradas suman al saldo y las salidas lo descuentan.
-                  </p>
-                </div>
-              </div>
-              <button
-                aria-label="Cerrar modal"
-                className="rounded-full p-1.5 text-[#3D443F] transition hover:bg-white hover:text-[#173D2C]"
-                onClick={closeModal}
-                type="button"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </header>
+            <X className="h-5 w-5" />
+          </button>
+        </header>
 
-            <div className="px-7 py-6">
-              <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <MovementTypeCard
-                  active={values.type === 'in'}
-                  icon={<ArrowDownLeft className="h-5 w-5" />}
-                  label="Entrada"
-                  onClick={() => updateValue('type', 'in')}
-                  subtitle="Suma al saldo"
-                  tone="in"
-                />
-                <MovementTypeCard
-                  active={values.type === 'out'}
-                  icon={<ArrowUpRight className="h-5 w-5" />}
-                  label="Salida"
-                  onClick={() => updateValue('type', 'out')}
-                  subtitle="Descuenta del saldo"
-                  tone="out"
-                />
-              </div>
+        <div className="px-7 py-6">
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <MovementTypeCard
+              active={values.type === 'in'}
+              icon={<ArrowDownLeft className="h-5 w-5" />}
+              label="Entrada"
+              onClick={() => updateValue('type', 'in')}
+              subtitle="Suma al saldo"
+              tone="in"
+            />
+            <MovementTypeCard
+              active={values.type === 'out'}
+              icon={<ArrowUpRight className="h-5 w-5" />}
+              label="Salida"
+              onClick={() => updateValue('type', 'out')}
+              subtitle="Descuenta del saldo"
+              tone="out"
+            />
+          </div>
 
-              <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-                {isLoanPayment ? (
-                  <div ref={searchRef} className="relative sm:col-span-2">
-                    <FormField error={errors.person} label="Buscar cliente">
-                      <div className="relative">
-                        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8F9691]" />
-                        <input
-                          autoComplete="off"
-                          className={`${inputClass(errors.person)} pl-12`}
-                          onChange={(event) => {
-                            const nextPerson = event.target.value;
-                            updateValue('person', nextPerson);
-                            if (nextPerson.length < 2) {
-                              setSearchResults([]);
-                              setShowResults(false);
-                            }
-                            if (selectedClient) {
-                              setSelectedClient(null);
-                              setClientLoans([]);
-                              updateValue('clientId', undefined);
-                              updateValue('loanId', undefined);
-                            }
-                          }}
-                          placeholder="Buscar por nombre, cédula o teléfono..."
-                          value={values.person}
-                        />
-                      </div>
-                    </FormField>
-                    {showResults && (
-                      <div className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-[12px] border border-[#DDEBE3] bg-white shadow-[0_12px_32px_rgba(40,92,67,0.12)]">
-                        {searchResults.map((client) => (
-                          <button
-                            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-[#F3FAF6]"
-                            key={client.id}
-                            onClick={() => handleSelectClient(client)}
-                            type="button"
-                          >
-                            <span className="font-bold text-[#173D2C]">{client.firstName} {client.lastName}</span>
-                            <span className="text-[#A9CDBB]">{client.identification}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {selectedClient && (
-                      <div className="mt-2">
-                        <FormField error={errors.loan} label="Préstamo">
-                          <select
-                            className={`${inputClass(errors.loan)} appearance-none pr-10`}
-                            onChange={(e) => updateValue('loanId', e.target.value)}
-                            value={values.loanId ?? ''}
-                          >
-                            <option value="">Seleccionar préstamo...</option>
-                            {clientLoans.length === 0 && <option value="" disabled>Sin préstamos activos</option>}
-                            {clientLoans.map((loan) => (
-                              <option key={loan.id} value={loan.id}>
-                                {loan.product?.name ?? 'Préstamo'} · {formatDop(loan.balance)} · Cuota {loan.paymentFreq}
-                              </option>
-                            ))}
-                          </select>
-                        </FormField>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <FormField error={errors.person} label="Persona o entidad">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+            {isLoanPayment ? (
+              <div ref={searchRef} className="relative sm:col-span-2">
+                <FormField error={errors.person} label="Buscar cliente">
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8F9691]" />
                     <input
-                      className={inputClass(errors.person)}
-                      onChange={(event) => updateValue('person', event.target.value)}
-                      placeholder="Ej. Carmen Reyes"
+                      autoComplete="off"
+                      className={`${inputClass(errors.person)} pl-12`}
+                      onChange={(event) => {
+                        const nextPerson = event.target.value;
+                        updateValue('person', nextPerson);
+                        if (nextPerson.length < 2) {
+                          setSearchResults([]);
+                          setShowResults(false);
+                        }
+                        if (selectedClient) {
+                          setSelectedClient(null);
+                          setClientLoans([]);
+                          updateValue('clientId', undefined);
+                          updateValue('loanId', undefined);
+                        }
+                      }}
+                      placeholder="Buscar por nombre, cédula o teléfono..."
                       value={values.person}
                     />
-                  </FormField>
-                )}
-
-                <FormField error={errors.amount} label="Monto">
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[#6F8076]">
-                      RD$
-                    </span>
-                    <input
-                      className={`${inputClass(errors.amount)} pl-14`}
-                      inputMode="decimal"
-                      onChange={(event) => updateValue('amount', event.target.value)}
-                      placeholder="0.00"
-                      value={values.amount}
-                    />
                   </div>
                 </FormField>
-
-                <SelectField
-                  error={errors.category}
-                  label="Categoría"
-                  onChange={handleCategoryChange}
-                  options={categories}
-                  value={values.category}
-                />
-
-                <SelectField
-                  label="Método de pago"
-                  onChange={(value) => updateValue('method', value)}
-                  options={methods}
-                  value={values.method}
-                />
-
-                <FormField className="sm:col-span-2" label="Descripción">
-                  <textarea
-                    className="h-[95px] w-full resize-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 py-3 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#5FA37D]"
-                    onChange={(event) => updateValue('description', event.target.value)}
-                    placeholder="Detalles del movimiento..."
-                    value={values.description}
-                  />
-                </FormField>
+                {showResults && (
+                  <div className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-[12px] border border-[#DDEBE3] bg-white shadow-[0_12px_32px_rgba(40,92,67,0.12)]">
+                    {searchResults.map((client) => (
+                      <button
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-[#F3FAF6]"
+                        key={client.id}
+                        onClick={() => handleSelectClient(client)}
+                        type="button"
+                      >
+                        <span className="font-bold text-[#173D2C]">{client.firstName} {client.lastName}</span>
+                        <span className="text-[#A9CDBB]">{client.identification}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {selectedClient && (
+                  <div className="mt-2">
+                    <FormField error={errors.loan} label="Préstamo">
+                      <select
+                        className={`${inputClass(errors.loan)} appearance-none pr-10`}
+                        onChange={(e) => updateValue('loanId', e.target.value)}
+                        value={values.loanId ?? ''}
+                      >
+                        <option value="">Seleccionar préstamo...</option>
+                        {clientLoans.length === 0 && <option value="" disabled>Sin préstamos activos</option>}
+                        {clientLoans.map((loan) => (
+                          <option key={loan.id} value={loan.id}>
+                            {loan.product?.name ?? 'Préstamo'} · {formatDop(loan.balance)} · Cuota {loan.paymentFreq}
+                          </option>
+                        ))}
+                      </select>
+                    </FormField>
+                  </div>
+                )}
               </div>
-            </div>
+            ) : (
+              <FormField error={errors.person} label="Persona o entidad">
+                <input
+                  className={inputClass(errors.person)}
+                  onChange={(event) => updateValue('person', event.target.value)}
+                  placeholder="Ej. Carmen Reyes"
+                  value={values.person}
+                />
+              </FormField>
+            )}
 
-            <footer className="flex flex-col items-stretch justify-end gap-3 border-t border-[#EDF2EF] px-7 py-5 sm:flex-row">
-              <button
-                className="h-11 rounded-full border border-[#DDEBE3] bg-white px-8 text-sm font-bold text-[#173D2C] transition hover:bg-[#F4FAF6]"
-                onClick={closeModal}
-                type="button"
-              >
-                Cancelar
-              </button>
-              <button
-                className="h-11 rounded-full bg-[#5a9a7a] px-8 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.18)] transition hover:bg-[#4a866a]"
-                type="submit"
-              >
-                Registrar movimiento
-              </button>
-            </footer>
-          </motion.form>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            <FormField error={errors.amount} label="Monto">
+              <div className="relative">
+                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[#6F8076]">
+                  RD$
+                </span>
+                <input
+                  className={`${inputClass(errors.amount)} pl-14`}
+                  inputMode="decimal"
+                  onChange={(event) => updateValue('amount', event.target.value)}
+                  placeholder="0.00"
+                  value={values.amount}
+                />
+              </div>
+            </FormField>
+
+            <SelectField
+              error={errors.category}
+              label="Categoría"
+              onChange={handleCategoryChange}
+              options={categories}
+              value={values.category}
+            />
+
+            <SelectField
+              label="Método de pago"
+              onChange={(value) => updateValue('method', value)}
+              options={methods}
+              value={values.method}
+            />
+
+            <FormField className="sm:col-span-2" label="Descripción">
+              <textarea
+                className="h-[95px] w-full resize-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 py-3 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#5FA37D]"
+                onChange={(event) => updateValue('description', event.target.value)}
+                placeholder="Detalles del movimiento..."
+                value={values.description}
+              />
+            </FormField>
+          </div>
+        </div>
+
+        <footer className="flex flex-col items-stretch justify-end gap-3 border-t border-[#EDF2EF] px-7 py-5 sm:flex-row">
+          <button
+            className="h-11 rounded-full border border-[#DDEBE3] bg-white px-8 text-sm font-bold text-[#173D2C] transition hover:bg-[#F4FAF6]"
+            onClick={closeModal}
+            type="button"
+          >
+            Cancelar
+          </button>
+          <button
+            className="h-11 rounded-full bg-[#5a9a7a] px-8 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.18)] transition hover:bg-[#4a866a]"
+            type="submit"
+          >
+            Registrar movimiento
+          </button>
+        </footer>
+      </form>
+    </div>
   );
 }
