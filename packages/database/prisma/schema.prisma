@@ -202,7 +202,7 @@ model Loan {
   @@index([clientId, createdAt])
   @@index([status, createdAt])
   @@index([createdAt])
-  @@index([portfolioId])
+  @@index([portfolioId, createdAt])
   @@index([startDate])
   @@index([status, endDate])
   @@map("loans")
@@ -357,7 +357,7 @@ model InvestorPayment {
 
   @@unique([investorId, periodMonth, periodYear])
   @@index([receiptNumber])
-  @@index([investorId])
+  @@index([investorId, periodYear(sort: Desc), periodMonth(sort: Desc)])
   @@index([paymentDate])
   @@map("investor_payments")
 }
