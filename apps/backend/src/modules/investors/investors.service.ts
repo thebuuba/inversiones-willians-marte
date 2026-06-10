@@ -27,8 +27,7 @@ export class InvestorsService {
     userId: string,
     attempt = 1,
   ): Promise<unknown> {
-    const count = await prisma.investor.count();
-    const code = `INV-${String(count + 1).padStart(4, '0')}`;
+    const code = await this.nextInvestorCode();
     try {
       return await prisma.investor.create({
         data: {
@@ -62,6 +61,16 @@ export class InvestorsService {
       }
       throw error;
     }
+  }
+
+  private async nextInvestorCode(): Promise<string> {
+    const lastInvestor = await prisma.investor.findFirst({
+      where: { code: { startsWith: 'INV-' } },
+      orderBy: { code: 'desc' },
+      select: { code: true },
+    });
+    const lastSequence = Number(lastInvestor?.code.match(/^INV-(\d+)$/)?.[1] ?? 0);
+    return `INV-${String(lastSequence + 1).padStart(4, '0')}`;
   }
 
   async findAll() {
