@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, type FormEvent, type ReactNode, useMemo, useRef, useState } from 'react';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -153,50 +153,91 @@ function SelectField({
   );
 }
 
-export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps) {
+function ClientSearch({
+  error,
+  onSelect,
+}: {
+  error: boolean;
+  onSelect: (client: Client) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<Client[]>([]);
+  const [show, setShow] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    clearTimeout(timerRef.current);
+    if (value.length < 2) {
+      setResults([]);
+      setShow(false);
+      return;
+    }
+    timerRef.current = setTimeout(async () => {
+      const result = await getClients(value);
+      setResults(result.data);
+      setShow(result.data.length > 0);
+    }, 300);
+  };
+
+  const handleSelect = (client: Client) => {
+    setQuery(`${client.firstName} ${client.lastName}`);
+    setShow(false);
+    onSelect(client);
+  };
+
+  return (
+    <div ref={containerRef} className="relative sm:col-span-2">
+      <FormField error={error} label="Buscar cliente">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8F9691]" />
+          <input
+            autoComplete="off"
+            className={`${inputClass(error)} pl-12`}
+            onChange={handleChange}
+            placeholder="Buscar por nombre, cédula o teléfono..."
+            value={query}
+          />
+        </div>
+      </FormField>
+      {show && (
+        <div className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-[12px] border border-[#DDEBE3] bg-white shadow-[0_12px_32px_rgba(40,92,67,0.12)]">
+          {results.map((client) => (
+            <button
+              className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-[#F3FAF6]"
+              key={client.id}
+              onClick={() => handleSelect(client)}
+              type="button"
+            >
+              <span className="font-bold text-[#173D2C]">{client.firstName} {client.lastName}</span>
+              <span className="text-[#A9CDBB]">{client.identification}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export const MovementModal = memo(function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps) {
   const [values, setValues] = useState<MovementFormValues>(initialValues);
   const [submitted, setSubmitted] = useState(false);
-  const [searchResults, setSearchResults] = useState<Client[]>([]);
-  const [showResults, setShowResults] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [clientLoans, setClientLoans] = useState<LoanSummary[]>([]);
-  const searchRef = useRef<HTMLDivElement>(null);
 
   const isLoanPayment = values.category === 'Pago de préstamo';
 
   const resetState = () => {
     setSubmitted(false);
     setValues(initialValues);
-    setSearchResults([]);
-    setShowResults(false);
     setSelectedClient(null);
     setClientLoans([]);
   };
 
-  useEffect(() => {
-    if (!isLoanPayment || values.person.length < 2) return;
-
-    const timer = setTimeout(async () => {
-      const result = await getClients(values.person);
-      setSearchResults(result.data);
-      setShowResults(result.data.length > 0);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [values.person, isLoanPayment]);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setShowResults(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   async function handleSelectClient(client: Client) {
     setSelectedClient(client);
-    setShowResults(false);
     setValues((prev) => ({
       ...prev,
       person: `${client.firstName} ${client.lastName}`,
@@ -231,8 +272,6 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
     if (value !== 'Pago de préstamo') {
       updateValue('clientId', undefined);
       updateValue('loanId', undefined);
-      setSearchResults([]);
-      setShowResults(false);
       setSelectedClient(null);
       setClientLoans([]);
     }
@@ -260,18 +299,18 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-6 transition-all duration-200 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-6 ${
         isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
-      }`}
+      } transition-opacity duration-200`}
     >
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/70"
         onClick={closeModal}
       />
       <form
-        className={`w-full max-w-[680px] overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-[0_28px_80px_rgba(0,0,0,0.26)] transition-all duration-200 ${
+        className={`w-full max-w-[680px] overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-[0_28px_80px_rgba(0,0,0,0.26)] ${
           isOpen ? 'scale-100 opacity-100' : 'scale-[0.96] opacity-0'
-        }`}
+        } transition-all duration-200`}
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
@@ -319,67 +358,10 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
             {isLoanPayment ? (
-              <div ref={searchRef} className="relative sm:col-span-2">
-                <FormField error={errors.person} label="Buscar cliente">
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8F9691]" />
-                    <input
-                      autoComplete="off"
-                      className={`${inputClass(errors.person)} pl-12`}
-                      onChange={(event) => {
-                        const nextPerson = event.target.value;
-                        updateValue('person', nextPerson);
-                        if (nextPerson.length < 2) {
-                          setSearchResults([]);
-                          setShowResults(false);
-                        }
-                        if (selectedClient) {
-                          setSelectedClient(null);
-                          setClientLoans([]);
-                          updateValue('clientId', undefined);
-                          updateValue('loanId', undefined);
-                        }
-                      }}
-                      placeholder="Buscar por nombre, cédula o teléfono..."
-                      value={values.person}
-                    />
-                  </div>
-                </FormField>
-                {showResults && (
-                  <div className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-[12px] border border-[#DDEBE3] bg-white shadow-[0_12px_32px_rgba(40,92,67,0.12)]">
-                    {searchResults.map((client) => (
-                      <button
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-[#F3FAF6]"
-                        key={client.id}
-                        onClick={() => handleSelectClient(client)}
-                        type="button"
-                      >
-                        <span className="font-bold text-[#173D2C]">{client.firstName} {client.lastName}</span>
-                        <span className="text-[#A9CDBB]">{client.identification}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {selectedClient && (
-                  <div className="mt-2">
-                    <FormField error={errors.loan} label="Préstamo">
-                      <select
-                        className={`${inputClass(errors.loan)} appearance-none pr-10`}
-                        onChange={(e) => updateValue('loanId', e.target.value)}
-                        value={values.loanId ?? ''}
-                      >
-                        <option value="">Seleccionar préstamo...</option>
-                        {clientLoans.length === 0 && <option value="" disabled>Sin préstamos activos</option>}
-                        {clientLoans.map((loan) => (
-                          <option key={loan.id} value={loan.id}>
-                            {loan.product?.name ?? 'Préstamo'} · {formatDop(loan.balance)} · Cuota {loan.paymentFreq}
-                          </option>
-                        ))}
-                      </select>
-                    </FormField>
-                  </div>
-                )}
-              </div>
+              <ClientSearch
+                error={errors.person}
+                onSelect={handleSelectClient}
+              />
             ) : (
               <FormField error={errors.person} label="Persona o entidad">
                 <input
@@ -432,6 +414,26 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
           </div>
         </div>
 
+        {selectedClient && (
+          <div className="px-7 pb-4">
+            <FormField error={errors.loan} label="Préstamo">
+              <select
+                className={`${inputClass(errors.loan)} appearance-none pr-10`}
+                onChange={(e) => updateValue('loanId', e.target.value)}
+                value={values.loanId ?? ''}
+              >
+                <option value="">Seleccionar préstamo...</option>
+                {clientLoans.length === 0 && <option value="" disabled>Sin préstamos activos</option>}
+                {clientLoans.map((loan) => (
+                  <option key={loan.id} value={loan.id}>
+                    {loan.product?.name ?? 'Préstamo'} · {formatDop(loan.balance)} · Cuota {loan.paymentFreq}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+          </div>
+        )}
+
         <footer className="flex flex-col items-stretch justify-end gap-3 border-t border-[#EDF2EF] px-7 py-5 sm:flex-row">
           <button
             className="h-11 rounded-full border border-[#DDEBE3] bg-white px-8 text-sm font-bold text-[#173D2C] transition hover:bg-[#F4FAF6]"
@@ -450,4 +452,4 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
       </form>
     </div>
   );
-}
+});

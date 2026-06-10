@@ -1,7 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -327,7 +326,7 @@ export function CashPanel() {
   const [totals, setTotals] = useState<CashTotals>(emptyTotals);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleCreateMovement = async (values: MovementFormValues) => {
+  const handleCreateMovement = useCallback(async (values: MovementFormValues) => {
     const amount = parseCurrency(values.amount);
     const isIncome = values.type === 'in';
     const isLoanPayment = values.category === 'Pago de préstamo' && values.clientId && values.loanId;
@@ -404,7 +403,7 @@ export function CashPanel() {
     }));
 
     setIsModalOpen(false);
-  };
+  }, [groups]);
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
