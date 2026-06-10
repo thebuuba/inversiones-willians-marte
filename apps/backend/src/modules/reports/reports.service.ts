@@ -67,26 +67,25 @@ export class ReportsService {
       },
     });
 
-    const result: Array<{
-      id: string;
-      name: string;
-      paymentsCount: number;
-      totalCollected: number;
-    }> = [];
-    for (const collector of collectors) {
-      const totalCollected = await prisma.payment.aggregate({
-        where: { receivedById: collector.id },
-        _sum: { amount: true },
-      });
-      result.push({
-        id: collector.id,
-        name: collector.name,
-        paymentsCount: collector._count.receivedPayments,
-        totalCollected: Number(totalCollected._sum.amount ?? 0),
-      });
+    if (collectors.length === 0) {
+      return [];
     }
 
-    return result;
+    const totals = await prisma.payment.groupBy({
+      by: ['receivedById'],
+      where: { receivedById: { in: collectors.map((collector) => collector.id) } },
+      _sum: { amount: true },
+    });
+    const totalByCollector = new Map(
+      totals.map((total) => [total.receivedById, Number(total._sum.amount ?? 0)]),
+    );
+
+    return collectors.map((collector) => ({
+      id: collector.id,
+      name: collector.name,
+      paymentsCount: collector._count.receivedPayments,
+      totalCollected: totalByCollector.get(collector.id) ?? 0,
+    }));
   }
 
   async monthlyCollections() {
@@ -124,29 +123,30 @@ export class ReportsService {
     weekEnd.setHours(23, 59, 59, 999);
 
     const rows = await prisma.$queryRaw<Array<{ day: string; nuevos: string; cerrados: string }>>`
-      SELECT
-        d.day,
-        COALESCE(SUM(n.count), 0) AS nuevos,
-        COALESCE(SUM(c.count), 0) AS cerrados
-      FROM (VALUES ('Lun'),('Mar'),('Mié'),('Jue'),('Vie'),('Sáb'),('Dom')) AS d(day)
-      LEFT JOIN LATERAL (
-        SELECT COUNT(*) AS count
+      WITH days(dow, day) AS (
+        VALUES (1, 'Lun'), (2, 'Mar'), (3, 'Mié'), (4, 'Jue'), (5, 'Vie'), (6, 'Sáb'), (7, 'Dom')
+      ),
+      new_loans AS (
+        SELECT EXTRACT(ISODOW FROM start_date)::int AS dow, COUNT(*) AS count
         FROM loans
         WHERE start_date >= ${weekStart} AND start_date <= ${weekEnd}
-          AND TO_CHAR(start_date, 'Dy') = d.day
-      ) n ON true
-      LEFT JOIN LATERAL (
-        SELECT COUNT(*) AS count
+        GROUP BY EXTRACT(ISODOW FROM start_date)::int
+      ),
+      closed_loans AS (
+        SELECT EXTRACT(ISODOW FROM end_date)::int AS dow, COUNT(*) AS count
         FROM loans
         WHERE status = 'PAID' AND end_date IS NOT NULL
           AND end_date >= ${weekStart} AND end_date <= ${weekEnd}
-          AND TO_CHAR(end_date, 'Dy') = d.day
-      ) c ON true
-      GROUP BY d.day
-      ORDER BY CASE d.day
-        WHEN 'Lun' THEN 1 WHEN 'Mar' THEN 2 WHEN 'Mié' THEN 3
-        WHEN 'Jue' THEN 4 WHEN 'Vie' THEN 5 WHEN 'Sáb' THEN 6 WHEN 'Dom' THEN 7
-      END
+        GROUP BY EXTRACT(ISODOW FROM end_date)::int
+      )
+      SELECT
+        d.day,
+        COALESCE(n.count, 0) AS nuevos,
+        COALESCE(c.count, 0) AS cerrados
+      FROM days d
+      LEFT JOIN new_loans n ON n.dow = d.dow
+      LEFT JOIN closed_loans c ON c.dow = d.dow
+      ORDER BY d.dow
     `;
 
     return rows.map((r) => ({
