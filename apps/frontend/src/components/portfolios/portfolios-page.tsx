@@ -249,7 +249,7 @@ export function PortfoliosPage() {
   }, [portfolios]);
 
   return (
-    <main className="min-h-screen bg-[#F4F5F6] p-5 font-sans text-[#173D2C]">
+    <main className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
       <div className="mx-auto max-w-[1640px]">
         <header className="mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end">
           <div>

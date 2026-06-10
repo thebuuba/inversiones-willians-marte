@@ -207,7 +207,8 @@ export default function DocumentosPage() {
         initial={{ opacity: 0, y: 16 }}
       >
         <div>
-          <h1 className="text-[28px] font-bold leading-tight text-[#173D2C]">Documentos</h1>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#A9CDBB]">ARCHIVOS</p>
+          <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#151918]">Documentos</h1>
           <p className="mt-1.5 text-sm text-[#7E9086]">Gestión documental del sistema.</p>
         </div>
         <button

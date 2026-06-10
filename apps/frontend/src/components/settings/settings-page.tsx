@@ -63,7 +63,7 @@ function SettingsHeader() {
   return (
     <motion.header
       animate="visible"
-      className="mb-5 flex flex-col justify-between gap-4 xl:flex-row xl:items-end"
+      className="mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end"
       initial="hidden"
       variants={fadeUp}
     >
@@ -72,7 +72,7 @@ function SettingsHeader() {
           <span className="h-2 w-2 rounded-full bg-[#5FA37D]" />
           Sistema
         </span>
-        <h1 className="mt-3 text-[30px] font-bold leading-tight text-[#173D2C]">Configuración</h1>
+        <h1 className="mt-3 text-[28px] font-bold leading-tight text-[#173D2C]">Configuración</h1>
         <p className="mt-1.5 text-sm font-medium text-[#7A8A80]">
           Ajusta los parámetros de tu sistema de préstamos.
         </p>

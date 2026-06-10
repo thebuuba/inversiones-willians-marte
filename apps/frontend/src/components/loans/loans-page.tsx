@@ -429,7 +429,7 @@ export function LoansPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F4F5F6] p-5 font-sans text-[#173D2C]">
+    <main className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
       <div className="mx-auto max-w-[1640px]">
         <LoansHeader total={total} amount={
           total > 0
