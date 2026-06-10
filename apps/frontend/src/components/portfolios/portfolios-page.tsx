@@ -108,7 +108,7 @@ function EmptyState() {
         Crea una cartera al registrar un préstamo nuevo para ver aquí sus clientes y códigos de préstamos.
       </p>
       <Link
-        className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#5FA37D] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.22)] transition hover:bg-[#4F9B76]"
+        className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#5a9a7a] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:bg-[#4a866a]"
         href="/prestamos/nuevo"
       >
         <Plus className="h-4 w-4" />
@@ -260,7 +260,7 @@ export function PortfoliosPage() {
             </p>
           </div>
           <Link
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#5FA37D] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.22)] transition hover:-translate-y-0.5 hover:bg-[#4F9B76]"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#5a9a7a] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-[#4a866a]"
             href="/prestamos/nuevo"
           >
             <Plus className="h-4 w-4" />

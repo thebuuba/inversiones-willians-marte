@@ -74,7 +74,7 @@ function FormHeaderActions({
         Cancelar
       </Link>
       <button
-        className="inline-flex h-12 items-center justify-center gap-3 rounded-full bg-[#5FA37D] px-7 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.24)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex h-12 items-center justify-center gap-3 rounded-full bg-[#5a9a7a] px-7 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.24)] transition hover:-translate-y-0.5 hover:bg-[#4a866a] disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={saving}
         onClick={onSave}
         type="button"

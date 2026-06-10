@@ -439,7 +439,7 @@ export function MovementModal({ isOpen, onClose, onSubmit }: MovementModalProps)
                 Cancelar
               </button>
               <button
-                className="h-11 rounded-full bg-[#285C43] px-8 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.18)] transition hover:bg-[#1F4A35]"
+                className="h-11 rounded-full bg-[#5a9a7a] px-8 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.18)] transition hover:bg-[#4a866a]"
                 type="submit"
               >
                 Registrar movimiento

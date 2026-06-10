@@ -79,7 +79,7 @@ export function RequestsPanel() {
   const [requests, setRequests] = useState<LoanRequestItem[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<LoanRequestItem | null>(null);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'history'>('all');
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     getRequests().then(setRequests);
@@ -90,19 +90,13 @@ export function RequestsPanel() {
     setSelectedRequest(null);
   }
 
-  function sortAndFilter(list: LoanRequestItem[]) {
-    const sorted = [...list].sort((a, b) => {
-      if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
-      if (a.status !== 'PENDING' && b.status === 'PENDING') return 1;
-      if (a.status === 'PENDING') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-    if (filter === 'pending') return sorted.filter((r) => r.status === 'PENDING');
-    if (filter === 'history') return sorted.filter((r) => r.status !== 'PENDING');
-    return sorted;
-  }
+  const pending = requests
+    .filter((r) => r.status === 'PENDING')
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
-  const filteredRequests = sortAndFilter(requests);
+  const history = requests
+    .filter((r) => r.status !== 'PENDING')
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   async function handleCreate(dto: CreateRequestDto) {
     try {
@@ -115,13 +109,13 @@ export function RequestsPanel() {
   }
 
   const total = requests.length;
-  const pending = requests.filter((r) => r.status === 'PENDING').length;
+  const pendingCount = pending.length;
   const approved = requests.filter((r) => r.status === 'APPROVED').length;
   const rejected = requests.filter((r) => r.status === 'REJECTED').length;
 
   const stats = [
     { label: 'TOTAL', value: String(total), icon: Inbox, bg: '#B8DCC5', color: '#285C43' },
-    { label: 'PENDIENTES', value: String(pending), icon: Clock3, bg: '#FFF4C8', color: '#B89A22' },
+    { label: 'PENDIENTES', value: String(pendingCount), icon: Clock3, bg: '#FFF4C8', color: '#B89A22' },
     { label: 'APROBADAS', value: String(approved), icon: CheckCircle2, bg: '#E4F0FF', color: '#5C82B7' },
     { label: 'RECHAZADAS', value: String(rejected), icon: XCircle, bg: '#FFE3D2', color: '#C96F4A' },
   ];
@@ -145,7 +139,7 @@ export function RequestsPanel() {
           </p>
         </div>
         <button
-          className="flex h-11 items-center gap-2 rounded-full bg-[#285C43] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.22)] transition hover:-translate-y-0.5"
+          className="flex h-11 items-center gap-2 rounded-full bg-[#5a9a7a] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
           onClick={() => setModalOpen(true)}
           type="button"
         >
@@ -171,90 +165,105 @@ export function RequestsPanel() {
 
       <PanelCard className="mb-5 p-3.5" index={5}>
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-          <div className="flex shrink-0 items-center gap-2">
-            <button
-              className={`flex h-10 items-center gap-2 rounded-[14px] px-3.5 text-sm font-bold transition ${
-                filter === 'pending' ? 'bg-[#E7F4EC] text-[#173D2C] shadow-[0_8px_18px_rgba(40,92,67,0.05)]' : 'text-[#5C6D63] hover:bg-[#F3FAF6]'
-              }`}
-              onClick={() => setFilter('pending')}
-              type="button"
-            >
-              <Inbox className={`h-4 w-4 ${filter === 'pending' ? 'text-[#5FA37D]' : 'text-[#8CA096]'}`} />
-              Activas
-              <span className="flex h-6 min-w-6 items-center justify-center rounded-full border border-[#A9CDBB] bg-white px-1.5 text-xs text-[#5FA37D]">
-                {pending}
-              </span>
-            </button>
-            <button
-              className={`flex h-10 items-center gap-2 rounded-[14px] px-3.5 text-sm font-bold transition ${
-                filter === 'history' ? 'bg-[#E7F4EC] text-[#173D2C] shadow-[0_8px_18px_rgba(40,92,67,0.05)]' : 'text-[#5C6D63] hover:bg-[#F3FAF6]'
-              }`}
-              onClick={() => setFilter('history')}
-              type="button"
-            >
-              <History className={`h-4 w-4 ${filter === 'history' ? 'text-[#5FA37D]' : 'text-[#8CA096]'}`} />
-              Historial
-            </button>
-          </div>
-
-          <div className="flex h-10 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-4 text-[#A9CDBB] xl:ml-auto xl:max-w-[380px]">
+          <div className="flex h-10 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-4 text-[#A9CDBB] xl:max-w-[380px]">
             <Search className="h-4 w-4 shrink-0" />
             <span className="truncate text-sm">Buscar por nombre o cédula...</span>
           </div>
-
-          <div className="grid grid-cols-2 gap-3 xl:w-[330px]">
-            <button
-              className={`flex h-10 items-center justify-center rounded-full border px-4 text-sm font-semibold transition ${
-                filter === 'all' ? 'border-[#285C43] bg-[#E7F4EC] text-[#173D2C]' : 'border-[#DDEBE3] bg-white text-[#173D2C] hover:bg-[#F3FAF6]'
-              }`}
-              onClick={() => setFilter('all')}
-              type="button"
-            >
-              Todas
-            </button>
+          <div className="flex items-center gap-2 text-sm text-[#7E9086]">
+            <span className="font-semibold text-[#173D2C]">{pendingCount}</span>
+            {pendingCount === 1 ? 'solicitud pendiente' : 'solicitudes pendientes'}
           </div>
         </div>
       </PanelCard>
 
-      <div className="space-y-3.5">
-        {filteredRequests.length === 0 && (
-          <p className="py-12 text-center text-sm font-medium text-[#A9CDBB]">
-            {filter === 'pending' ? 'No hay solicitudes pendientes' : filter === 'history' ? 'No hay historial' : 'No hay solicitudes registradas'}
-          </p>
-        )}
-        {filteredRequests.map((request, index) => (
-          <motion.article
-            key={request.id}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            custom={index + 6}
-            onClick={() => setSelectedRequest(request)}
-            whileHover={{ y: -3 }}
-            className="flex min-h-[86px] cursor-pointer items-center gap-4 rounded-[18px] border border-[#EDF2EF] bg-white px-5 py-4 shadow-[0_7px_22px_rgba(40,92,67,0.03)] transition-shadow hover:shadow-[0_14px_32px_rgba(40,92,67,0.075)]"
+      {pending.length === 0 ? (
+        <p className="py-12 text-center text-sm font-medium text-[#A9CDBB]">No hay solicitudes pendientes</p>
+      ) : (
+        <div className="mb-5 space-y-3.5">
+          {pending.map((request, index) => (
+            <motion.article
+              key={request.id}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              custom={index + 6}
+              onClick={() => setSelectedRequest(request)}
+              whileHover={{ y: -3 }}
+              className="flex min-h-[86px] cursor-pointer items-center gap-4 rounded-[18px] border border-[#EDF2EF] bg-white px-5 py-4 shadow-[0_7px_22px_rgba(40,92,67,0.03)] transition-shadow hover:shadow-[0_14px_32px_rgba(40,92,67,0.075)]"
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E7F4EC] text-sm font-bold text-[#5FA37D]">
+                {request.firstName[0]}{request.lastName[0]}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-sm font-bold text-[#173D2C]">{request.firstName} {request.lastName}</h2>
+                  <span className="text-[#A9CDBB]">·</span>
+                  <span className="text-xs font-medium text-[#8CA096]">{request.code}</span>
+                </div>
+                <p className="mt-1.5 max-w-[920px] truncate text-xs font-medium text-[#7E9086]">{request.description}</p>
+                <div className="mt-2 flex items-center gap-2.5">
+                  <StatusBadge status={request.status} />
+                  <span className="text-xs text-[#A9CDBB]">{timeAgo(request.createdAt)}</span>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-5">
+                <p className="text-base font-bold text-[#173D2C]">{formatDop(request.amount)}</p>
+                <ChevronRight className="h-4 w-4 text-[#A9CDBB]" />
+              </div>
+            </motion.article>
+          ))}
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <PanelCard className="overflow-hidden" style={{ backgroundColor: '#F3F4F6' }}>
+          <button
+            onClick={() => setHistoryOpen((v) => !v)}
+            className="flex w-full items-center justify-between px-5 py-4 text-left"
+            type="button"
           >
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E7F4EC] text-sm font-bold text-[#5FA37D]">
-              {request.firstName[0]}{request.lastName[0]}
+            <div className="flex items-center gap-2">
+              <History className="h-4 w-4 text-[#8CA096]" />
+              <span className="text-sm font-bold text-[#173D2C]">Historial</span>
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-full border border-[#A9CDBB] bg-white px-1.5 text-xs text-[#5FA37D]">
+                {history.length}
+              </span>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-sm font-bold text-[#173D2C]">{request.firstName} {request.lastName}</h2>
-                <span className="text-[#A9CDBB]">·</span>
-                <span className="text-xs font-medium text-[#8CA096]">{request.code}</span>
-              </div>
-              <p className="mt-1.5 max-w-[920px] truncate text-xs font-medium text-[#7E9086]">{request.description}</p>
-              <div className="mt-2 flex items-center gap-2.5">
-                <StatusBadge status={request.status} />
-                <span className="text-xs text-[#A9CDBB]">{timeAgo(request.createdAt)}</span>
-              </div>
+            <ChevronRight className={`h-4 w-4 text-[#A9CDBB] transition-transform ${historyOpen ? 'rotate-90' : ''}`} />
+          </button>
+          {historyOpen && (
+            <div className="space-y-3.5 border-t border-[#EDF2EF] p-5 pt-4">
+              {history.map((request) => (
+                <article
+                  key={request.id}
+                  onClick={() => setSelectedRequest(request)}
+                  className="flex min-h-[86px] cursor-pointer items-center gap-4 rounded-[18px] border border-[#EDF2EF] bg-[#F6F7F9] px-5 py-4 shadow-[0_7px_22px_rgba(40,92,67,0.03)] transition-shadow hover:shadow-[0_14px_32px_rgba(40,92,67,0.075)]"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E8EAED] text-sm font-bold text-[#8CA096]">
+                    {request.firstName[0]}{request.lastName[0]}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-sm font-bold text-[#173D2C]">{request.firstName} {request.lastName}</h2>
+                      <span className="text-[#A9CDBB]">·</span>
+                      <span className="text-xs font-medium text-[#8CA096]">{request.code}</span>
+                    </div>
+                    <p className="mt-1.5 max-w-[920px] truncate text-xs font-medium text-[#7E9086]">{request.description}</p>
+                    <div className="mt-2 flex items-center gap-2.5">
+                      <StatusBadge status={request.status} />
+                      <span className="text-xs text-[#A9CDBB]">{timeAgo(request.createdAt)}</span>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-5">
+                    <p className="text-base font-bold text-[#173D2C]">{formatDop(request.amount)}</p>
+                    <ChevronRight className="h-4 w-4 text-[#A9CDBB]" />
+                  </div>
+                </article>
+              ))}
             </div>
-            <div className="flex shrink-0 items-center gap-5">
-              <p className="text-base font-bold text-[#173D2C]">{formatDop(request.amount)}</p>
-              <ChevronRight className="h-4 w-4 text-[#A9CDBB]" />
-            </div>
-          </motion.article>
-        ))}
-      </div>
+          )}
+        </PanelCard>
+      )}
 
       <NewRequestModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleCreate} />
       <RequestDetailDrawer

@@ -86,7 +86,7 @@ function SettingsHeader() {
           Cancelar
         </button>
         <button
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#285C43] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.2)] transition hover:-translate-y-0.5 hover:bg-[#1F4A36]"
+          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#5a9a7a] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.2)] transition hover:-translate-y-0.5 hover:bg-[#4a866a]"
           type="button"
         >
           <Check className="h-4 w-4" />
@@ -565,7 +565,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
               </button>
               <button
                 className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
-                  saving ? 'bg-[#A9CDBB]' : 'bg-[#285C43] shadow-[0_8px_16px_rgba(40,92,67,0.22)] hover:-translate-y-0.5'
+                  saving ? 'bg-[#A9CDBB]' : 'bg-[#5a9a7a] shadow-[0_8px_16px_rgba(90,154,122,0.22)] hover:-translate-y-0.5'
                 }`}
                 disabled={saving}
                 type="submit"
@@ -676,7 +676,7 @@ function SettingsUsersRolesTab() {
           <p className="text-sm font-medium text-[#7A8A80]">{users.length} miembros · {activeCount} activos</p>
           {isAdmin && (
             <button
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2F7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#5a9a7a] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.2)] transition hover:-translate-y-0.5 hover:bg-[#4a866a]"
               onClick={() => setShowCreate(true)}
               type="button"
             >

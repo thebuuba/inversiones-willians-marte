@@ -204,7 +204,7 @@ export function DashboardHome() {
             Ver reportes
           </button>
           <Link
-            className="flex h-11 items-center gap-2 rounded-full bg-[#5FA37D] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(95,163,125,0.22)]"
+            className="flex h-11 items-center gap-2 rounded-full bg-[#5a9a7a] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)]"
             href="/prestamos/nuevo"
           >
             <Plus className="h-4 w-4" />

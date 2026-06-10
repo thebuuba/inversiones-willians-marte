@@ -167,7 +167,7 @@ function UploadModal({ open, onClose, onUploaded }: { open: boolean; onClose: ()
               <button
                 className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
                   file && !uploading
-                    ? 'bg-[#285C43] shadow-[0_8px_16px_rgba(40,92,67,0.22)] hover:-translate-y-0.5'
+                    ? 'bg-[#5a9a7a] shadow-[0_8px_16px_rgba(90,154,122,0.22)] hover:-translate-y-0.5'
                     : 'bg-[#A9CDBB] cursor-not-allowed'
                 }`}
                 disabled={!file || uploading}
@@ -211,7 +211,7 @@ export default function DocumentosPage() {
           <p className="mt-1.5 text-sm text-[#7E9086]">Gestión documental del sistema.</p>
         </div>
         <button
-          className="flex h-11 items-center gap-2 rounded-full bg-[#285C43] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.22)] transition hover:-translate-y-0.5"
+          className="flex h-11 items-center gap-2 rounded-full bg-[#5a9a7a] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
           onClick={() => setShowUpload(true)}
           type="button"
         >

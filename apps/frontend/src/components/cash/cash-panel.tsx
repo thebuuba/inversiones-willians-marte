@@ -283,7 +283,7 @@ function Header({ onNewMovement }: { onNewMovement: () => void }) {
         <p className="mt-1.5 text-sm text-[#7E9086]">Controla las entradas y salidas de dinero del negocio.</p>
       </div>
       <button
-        className="flex h-11 items-center gap-2 rounded-full bg-[#285C43] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.22)] transition hover:-translate-y-0.5"
+        className="flex h-11 items-center gap-2 rounded-full bg-[#5a9a7a] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
         onClick={onNewMovement}
         type="button"
       >
