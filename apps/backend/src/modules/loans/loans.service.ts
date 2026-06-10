@@ -223,7 +223,7 @@ export class LoansService {
       totalAmount: Number(loan.totalAmount),
       balance: Number(loan.balance),
       totalPaid,
-      remaining: Number(loan.balance) - totalPaid,
+      remaining: Number(loan.balance),
       paidInstallments,
       totalInstallments: loan.schedule.length,
       overdueInstallments,

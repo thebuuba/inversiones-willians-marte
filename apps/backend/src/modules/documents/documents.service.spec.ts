@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
 import { DocumentsService } from './documents.service';
 import { AuditService } from '../audit/audit.service';
 import { prisma } from '@inversiones/database';
@@ -53,5 +54,13 @@ describe('DocumentsService', () => {
       mimeType: 'application/pdf',
       path: expect.stringContaining('receipt.pdf'),
     });
+  });
+
+  it('throws NotFoundException when deleting a missing document', async () => {
+    jest.mocked(prisma.document.findUnique).mockResolvedValue(null);
+
+    await expect(service.remove('missing-doc', 'user-1')).rejects.toThrow(NotFoundException);
+
+    expect(prisma.document.delete).not.toHaveBeenCalled();
   });
 });

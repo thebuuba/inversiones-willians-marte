@@ -8,8 +8,12 @@ api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem('auth');
     if (stored) {
-      const { token } = JSON.parse(stored);
-      if (token) config.headers.Authorization = `Bearer ${token}`;
+      try {
+        const { token } = JSON.parse(stored);
+        if (token) config.headers.Authorization = `Bearer ${token}`;
+      } catch {
+        localStorage.removeItem('auth');
+      }
     }
   }
   return config;
@@ -18,7 +22,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
+    const isLoginRequest = error.config?.url === '/auth/login';
+    if (error.response?.status === 401 && !isLoginRequest && typeof window !== 'undefined') {
       localStorage.removeItem('auth');
       window.location.href = '/login';
     }

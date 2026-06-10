@@ -76,6 +76,21 @@ test('uses lower per-installment interest for fortnightly schedules', () => {
   assert.ok(fortnightlySchedule.schedule[0].payment < monthlySchedule.schedule[0].payment);
 });
 
+test('does not allow custom payments to create negative principal amortization', () => {
+  const result = computeSchedule(1000, 10, 2, 'SIMPLE', '50');
+
+  assert.deepEqual(
+    result.schedule.map((row) => row.principal),
+    [0, 0],
+  );
+  assert.deepEqual(
+    result.schedule.map((row) => row.balance),
+    [1000, 1000],
+  );
+  assert.equal(result.totalPayment, 100);
+  assert.equal(result.totalInterest, 100);
+});
+
 test('derives installment dates from first payment date and payment frequency', () => {
   assert.equal(getInstallmentIsoDate('2026-06-08', 1, 'MONTHLY'), '2026-06-08');
   assert.equal(getInstallmentIsoDate('2026-06-08', 2, 'MONTHLY'), '2026-07-08');

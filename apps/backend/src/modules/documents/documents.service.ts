@@ -68,6 +68,8 @@ export class DocumentsService {
 
   async remove(id: string, userId: string) {
     const document = await prisma.document.findUnique({ where: { id } });
+    if (!document) throw new NotFoundException('Document not found');
+
     await prisma.document.delete({ where: { id } });
     if (document?.clientId) {
       await this.audit.log({

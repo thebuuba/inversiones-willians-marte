@@ -1,10 +1,10 @@
-import { IsString, IsNumber, IsEnum, IsOptional, Min } from 'class-validator';
+import { IsString, IsNumber, IsEnum, IsOptional, Min, MinLength } from 'class-validator';
 import { InterestTypeEnum, PaymentFrequencyEnum } from '@inversiones/shared';
 import type { InterestType, PaymentFrequency } from '@inversiones/shared';
 
 export class CreateLoanProductDto {
   @IsString()
-  @Min(2)
+  @MinLength(2)
   name: string;
 
   @IsEnum(InterestTypeEnum)

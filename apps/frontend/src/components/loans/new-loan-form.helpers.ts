@@ -202,16 +202,20 @@ export function computeSchedule(principal: number, periodicRate: number, months:
     const payment = parseNumber(customPayment);
     let balance = principal;
     let totalInterest = 0;
+    let totalPayment = 0;
     const schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[] = [];
 
     for (let i = 1; i <= months; i++) {
-      const interest = balance * rate;
-      const princ = Math.min(payment - interest, balance);
+      const interestDue = balance * rate;
+      const interest = Math.min(payment, interestDue);
+      const princ = Math.min(Math.max(payment - interest, 0), balance);
+      const installmentPayment = interest + princ;
       balance -= princ;
       totalInterest += interest;
+      totalPayment += installmentPayment;
       schedule.push({
         number: i,
-        payment: Math.round(payment * 100) / 100,
+        payment: Math.round(installmentPayment * 100) / 100,
         principal: Math.round(princ * 100) / 100,
         interest: Math.round(interest * 100) / 100,
         balance: Math.round(Math.max(balance, 0) * 100) / 100,
@@ -220,7 +224,7 @@ export function computeSchedule(principal: number, periodicRate: number, months:
 
     return {
       schedule,
-      totalPayment: Math.round((principal + totalInterest) * 100) / 100,
+      totalPayment: Math.round(totalPayment * 100) / 100,
       totalPrincipal: principal,
       totalInterest: Math.round(totalInterest * 100) / 100,
       payment,

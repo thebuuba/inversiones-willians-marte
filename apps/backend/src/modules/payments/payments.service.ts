@@ -76,14 +76,22 @@ export class PaymentsService {
         include: { allocations: true },
       });
 
+      const paidBySchedule = new Map<string, number>();
       for (const alloc of allocations) {
-        const schedule = loan.schedule.find((s) => s.id === alloc.scheduleId);
+        paidBySchedule.set(
+          alloc.scheduleId,
+          (paidBySchedule.get(alloc.scheduleId) ?? 0) + alloc.amount,
+        );
+      }
+
+      for (const [scheduleId, amount] of paidBySchedule) {
+        const schedule = loan.schedule.find((s) => s.id === scheduleId);
         if (!schedule) continue;
-        const totalPaid = Number(schedule.paidAmount ?? 0) + alloc.amount;
+        const totalPaid = Number(schedule.paidAmount ?? 0) + amount;
         const isFull = totalPaid >= Number(schedule.amount);
 
         await tx.paymentSchedule.update({
-          where: { id: alloc.scheduleId },
+          where: { id: scheduleId },
           data: {
             status: isFull ? 'PAID' : 'PARTIAL',
             paidDate: isFull ? new Date(dto.paymentDate) : undefined,
