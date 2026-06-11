@@ -40,30 +40,58 @@ export class DocumentCaptureSessionsService {
   }
 
   async upload(token: string, input: CaptureUploadInput) {
-    const session = await this.getActiveSession(token);
-
-    const document = await this.documents.create(
-      {
-        name: input.name,
-        category: 'general',
-        clientId: session.clientId,
-        fileUrl: input.fileUrl,
-        fileSize: input.fileSize,
-        mimeType: input.mimeType,
-        uploadedFile: input.uploadedFile,
+    const reservation = await prisma.documentCaptureSession.updateMany({
+      where: {
+        token,
+        usedAt: null,
+        closedAt: null,
+        expiresAt: { gt: new Date() },
+        uploadCount: { lt: prisma.documentCaptureSession.fields.maxUploads },
       },
-      session.createdById,
-    );
-
-    await prisma.documentCaptureSession.update({
-      where: { token },
       data: { uploadCount: { increment: 1 } },
     });
 
-    return document;
+    if (reservation.count === 0) {
+      const existing = await prisma.documentCaptureSession.findUnique({ where: { token } });
+      if (!existing) throw new NotFoundException('Capture session not found');
+      throw new GoneException('Capture session expired');
+    }
+
+    const session = await prisma.documentCaptureSession.findUnique({
+      where: { token },
+      include: { client: { select: { firstName: true, lastName: true } } },
+    });
+    if (!session) throw new NotFoundException('Capture session not found');
+
+    try {
+      return await this.documents.create(
+        {
+          name: input.name,
+          category: 'general',
+          clientId: session.clientId,
+          fileUrl: input.fileUrl,
+          fileSize: input.fileSize,
+          mimeType: input.mimeType,
+          uploadedFile: input.uploadedFile,
+        },
+        session.createdById,
+      );
+    } catch (error) {
+      await prisma.documentCaptureSession
+        .update({
+          where: { token },
+          data: { uploadCount: { decrement: 1 } },
+        })
+        .catch(() => undefined);
+      throw error;
+    }
   }
 
   async close(token: string) {
+    const session = await prisma.documentCaptureSession.findUnique({ where: { token } });
+    if (!session) throw new NotFoundException('Capture session not found');
+    if (session.closedAt) return session;
+
     return prisma.documentCaptureSession.update({
       where: { token },
       data: { closedAt: new Date() },

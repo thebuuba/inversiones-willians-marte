@@ -8,6 +8,12 @@ import { compressImage } from '@/lib/compress-image';
 
 type CaptureState = 'loading' | 'ready' | 'uploading' | 'success' | 'error' | 'expired';
 
+function getResponseStatus(error: unknown) {
+  return typeof error === 'object' && error !== null && 'response' in error
+    ? (error.response as { status?: number } | undefined)?.status
+    : undefined;
+}
+
 export function DocumentCapturePage({ token }: { token: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [session, setSession] = useState<DocumentCaptureSessionItem | null>(null);
@@ -26,7 +32,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
       })
       .catch((error) => {
         if (!active) return;
-        const status = error?.response?.status;
+        const status = getResponseStatus(error);
         setState(status === 410 || status === 404 ? 'expired' : 'error');
         setMessage('Este enlace ya no esta disponible.');
       });
@@ -46,12 +52,19 @@ export function DocumentCapturePage({ token }: { token: string }) {
       const formData = new FormData();
       formData.append('file', uploadFile);
       await uploadDocumentCapture(token, formData);
+      if (inputRef.current) inputRef.current.value = '';
       setState('success');
       setMessage('Documento subido correctamente. Puedes volver a la computadora.');
     } catch (error) {
       console.error('Error al subir documento desde captura movil:', error);
-      setState('error');
-      setMessage('No se pudo subir el documento. Revisa la conexion e intenta de nuevo.');
+      const status = getResponseStatus(error);
+      if (status === 410 || status === 404) {
+        setState('expired');
+        setMessage('Este enlace ya no esta disponible.');
+      } else {
+        setState('error');
+        setMessage('No se pudo subir el documento. Revisa la conexion e intenta de nuevo.');
+      }
     }
   }
 
@@ -104,6 +117,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
           <button
             className="mt-3 h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm font-semibold text-neutral-600"
             onClick={() => {
+              if (inputRef.current) inputRef.current.value = '';
               setState('ready');
               setMessage('Puedes capturar otro documento con este enlace si sigue activo.');
             }}

@@ -12,3 +12,5 @@ dist/
 .worktrees/
 /derecho.png
 /izquierdo.png
+.vercel
+.env*
