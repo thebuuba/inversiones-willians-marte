@@ -374,6 +374,12 @@ model Document {
   fileUrl      String?  @map("file_url")
   fileSize     Int?     @map("file_size")
   mimeType     String?  @map("mime_type")
+  originalFileUrl     String? @map("original_file_url")
+  processedFileUrl    String? @map("processed_file_url")
+  documentType        String  @default("otro") @map("document_type")
+  detectionConfidence Int     @default(0) @map("detection_confidence")
+  processingStatus    String  @default("not_applicable") @map("processing_status")
+  processingNotes     String? @map("processing_notes")
   notes        String?
   uploadedById String   @map("uploaded_by")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -385,6 +391,8 @@ model Document {
 
   @@index([clientId, createdAt])
   @@index([investorId, createdAt])
+  @@index([documentType])
+  @@index([processingStatus])
   @@map("documents")
 }
 

@@ -1,27 +1,78 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { DocumentsService } from './documents.service';
+import { DocumentProcessingService } from './document-processing.service';
 import { AuditService } from '../audit/audit.service';
 import { prisma } from '@inversiones/database';
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
-    document: { findUnique: jest.fn(), delete: jest.fn() },
+    document: { create: jest.fn(), findUnique: jest.fn(), delete: jest.fn() },
   },
 }));
 
 describe('DocumentsService', () => {
   const audit = { log: jest.fn() };
+  const documentProcessing = { analyze: jest.fn() };
   let service: DocumentsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [DocumentsService, { provide: AuditService, useValue: audit }],
+      providers: [
+        DocumentsService,
+        { provide: AuditService, useValue: audit },
+        { provide: DocumentProcessingService, useValue: documentProcessing },
+      ],
     }).compile();
     service = module.get(DocumentsService);
   });
 
   afterEach(() => jest.clearAllMocks());
+
+  it('persists processing metadata when creating a document with an uploaded file', async () => {
+    documentProcessing.analyze.mockResolvedValue({
+      originalFileUrl: 'stored.webp',
+      documentType: 'cedula',
+      detectionConfidence: 92,
+      processingStatus: 'needs_review',
+      processingNotes: 'Documento detectado; recorte automatico pendiente de motor de imagen.',
+    });
+    jest.mocked(prisma.document.create).mockResolvedValue({ id: 'doc-1' } as any);
+
+    await service.create(
+      {
+        name: 'Cedula',
+        category: 'general',
+        clientId: 7,
+        fileUrl: 'stored.webp',
+        fileSize: 12345,
+        mimeType: 'image/webp',
+        uploadedFile: {
+          filename: 'stored.webp',
+          originalname: 'cedula juan.jpg',
+          mimetype: 'image/jpeg',
+        },
+      },
+      'user-1',
+    );
+
+    expect(documentProcessing.analyze).toHaveBeenCalledWith({
+      filename: 'stored.webp',
+      originalname: 'cedula juan.jpg',
+      mimetype: 'image/jpeg',
+    });
+    expect(prisma.document.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        clientId: 7,
+        fileUrl: 'stored.webp',
+        originalFileUrl: 'stored.webp',
+        documentType: 'cedula',
+        detectionConfidence: 92,
+        processingStatus: 'needs_review',
+        processingNotes: 'Documento detectado; recorte automatico pendiente de motor de imagen.',
+      }),
+    });
+  });
 
   it('logs the client document name when deleting an attachment', async () => {
     jest

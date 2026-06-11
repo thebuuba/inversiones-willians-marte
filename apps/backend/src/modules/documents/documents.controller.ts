@@ -78,6 +78,11 @@ export class DocumentsController {
         fileUrl: file.filename,
         fileSize: file.size,
         mimeType: file.mimetype,
+        uploadedFile: {
+          filename: file.filename,
+          originalname: file.originalname,
+          mimetype: file.mimetype,
+        },
       },
       userId,
     );

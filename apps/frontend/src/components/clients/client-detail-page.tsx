@@ -203,6 +203,42 @@ function ClientLoansTab({ loans }: { loans: LoanSummary[] }) {
   );
 }
 
+const documentTypeLabels: Record<string, string> = {
+  cedula: 'Cédula',
+  recibo: 'Recibo',
+  acto_notarial: 'Acto notarial',
+  otro: 'Otro',
+  general: 'General',
+};
+
+const processingStatusLabels: Record<string, { label: string; className: string; icon: typeof CircleCheck }> = {
+  processed: {
+    label: 'Procesado',
+    className: 'bg-emerald-50 text-emerald-700',
+    icon: CircleCheck,
+  },
+  needs_review: {
+    label: 'Revisar',
+    className: 'bg-amber-50 text-amber-700',
+    icon: CircleAlert,
+  },
+  failed: {
+    label: 'Fallo',
+    className: 'bg-red-50 text-red-700',
+    icon: CircleAlert,
+  },
+  not_applicable: {
+    label: 'No aplica',
+    className: 'bg-neutral-100 text-neutral-500',
+    icon: CircleAlert,
+  },
+  pending: {
+    label: 'Pendiente',
+    className: 'bg-blue-50 text-blue-700',
+    icon: CircleAlert,
+  },
+};
+
 function DocumentCard({
   doc,
   onDelete,
@@ -210,6 +246,10 @@ function DocumentCard({
   doc: DocumentItem;
   onDelete: (id: string) => void;
 }) {
+  const typeKey = doc.documentType ?? doc.category ?? 'otro';
+  const status = doc.processingStatus ? processingStatusLabels[doc.processingStatus] : null;
+  const StatusIcon = status?.icon;
+
   return (
     <div
       className="flex cursor-pointer items-center justify-between rounded-2xl border border-neutral-100 bg-white px-5 py-4 shadow-sm transition hover:bg-[#eaf5ed]/30"
@@ -224,7 +264,15 @@ function DocumentCard({
             {doc.name}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-            <span className="rounded-full bg-[#eaf5ed] px-2.5 py-0.5 text-xs font-semibold text-[#5a9a7a]">{doc.category}</span>
+            <span className="rounded-full bg-[#eaf5ed] px-2.5 py-0.5 text-xs font-semibold text-[#5a9a7a]">
+              {documentTypeLabels[typeKey] ?? typeKey}
+            </span>
+            {status && StatusIcon ? (
+              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.className}`}>
+                <StatusIcon className="h-3 w-3" />
+                {status.label}
+              </span>
+            ) : null}
             {doc.fileSize ? <span>{(doc.fileSize / 1024).toFixed(1)} KB</span> : null}
             <span>{fmtDate(doc.createdAt)}</span>
           </div>
@@ -378,7 +426,6 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
       const fd = new FormData();
       fd.append('file', compressed);
       fd.append('name', name);
-      fd.append('category', 'general');
       fd.append('clientId', String(clientId));
       await createDocument(fd);
       const docs = await getDocuments(clientId);

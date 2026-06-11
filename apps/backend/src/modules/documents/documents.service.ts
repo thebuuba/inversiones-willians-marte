@@ -2,6 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { join, normalize } from 'path';
 import { AuditService } from '../audit/audit.service';
+import {
+  DocumentProcessingResult,
+  DocumentProcessingService,
+  UploadedDocumentFile,
+} from './document-processing.service';
 
 interface CreateDocumentInput {
   name: string;
@@ -13,15 +18,23 @@ interface CreateDocumentInput {
   fileUrl: string;
   fileSize: number;
   mimeType: string;
+  uploadedFile?: UploadedDocumentFile;
 }
 
 @Injectable()
 export class DocumentsService {
-  constructor(private audit: AuditService) {}
+  constructor(
+    private audit: AuditService,
+    private documentProcessing: DocumentProcessingService,
+  ) {}
 
   private readonly uploadsDir = join(__dirname, '..', '..', '..', 'uploads');
 
   async create(dto: CreateDocumentInput, userId: string) {
+    const processing = dto.uploadedFile
+      ? await this.documentProcessing.analyze(dto.uploadedFile)
+      : this.defaultProcessing(dto.fileUrl);
+
     return prisma.document.create({
       data: {
         name: dto.name,
@@ -33,9 +46,25 @@ export class DocumentsService {
         fileUrl: dto.fileUrl,
         fileSize: dto.fileSize,
         mimeType: dto.mimeType,
+        originalFileUrl: processing.originalFileUrl,
+        processedFileUrl: processing.processedFileUrl ?? null,
+        documentType: processing.documentType,
+        detectionConfidence: processing.detectionConfidence,
+        processingStatus: processing.processingStatus,
+        processingNotes: processing.processingNotes ?? null,
         uploadedById: userId,
       },
     });
+  }
+
+  private defaultProcessing(fileUrl: string): DocumentProcessingResult {
+    return {
+      originalFileUrl: fileUrl,
+      documentType: 'otro',
+      detectionConfidence: 0,
+      processingStatus: 'not_applicable',
+      processingNotes: 'Documento creado sin archivo analizable.',
+    };
   }
 
   async findAll(clientId?: number, investorId?: string) {

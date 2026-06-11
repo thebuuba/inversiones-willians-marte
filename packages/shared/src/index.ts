@@ -206,11 +206,20 @@ export interface CreateDocumentDto {
   notes?: string;
 }
 
+export type DocumentType = 'cedula' | 'recibo' | 'acto_notarial' | 'otro';
+export type DocumentProcessingStatus = 'pending' | 'processed' | 'needs_review' | 'failed' | 'not_applicable';
+
 export interface DocumentItem extends CreateDocumentDto {
   id: string;
   fileUrl?: string;
   fileSize?: number;
   mimeType?: string;
+  originalFileUrl?: string;
+  processedFileUrl?: string;
+  documentType?: DocumentType;
+  detectionConfidence?: number;
+  processingStatus?: DocumentProcessingStatus;
+  processingNotes?: string;
   uploadedById: string;
   createdAt: string;
   updatedAt: string;
