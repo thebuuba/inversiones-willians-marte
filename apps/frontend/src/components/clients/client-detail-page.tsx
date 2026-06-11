@@ -367,7 +367,8 @@ function UploadModal({
               <span>Haz clic para seleccionar un archivo</span>
             )}
             <input
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+              capture="environment"
               className="hidden"
               onChange={handleFileChange}
               type="file"
