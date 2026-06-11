@@ -5,7 +5,7 @@ import Image from 'next/image';
 import QRCode from 'qrcode';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getClient, updateClient } from '@/lib/api/clients';
-import { getDocuments, createDocument, createDocumentCaptureSession, deleteDocument, downloadDocument } from '@/lib/api/documents';
+import { getDocuments, createDocument, createDocumentCaptureSession, deleteDocument, downloadDocument, viewDocument } from '@/lib/api/documents';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { compressImage } from '@/lib/compress-image';
@@ -37,6 +37,7 @@ import {
   CircleAlert,
   Loader2,
   QrCode,
+  Eye,
 } from 'lucide-react';
 
 type ClientTab = 'Información' | 'Préstamos' | 'Documentos' | 'Historial' | 'Notas';
@@ -284,7 +285,7 @@ function DocumentCard({
   return (
     <div
       className="flex cursor-pointer items-center justify-between rounded-2xl border border-neutral-100 bg-white px-5 py-4 shadow-sm transition hover:bg-[#eaf5ed]/30"
-      onClick={() => doc.fileUrl && downloadDocument(doc.id, doc.name)}
+      onClick={() => doc.fileUrl && viewDocument(doc.id)}
     >
       <div className="flex min-w-0 items-center gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf5ed]">
@@ -311,6 +312,19 @@ function DocumentCard({
       </div>
 
       <div className="flex items-center gap-3 text-neutral-400">
+        {doc.fileUrl && (
+          <button
+            aria-label={`Ver ${doc.name}`}
+            className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#5a9a7a]"
+            onClick={(e) => {
+              e.stopPropagation();
+              viewDocument(doc.id);
+            }}
+            type="button"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+        )}
         {doc.fileUrl && (
           <button
             aria-label={`Descargar ${doc.name}`}
@@ -340,12 +354,14 @@ function DocumentCard({
 function UploadModal({
   open,
   clientId,
+  documentsCount,
   onClose,
   onUpload,
   uploading,
 }: {
   open: boolean;
   clientId: number;
+  documentsCount: number;
   onClose: () => void;
   onUpload: (file: File, name: string) => Promise<void>;
   uploading: boolean;
@@ -356,19 +372,22 @@ function UploadModal({
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [creatingCaptureSession, setCreatingCaptureSession] = useState(false);
   const [captureError, setCaptureError] = useState('');
+  const [captureInitialCount, setCaptureInitialCount] = useState<number | null>(null);
+  const captureReceived = open && Boolean(qrDataUrl) && captureInitialCount != null && documentsCount > captureInitialCount;
 
-  function resetForm() {
+  const resetForm = useCallback(() => {
     setFile(null);
     setName('');
     setCaptureUrl('');
     setQrDataUrl('');
     setCaptureError('');
-  }
+    setCaptureInitialCount(null);
+  }, []);
 
-  function closeModal() {
+  const closeModal = useCallback(() => {
     resetForm();
     onClose();
-  }
+  }, [onClose, resetForm]);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -398,6 +417,7 @@ function UploadModal({
       });
       setCaptureUrl(nextCaptureUrl);
       setQrDataUrl(nextQrDataUrl);
+      setCaptureInitialCount(documentsCount);
     } catch (error) {
       console.error('Error al crear sesion de captura movil:', error);
       setCaptureError('No se pudo generar el QR. Intenta de nuevo.');
@@ -405,6 +425,12 @@ function UploadModal({
       setCreatingCaptureSession(false);
     }
   }
+
+  useEffect(() => {
+    if (!captureReceived) return;
+    const timeout = window.setTimeout(closeModal, 1400);
+    return () => window.clearTimeout(timeout);
+  }, [captureReceived, closeModal]);
 
   if (!open) return null;
 
@@ -444,7 +470,9 @@ function UploadModal({
                 unoptimized
                 width={176}
               />
-              <p className="mt-3 text-xs font-medium text-neutral-600">Escanea este QR con el teléfono.</p>
+              <p className="mt-3 text-xs font-medium text-neutral-600">
+                {captureReceived ? 'Documento recibido. Cerrando...' : 'Escanea este QR con el teléfono.'}
+              </p>
               <p className="mt-1 break-all text-[11px] text-neutral-400">{captureUrl}</p>
             </div>
           ) : null}
@@ -566,6 +594,7 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
       <UploadModal
         open={showModal}
         clientId={clientId}
+        documentsCount={documents.length}
         onClose={() => setShowModal(false)}
         onUpload={handleUpload}
         uploading={uploading}

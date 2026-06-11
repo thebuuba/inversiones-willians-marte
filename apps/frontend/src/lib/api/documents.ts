@@ -64,3 +64,13 @@ export async function downloadDocument(id: string, filename: string): Promise<vo
   link.remove();
   window.URL.revokeObjectURL(url);
 }
+
+export async function viewDocument(id: string, preferProcessed = true): Promise<void> {
+  const { data } = await api.get<Blob>(`/documents/${id}/file`, {
+    params: { disposition: 'inline', variant: preferProcessed ? 'processed' : 'original' },
+    responseType: 'blob',
+  });
+  const url = window.URL.createObjectURL(data);
+  window.open(url, '_blank', 'noopener,noreferrer');
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+}

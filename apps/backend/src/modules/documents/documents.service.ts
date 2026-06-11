@@ -71,17 +71,48 @@ export class DocumentsService {
     const where: Record<string, unknown> = {};
     if (clientId) where.clientId = clientId;
     if (investorId) where.investorId = investorId;
-    return prisma.document.findMany({
+    const documents = await prisma.document.findMany({
       where,
       orderBy: { createdAt: 'desc' },
     });
+
+    return Promise.all(
+      documents.map(async (document) => {
+        if (
+          document.fileUrl &&
+          document.mimeType?.startsWith('image/') &&
+          !document.processedFileUrl &&
+          document.processingStatus === 'needs_review'
+        ) {
+          const processing = await this.documentProcessing.analyze({
+            filename: document.fileUrl,
+            originalname: document.name,
+            mimetype: document.mimeType,
+          });
+
+          if (processing.processedFileUrl) {
+            return prisma.document.update({
+              where: { id: document.id },
+              data: {
+                processedFileUrl: processing.processedFileUrl,
+                processingStatus: processing.processingStatus,
+                processingNotes: processing.processingNotes ?? null,
+              },
+            });
+          }
+        }
+
+        return document;
+      }),
+    );
   }
 
-  async getFileForDownload(id: string) {
+  async getFileForDownload(id: string, preferProcessed = false) {
     const document = await prisma.document.findUnique({ where: { id } });
     if (!document?.fileUrl) throw new NotFoundException('Document file not found');
 
-    const filename = normalize(document.fileUrl).replace(/^(\.\.(\/|\\|$))+/, '');
+    const storedFile = preferProcessed && document.processedFileUrl ? document.processedFileUrl : document.fileUrl;
+    const filename = normalize(storedFile).replace(/^(\.\.(\/|\\|$))+/, '');
     const path = join(this.uploadsDir, filename);
 
     if (!path.startsWith(this.uploadsDir)) {
@@ -91,7 +122,7 @@ export class DocumentsService {
     return {
       path,
       filename: document.name,
-      mimeType: document.mimeType ?? 'application/octet-stream',
+      mimeType: preferProcessed && document.processedFileUrl ? 'image/webp' : document.mimeType ?? 'application/octet-stream',
     };
   }
 

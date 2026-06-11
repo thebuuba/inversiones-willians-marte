@@ -96,9 +96,18 @@ export class DocumentsController {
 
   @Get(':id/file')
   @Roles('ADMIN', 'COLLECTOR')
-  async download(@Param('id') id: string, @Res() res: Response) {
-    const file = await this.documents.getFileForDownload(id);
+  async download(
+    @Param('id') id: string,
+    @Query('disposition') disposition: string | undefined,
+    @Query('variant') variant: string | undefined,
+    @Res() res: Response,
+  ) {
+    const file = await this.documents.getFileForDownload(id, variant === 'processed');
     res.type(file.mimeType);
+    if (disposition === 'inline') {
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(file.filename)}"`);
+      return res.sendFile(file.path);
+    }
     return res.download(file.path, file.filename);
   }
 
