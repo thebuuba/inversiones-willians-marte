@@ -1,6 +1,16 @@
 import { api } from '../api';
 import type { ApiResponse, DocumentCaptureSessionItem, DocumentItem } from '@inversiones/shared';
 
+function timeoutSignal(ms: number) {
+  if (typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal) {
+    return AbortSignal.timeout(ms);
+  }
+
+  const controller = new AbortController();
+  globalThis.setTimeout(() => controller.abort(), ms);
+  return controller.signal;
+}
+
 export async function getDocuments(clientId?: number, investorId?: string): Promise<DocumentItem[]> {
   const params: Record<string, string> = {};
   if (clientId) params.clientId = String(clientId);
@@ -20,12 +30,22 @@ export async function createDocumentCaptureSession(clientId: number): Promise<Do
 }
 
 export async function getDocumentCaptureSession(token: string): Promise<DocumentCaptureSessionItem> {
-  const { data } = await api.get<ApiResponse<DocumentCaptureSessionItem>>(`/documents/capture-sessions/${token}`);
+  const response = await fetch(`/api/document-capture/${encodeURIComponent(token)}`, {
+    signal: timeoutSignal(10_000),
+  });
+  const data = (await response.json()) as ApiResponse<DocumentCaptureSessionItem>;
+  if (!response.ok) throw Object.assign(new Error(data.error ?? 'Capture session request failed'), { response });
   return data.data as DocumentCaptureSessionItem;
 }
 
 export async function uploadDocumentCapture(token: string, formData: FormData): Promise<DocumentItem> {
-  const { data } = await api.post<ApiResponse<DocumentItem>>(`/documents/capture-sessions/${token}/upload`, formData);
+  const response = await fetch(`/api/document-capture/${encodeURIComponent(token)}/upload`, {
+    method: 'POST',
+    body: formData,
+    signal: timeoutSignal(30_000),
+  });
+  const data = (await response.json()) as ApiResponse<DocumentItem>;
+  if (!response.ok) throw Object.assign(new Error(data.error ?? 'Capture upload request failed'), { response });
   return data.data as DocumentItem;
 }
 
