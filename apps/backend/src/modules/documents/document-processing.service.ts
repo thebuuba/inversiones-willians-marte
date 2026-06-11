@@ -88,7 +88,7 @@ export class DocumentProcessingService {
         .normalize()
         .sharpen()
         .resize({ width: 1800, height: 1800, fit: 'inside', withoutEnlargement: true })
-        .webp({ quality: 88 })
+        .webp({ quality: 78 })
         .toFile(outputPath);
       return outputFilename;
     } catch {

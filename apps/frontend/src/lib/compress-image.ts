@@ -1,4 +1,4 @@
-export function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promise<File> {
+export function compressImage(file: File, maxWidth = 1000, quality = 0.58): Promise<File> {
   return new Promise((resolve, reject) => {
     if (!file.type.startsWith('image/')) return resolve(file);
 
