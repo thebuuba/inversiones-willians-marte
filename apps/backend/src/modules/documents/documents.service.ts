@@ -71,40 +71,10 @@ export class DocumentsService {
     const where: Record<string, unknown> = {};
     if (clientId) where.clientId = clientId;
     if (investorId) where.investorId = investorId;
-    const documents = await prisma.document.findMany({
+    return prisma.document.findMany({
       where,
       orderBy: { createdAt: 'desc' },
     });
-
-    return Promise.all(
-      documents.map(async (document) => {
-        if (
-          document.fileUrl &&
-          document.mimeType?.startsWith('image/') &&
-          !document.processedFileUrl &&
-          document.processingStatus === 'needs_review'
-        ) {
-          const processing = await this.documentProcessing.analyze({
-            filename: document.fileUrl,
-            originalname: document.name,
-            mimetype: document.mimeType,
-          });
-
-          if (processing.processedFileUrl) {
-            return prisma.document.update({
-              where: { id: document.id },
-              data: {
-                processedFileUrl: processing.processedFileUrl,
-                processingStatus: processing.processingStatus,
-                processingNotes: processing.processingNotes ?? null,
-              },
-            });
-          }
-        }
-
-        return document;
-      }),
-    );
   }
 
   async getFileForDownload(id: string, preferProcessed = false) {

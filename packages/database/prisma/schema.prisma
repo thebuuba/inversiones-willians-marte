@@ -405,6 +405,9 @@ model DocumentCaptureSession {
   createdById String    @map("created_by")
   expiresAt   DateTime  @map("expires_at")
   usedAt      DateTime? @map("used_at")
+  closedAt    DateTime? @map("closed_at")
+  uploadCount Int       @default(0) @map("upload_count")
+  maxUploads  Int       @default(5) @map("max_uploads")
   createdAt   DateTime  @default(now()) @map("created_at")
 
   client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)

@@ -7,7 +7,7 @@ import { prisma } from '@inversiones/database';
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
-    document: { create: jest.fn(), findUnique: jest.fn(), delete: jest.fn() },
+    document: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
   },
 }));
 
@@ -90,6 +90,24 @@ describe('DocumentsService', () => {
       action: 'DOCUMENT_DELETED',
       newValues: { name: 'Cédula' },
     });
+  });
+
+  it('lists documents without reprocessing pending images', async () => {
+    const document = {
+      id: 'doc-1',
+      name: 'Cedula',
+      clientId: 7,
+      fileUrl: 'cedula.webp',
+      mimeType: 'image/webp',
+      processedFileUrl: null,
+      processingStatus: 'needs_review',
+    };
+    jest.mocked(prisma.document.findMany).mockResolvedValue([document] as any);
+
+    await expect(service.findAll(7)).resolves.toEqual([document]);
+
+    expect(documentProcessing.analyze).not.toHaveBeenCalled();
+    expect(prisma.document.update).not.toHaveBeenCalled();
   });
 
   it('resolves a stored file path for authenticated downloads', async () => {

@@ -45,6 +45,13 @@ export class DocumentCaptureSessionsController {
     return this.captureSessions.findActive(token);
   }
 
+  @Post(':token/close')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'COLLECTOR')
+  close(@Param('token') token: string) {
+    return this.captureSessions.close(token);
+  }
+
   @Post(':token/upload')
   @UseInterceptors(
     FileInterceptor('file', {

@@ -5,6 +5,7 @@ import { DocumentsService } from './documents.service';
 import { UploadedDocumentFile } from './document-processing.service';
 
 const CAPTURE_SESSION_TTL_MS = 10 * 60 * 1000;
+const DEFAULT_MAX_UPLOADS = 5;
 
 interface CaptureUploadInput {
   name: string;
@@ -25,6 +26,7 @@ export class DocumentCaptureSessionsService {
         clientId,
         createdById,
         expiresAt: new Date(Date.now() + CAPTURE_SESSION_TTL_MS),
+        maxUploads: DEFAULT_MAX_UPLOADS,
       },
       include: { client: { select: { firstName: true, lastName: true } } },
     });
@@ -53,7 +55,19 @@ export class DocumentCaptureSessionsService {
       session.createdById,
     );
 
+    await prisma.documentCaptureSession.update({
+      where: { token },
+      data: { uploadCount: { increment: 1 } },
+    });
+
     return document;
+  }
+
+  async close(token: string) {
+    return prisma.documentCaptureSession.update({
+      where: { token },
+      data: { closedAt: new Date() },
+    });
   }
 
   private async getActiveSession(token: string) {
@@ -63,7 +77,12 @@ export class DocumentCaptureSessionsService {
     });
 
     if (!session) throw new NotFoundException('Capture session not found');
-    if (session.usedAt || session.expiresAt.getTime() <= Date.now()) {
+    if (
+      session.usedAt ||
+      session.closedAt ||
+      session.expiresAt.getTime() <= Date.now() ||
+      session.uploadCount >= session.maxUploads
+    ) {
       throw new GoneException('Capture session expired');
     }
 
@@ -74,6 +93,8 @@ export class DocumentCaptureSessionsService {
     token: string;
     clientId: number;
     expiresAt: Date;
+    uploadCount?: number;
+    maxUploads?: number;
     client: { firstName: string; lastName: string };
   }) {
     return {
@@ -81,6 +102,8 @@ export class DocumentCaptureSessionsService {
       clientId: session.clientId,
       clientName: `${session.client.firstName} ${session.client.lastName}`.trim(),
       expiresAt: session.expiresAt.toISOString(),
+      uploadCount: session.uploadCount,
+      maxUploads: session.maxUploads,
     };
   }
 

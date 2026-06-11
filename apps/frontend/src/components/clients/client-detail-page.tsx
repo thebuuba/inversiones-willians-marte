@@ -5,7 +5,15 @@ import Image from 'next/image';
 import QRCode from 'qrcode';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getClient, updateClient } from '@/lib/api/clients';
-import { getDocuments, createDocument, createDocumentCaptureSession, deleteDocument, downloadDocument, viewDocument } from '@/lib/api/documents';
+import {
+  getDocuments,
+  createDocument,
+  createDocumentCaptureSession,
+  closeDocumentCaptureSession,
+  deleteDocument,
+  downloadDocument,
+  viewDocument,
+} from '@/lib/api/documents';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { compressImage } from '@/lib/compress-image';
@@ -370,6 +378,8 @@ function UploadModal({
   const [name, setName] = useState('');
   const [captureUrl, setCaptureUrl] = useState('');
   const [qrDataUrl, setQrDataUrl] = useState('');
+  const [captureToken, setCaptureToken] = useState('');
+  const [captureLimitLabel, setCaptureLimitLabel] = useState('');
   const [creatingCaptureSession, setCreatingCaptureSession] = useState(false);
   const [captureError, setCaptureError] = useState('');
   const [captureInitialCount, setCaptureInitialCount] = useState<number | null>(null);
@@ -380,14 +390,21 @@ function UploadModal({
     setName('');
     setCaptureUrl('');
     setQrDataUrl('');
+    setCaptureToken('');
+    setCaptureLimitLabel('');
     setCaptureError('');
     setCaptureInitialCount(null);
   }, []);
 
   const closeModal = useCallback(() => {
+    if (captureToken) {
+      closeDocumentCaptureSession(captureToken).catch((error) => {
+        console.error('Error al cerrar sesion de captura movil:', error);
+      });
+    }
     resetForm();
     onClose();
-  }, [onClose, resetForm]);
+  }, [captureToken, onClose, resetForm]);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -408,6 +425,11 @@ function UploadModal({
     setCreatingCaptureSession(true);
     setCaptureError('');
     try {
+      if (captureToken) {
+        await closeDocumentCaptureSession(captureToken).catch((error) => {
+          console.error('Error al cerrar sesion de captura movil anterior:', error);
+        });
+      }
       const session = await createDocumentCaptureSession(clientId);
       const nextCaptureUrl = buildMobileCaptureUrl(session.token);
       const nextQrDataUrl = await QRCode.toDataURL(nextCaptureUrl, {
@@ -417,6 +439,10 @@ function UploadModal({
       });
       setCaptureUrl(nextCaptureUrl);
       setQrDataUrl(nextQrDataUrl);
+      setCaptureToken(session.token);
+      setCaptureLimitLabel(
+        session.maxUploads ? `${session.uploadCount ?? 0}/${session.maxUploads} documentos permitidos` : '',
+      );
       setCaptureInitialCount(documentsCount);
     } catch (error) {
       console.error('Error al crear sesion de captura movil:', error);
@@ -473,6 +499,7 @@ function UploadModal({
               <p className="mt-3 text-xs font-medium text-neutral-600">
                 {captureReceived ? 'Documento recibido. Cerrando...' : 'Escanea este QR con el teléfono.'}
               </p>
+              {captureLimitLabel ? <p className="mt-1 text-[11px] font-medium text-neutral-500">{captureLimitLabel}</p> : null}
               <p className="mt-1 break-all text-[11px] text-neutral-400">{captureUrl}</p>
             </div>
           ) : null}

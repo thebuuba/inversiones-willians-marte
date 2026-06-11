@@ -230,6 +230,8 @@ export interface DocumentCaptureSessionItem {
   clientId: number;
   clientName: string;
   expiresAt: string;
+  uploadCount?: number;
+  maxUploads?: number;
 }
 
 export const RequestStatusEnum = {
