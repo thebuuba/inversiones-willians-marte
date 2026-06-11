@@ -77,6 +77,7 @@ model User {
   investors              Investor[]
   investorPayments       InvestorPayment[] @relation("InvestorPaymentReceivedBy")
   uploadedDocuments      Document[]
+  documentCaptureSessions DocumentCaptureSession[]
   tasks                  Task[]
   portfolios             Portfolio[]
 
@@ -113,6 +114,7 @@ model Client {
   loanRequests LoanRequest[]
   documents    Document[]
   auditLogs    AuditLog[]
+  documentCaptureSessions DocumentCaptureSession[]
 
   @@index([active, createdAt])
   @@map("clients")
@@ -394,6 +396,23 @@ model Document {
   @@index([documentType])
   @@index([processingStatus])
   @@map("documents")
+}
+
+model DocumentCaptureSession {
+  id          String    @id @default(uuid())
+  token       String    @unique
+  clientId    Int       @map("client_id")
+  createdById String    @map("created_by")
+  expiresAt   DateTime  @map("expires_at")
+  usedAt      DateTime? @map("used_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdBy User   @relation(fields: [createdById], references: [id])
+
+  @@index([clientId, createdAt])
+  @@index([token, expiresAt])
+  @@map("document_capture_sessions")
 }
 
 // ─── Tasks / Agenda ─────────────────────────────────────────────────────────

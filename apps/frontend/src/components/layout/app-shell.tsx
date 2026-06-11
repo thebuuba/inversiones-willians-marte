@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { useAuth } from '@/lib/auth-context';
 
 const publicRoutes = ['/login'];
+const publicRoutePrefixes = ['/captura-documento/'];
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -13,13 +14,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { user, token, loading } = useAuth();
   const isPublicRoute = publicRoutes.includes(pathname);
+  const isPublicRoutePrefix = publicRoutePrefixes.some((prefix) => pathname.startsWith(prefix));
   const isAuthenticated = Boolean(user && token);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (loading) return;
 
-    if (!isAuthenticated && !isPublicRoute) {
+    if (!isAuthenticated && !isPublicRoute && !isPublicRoutePrefix) {
       router.replace('/login');
       return;
     }
@@ -27,7 +29,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (isAuthenticated && pathname === '/login') {
       router.replace('/inicio');
     }
-  }, [isAuthenticated, isPublicRoute, loading, pathname, router]);
+  }, [isAuthenticated, isPublicRoute, isPublicRoutePrefix, loading, pathname, router]);
 
   useEffect(() => {
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
@@ -42,7 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     });
   }
 
-  if (isPublicRoute) {
+  if (isPublicRoute || isPublicRoutePrefix) {
     return <>{children}</>;
   }
 

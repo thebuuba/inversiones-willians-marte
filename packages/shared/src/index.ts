@@ -225,6 +225,13 @@ export interface DocumentItem extends CreateDocumentDto {
   updatedAt: string;
 }
 
+export interface DocumentCaptureSessionItem {
+  token: string;
+  clientId: number;
+  clientName: string;
+  expiresAt: string;
+}
+
 export const RequestStatusEnum = {
   PENDING: 'PENDING',
   UNDER_REVIEW: 'UNDER_REVIEW',

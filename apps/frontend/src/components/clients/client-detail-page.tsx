@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
+import QRCode from 'qrcode';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getClient, updateClient } from '@/lib/api/clients';
-import { getDocuments, createDocument, deleteDocument, downloadDocument } from '@/lib/api/documents';
+import { getDocuments, createDocument, createDocumentCaptureSession, deleteDocument, downloadDocument } from '@/lib/api/documents';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { compressImage } from '@/lib/compress-image';
@@ -33,6 +35,8 @@ import {
   Phone,
   CircleCheck,
   CircleAlert,
+  Loader2,
+  QrCode,
 } from 'lucide-react';
 
 type ClientTab = 'Información' | 'Préstamos' | 'Documentos' | 'Historial' | 'Notas';
@@ -239,6 +243,33 @@ const processingStatusLabels: Record<string, { label: string; className: string;
   },
 };
 
+function buildMobileCaptureUrl(token: string) {
+  const path = `/captura-documento/${encodeURIComponent(token)}`;
+  if (typeof window === 'undefined') return path;
+
+  const configuredBase = process.env.NEXT_PUBLIC_MOBILE_BASE_URL?.replace(/\/$/, '');
+  if (configuredBase) return `${configuredBase}${path}`;
+
+  const currentUrl = new URL(window.location.href);
+  if (currentUrl.hostname !== 'localhost' && currentUrl.hostname !== '127.0.0.1') {
+    return `${currentUrl.origin}${path}`;
+  }
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (apiUrl) {
+    try {
+      const parsedApiUrl = new URL(apiUrl);
+      if (parsedApiUrl.hostname !== 'localhost' && parsedApiUrl.hostname !== '127.0.0.1') {
+        return `${currentUrl.protocol}//${parsedApiUrl.hostname}:${currentUrl.port || '3001'}${path}`;
+      }
+    } catch {
+      return `${currentUrl.origin}${path}`;
+    }
+  }
+
+  return `${currentUrl.origin}${path}`;
+}
+
 function DocumentCard({
   doc,
   onDelete,
@@ -308,21 +339,30 @@ function DocumentCard({
 
 function UploadModal({
   open,
+  clientId,
   onClose,
   onUpload,
   uploading,
 }: {
   open: boolean;
+  clientId: number;
   onClose: () => void;
   onUpload: (file: File, name: string) => Promise<void>;
   uploading: boolean;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
+  const [captureUrl, setCaptureUrl] = useState('');
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [creatingCaptureSession, setCreatingCaptureSession] = useState(false);
+  const [captureError, setCaptureError] = useState('');
 
   function resetForm() {
     setFile(null);
     setName('');
+    setCaptureUrl('');
+    setQrDataUrl('');
+    setCaptureError('');
   }
 
   function closeModal() {
@@ -345,6 +385,27 @@ function UploadModal({
     onClose();
   }
 
+  async function handleCreateCaptureSession() {
+    setCreatingCaptureSession(true);
+    setCaptureError('');
+    try {
+      const session = await createDocumentCaptureSession(clientId);
+      const nextCaptureUrl = buildMobileCaptureUrl(session.token);
+      const nextQrDataUrl = await QRCode.toDataURL(nextCaptureUrl, {
+        margin: 1,
+        width: 240,
+        color: { dark: '#173D2C', light: '#FFFFFF' },
+      });
+      setCaptureUrl(nextCaptureUrl);
+      setQrDataUrl(nextQrDataUrl);
+    } catch (error) {
+      console.error('Error al crear sesion de captura movil:', error);
+      setCaptureError('No se pudo generar el QR. Intenta de nuevo.');
+    } finally {
+      setCreatingCaptureSession(false);
+    }
+  }
+
   if (!open) return null;
 
   return (
@@ -355,6 +416,41 @@ function UploadModal({
       >
         <h3 className="mb-1 text-lg font-bold text-neutral-900">Subir documento</h3>
         <p className="mb-5 text-sm text-neutral-500">Selecciona un archivo y asigna un nombre opcional.</p>
+
+        <div className="mb-4 rounded-xl border border-[#d7eadf] bg-[#f4fbf7] p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-neutral-900">Capturar con teléfono</p>
+              <p className="mt-1 text-xs text-neutral-500">Genera un QR para tomar la foto desde el celular.</p>
+            </div>
+            <button
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#5a9a7a] text-white transition hover:bg-[#4a866a] disabled:opacity-50"
+              disabled={creatingCaptureSession}
+              onClick={handleCreateCaptureSession}
+              title="Generar QR de captura"
+              type="button"
+            >
+              {creatingCaptureSession ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
+            </button>
+          </div>
+
+          {qrDataUrl ? (
+            <div className="mt-4 flex flex-col items-center rounded-xl bg-white p-4 text-center">
+              <Image
+                alt="QR para capturar documento con el teléfono"
+                className="h-44 w-44"
+                height={176}
+                src={qrDataUrl}
+                unoptimized
+                width={176}
+              />
+              <p className="mt-3 text-xs font-medium text-neutral-600">Escanea este QR con el teléfono.</p>
+              <p className="mt-1 break-all text-[11px] text-neutral-400">{captureUrl}</p>
+            </div>
+          ) : null}
+
+          {captureError ? <p className="mt-3 text-xs font-semibold text-red-600">{captureError}</p> : null}
+        </div>
 
         <div className="mb-4">
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-neutral-500">
@@ -416,9 +512,19 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
   const [uploading, setUploading] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
+  const refreshDocuments = useCallback(() => {
     getDocuments(clientId).then(setDocuments);
   }, [clientId]);
+
+  useEffect(() => {
+    refreshDocuments();
+  }, [refreshDocuments]);
+
+  useEffect(() => {
+    if (!showModal) return;
+    const interval = window.setInterval(refreshDocuments, 3000);
+    return () => window.clearInterval(interval);
+  }, [refreshDocuments, showModal]);
 
   async function handleUpload(file: File, name: string) {
     setUploading(true);
@@ -459,6 +565,7 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
 
       <UploadModal
         open={showModal}
+        clientId={clientId}
         onClose={() => setShowModal(false)}
         onUpload={handleUpload}
         uploading={uploading}
