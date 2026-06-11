@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { existsSync } from 'fs';
 import { basename, extname, join } from 'path';
 import sharp from 'sharp';
+import { detectDocumentCropBox } from './document-image-crop';
 
 export type DetectedDocumentType = 'cedula' | 'recibo' | 'acto_notarial' | 'otro';
 export type DocumentProcessingStatus = 'processed' | 'needs_review' | 'failed' | 'not_applicable';
@@ -48,9 +49,42 @@ export class DocumentProcessingService {
     const outputPath = join(this.uploadsDir, outputFilename);
 
     try {
-      await sharp(inputPath)
-        .rotate()
-        .trim({ threshold: 12 })
+      const baseImage = sharp(inputPath).rotate();
+      const raw = await baseImage
+        .clone()
+        .resize({ width: 900, height: 900, fit: 'inside', withoutEnlargement: true })
+        .removeAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      const cropBox = detectDocumentCropBox({
+        data: raw.data,
+        width: raw.info.width,
+        height: raw.info.height,
+        channels: raw.info.channels,
+      });
+      const metadata = await baseImage.metadata();
+      const scaleX = metadata.width && raw.info.width ? metadata.width / raw.info.width : 1;
+      const scaleY = metadata.height && raw.info.height ? metadata.height / raw.info.height : 1;
+      const sourceWidth = metadata.width ?? Math.floor(raw.info.width * scaleX);
+      const sourceHeight = metadata.height ?? Math.floor(raw.info.height * scaleY);
+      const extractBox = cropBox
+        ? {
+            left: Math.max(0, Math.min(sourceWidth - 1, Math.floor(cropBox.left * scaleX))),
+            top: Math.max(0, Math.min(sourceHeight - 1, Math.floor(cropBox.top * scaleY))),
+            width: Math.max(1, Math.min(sourceWidth, Math.floor(cropBox.width * scaleX))),
+            height: Math.max(1, Math.min(sourceHeight, Math.floor(cropBox.height * scaleY))),
+          }
+        : undefined;
+
+      if (extractBox) {
+        extractBox.width = Math.min(extractBox.width, sourceWidth - extractBox.left);
+        extractBox.height = Math.min(extractBox.height, sourceHeight - extractBox.top);
+      }
+
+      let pipeline = sharp(inputPath).rotate();
+      if (extractBox) pipeline = pipeline.extract(extractBox);
+
+      await pipeline
         .normalize()
         .sharpen()
         .resize({ width: 1800, height: 1800, fit: 'inside', withoutEnlargement: true })
@@ -64,7 +98,7 @@ export class DocumentProcessingService {
 
   private processingNotes(isImage: boolean, processed: boolean) {
     if (!isImage) return 'El recorte automatico solo aplica a imagenes en esta version.';
-    if (processed) return 'Imagen recortada y mejorada automaticamente.';
+    if (processed) return 'Area del documento detectada, recortada y mejorada automaticamente.';
     return 'No se pudo recortar automaticamente; revisar imagen original.';
   }
 
