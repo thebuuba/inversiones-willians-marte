@@ -1,9 +1,9 @@
 'use client';
 
 import { useRef } from 'react';
-import { X, Printer, Download } from 'lucide-react';
+import { X, Printer, Download, MessageCircle } from 'lucide-react';
 import { formatDop } from '@/lib/currency';
-import type { InvestorItem, InvestorPaymentItem } from '@inversiones/shared';
+import type { InvestorInvestmentSummary, InvestorItem, InvestorPaymentItem } from '@inversiones/shared';
 
 const fmt = (n: number | string) => formatDop(n);
 const fmtDate = (s: string | Date) =>
@@ -14,16 +14,35 @@ const MONTHS = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
+const safeFilename = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 80) || 'inversionista';
+
 interface PaymentReceiptModalProps {
   payment: InvestorPaymentItem;
   investor: InvestorItem;
+  investment?: InvestorInvestmentSummary | null;
   onClose: () => void;
 }
 
-export function PaymentReceiptModal({ payment, investor, onClose }: PaymentReceiptModalProps) {
+export function PaymentReceiptModal({ payment, investor, investment, onClose }: PaymentReceiptModalProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
 
   const padReceipt = String(payment.receiptNumber).padStart(5, '0');
+  const monthLabel = MONTHS[payment.periodMonth - 1] ?? String(payment.periodMonth);
+  const receiptFilename = [
+    'Recibo',
+    safeFilename(investor.name),
+    investment?.code ? safeFilename(investment.code) : null,
+    safeFilename(monthLabel),
+    payment.periodYear,
+  ]
+    .filter(Boolean)
+    .join('_');
 
   async function handlePrint() {
     const content = receiptRef.current;
@@ -76,7 +95,7 @@ export function PaymentReceiptModal({ payment, investor, onClose }: PaymentRecei
     const html2pdf = (await import('html2pdf.js')).default;
     const opt = {
       margin: [5, 5, 5, 5] as [number, number, number, number],
-      filename: `Recibo_${investor.name.replace(/\s+/g, '_')}_${MONTHS[payment.periodMonth - 1]}${payment.periodYear}.pdf`,
+      filename: `${receiptFilename}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: [80, 200] as [number, number], orientation: 'portrait' as const },
@@ -84,6 +103,23 @@ export function PaymentReceiptModal({ payment, investor, onClose }: PaymentRecei
 
     const worker = html2pdf().set(opt).from(content);
     await worker.save();
+  }
+
+  function handleWhatsApp() {
+    const lines = [
+      `Recibo de pago #${padReceipt}`,
+      `Inversionista: ${investor.name}`,
+      investment?.code ? `Inversión: ${investment.code}` : `Código: ${investor.code}`,
+      `Período: ${monthLabel} ${payment.periodYear}`,
+      `Monto pagado: ${fmt(Number(payment.amount))}`,
+      `Fecha: ${fmtDate(payment.paymentDate)}`,
+      `Método: ${payment.paymentMethod ?? 'No especificado'}`,
+      payment.reference ? `Referencia: ${payment.reference}` : null,
+      '',
+      'Inversiones Willians Marte',
+    ].filter(Boolean);
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener,noreferrer');
   }
 
   return (
@@ -141,7 +177,12 @@ export function PaymentReceiptModal({ payment, investor, onClose }: PaymentRecei
             <div style={{ borderBottom: '1px dashed #000', paddingBottom: '8px', marginBottom: '8px', textAlign: 'left' }}>
               <strong>Inversionista:</strong> {investor.name}<br />
               <strong>Código:</strong> {investor.code}<br />
-              <strong>Período:</strong> {MONTHS[payment.periodMonth - 1]} {payment.periodYear}<br />
+              {investment?.code && (
+                <>
+                  <strong>Inversión:</strong> {investment.code}<br />
+                </>
+              )}
+              <strong>Período:</strong> {monthLabel} {payment.periodYear}<br />
             </div>
 
             <div style={{ borderBottom: '1px dashed #000', paddingBottom: '8px', marginBottom: '8px', textAlign: 'left' }}>
@@ -172,7 +213,7 @@ export function PaymentReceiptModal({ payment, investor, onClose }: PaymentRecei
           </div>
         </div>
 
-        <footer className="flex justify-end gap-3 border-t border-[#edf2ef] px-6 py-4">
+        <footer className="flex flex-wrap justify-end gap-3 border-t border-[#edf2ef] px-6 py-4">
           <button
             className="inline-flex h-11 items-center gap-2 rounded-full border border-[#ddebe3] bg-white px-6 text-sm font-bold text-[#173d2c]"
             onClick={handlePrint}
@@ -182,12 +223,20 @@ export function PaymentReceiptModal({ payment, investor, onClose }: PaymentRecei
             Imprimir
           </button>
           <button
+            className="inline-flex h-11 items-center gap-2 rounded-full border border-[#c8ead6] bg-white px-6 text-sm font-bold text-[#1f7a4e] hover:bg-[#f1faf5]"
+            onClick={handleWhatsApp}
+            type="button"
+          >
+            <MessageCircle className="h-4 w-4" />
+            WhatsApp
+          </button>
+          <button
             className="inline-flex h-11 items-center gap-2 rounded-full bg-[#285c43] px-6 text-sm font-bold text-white hover:bg-[#1f4a34]"
             onClick={handleDownload}
             type="button"
           >
             <Download className="h-4 w-4" />
-            Descargar PDF
+            Guardar PDF
           </button>
           <button
             className="inline-flex h-11 items-center rounded-full border border-[#ddebe3] bg-white px-6 text-sm font-bold text-[#173d2c]"

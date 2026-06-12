@@ -386,6 +386,7 @@ export function RegisterInvestorPaymentPage() {
         <PaymentReceiptModal
           payment={createdPayment}
           investor={investor}
+          investment={investment}
           onClose={() => router.push(`/inversionistas/${investor.id}`)}
         />
       )}
