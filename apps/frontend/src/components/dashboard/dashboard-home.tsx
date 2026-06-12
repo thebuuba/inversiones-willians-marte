@@ -173,6 +173,7 @@ export function DashboardHome() {
 
   const auditSafe = audit ?? [];
   const auditRows = auditSafe.map((entry) => ({
+    id: entry.id,
     name: entry.performedByName ?? 'Sistema',
     action: entry.action,
     ref: entry.entity,
@@ -340,7 +341,7 @@ export function DashboardHome() {
             {auditRows.length > 0 ? auditRows.map((row, index) => {
               const Icon = row.icon;
               return (
-                <div key={`${row.name}-${row.time}`} className={`flex items-center gap-3.5 py-3.5 ${index !== auditRows.length - 1 ? 'border-b border-[#EDF2EF]' : ''}`}>
+                <div key={row.id ?? `audit-${index}`} className={`flex items-center gap-3.5 py-3.5 ${index !== auditRows.length - 1 ? 'border-b border-[#EDF2EF]' : ''}`}>
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: row.bg, color: row.color }}>
                     <Icon className="h-4 w-4" />
                   </div>
