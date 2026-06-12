@@ -29,28 +29,47 @@ export class InvestorsService {
   ): Promise<unknown> {
     const code = await this.nextInvestorCode();
     try {
-      return await prisma.investor.create({
-        data: {
-          name: dto.name,
-          email: dto.email,
-          phone: dto.phone,
-          phone2: dto.phone2,
-          cedula: dto.cedula,
-          birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
-          nationality: dto.nationality,
-          type: dto.type ?? 'individual',
-          photo: dto.photo,
-          capital: dto.capital,
-          monthlyPayment: dto.monthlyPayment,
-          rate: dto.rate,
-          startDate: dto.startDate ? new Date(dto.startDate) : null,
-          term: dto.term,
-          bank: dto.bank,
-          notes: dto.notes,
-          code,
-          createdById: userId,
-        },
+      const investor = await prisma.$transaction(async (tx) => {
+        const created = await tx.investor.create({
+          data: {
+            name: dto.name,
+            email: dto.email,
+            phone: dto.phone,
+            phone2: dto.phone2,
+            cedula: dto.cedula,
+            birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
+            nationality: dto.nationality,
+            type: dto.type ?? 'individual',
+            photo: dto.photo,
+            capital: dto.capital,
+            monthlyPayment: dto.monthlyPayment,
+            rate: dto.rate,
+            startDate: dto.startDate ? new Date(dto.startDate) : null,
+            term: dto.term,
+            bank: dto.bank,
+            notes: dto.notes,
+            code,
+            createdById: userId,
+          },
+        });
+
+        await tx.investorInvestment.create({
+          data: {
+            investorId: created.id,
+            code: `${created.code}-01`,
+            capital: dto.capital,
+            monthlyPayment: dto.monthlyPayment,
+            rate: dto.rate,
+            startDate: dto.startDate ? new Date(dto.startDate) : null,
+            term: dto.term,
+            notes: dto.notes,
+            createdById: userId,
+          },
+        });
+
+        return created;
       });
+      return this.findOne(investor.id);
     } catch (error) {
       if (
         attempt < 3 &&
@@ -74,39 +93,67 @@ export class InvestorsService {
   }
 
   async findAll() {
-    return prisma.investor.findMany({ orderBy: { createdAt: 'desc' } });
+    const investors = await prisma.investor.findMany({
+      include: this.investorInclude(),
+      orderBy: { createdAt: 'desc' },
+    });
+    return investors.map((investor) => this.decorateInvestor(investor));
   }
 
   async findOne(id: string) {
-    const investor = await prisma.investor.findUnique({ where: { id } });
+    const investor = await prisma.investor.findUnique({
+      where: { id },
+      include: this.investorInclude(),
+    });
     if (!investor) throw new NotFoundException('Investor not found');
-    return investor;
+    return this.decorateInvestor(investor);
   }
 
   async update(id: string, dto: UpdateInvestorDto) {
     try {
       await this.findOne(id);
-      return await prisma.investor.update({
-        where: { id },
-        data: {
-          name: dto.name,
-          email: dto.email,
-          phone: dto.phone,
-          phone2: dto.phone2,
-          cedula: dto.cedula,
-          birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
-          nationality: dto.nationality,
-          type: dto.type,
-          photo: dto.photo,
-          capital: dto.capital,
-          monthlyPayment: dto.monthlyPayment,
-          rate: dto.rate,
-          startDate: dto.startDate ? new Date(dto.startDate) : undefined,
-          term: dto.term,
-          bank: dto.bank,
-          notes: dto.notes,
-        },
+      await prisma.$transaction(async (tx) => {
+        await tx.investor.update({
+          where: { id },
+          data: {
+            name: dto.name,
+            email: dto.email,
+            phone: dto.phone,
+            phone2: dto.phone2,
+            cedula: dto.cedula,
+            birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
+            nationality: dto.nationality,
+            type: dto.type,
+            photo: dto.photo,
+            capital: dto.capital,
+            monthlyPayment: dto.monthlyPayment,
+            rate: dto.rate,
+            startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+            term: dto.term,
+            bank: dto.bank,
+            notes: dto.notes,
+          },
+        });
+
+        const firstInvestment = await tx.investorInvestment.findFirst({
+          where: { investorId: id },
+          orderBy: { createdAt: 'asc' },
+        });
+        if (firstInvestment) {
+          await tx.investorInvestment.update({
+            where: { id: firstInvestment.id },
+            data: {
+              capital: dto.capital,
+              monthlyPayment: dto.monthlyPayment,
+              rate: dto.rate,
+              startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+              term: dto.term,
+              notes: dto.notes,
+            },
+          });
+        }
       });
+      return this.findOne(id);
     } catch (error) {
       this.handlePrismaError(error, 'Error al actualizar el inversionista');
     }
@@ -117,6 +164,10 @@ export class InvestorsService {
       await this.findOne(id);
       return await prisma.$transaction(async (tx) => {
         await tx.investorPayment.deleteMany({ where: { investorId: id } });
+        await tx.investorInvestmentMovement.deleteMany({
+          where: { investment: { investorId: id } },
+        });
+        await tx.investorInvestment.deleteMany({ where: { investorId: id } });
         await tx.document.updateMany({ where: { investorId: id }, data: { investorId: null } });
         return tx.investor.delete({ where: { id } });
       });
@@ -152,5 +203,51 @@ export class InvestorsService {
       error instanceof Error ? error.stack : undefined,
     );
     throw new InternalServerErrorException(fallbackMessage);
+  }
+
+  private investorInclude() {
+    return {
+      investments: {
+        include: { payments: true },
+        orderBy: { createdAt: 'desc' as const },
+      },
+    };
+  }
+
+  private decorateInvestor(
+    investor: Prisma.InvestorGetPayload<{
+      include: ReturnType<InvestorsService['investorInclude']>;
+    }>,
+  ) {
+    const activeInvestments = investor.investments.filter(
+      (investment) => investment.status === 'ACTIVE',
+    );
+    const totalCapital = activeInvestments.reduce(
+      (sum, investment) => sum + Number(investment.capital),
+      0,
+    );
+    const totalMonthlyReturn = activeInvestments.reduce(
+      (sum, investment) => sum + Number(investment.monthlyPayment),
+      0,
+    );
+    const primaryInvestment = activeInvestments[0] ?? investor.investments[0];
+
+    return {
+      ...investor,
+      capital: totalCapital,
+      monthlyPayment: totalMonthlyReturn,
+      rate: primaryInvestment ? Number(primaryInvestment.rate) : Number(investor.rate),
+      startDate: primaryInvestment?.startDate ?? investor.startDate,
+      term: primaryInvestment?.term ?? investor.term,
+      totalCapital,
+      totalMonthlyReturn,
+      activeInvestments: activeInvestments.length,
+      investments: investor.investments.map((investment) => ({
+        ...investment,
+        capital: Number(investment.capital),
+        monthlyPayment: Number(investment.monthlyPayment),
+        rate: Number(investment.rate),
+      })),
+    };
   }
 }

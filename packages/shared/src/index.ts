@@ -142,6 +142,28 @@ export const InvestorStatusEnum = {
 } as const;
 export type InvestorStatus = (typeof InvestorStatusEnum)[keyof typeof InvestorStatusEnum];
 
+export const InvestorInvestmentStatusEnum = {
+  ACTIVE: 'ACTIVE',
+  PAUSED: 'PAUSED',
+  CLOSED: 'CLOSED',
+} as const;
+export type InvestorInvestmentStatus =
+  (typeof InvestorInvestmentStatusEnum)[keyof typeof InvestorInvestmentStatusEnum];
+
+export const InvestorInvestmentPaymentStatusEnum = {
+  PAID: 'PAID',
+  PENDING: 'PENDING',
+  OVERDUE: 'OVERDUE',
+} as const;
+export type InvestorInvestmentPaymentStatus =
+  (typeof InvestorInvestmentPaymentStatusEnum)[keyof typeof InvestorInvestmentPaymentStatusEnum];
+
+export const InvestorInvestmentMovementTypeEnum = {
+  CAPITAL_ADDITION: 'CAPITAL_ADDITION',
+} as const;
+export type InvestorInvestmentMovementType =
+  (typeof InvestorInvestmentMovementTypeEnum)[keyof typeof InvestorInvestmentMovementTypeEnum];
+
 export interface CreateInvestorDto {
   name: string;
   email?: string;
@@ -168,10 +190,67 @@ export interface InvestorItem extends CreateInvestorDto {
   createdById: string;
   createdAt: string;
   updatedAt: string;
+  totalCapital?: number;
+  totalMonthlyReturn?: number;
+  activeInvestments?: number;
+  investments?: InvestorInvestmentSummary[];
+}
+
+export interface CreateInvestorInvestmentDto {
+  capital: number;
+  monthlyPayment?: number;
+  rate: number;
+  startDate?: string;
+  term?: string;
+  notes?: string;
+}
+
+export interface AddInvestorCapitalDto {
+  amount: number;
+  movementDate: string;
+  notes?: string;
+}
+
+export interface InvestorInvestmentSummary {
+  id: string;
+  investorId: string;
+  code: string;
+  capital: number;
+  monthlyPayment: number;
+  rate: number;
+  startDate?: string;
+  term?: string;
+  status: InvestorInvestmentStatus;
+  notes?: string;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  nextDueDate?: string;
+  currentPeriodMonth?: number;
+  currentPeriodYear?: number;
+  paymentStatus?: InvestorInvestmentPaymentStatus;
+}
+
+export interface InvestorInvestmentMovementItem {
+  id: string;
+  investmentId: string;
+  type: InvestorInvestmentMovementType;
+  amount: number;
+  movementDate: string;
+  notes?: string;
+  createdById: string;
+  createdAt: string;
+}
+
+export interface InvestorInvestmentDetail extends InvestorInvestmentSummary {
+  investor?: InvestorItem;
+  payments?: InvestorPaymentItem[];
+  movements?: InvestorInvestmentMovementItem[];
 }
 
 export interface CreateInvestorPaymentDto {
-  investorId: string;
+  investorId?: string;
+  investmentId?: string;
   amount: number;
   periodMonth: number;
   periodYear: number;
@@ -185,6 +264,7 @@ export interface InvestorPaymentItem {
   id: string;
   receiptNumber: number;
   investorId: string;
+  investmentId?: string;
   amount: number;
   periodMonth: number;
   periodYear: number;

@@ -3,10 +3,15 @@ import { prisma, Prisma } from '@inversiones/database';
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
+    $transaction: jest.fn(),
     investor: {
       count: jest.fn(),
       create: jest.fn(),
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
+    },
+    investorInvestment: {
+      create: jest.fn(),
     },
   },
   Prisma: {
@@ -34,6 +39,24 @@ describe('InvestorsService', () => {
 
   beforeEach(() => {
     service = new InvestorsService();
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback({
+        investor: prisma.investor,
+        investorInvestment: prisma.investorInvestment,
+      } as never),
+    );
+    jest.mocked(prisma.investor.findUnique).mockResolvedValue({
+      id: 'investor-6',
+      investments: [
+        {
+          id: 'investment-1',
+          capital: 10000,
+          monthlyPayment: 100,
+          rate: 3,
+          status: 'ACTIVE',
+        },
+      ],
+    } as never);
   });
 
   afterEach(() => {
@@ -43,13 +66,20 @@ describe('InvestorsService', () => {
   it('creates the next investor code from the highest existing code instead of row count', async () => {
     jest.mocked(prisma.investor.count).mockResolvedValue(2);
     jest.mocked(prisma.investor.findFirst).mockResolvedValue({ code: 'INV-0005' } as never);
-    jest.mocked(prisma.investor.create).mockResolvedValue({ id: 'investor-6' } as never);
+    jest
+      .mocked(prisma.investor.create)
+      .mockResolvedValue({ id: 'investor-6', code: 'INV-0006' } as never);
 
     await service.create(dto, 'user-1');
 
     expect(prisma.investor.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ code: 'INV-0006' }),
+      }),
+    );
+    expect(prisma.investorInvestment.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ investorId: 'investor-6', code: 'INV-0006-01' }),
       }),
     );
   });
@@ -67,7 +97,19 @@ describe('InvestorsService', () => {
           clientVersion: '6.5.0',
         }),
       )
-      .mockResolvedValueOnce({ id: 'investor-7' } as never);
+      .mockResolvedValueOnce({ id: 'investor-7', code: 'INV-0007' } as never);
+    jest.mocked(prisma.investor.findUnique).mockResolvedValue({
+      id: 'investor-7',
+      investments: [
+        {
+          id: 'investment-2',
+          capital: 10000,
+          monthlyPayment: 100,
+          rate: 3,
+          status: 'ACTIVE',
+        },
+      ],
+    } as never);
 
     await service.create(dto, 'user-1');
 

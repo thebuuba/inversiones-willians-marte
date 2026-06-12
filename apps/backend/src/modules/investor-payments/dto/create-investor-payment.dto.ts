@@ -1,8 +1,13 @@
 import { IsString, IsNumber, IsInt, IsOptional, Min, Max } from 'class-validator';
 
 export class CreateInvestorPaymentDto {
+  @IsOptional()
   @IsString()
-  investorId: string;
+  investorId?: string;
+
+  @IsOptional()
+  @IsString()
+  investmentId?: string;
 
   @IsNumber()
   @Min(0.01)

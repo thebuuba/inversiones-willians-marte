@@ -11,6 +11,7 @@ describe('InvestorPaymentsController routing', () => {
   const service = {
     create: jest.fn(),
     findByInvestor: jest.fn(),
+    findByInvestment: jest.fn(),
     checkPeriod: jest.fn(),
   };
 
@@ -44,7 +45,7 @@ describe('InvestorPaymentsController routing', () => {
       .expect(200)
       .expect({ id: 'period-payment' });
 
-    expect(service.checkPeriod).toHaveBeenCalledWith('investor-1', 6, 2026);
+    expect(service.checkPeriod).toHaveBeenCalledWith(6, 2026, undefined, 'investor-1');
     expect(service.findByInvestor).not.toHaveBeenCalled();
   });
 });

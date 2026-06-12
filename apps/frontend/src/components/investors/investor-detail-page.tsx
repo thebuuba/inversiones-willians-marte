@@ -22,6 +22,11 @@ import {
 
 const fmt = (n: number | string) => formatDop(n, { space: true });
 const fmtDate = (s: string | Date) => new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
+const paymentStatusLabel = {
+  PAID: 'Al dia',
+  PENDING: 'Pendiente',
+  OVERDUE: 'Atrasada',
+} as const;
 
 const TABS = ['Resumen', 'Historial de pagos', 'Documentos', 'Datos personales'];
 
@@ -60,6 +65,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
   const capital = data?.capital ?? 0;
   const rate = data?.rate ?? 0;
   const monthlyReturn = data?.monthlyPayment ?? 0;
+  const investments = data?.investments ?? [];
 
   if (loading) {
     return (
@@ -183,18 +189,20 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                 </button>
                 <Link
                   className="inline-flex h-10 items-center gap-1.5 rounded-full border border-[#5a9a7a] bg-white px-5 text-sm text-[#5a9a7a] hover:bg-[#eaf5ed]"
-                  href={`/inversionistas/nuevo?investorId=${investorId}`}
+                  href={`/inversionistas/nuevo?sourceInvestorId=${investorId}`}
                 >
                   <Plus className="h-4 w-4" />
                   Nueva inversión
                 </Link>
-                <Link
-                  className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm text-white hover:bg-[#4a866a]"
-                  href={`/inversionistas/pago?investorId=${investorId}`}
-                >
-                  <Plus className="h-4 w-4" />
-                  Registrar pago
-                </Link>
+                {investments.length === 1 && (
+                  <Link
+                    className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm text-white hover:bg-[#4a866a]"
+                    href={`/inversionistas/pago?investmentId=${investments[0].id}`}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Registrar pago
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -240,36 +248,66 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
             <div className="space-y-5">
               <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
-                <h3 className="mb-4 text-base font-semibold text-neutral-900">Inversiones</h3>
-                <div className="rounded-xl border border-neutral-100 bg-[#fafafa] p-4">
-                  <div className="flex items-center justify-between border-b border-neutral-100 pb-3 mb-3">
-                    <div>
-                      <p className="text-xs font-medium text-neutral-500">Capital invertido</p>
-                      <p className="text-lg font-bold text-neutral-900">{fmt(capital)}</p>
-                    </div>
-                    <span className="rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-semibold text-[#5a9a7a]">
-                      {data.term ?? 'Indefinido'}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p className="text-xs text-neutral-400">Tasa</p>
-                      <p className="font-semibold text-neutral-900">{rate}% mensual</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-neutral-400">Retorno mensual</p>
-                      <p className="font-semibold text-neutral-900">{fmt(monthlyReturn)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-neutral-400">Inicio</p>
-                      <p className="font-semibold text-neutral-900">{data.startDate ? fmtDate(data.startDate) : '—'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-neutral-400">Frecuencia</p>
-                      <p className="font-semibold text-neutral-900">Mensual</p>
-                    </div>
-                  </div>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h3 className="text-base font-semibold text-neutral-900">Inversiones</h3>
+                  <span className="rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-semibold text-[#5a9a7a]">
+                    {investments.length} activas/historicas
+                  </span>
                 </div>
+                {investments.length === 0 ? (
+                  <p className="rounded-xl border border-neutral-100 bg-[#fafafa] p-5 text-sm text-neutral-400">
+                    Este inversionista aun no tiene inversiones registradas.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {investments.map((investment) => {
+                      const status = investment.paymentStatus ? paymentStatusLabel[investment.paymentStatus] : 'Pendiente';
+                      return (
+                        <div key={investment.id} className="rounded-xl border border-neutral-100 bg-[#fafafa] p-4">
+                          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-sm font-bold text-neutral-900">{investment.code}</p>
+                                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-[#c96f4a]' : investment.paymentStatus === 'PAID' ? 'bg-[#eaf5ed] text-[#5a9a7a]' : 'bg-[#fef3c7] text-[#a16207]'}`}>
+                                  {status}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-xs text-neutral-400">
+                                Inicio {investment.startDate ? fmtDate(investment.startDate) : '—'} · Plazo {investment.term ?? 'Indefinido'}
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Link className="rounded-full border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50" href={`/inversiones/${investment.id}`}>
+                                Ver detalle
+                              </Link>
+                              <Link className="rounded-full bg-[#5a9a7a] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4a866a]" href={`/inversionistas/pago?investmentId=${investment.id}`}>
+                                Registrar pago
+                              </Link>
+                            </div>
+                          </div>
+                          <div className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
+                            <div>
+                              <p className="text-xs text-neutral-400">Capital</p>
+                              <p className="font-semibold text-neutral-900">{fmt(investment.capital)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-neutral-400">Tasa</p>
+                              <p className="font-semibold text-neutral-900">{investment.rate}% mensual</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-neutral-400">Retorno mensual</p>
+                              <p className="font-semibold text-neutral-900">{fmt(investment.monthlyPayment)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-neutral-400">Proximo vencimiento</p>
+                              <p className="font-semibold text-neutral-900">{investment.nextDueDate ? fmtDate(investment.nextDueDate) : '—'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 

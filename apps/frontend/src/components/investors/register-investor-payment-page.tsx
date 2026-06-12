@@ -5,9 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, TrendingUp, CheckCircle2, Clock } from 'lucide-react';
 import { getInvestor } from '@/lib/api/investors';
-import { createInvestorPayment, checkInvestorPaymentPeriod, getInvestorPayments } from '@/lib/api/investor-payments';
+import { getInvestment } from '@/lib/api/investments';
+import { createInvestorPayment, checkInvestorPaymentPeriod, getInvestmentPayments } from '@/lib/api/investor-payments';
 import { formatDop } from '@/lib/currency';
-import type { InvestorItem, InvestorPaymentItem } from '@inversiones/shared';
+import type { InvestorInvestmentDetail, InvestorItem, InvestorPaymentItem } from '@inversiones/shared';
 import { PaymentReceiptModal } from './payment-receipt-modal';
 
 const fmt = (n: number | string) => formatDop(n);
@@ -30,8 +31,10 @@ export function RegisterInvestorPaymentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const investorId = searchParams.get('investorId');
+  const investmentId = searchParams.get('investmentId');
 
   const [investor, setInvestor] = useState<InvestorItem | null>(null);
+  const [investment, setInvestment] = useState<InvestorInvestmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [payments, setPayments] = useState<InvestorPaymentItem[]>([]);
   const [periodPaid, setPeriodPaid] = useState<InvestorPaymentItem | null>(null);
@@ -51,39 +54,52 @@ export function RegisterInvestorPaymentPage() {
   const [createdPayment, setCreatedPayment] = useState<InvestorPaymentItem | null>(null);
 
   useEffect(() => {
-    if (!investorId) {
+    if (!investorId && !investmentId) {
       router.replace('/inversionistas');
       return;
     }
-    Promise.all([
-      getInvestor(investorId),
-      getInvestorPayments(investorId).catch(() => [] as InvestorPaymentItem[]),
-    ])
-      .then(([inv, p]) => {
-        setInvestor(inv);
-        setPayments(p);
-      })
-      .catch(() => setInvestor(null))
-      .finally(() => setLoading(false));
-  }, [investorId, router]);
+    const load = async () => {
+      if (investmentId) {
+        const invst = await getInvestment(investmentId);
+        setInvestment(invst);
+        setInvestor(invst.investor ?? null);
+        setPayments(await getInvestmentPayments(investmentId).catch(() => [] as InvestorPaymentItem[]));
+        return;
+      }
 
-  const cuota = investor
-    ? Math.round(Number(investor.capital) * Number(investor.rate) / 100)
-    : 0;
+      const inv = await getInvestor(investorId!);
+      const selectedInvestment = inv.investments?.find((item) => item.status === 'ACTIVE') ?? inv.investments?.[0];
+      if (!selectedInvestment) throw new Error('missing investment');
+      const invst = await getInvestment(selectedInvestment.id);
+      setInvestor(inv);
+      setInvestment(invst);
+      setPayments(await getInvestmentPayments(selectedInvestment.id).catch(() => [] as InvestorPaymentItem[]));
+    };
+
+    load()
+      .catch(() => {
+        setInvestor(null);
+        setInvestment(null);
+      })
+      .finally(() => setLoading(false));
+  }, [investmentId, investorId, router]);
+
+  const targetInvestmentId = investment?.id;
+  const cuota = investment ? Math.round(Number(investment.monthlyPayment)) : 0;
 
   useEffect(() => {
-    if (!investorId || !investor) return;
+    if (!targetInvestmentId || !investment) return;
     queueMicrotask(() => setCheckingPeriod(true));
-    checkInvestorPaymentPeriod(investorId, periodMonth, periodYear)
+    checkInvestorPaymentPeriod(targetInvestmentId, periodMonth, periodYear, 'investment')
       .then((p) => {
         setPeriodPaid(p);
         if (!p) setAmount(String(cuota));
       })
       .catch(() => setPeriodPaid(null))
       .finally(() => setCheckingPeriod(false));
-  }, [investorId, periodMonth, periodYear, investor, cuota]);
+  }, [targetInvestmentId, periodMonth, periodYear, investment, cuota]);
 
-  if (!investorId) return null;
+  if (!investorId && !investmentId) return null;
 
   if (loading) {
     return (
@@ -93,7 +109,7 @@ export function RegisterInvestorPaymentPage() {
     );
   }
 
-  if (!investor) {
+  if (!investor || !investment) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#F3F4F6] font-sans">
         <p className="text-sm font-medium text-neutral-400">Inversionista no encontrado.</p>
@@ -112,12 +128,14 @@ export function RegisterInvestorPaymentPage() {
     event.preventDefault();
     setSubmitted(true);
     setError(null);
+    if (!investor || !investment) return;
     if (!Number.isFinite(amountNumber) || amountNumber <= 0 || !paymentDate) return;
 
     setSaving(true);
     try {
       const payment = await createInvestorPayment({
-        investorId: investorId!,
+        investorId: investor.id,
+        investmentId: investment.id,
         amount: amountNumber,
         periodMonth,
         periodYear,
@@ -144,7 +162,7 @@ export function RegisterInvestorPaymentPage() {
       <div className="mx-auto max-w-7xl">
         <Link
           className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#5a9a7a] hover:text-[#7fb89a]"
-          href={`/inversionistas/${investorId}`}
+          href={`/inversionistas/${investor.id}`}
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver a inversionista
@@ -160,7 +178,7 @@ export function RegisterInvestorPaymentPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-neutral-900">{investor.name}</h2>
-                  <p className="text-sm text-neutral-500">{investor.code}</p>
+                  <p className="text-sm text-neutral-500">{investment.code}</p>
                   <span className="mt-1 inline-block rounded-full bg-[#eaf5ed] px-3 py-0.5 text-xs font-semibold text-[#5a9a7a]">
                     {investor.status === 'ACTIVE' ? 'Activo' : investor.status === 'PAUSED' ? 'Pausado' : 'Retirado'}
                   </span>
@@ -173,11 +191,11 @@ export function RegisterInvestorPaymentPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
                   <span className="text-xs text-neutral-500">Capital invertido</span>
-                  <span className="text-sm font-bold text-neutral-900">{fmt(Number(investor.capital))}</span>
+                  <span className="text-sm font-bold text-neutral-900">{fmt(Number(investment.capital))}</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
                   <span className="text-xs text-neutral-500">Tasa mensual</span>
-                  <span className="text-sm font-bold text-neutral-900">{Number(investor.rate)}%</span>
+                  <span className="text-sm font-bold text-neutral-900">{Number(investment.rate)}%</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
                   <span className="text-xs text-neutral-500">Retorno mensual (cuota)</span>
@@ -345,7 +363,7 @@ export function RegisterInvestorPaymentPage() {
                 <div className="mt-6 flex justify-end gap-3 border-t border-[#edf2ef] pt-4">
                   <Link
                     className="inline-flex h-11 items-center rounded-full border border-[#ddebe3] bg-white px-6 text-sm font-bold text-[#173d2c]"
-                    href={`/inversionistas/${investorId}`}
+                    href={`/inversionistas/${investor.id}`}
                   >
                     Cancelar
                   </Link>
@@ -368,7 +386,7 @@ export function RegisterInvestorPaymentPage() {
         <PaymentReceiptModal
           payment={createdPayment}
           investor={investor}
-          onClose={() => router.push(`/inversionistas/${investorId}`)}
+          onClose={() => router.push(`/inversionistas/${investor.id}`)}
         />
       )}
     </>

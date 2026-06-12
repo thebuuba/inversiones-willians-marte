@@ -21,10 +21,22 @@ export class InvestorPaymentsController {
   @Roles('ADMIN', 'COLLECTOR')
   checkPeriod(
     @Query('investorId') investorId: string,
+    @Query('investmentId') investmentId: string,
     @Query('periodMonth') periodMonth: string,
     @Query('periodYear') periodYear: string,
   ) {
-    return this.service.checkPeriod(investorId, Number(periodMonth), Number(periodYear));
+    return this.service.checkPeriod(
+      Number(periodMonth),
+      Number(periodYear),
+      investmentId,
+      investorId,
+    );
+  }
+
+  @Get('investment/:investmentId')
+  @Roles('ADMIN', 'COLLECTOR')
+  findByInvestment(@Param('investmentId') investmentId: string) {
+    return this.service.findByInvestment(investmentId);
   }
 
   @Get(':investorId')

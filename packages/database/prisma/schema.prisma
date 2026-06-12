@@ -56,6 +56,16 @@ enum RequestStatus {
   REJECTED
 }
 
+enum InvestorInvestmentStatus {
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum InvestorInvestmentMovementType {
+  CAPITAL_ADDITION
+}
+
 // ─── Users ──────────────────────────────────────────────────────────────────
 
 model User {
@@ -75,6 +85,8 @@ model User {
   auditLogs         AuditLog[]
   loanRequests      LoanRequest[]
   investors              Investor[]
+  investorInvestments    InvestorInvestment[] @relation("InvestorInvestmentCreatedBy")
+  investorInvestmentMovements InvestorInvestmentMovement[] @relation("InvestorInvestmentMovementCreatedBy")
   investorPayments       InvestorPayment[] @relation("InvestorPaymentReceivedBy")
   uploadedDocuments      Document[]
   documentCaptureSessions DocumentCaptureSession[]
@@ -332,10 +344,53 @@ model Investor {
 
   createdBy User       @relation(fields: [createdById], references: [id])
   documents Document[]
+  investments InvestorInvestment[]
   payments  InvestorPayment[]
 
   @@index([createdAt])
   @@map("investors")
+}
+
+model InvestorInvestment {
+  id             String                   @id @default(uuid())
+  investorId     String                   @map("investor_id")
+  code           String                   @unique
+  capital        Decimal                  @default(0)
+  monthlyPayment Decimal                  @default(0) @map("monthly_payment")
+  rate           Decimal                  @default(0)
+  startDate      DateTime?                @map("start_date")
+  term           String?
+  status         InvestorInvestmentStatus @default(ACTIVE)
+  notes          String?
+  createdById    String                   @map("created_by")
+  createdAt      DateTime                 @default(now()) @map("created_at")
+  updatedAt      DateTime                 @updatedAt @map("updated_at")
+
+  investor  Investor @relation(fields: [investorId], references: [id])
+  createdBy User     @relation("InvestorInvestmentCreatedBy", fields: [createdById], references: [id])
+  payments  InvestorPayment[]
+  movements InvestorInvestmentMovement[]
+
+  @@index([investorId])
+  @@index([createdAt])
+  @@map("investor_investments")
+}
+
+model InvestorInvestmentMovement {
+  id           String                         @id @default(uuid())
+  investmentId String                         @map("investment_id")
+  type         InvestorInvestmentMovementType
+  amount       Decimal
+  movementDate DateTime                       @map("movement_date")
+  notes        String?
+  createdById  String                         @map("created_by")
+  createdAt    DateTime                       @default(now()) @map("created_at")
+
+  investment InvestorInvestment @relation(fields: [investmentId], references: [id])
+  createdBy  User               @relation("InvestorInvestmentMovementCreatedBy", fields: [createdById], references: [id])
+
+  @@index([investmentId, movementDate(sort: Desc)])
+  @@map("investor_investment_movements")
 }
 
 // ─── Investor Payments ─────────────────────────────────────────────────────
@@ -344,6 +399,7 @@ model InvestorPayment {
   id            String   @id @default(uuid())
   receiptNumber Int      @map("receipt_number")
   investorId    String   @map("investor_id")
+  investmentId  String?  @map("investment_id")
   amount        Decimal
   periodMonth   Int      @map("period_month")
   periodYear    Int      @map("period_year")
@@ -355,11 +411,13 @@ model InvestorPayment {
   createdAt     DateTime @default(now()) @map("created_at")
 
   investor   Investor @relation(fields: [investorId], references: [id])
+  investment InvestorInvestment? @relation(fields: [investmentId], references: [id])
   receivedBy User     @relation("InvestorPaymentReceivedBy", fields: [receivedById], references: [id])
 
-  @@unique([investorId, periodMonth, periodYear])
+  @@unique([investmentId, periodMonth, periodYear])
   @@index([receiptNumber])
   @@index([investorId, periodYear(sort: Desc), periodMonth(sort: Desc)])
+  @@index([investmentId, periodYear(sort: Desc), periodMonth(sort: Desc)])
   @@index([paymentDate])
   @@map("investor_payments")
 }

@@ -1,0 +1,191 @@
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { prisma, Prisma } from '@inversiones/database';
+import { AddCapitalDto } from './dto/add-capital.dto';
+import { CreateInvestmentDto } from './dto/create-investment.dto';
+
+type PaymentStatus = 'PAID' | 'PENDING' | 'OVERDUE';
+
+@Injectable()
+export class InvestmentsService {
+  async create(investorId: string, dto: CreateInvestmentDto, userId: string) {
+    const investor = await prisma.investor.findUnique({
+      where: { id: investorId },
+      select: { id: true, code: true },
+    });
+    if (!investor) throw new NotFoundException('Investor not found');
+
+    const code = await this.nextInvestmentCode(investor.id, investor.code);
+    const monthlyPayment =
+      dto.monthlyPayment ?? this.calculateMonthlyPayment(dto.capital, dto.rate);
+
+    const investment = await prisma.investorInvestment.create({
+      data: {
+        investorId,
+        code,
+        capital: dto.capital,
+        monthlyPayment,
+        rate: dto.rate,
+        startDate: dto.startDate ? new Date(dto.startDate) : null,
+        term: dto.term,
+        notes: dto.notes,
+        createdById: userId,
+      },
+      include: this.detailInclude(),
+    });
+
+    return this.toInvestmentDetail(investment);
+  }
+
+  async listByInvestor(investorId: string) {
+    const investor = await prisma.investor.findUnique({
+      where: { id: investorId },
+      select: { id: true },
+    });
+    if (!investor) throw new NotFoundException('Investor not found');
+
+    const investments = await prisma.investorInvestment.findMany({
+      where: { investorId },
+      include: { payments: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return investments.map((investment) => this.toInvestmentSummary(investment));
+  }
+
+  async findOne(id: string) {
+    const investment = await prisma.investorInvestment.findUnique({
+      where: { id },
+      include: this.detailInclude(),
+    });
+    if (!investment) throw new NotFoundException('Investment not found');
+    return this.toInvestmentDetail(investment);
+  }
+
+  async addCapital(id: string, dto: AddCapitalDto, userId: string) {
+    const investment = await prisma.investorInvestment.findUnique({ where: { id } });
+    if (!investment) throw new NotFoundException('Investment not found');
+    if (investment.status !== 'ACTIVE') {
+      throw new BadRequestException('Only active investments can receive capital additions');
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const nextCapital = Number(investment.capital) + dto.amount;
+      await tx.investorInvestment.update({
+        where: { id },
+        data: {
+          capital: nextCapital,
+          monthlyPayment: this.calculateMonthlyPayment(nextCapital, Number(investment.rate)),
+        },
+      });
+      await tx.investorInvestmentMovement.create({
+        data: {
+          investmentId: id,
+          type: 'CAPITAL_ADDITION',
+          amount: dto.amount,
+          movementDate: new Date(dto.movementDate),
+          notes: dto.notes,
+          createdById: userId,
+        },
+      });
+    });
+
+    return this.findOne(id);
+  }
+
+  async resolveSingleActiveInvestment(investorId: string) {
+    const investments = await prisma.investorInvestment.findMany({
+      where: { investorId, status: 'ACTIVE' },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (investments.length === 0) throw new NotFoundException('Investment not found');
+    if (investments.length > 1) {
+      throw new BadRequestException(
+        'Investment id is required for investors with multiple active investments',
+      );
+    }
+    return investments[0];
+  }
+
+  calculateMonthlyPayment(capital: number, rate: number) {
+    if (!Number.isFinite(capital) || !Number.isFinite(rate) || capital <= 0 || rate <= 0) return 0;
+    return capital * (rate / 100);
+  }
+
+  getCurrentPeriodStatus(
+    startDate: Date | string | null | undefined,
+    payments: Array<{ periodMonth: number; periodYear: number }>,
+    today = new Date(),
+  ): {
+    currentPeriodMonth: number;
+    currentPeriodYear: number;
+    nextDueDate: Date | null;
+    paymentStatus: PaymentStatus;
+  } {
+    const currentPeriodMonth = today.getMonth() + 1;
+    const currentPeriodYear = today.getFullYear();
+    const paid = payments.some(
+      (payment) =>
+        payment.periodMonth === currentPeriodMonth && payment.periodYear === currentPeriodYear,
+    );
+    const nextDueDate = startDate
+      ? this.dueDateForPeriod(new Date(startDate), currentPeriodYear, currentPeriodMonth)
+      : null;
+
+    if (paid) return { currentPeriodMonth, currentPeriodYear, nextDueDate, paymentStatus: 'PAID' };
+    if (nextDueDate && today.getTime() > nextDueDate.getTime()) {
+      return { currentPeriodMonth, currentPeriodYear, nextDueDate, paymentStatus: 'OVERDUE' };
+    }
+    return { currentPeriodMonth, currentPeriodYear, nextDueDate, paymentStatus: 'PENDING' };
+  }
+
+  private dueDateForPeriod(startDate: Date, year: number, month: number) {
+    const day = startDate.getUTCDate();
+    const lastDay = new Date(year, month, 0).getDate();
+    return new Date(year, month - 1, Math.min(day, lastDay), 12);
+  }
+
+  private async nextInvestmentCode(investorId: string, investorCode: string) {
+    const count = await prisma.investorInvestment.count({ where: { investorId } });
+    return `${investorCode}-${String(count + 1).padStart(2, '0')}`;
+  }
+
+  private detailInclude() {
+    return {
+      investor: true,
+      payments: { orderBy: [{ periodYear: 'desc' as const }, { periodMonth: 'desc' as const }] },
+      movements: { orderBy: { movementDate: 'desc' as const } },
+    };
+  }
+
+  private toInvestmentDetail(
+    investment: Prisma.InvestorInvestmentGetPayload<{
+      include: ReturnType<InvestmentsService['detailInclude']>;
+    }>,
+  ) {
+    return {
+      ...this.toInvestmentSummary(investment),
+      investor: investment.investor,
+      payments: investment.payments,
+      movements: investment.movements,
+    };
+  }
+
+  private toInvestmentSummary(
+    investment:
+      | Prisma.InvestorInvestmentGetPayload<{ include: { payments: true } }>
+      | Prisma.InvestorInvestmentGetPayload<Record<string, never>>,
+  ) {
+    const payments = 'payments' in investment ? investment.payments : [];
+    const status = this.getCurrentPeriodStatus(investment.startDate, payments);
+    return {
+      ...investment,
+      capital: Number(investment.capital),
+      monthlyPayment: Number(investment.monthlyPayment),
+      rate: Number(investment.rate),
+      nextDueDate: status.nextDueDate,
+      currentPeriodMonth: status.currentPeriodMonth,
+      currentPeriodYear: status.currentPeriodYear,
+      paymentStatus: status.paymentStatus,
+    };
+  }
+}

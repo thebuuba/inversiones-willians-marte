@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { CreateInvestorPaymentDto } from './dto/create-investor-payment.dto';
+import { InvestmentsService } from '../investments/investments.service';
 
 @Injectable()
 export class InvestorPaymentsService {
+  constructor(private investments: InvestmentsService) {}
+
   async create(dto: CreateInvestorPaymentDto, userId: string) {
-    const investor = await prisma.investor.findUnique({ where: { id: dto.investorId } });
-    if (!investor) throw new NotFoundException('Investor not found');
+    const investment = await this.resolveInvestment(dto.investmentId, dto.investorId);
 
     const lastReceipt = await prisma.investorPayment.findFirst({
       orderBy: { receiptNumber: 'desc' },
@@ -17,7 +19,8 @@ export class InvestorPaymentsService {
     try {
       return await prisma.investorPayment.create({
         data: {
-          investorId: dto.investorId,
+          investorId: investment.investorId,
+          investmentId: investment.id,
           receiptNumber,
           amount: dto.amount,
           periodMonth: dto.periodMonth,
@@ -51,9 +54,35 @@ export class InvestorPaymentsService {
     });
   }
 
-  async checkPeriod(investorId: string, periodMonth: number, periodYear: number) {
-    return prisma.investorPayment.findFirst({
-      where: { investorId, periodMonth, periodYear },
+  async findByInvestment(investmentId: string) {
+    return prisma.investorPayment.findMany({
+      where: { investmentId },
+      include: { receivedBy: { select: { id: true, name: true } } },
+      orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }],
     });
+  }
+
+  async checkPeriod(
+    periodMonth: number,
+    periodYear: number,
+    investmentId?: string,
+    investorId?: string,
+  ) {
+    const investment = await this.resolveInvestment(investmentId, investorId);
+    return prisma.investorPayment.findFirst({
+      where: { investmentId: investment.id, periodMonth, periodYear },
+    });
+  }
+
+  private async resolveInvestment(investmentId?: string, investorId?: string) {
+    if (investmentId) {
+      const investment = await prisma.investorInvestment.findUnique({
+        where: { id: investmentId },
+      });
+      if (!investment) throw new NotFoundException('Investment not found');
+      return investment;
+    }
+    if (investorId) return this.investments.resolveSingleActiveInvestment(investorId);
+    throw new BadRequestException('Investment id is required');
   }
 }

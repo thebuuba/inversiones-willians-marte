@@ -11,13 +11,25 @@ export async function getInvestorPayments(investorId: string): Promise<InvestorP
   return data.data ?? [];
 }
 
+export async function getInvestmentPayments(investmentId: string): Promise<InvestorPaymentItem[]> {
+  const { data } = await api.get<ApiResponse<InvestorPaymentItem[]>>(
+    `/investor-payments/investment/${investmentId}`,
+  );
+  return data.data ?? [];
+}
+
 export async function checkInvestorPaymentPeriod(
-  investorId: string,
+  investorIdOrInvestmentId: string,
   periodMonth: number,
   periodYear: number,
+  mode: 'investor' | 'investment' = 'investor',
 ): Promise<InvestorPaymentItem | null> {
   const { data } = await api.get<ApiResponse<InvestorPaymentItem | null>>('/investor-payments/check', {
-    params: { investorId, periodMonth, periodYear },
+    params: {
+      [mode === 'investment' ? 'investmentId' : 'investorId']: investorIdOrInvestmentId,
+      periodMonth,
+      periodYear,
+    },
   });
   return data.data ?? null;
 }
