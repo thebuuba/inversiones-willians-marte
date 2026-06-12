@@ -7,7 +7,13 @@ import { prisma } from '@inversiones/database';
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
-    document: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
+    document: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
   },
 }));
 

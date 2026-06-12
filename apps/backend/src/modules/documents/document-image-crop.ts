@@ -124,7 +124,7 @@ function colorDistance(a: Rgb, b: Rgb) {
 }
 
 function brightness(pixel: Rgb) {
-  return (pixel.r * 0.299 + pixel.g * 0.587 + pixel.b * 0.114);
+  return pixel.r * 0.299 + pixel.g * 0.587 + pixel.b * 0.114;
 }
 
 function clamp(value: number, min: number, max: number) {

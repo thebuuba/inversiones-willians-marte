@@ -64,6 +64,7 @@ describe('InvestorsService', () => {
       .mockRejectedValueOnce(
         new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
           code: 'P2002',
+          clientVersion: '6.5.0',
         }),
       )
       .mockResolvedValueOnce({ id: 'investor-7' } as never);

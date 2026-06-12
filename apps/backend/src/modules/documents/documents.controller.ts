@@ -105,7 +105,10 @@ export class DocumentsController {
     const file = await this.documents.getFileForDownload(id, variant === 'processed');
     res.type(file.mimeType);
     if (disposition === 'inline') {
-      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(file.filename)}"`);
+      res.setHeader(
+        'Content-Disposition',
+        `inline; filename="${encodeURIComponent(file.filename)}"`,
+      );
       return res.sendFile(file.path);
     }
     return res.download(file.path, file.filename);

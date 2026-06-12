@@ -81,7 +81,8 @@ export class DocumentsService {
     const document = await prisma.document.findUnique({ where: { id } });
     if (!document?.fileUrl) throw new NotFoundException('Document file not found');
 
-    const storedFile = preferProcessed && document.processedFileUrl ? document.processedFileUrl : document.fileUrl;
+    const storedFile =
+      preferProcessed && document.processedFileUrl ? document.processedFileUrl : document.fileUrl;
     const filename = normalize(storedFile).replace(/^(\.\.(\/|\\|$))+/, '');
     const path = join(this.uploadsDir, filename);
 
@@ -92,7 +93,10 @@ export class DocumentsService {
     return {
       path,
       filename: document.name,
-      mimeType: preferProcessed && document.processedFileUrl ? 'image/webp' : document.mimeType ?? 'application/octet-stream',
+      mimeType:
+        preferProcessed && document.processedFileUrl
+          ? 'image/webp'
+          : (document.mimeType ?? 'application/octet-stream'),
     };
   }
 

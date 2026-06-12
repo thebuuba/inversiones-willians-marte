@@ -124,7 +124,7 @@ describe('DocumentCaptureSessionsService', () => {
   });
 
   it('reserves upload capacity before creating the document', async () => {
-    jest.mocked(prisma.documentCaptureSession.updateMany).mockResolvedValue({ count: 1 } as any);
+    jest.mocked(prisma.documentCaptureSession.updateMany).mockResolvedValue({ count: 1 });
     jest.mocked(prisma.documentCaptureSession.findUnique).mockResolvedValue({
       token: 'active-token',
       clientId: 8,
@@ -168,49 +168,55 @@ describe('DocumentCaptureSessionsService', () => {
   });
 
   it('throws GoneException when upload capacity cannot be reserved for an existing token', async () => {
-    jest.mocked(prisma.documentCaptureSession.updateMany).mockResolvedValue({ count: 0 } as any);
+    jest.mocked(prisma.documentCaptureSession.updateMany).mockResolvedValue({ count: 0 });
     jest.mocked(prisma.documentCaptureSession.findUnique).mockResolvedValue({
       token: 'full-token',
       clientId: 8,
     } as any);
 
-    await expect(service.upload('full-token', {
-      name: 'cedula',
-      fileUrl: 'cedula.webp',
-      fileSize: 100,
-      mimeType: 'image/webp',
-      uploadedFile: {
-        filename: 'cedula.webp',
-        originalname: 'cedula.webp',
-        mimetype: 'image/webp',
-      },
-    })).rejects.toThrow(GoneException);
+    await expect(
+      service.upload('full-token', {
+        name: 'cedula',
+        fileUrl: 'cedula.webp',
+        fileSize: 100,
+        mimeType: 'image/webp',
+        uploadedFile: {
+          filename: 'cedula.webp',
+          originalname: 'cedula.webp',
+          mimetype: 'image/webp',
+        },
+      }),
+    ).rejects.toThrow(GoneException);
 
     expect(documents.create).not.toHaveBeenCalled();
   });
 
   it('throws NotFoundException when upload capacity cannot be reserved for a missing token', async () => {
-    jest.mocked(prisma.documentCaptureSession.updateMany).mockResolvedValue({ count: 0 } as any);
+    jest.mocked(prisma.documentCaptureSession.updateMany).mockResolvedValue({ count: 0 });
     jest.mocked(prisma.documentCaptureSession.findUnique).mockResolvedValue(null);
 
-    await expect(service.upload('missing-token', {
-      name: 'cedula',
-      fileUrl: 'cedula.webp',
-      fileSize: 100,
-      mimeType: 'image/webp',
-      uploadedFile: {
-        filename: 'cedula.webp',
-        originalname: 'cedula.webp',
-        mimetype: 'image/webp',
-      },
-    })).rejects.toThrow(NotFoundException);
+    await expect(
+      service.upload('missing-token', {
+        name: 'cedula',
+        fileUrl: 'cedula.webp',
+        fileSize: 100,
+        mimeType: 'image/webp',
+        uploadedFile: {
+          filename: 'cedula.webp',
+          originalname: 'cedula.webp',
+          mimetype: 'image/webp',
+        },
+      }),
+    ).rejects.toThrow(NotFoundException);
 
     expect(documents.create).not.toHaveBeenCalled();
   });
 
   it('rolls back the reserved upload count when document creation fails', async () => {
-    jest.mocked(prisma.documentCaptureSession.updateMany).mockResolvedValue({ count: 1 } as any);
-    jest.mocked(prisma.documentCaptureSession.update).mockResolvedValue({ token: 'active-token' } as any);
+    jest.mocked(prisma.documentCaptureSession.updateMany).mockResolvedValue({ count: 1 });
+    jest
+      .mocked(prisma.documentCaptureSession.update)
+      .mockResolvedValue({ token: 'active-token' } as any);
     jest.mocked(prisma.documentCaptureSession.findUnique).mockResolvedValue({
       token: 'active-token',
       clientId: 8,
@@ -224,17 +230,19 @@ describe('DocumentCaptureSessionsService', () => {
     } as any);
     documents.create.mockRejectedValue(new Error('create failed'));
 
-    await expect(service.upload('active-token', {
-      name: 'cedula',
-      fileUrl: 'cedula.webp',
-      fileSize: 100,
-      mimeType: 'image/webp',
-      uploadedFile: {
-        filename: 'cedula.webp',
-        originalname: 'cedula.webp',
-        mimetype: 'image/webp',
-      },
-    })).rejects.toThrow('create failed');
+    await expect(
+      service.upload('active-token', {
+        name: 'cedula',
+        fileUrl: 'cedula.webp',
+        fileSize: 100,
+        mimeType: 'image/webp',
+        uploadedFile: {
+          filename: 'cedula.webp',
+          originalname: 'cedula.webp',
+          mimetype: 'image/webp',
+        },
+      }),
+    ).rejects.toThrow('create failed');
 
     expect(prisma.documentCaptureSession.update).toHaveBeenCalledWith({
       where: { token: 'active-token' },
@@ -243,7 +251,9 @@ describe('DocumentCaptureSessionsService', () => {
   });
 
   it('closes an active session', async () => {
-    jest.mocked(prisma.documentCaptureSession.update).mockResolvedValue({ token: 'active-token' } as any);
+    jest
+      .mocked(prisma.documentCaptureSession.update)
+      .mockResolvedValue({ token: 'active-token' } as any);
 
     await service.close('active-token');
 
@@ -260,7 +270,10 @@ describe('DocumentCaptureSessionsService', () => {
       closedAt,
     } as any);
 
-    await expect(service.close('closed-token')).resolves.toMatchObject({ token: 'closed-token', closedAt });
+    await expect(service.close('closed-token')).resolves.toMatchObject({
+      token: 'closed-token',
+      closedAt,
+    });
 
     expect(prisma.documentCaptureSession.update).not.toHaveBeenCalled();
   });

@@ -36,7 +36,11 @@ export class DocumentProcessingService {
       processedFileUrl,
       documentType: detection.documentType,
       detectionConfidence: detection.detectionConfidence,
-      processingStatus: isImage ? (processedFileUrl ? 'processed' : 'needs_review') : 'not_applicable',
+      processingStatus: isImage
+        ? processedFileUrl
+          ? 'processed'
+          : 'needs_review'
+        : 'not_applicable',
       processingNotes: this.processingNotes(isImage, Boolean(processedFileUrl)),
     };
   }
@@ -112,7 +116,16 @@ export class DocumentProcessingService {
       return { documentType: 'cedula', detectionConfidence: 92 };
     }
 
-    if (this.includesAny(text, ['recibo', 'comprobante', 'pago', 'deposito', 'transferencia', 'voucher'])) {
+    if (
+      this.includesAny(text, [
+        'recibo',
+        'comprobante',
+        'pago',
+        'deposito',
+        'transferencia',
+        'voucher',
+      ])
+    ) {
       return { documentType: 'recibo', detectionConfidence: 88 };
     }
 
