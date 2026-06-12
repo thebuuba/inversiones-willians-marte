@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS "investor_payments_investment_id_period_month_period_year_key";

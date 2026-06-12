@@ -53,6 +53,12 @@ export function RegisterInvestorPaymentPage() {
   const [submitted, setSubmitted] = useState(false);
   const [createdPayment, setCreatedPayment] = useState<InvestorPaymentItem | null>(null);
 
+  function applyInvestmentPeriod(invst: InvestorInvestmentDetail) {
+    if (!invst.currentPeriodMonth || !invst.currentPeriodYear) return;
+    setPeriodMonth(invst.currentPeriodMonth);
+    setPeriodYear(invst.currentPeriodYear);
+  }
+
   useEffect(() => {
     if (!investorId && !investmentId) {
       router.replace('/inversionistas');
@@ -63,6 +69,7 @@ export function RegisterInvestorPaymentPage() {
         const invst = await getInvestment(investmentId);
         setInvestment(invst);
         setInvestor(invst.investor ?? null);
+        applyInvestmentPeriod(invst);
         setPayments(await getInvestmentPayments(investmentId).catch(() => [] as InvestorPaymentItem[]));
         return;
       }
@@ -73,6 +80,7 @@ export function RegisterInvestorPaymentPage() {
       const invst = await getInvestment(selectedInvestment.id);
       setInvestor(inv);
       setInvestment(invst);
+      applyInvestmentPeriod(invst);
       setPayments(await getInvestmentPayments(selectedInvestment.id).catch(() => [] as InvestorPaymentItem[]));
     };
 
@@ -251,22 +259,24 @@ export function RegisterInvestorPaymentPage() {
               Registra el pago mensual correspondiente al período seleccionado.
             </p>
 
-            {periodPaid ? (
+            {periodPaid && (
               <div className="rounded-xl bg-[#eaf5ed] p-5 border border-[#c2dfcb]/60">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-[#5a9a7a]" />
-                  <p className="font-semibold text-[#5a9a7a]">Período ya pagado</p>
+                  <p className="font-semibold text-[#5a9a7a]">Este período ya tiene pagos</p>
                 </div>
                 <p className="mt-2 text-sm text-neutral-600">
-                  El período {MONTHS[periodMonth - 1]} {periodYear} ya fue registrado por{' '}
-                  <strong>{fmt(Number(periodPaid.amount))}</strong> el {fmtDate(periodPaid.paymentDate)}.
+                  Ya existe un pago de <strong>{fmt(Number(periodPaid.amount))}</strong> para{' '}
+                  {MONTHS[periodMonth - 1]} {periodYear}, registrado el {fmtDate(periodPaid.paymentDate)}.
+                  Puedes registrar otro pago o complemento para este mismo período.
                 </p>
                 {periodPaid.paymentMethod && (
                   <p className="mt-1 text-sm text-neutral-500">Método: {periodPaid.paymentMethod}</p>
                 )}
               </div>
-            ) : (
-              <form onSubmit={handleSubmit}>
+            )}
+
+            <form className={periodPaid ? 'mt-5' : undefined} onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <label className="block">
                     <span className="mb-2 block text-sm font-bold text-[#5c6d63]">Período</span>
@@ -375,8 +385,7 @@ export function RegisterInvestorPaymentPage() {
                     {saving ? 'Registrando...' : 'Registrar pago'}
                   </button>
                 </div>
-              </form>
-            )}
+            </form>
           </div>
         </div>
       </div>

@@ -40,7 +40,7 @@ export class InvestorPaymentsService {
         'code' in error &&
         (error as { code: string }).code === 'P2002'
       ) {
-        throw new BadRequestException('This period is already paid for this investor');
+        throw new BadRequestException('Unable to create investor payment due to duplicate data');
       }
       throw error;
     }

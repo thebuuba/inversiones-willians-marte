@@ -2,8 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { prisma, Prisma } from '@inversiones/database';
 import { AddCapitalDto } from './dto/add-capital.dto';
 import { CreateInvestmentDto } from './dto/create-investment.dto';
-
-type PaymentStatus = 'PAID' | 'PENDING' | 'OVERDUE';
+import { getInvestmentPeriodStatus } from './investment-period-status';
 
 @Injectable()
 export class InvestmentsService {
@@ -115,33 +114,8 @@ export class InvestmentsService {
     startDate: Date | string | null | undefined,
     payments: Array<{ periodMonth: number; periodYear: number }>,
     today = new Date(),
-  ): {
-    currentPeriodMonth: number;
-    currentPeriodYear: number;
-    nextDueDate: Date | null;
-    paymentStatus: PaymentStatus;
-  } {
-    const currentPeriodMonth = today.getMonth() + 1;
-    const currentPeriodYear = today.getFullYear();
-    const paid = payments.some(
-      (payment) =>
-        payment.periodMonth === currentPeriodMonth && payment.periodYear === currentPeriodYear,
-    );
-    const nextDueDate = startDate
-      ? this.dueDateForPeriod(new Date(startDate), currentPeriodYear, currentPeriodMonth)
-      : null;
-
-    if (paid) return { currentPeriodMonth, currentPeriodYear, nextDueDate, paymentStatus: 'PAID' };
-    if (nextDueDate && today.getTime() > nextDueDate.getTime()) {
-      return { currentPeriodMonth, currentPeriodYear, nextDueDate, paymentStatus: 'OVERDUE' };
-    }
-    return { currentPeriodMonth, currentPeriodYear, nextDueDate, paymentStatus: 'PENDING' };
-  }
-
-  private dueDateForPeriod(startDate: Date, year: number, month: number) {
-    const day = startDate.getUTCDate();
-    const lastDay = new Date(year, month, 0).getDate();
-    return new Date(year, month - 1, Math.min(day, lastDay), 12);
+  ) {
+    return getInvestmentPeriodStatus(startDate, payments, today);
   }
 
   private async nextInvestmentCode(investorId: string, investorCode: string) {

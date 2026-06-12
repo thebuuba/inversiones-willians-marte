@@ -28,6 +28,19 @@ describe('InvestmentsService', () => {
     expect(status.currentPeriodYear).toBe(2026);
   });
 
+  it('uses the first investment period when the investment starts in the future', () => {
+    const status = service.getCurrentPeriodStatus(
+      '2026-07-09',
+      [{ periodMonth: 7, periodYear: 2026 }],
+      new Date('2026-06-12T12:00:00.000Z'),
+    );
+
+    expect(status.paymentStatus).toBe('PAID');
+    expect(status.currentPeriodMonth).toBe(7);
+    expect(status.currentPeriodYear).toBe(2026);
+    expect(status.nextDueDate?.toISOString().slice(0, 10)).toBe('2026-07-09');
+  });
+
   it('marks the current period as overdue after the start-day due date passes', () => {
     const status = service.getCurrentPeriodStatus(
       '2026-07-03',

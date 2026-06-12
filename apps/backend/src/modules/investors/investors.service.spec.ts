@@ -60,6 +60,7 @@ describe('InvestorsService', () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.clearAllMocks();
   });
 
@@ -125,5 +126,38 @@ describe('InvestorsService', () => {
         data: expect.objectContaining({ code: 'INV-0007' }),
       }),
     );
+  });
+
+  it('decorates investor investments with the current payment status', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-07-12T12:00:00.000Z'));
+    jest.mocked(prisma.investor.findUnique).mockResolvedValue({
+      id: 'investor-8',
+      capital: 100000,
+      monthlyPayment: 3000,
+      rate: 3,
+      startDate: new Date('2026-07-09T00:00:00.000Z'),
+      term: '12m',
+      investments: [
+        {
+          id: 'investment-8',
+          investorId: 'investor-8',
+          code: 'INV-0008-01',
+          capital: 100000,
+          monthlyPayment: 3000,
+          rate: 3,
+          startDate: new Date('2026-07-09T00:00:00.000Z'),
+          term: '12m',
+          status: 'ACTIVE',
+          payments: [{ periodMonth: 7, periodYear: 2026 }],
+        },
+      ],
+    } as never);
+
+    const investor = await service.findOne('investor-8');
+
+    expect(investor.investments[0].paymentStatus).toBe('PAID');
+    expect(investor.investments[0].currentPeriodMonth).toBe(7);
+    expect(investor.investments[0].currentPeriodYear).toBe(2026);
+    expect(investor.investments[0].nextDueDate.toISOString().slice(0, 10)).toBe('2026-07-09');
   });
 });

@@ -414,7 +414,6 @@ model InvestorPayment {
   investment InvestorInvestment? @relation(fields: [investmentId], references: [id])
   receivedBy User     @relation("InvestorPaymentReceivedBy", fields: [receivedById], references: [id])
 
-  @@unique([investmentId, periodMonth, periodYear])
   @@index([receiptNumber])
   @@index([investorId, periodYear(sort: Desc), periodMonth(sort: Desc)])
   @@index([investmentId, periodYear(sort: Desc), periodMonth(sort: Desc)])

@@ -9,6 +9,7 @@ import {
 import { prisma, Prisma } from '@inversiones/database';
 import { CreateInvestorDto } from './dto/create-investor.dto';
 import { UpdateInvestorDto } from './dto/update-investor.dto';
+import { getInvestmentPeriodStatus } from '../investments/investment-period-status';
 
 @Injectable()
 export class InvestorsService {
@@ -244,6 +245,7 @@ export class InvestorsService {
       activeInvestments: activeInvestments.length,
       investments: investor.investments.map((investment) => ({
         ...investment,
+        ...getInvestmentPeriodStatus(investment.startDate, investment.payments),
         capital: Number(investment.capital),
         monthlyPayment: Number(investment.monthlyPayment),
         rate: Number(investment.rate),
