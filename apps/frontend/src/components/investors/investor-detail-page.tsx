@@ -59,7 +59,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
 
   const capital = data?.capital ?? 0;
   const rate = data?.rate ?? 0;
-  const monthlyReturn = Math.round(capital * rate / 100);
+  const monthlyReturn = data?.monthlyPayment ?? 0;
 
   if (loading) {
     return (
