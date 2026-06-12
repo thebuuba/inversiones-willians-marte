@@ -5,7 +5,7 @@ export function calculateMonthlyInterest(capital: number, portfolioRate: number)
     return null;
   }
 
-  return capital * (portfolioRate / 300);
+  return capital * (portfolioRate / 100);
 }
 
 export function formatDopCurrency(value: number): string {

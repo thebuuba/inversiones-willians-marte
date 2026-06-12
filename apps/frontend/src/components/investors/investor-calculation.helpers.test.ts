@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { calculateMonthlyInterest, formatDopCurrency } from './investor-calculation.helpers.ts';
 
-test('calculates monthly interest using the portfolio rate rule', () => {
-  assert.equal(calculateMonthlyInterest(3000000, 3), 30000);
+test('calculates monthly interest from a monthly percentage rate', () => {
+  assert.equal(calculateMonthlyInterest(100000, 3), 3000);
 });
 
 test('returns null when capital or rate are not positive numbers', () => {
