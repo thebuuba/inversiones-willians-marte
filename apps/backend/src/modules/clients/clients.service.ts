@@ -3,6 +3,7 @@ import { prisma } from '@inversiones/database';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { AuditService } from '../audit/audit.service';
+import { formatPersonName } from '../../common/text/name-case';
 
 type ClientLoanRow = {
   id: string;
@@ -46,7 +47,12 @@ export class ClientsService {
 
   async create(dto: CreateClientDto, userId: string) {
     return prisma.client.create({
-      data: { ...dto, createdById: userId },
+      data: {
+        ...dto,
+        firstName: formatPersonName(dto.firstName),
+        lastName: formatPersonName(dto.lastName),
+        createdById: userId,
+      },
     });
   }
 
@@ -184,10 +190,13 @@ export class ClientsService {
 
   async update(id: number, dto: UpdateClientDto, userId?: string) {
     const previous = await this.findOne(id);
-    const updated = await prisma.client.update({ where: { id }, data: dto });
+    const data = { ...dto };
+    if (dto.firstName !== undefined) data.firstName = formatPersonName(dto.firstName);
+    if (dto.lastName !== undefined) data.lastName = formatPersonName(dto.lastName);
+    const updated = await prisma.client.update({ where: { id }, data });
 
     if (userId) {
-      const changes = (Object.entries(dto) as Array<[string, unknown]>)
+      const changes = (Object.entries(data) as Array<[string, unknown]>)
         .filter(
           ([field, value]) =>
             field !== 'notes' && previous[field as keyof typeof previous] !== value,
@@ -209,8 +218,8 @@ export class ClientsService {
         });
       }
 
-      if (dto.notes !== undefined && dto.notes !== previous.notes) {
-        await this.logNoteChanges(id, userId, previous.notes, dto.notes);
+      if (data.notes !== undefined && data.notes !== previous.notes) {
+        await this.logNoteChanges(id, userId, previous.notes, data.notes);
       }
     }
 

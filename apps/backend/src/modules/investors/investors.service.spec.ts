@@ -30,7 +30,7 @@ describe('InvestorsService', () => {
   let service: InvestorsService;
 
   const dto = {
-    name: 'Inversionista Nuevo',
+    name: 'inversionista nuevo',
     capital: 10000,
     monthlyPayment: 100,
     rate: 3,
@@ -75,7 +75,7 @@ describe('InvestorsService', () => {
 
     expect(prisma.investor.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ code: 'INV-0006' }),
+        data: expect.objectContaining({ code: 'INV-0006', name: 'Inversionista Nuevo' }),
       }),
     );
     expect(prisma.investorInvestment.create).toHaveBeenCalledWith(

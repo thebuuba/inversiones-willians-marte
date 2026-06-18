@@ -10,6 +10,7 @@ import { prisma, Prisma } from '@inversiones/database';
 import { CreateInvestorDto } from './dto/create-investor.dto';
 import { UpdateInvestorDto } from './dto/update-investor.dto';
 import { getInvestmentPeriodStatus } from '../investments/investment-period-status';
+import { formatPersonName } from '../../common/text/name-case';
 
 @Injectable()
 export class InvestorsService {
@@ -33,7 +34,7 @@ export class InvestorsService {
       const investor = await prisma.$transaction(async (tx) => {
         const created = await tx.investor.create({
           data: {
-            name: dto.name,
+            name: formatPersonName(dto.name),
             email: dto.email,
             phone: dto.phone,
             phone2: dto.phone2,
@@ -117,7 +118,7 @@ export class InvestorsService {
         await tx.investor.update({
           where: { id },
           data: {
-            name: dto.name,
+            name: dto.name === undefined ? undefined : formatPersonName(dto.name),
             email: dto.email,
             phone: dto.phone,
             phone2: dto.phone2,

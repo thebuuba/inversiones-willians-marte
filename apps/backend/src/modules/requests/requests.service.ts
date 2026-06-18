@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { Prisma, RequestStatus, prisma } from '@inversiones/database';
 import { CreateRequestDto } from './dto/create-request.dto';
+import { formatPersonName } from '../../common/text/name-case';
 
 @Injectable()
 export class RequestsService {
@@ -11,6 +12,8 @@ export class RequestsService {
     return prisma.loanRequest.create({
       data: {
         ...dto,
+        firstName: formatPersonName(dto.firstName),
+        lastName: formatPersonName(dto.lastName),
         amount: dto.amount,
         code,
         createdById: userId,

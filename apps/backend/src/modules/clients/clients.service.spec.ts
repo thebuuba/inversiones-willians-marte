@@ -50,13 +50,13 @@ describe('ClientsService', () => {
 
   describe('create', () => {
     it('should create a client', async () => {
-      const dto: CreateClientDto = { firstName: 'Juan', lastName: 'Pérez', phone: '809-555-0101' };
+      const dto: CreateClientDto = { firstName: 'juan', lastName: 'pérez', phone: '809-555-0101' };
       jest.mocked(prisma.client.create).mockResolvedValue(mockClient as any);
 
       const result = await service.create(dto, 'user-1');
       expect(result).toEqual(mockClient);
       expect(prisma.client.create).toHaveBeenCalledWith({
-        data: { ...dto, createdById: 'user-1' },
+        data: { ...dto, firstName: 'Juan', lastName: 'Pérez', createdById: 'user-1' },
       });
     });
   });
@@ -116,6 +116,18 @@ describe('ClientsService', () => {
       const dto: UpdateClientDto = { phone: '809-555-0202' };
       const result = await service.update(1, dto);
       expect(result.phone).toBe('809-555-0202');
+    });
+
+    it('formats updated client names', async () => {
+      jest.mocked(prisma.client.findUnique).mockResolvedValue(mockClient as any);
+      jest.mocked(prisma.client.update).mockResolvedValue(mockClient as any);
+
+      await service.update(1, { firstName: 'roberto', lastName: 'lopez' });
+
+      expect(prisma.client.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { firstName: 'Roberto', lastName: 'Lopez' },
+      });
     });
 
     it('should log changed fields and summarized note actions', async () => {
