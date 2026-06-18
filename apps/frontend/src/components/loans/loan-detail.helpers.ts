@@ -17,6 +17,30 @@ export interface LoanDetailTotals {
   totalInstallments: number;
 }
 
+export interface OperationalScheduleRow {
+  dueDate: string;
+  amount: number | string;
+  paidAmount?: number | string | null;
+  status: string;
+}
+
+export interface OperationalPayment {
+  amount: number | string;
+  paymentDate: string;
+  receivedBy?: { name?: string | null } | null;
+}
+
+export interface OperationalLateFee {
+  amount: number | string;
+  paid: boolean;
+}
+
+export interface LoanOperationalSummaryLike {
+  schedule: OperationalScheduleRow[];
+  payments: OperationalPayment[];
+  lateFees?: OperationalLateFee[];
+}
+
 export type LoanCollectionStatus = 'A tiempo' | 'Pendiente' | 'Atrasado' | 'Vencido';
 
 export interface LoanCollectionStatusLike {
@@ -108,5 +132,27 @@ export function getLoanDetailTotals(loan: LoanDetailLike): LoanDetailTotals {
     progress: getLoanProgress(loan.totalAmount, loan.balance),
     paidInstallments: loan.schedule.filter((row) => row.status === 'PAID').length,
     totalInstallments: loan.schedule.length,
+  };
+}
+
+export function getLoanOperationalSummary(loan: LoanOperationalSummaryLike, now = new Date()) {
+  const today = getCalendarDay(now);
+  const unpaidSchedules = loan.schedule
+    .filter((row) => row.status !== 'PAID')
+    .sort((a, b) => getCalendarDay(a.dueDate) - getCalendarDay(b.dueDate));
+  const nextSchedule = unpaidSchedules[0] ?? null;
+  const lastPayment = [...loan.payments].sort(
+    (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime(),
+  )[0] ?? null;
+
+  return {
+    pendingInstallments: unpaidSchedules.length,
+    overdueInstallments: unpaidSchedules.filter((row) => getCalendarDay(row.dueDate) <= today).length,
+    unpaidLateFees: (loan.lateFees ?? [])
+      .filter((fee) => !fee.paid)
+      .reduce((sum, fee) => sum + Number(fee.amount), 0),
+    nextSchedule,
+    nextSchedulePending: nextSchedule ? getScheduleRemaining(Number(nextSchedule.amount), Number(nextSchedule.paidAmount ?? 0)) : 0,
+    lastPayment,
   };
 }

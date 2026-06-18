@@ -13,6 +13,16 @@ export interface LoanListProduct {
   name: string;
 }
 
+export interface LoanListPortfolio {
+  id: string;
+  name: string;
+}
+
+export interface LoanUserSummary {
+  id: string;
+  name: string;
+}
+
 export interface LoanListItem {
   id: string;
   loanNumber: number;
@@ -32,6 +42,8 @@ export interface LoanListItem {
   createdAt: string;
   client: LoanListClient;
   product: LoanListProduct;
+  portfolio: LoanListPortfolio | null;
+  createdBy?: LoanUserSummary | null;
 }
 
 export interface PaginatedLoans {
@@ -59,11 +71,23 @@ export interface LoanDetailPayment {
   paymentMethod: string | null;
   reference: string | null;
   notes: string | null;
+  receivedBy?: LoanUserSummary | null;
+}
+
+export interface LoanDetailLateFee {
+  id: string;
+  loanId: string;
+  scheduleId: string;
+  amount: number;
+  calculatedDate: string;
+  paid: boolean;
+  createdAt: string;
 }
 
 export interface LoanDetail extends LoanListItem {
   schedule: LoanScheduleItem[];
   payments: LoanDetailPayment[];
+  lateFees?: LoanDetailLateFee[];
 }
 
 export async function getLoans(status?: string, search?: string, take = 50, skip = 0): Promise<PaginatedLoans> {

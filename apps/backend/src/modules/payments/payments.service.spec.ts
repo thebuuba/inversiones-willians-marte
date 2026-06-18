@@ -150,4 +150,56 @@ describe('PaymentsService', () => {
       }),
     });
   });
+
+  it('keeps indefinite loans active with principal balance after interest payment', async () => {
+    const loanUpdate = jest.fn();
+    const tx = {
+      payment: {
+        create: jest.fn().mockResolvedValue({ id: 'payment-1', amount: 591.06, allocations: [] }),
+      },
+      paymentSchedule: {
+        update: jest.fn(),
+      },
+      loan: {
+        findUnique: jest.fn().mockResolvedValue({
+          ...loan,
+          principal: 39404,
+          interestType: 'INDEFINITE',
+          totalAmount: 591.06,
+          schedule: [{ ...schedule, amount: 591.06, paidAmount: 591.06, status: 'PAID' }],
+        }),
+        update: loanUpdate,
+      },
+      auditLog: {
+        create: jest.fn(),
+      },
+    };
+
+    jest.mocked(prisma.loan.findUnique).mockResolvedValue({
+      ...loan,
+      principal: 39404,
+      interestType: 'INDEFINITE',
+      totalAmount: 591.06,
+      schedule: [{ ...schedule, amount: 591.06, interestPart: 591.06 }],
+    } as any);
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
+
+    await service.create(
+      {
+        loanId: 'loan-1',
+        clientId: 1,
+        amount: 591.06,
+        paymentDate,
+      },
+      'user-1',
+    );
+
+    expect(loanUpdate).toHaveBeenCalledWith({
+      where: { id: 'loan-1' },
+      data: {
+        balance: 39404,
+        status: 'ACTIVE',
+      },
+    });
+  });
 });

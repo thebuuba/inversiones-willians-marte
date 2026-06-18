@@ -214,8 +214,10 @@ export class LoansService {
       include: {
         client: true,
         product: true,
+        portfolio: { select: { id: true, name: true } },
         createdBy: { select: { id: true, name: true } },
         schedule: { orderBy: { dueDate: 'asc' } },
+        lateFees: { orderBy: { calculatedDate: 'desc' } },
         payments: {
           include: { receivedBy: { select: { id: true, name: true } } },
           orderBy: { paymentDate: 'desc' },

@@ -5,6 +5,7 @@ import {
   getLoanCollectionStatus,
   getClientLoanStats,
   getLoanDetailTotals,
+  getLoanOperationalSummary,
   getLoanProgress,
   getRegularInstallment,
   getScheduleRemaining,
@@ -61,6 +62,34 @@ test('derives detail totals from payments and schedule rows', () => {
       progress: 64,
       paidInstallments: 2,
       totalInstallments: 3,
+    },
+  );
+});
+
+test('derives operational summary from schedules, payments, and existing late fees', () => {
+  assert.deepEqual(
+    getLoanOperationalSummary({
+      schedule: [
+        { dueDate: '2026-06-10T00:00:00', amount: 1000, paidAmount: 1000, status: 'PAID' },
+        { dueDate: '2026-06-15T00:00:00', amount: 1000, paidAmount: 250, status: 'PARTIAL' },
+        { dueDate: '2026-06-20T00:00:00', amount: 1000, paidAmount: null, status: 'PENDING' },
+      ],
+      payments: [
+        { amount: 500, paymentDate: '2026-06-12T00:00:00', receivedBy: { name: 'Ana' } },
+        { amount: 750, paymentDate: '2026-06-16T00:00:00', receivedBy: { name: 'Luis' } },
+      ],
+      lateFees: [
+        { amount: 150, paid: false },
+        { amount: 50, paid: true },
+      ],
+    }, today),
+    {
+      pendingInstallments: 2,
+      overdueInstallments: 1,
+      unpaidLateFees: 150,
+      nextSchedule: { dueDate: '2026-06-15T00:00:00', amount: 1000, paidAmount: 250, status: 'PARTIAL' },
+      nextSchedulePending: 750,
+      lastPayment: { amount: 750, paymentDate: '2026-06-16T00:00:00', receivedBy: { name: 'Luis' } },
     },
   );
 });

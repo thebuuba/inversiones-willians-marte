@@ -149,11 +149,13 @@ export class PaymentsService {
     if (!loan) return;
 
     const totalPaid = loan.schedule.reduce((sum, s) => sum + Number(s.paidAmount ?? 0), 0);
-    const newBalance = Math.max(0, Number(loan.totalAmount) - totalPaid);
-
     const allPaid = loan.schedule.every((s) => s.status === 'PAID');
+    const isIndefinite = loan.interestType === 'INDEFINITE';
+    const newBalance = isIndefinite
+      ? Number(loan.principal)
+      : Math.max(0, Number(loan.totalAmount) - totalPaid);
 
-    const nextStatus = allPaid ? 'PAID' : loan.status;
+    const nextStatus = !isIndefinite && allPaid ? 'PAID' : loan.status;
     await tx.loan.update({
       where: { id: loanId },
       data: {

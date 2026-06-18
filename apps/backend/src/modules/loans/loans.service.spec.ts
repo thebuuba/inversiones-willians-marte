@@ -50,6 +50,20 @@ describe('LoansService', () => {
     });
   });
 
+  it('loads existing late fees in loan detail', async () => {
+    jest.mocked(prisma.loan.findUnique).mockResolvedValue({ id: 'loan-1' } as any);
+
+    await service.findOne('loan-1');
+
+    expect(prisma.loan.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({
+          lateFees: expect.anything(),
+        }),
+      }),
+    );
+  });
+
   it('writes an audit event when a loan is created', async () => {
     const amortization = {
       calculate: jest.fn().mockReturnValue([
