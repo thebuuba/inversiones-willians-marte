@@ -25,6 +25,8 @@ pnpm db:seed
 
 Usa el connection string del pooler si Supabase lo recomienda para apps serverless o con conexiones limitadas. El backend usa Prisma directamente; no usa Supabase Auth ni el SDK del navegador.
 
+Para operación diaria, backups y la diferencia entre migraciones y `db:push`, usa `docs/database-operations.md`.
+
 ## 2. Backend en Render
 
 Crea un Web Service desde GitHub. Hazlo manualmente desde el dashboard, no con Blueprint, para evitar flujos que pidan billing antes de tiempo.

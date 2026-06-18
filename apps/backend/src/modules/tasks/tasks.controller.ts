@@ -15,10 +15,11 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
-import { CurrentUser } from '../../common/decorators';
+import { CurrentUser, Roles } from '../../common/decorators';
+import { RolesGuard } from '../../common/guards';
 
 @Controller('tasks')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TasksController {
   constructor(private tasks: TasksService) {}
 
@@ -52,7 +53,8 @@ export class TasksController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.tasks.remove(id);
+  @Roles('ADMIN')
+  remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.tasks.remove(id, userId);
   }
 }

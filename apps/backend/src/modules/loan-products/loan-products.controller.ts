@@ -3,7 +3,7 @@ import { LoanProductsService } from './loan-products.service';
 import { CreateLoanProductDto } from './dto/create-loan-product.dto';
 import { UpdateLoanProductDto } from './dto/update-loan-product.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
-import { Roles } from '../../common/decorators';
+import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
 
 @Controller('loan-products')
@@ -35,7 +35,7 @@ export class LoanProductsController {
 
   @Delete(':id')
   @Roles('ADMIN')
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.service.remove(id, userId);
   }
 }

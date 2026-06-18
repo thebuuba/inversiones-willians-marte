@@ -4,6 +4,10 @@ import { prisma } from '@inversiones/database';
 @Injectable()
 export class ReportsService {
   async dashboard() {
+    const todayStart = startOfUtcDay(new Date());
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setUTCDate(tomorrowStart.getUTCDate() + 1);
+
     const [activeLoans, totalClients, paymentsToday, portfolioStats, overdueLoans] =
       await Promise.all([
         prisma.loan.count({ where: { status: 'ACTIVE' } }),
@@ -11,7 +15,8 @@ export class ReportsService {
         prisma.payment.aggregate({
           where: {
             paymentDate: {
-              gte: new Date(new Date().setHours(0, 0, 0, 0)),
+              gte: todayStart,
+              lt: tomorrowStart,
             },
           },
           _sum: { amount: true },
@@ -191,4 +196,8 @@ export class ReportsService {
       status: s.status,
     }));
   }
+}
+
+function startOfUtcDay(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }

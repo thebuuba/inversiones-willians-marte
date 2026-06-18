@@ -3,7 +3,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards';
-import { Roles } from '../../common/decorators';
+import { CurrentUser, Roles } from '../../common/decorators';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -12,8 +12,8 @@ export class UsersController {
 
   @Post()
   @Roles('ADMIN')
-  create(@Body() dto: CreateUserDto) {
-    return this.users.create(dto);
+  create(@Body() dto: CreateUserDto, @CurrentUser('id') userId: string) {
+    return this.users.create(dto, userId);
   }
 
   @Get()
@@ -30,7 +30,7 @@ export class UsersController {
 
   @Post(':id/toggle-active')
   @Roles('ADMIN')
-  toggleActive(@Param('id') id: string) {
-    return this.users.toggleActive(id);
+  toggleActive(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.users.toggleActive(id, userId);
   }
 }

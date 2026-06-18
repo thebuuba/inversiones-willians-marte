@@ -32,6 +32,22 @@ export class InvestmentsService {
       include: this.detailInclude(),
     });
 
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action: 'INVESTMENT_CREATED',
+        entityType: 'InvestorInvestment',
+        entityId: investment.id,
+        newValues: {
+          investorId,
+          code: investment.code,
+          capital: dto.capital,
+          monthlyPayment,
+          rate: dto.rate,
+        },
+      },
+    });
+
     return this.toInvestmentDetail(investment);
   }
 
@@ -76,7 +92,7 @@ export class InvestmentsService {
           monthlyPayment: this.calculateMonthlyPayment(nextCapital, Number(investment.rate)),
         },
       });
-      await tx.investorInvestmentMovement.create({
+      const movement = await tx.investorInvestmentMovement.create({
         data: {
           investmentId: id,
           type: 'CAPITAL_ADDITION',
@@ -84,6 +100,21 @@ export class InvestmentsService {
           movementDate: new Date(dto.movementDate),
           notes: dto.notes,
           createdById: userId,
+        },
+      });
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'INVESTMENT_CAPITAL_ADDED',
+          entityType: 'InvestorInvestmentMovement',
+          entityId: movement.id,
+          newValues: {
+            investmentId: id,
+            amount: dto.amount,
+            previousCapital: Number(investment.capital),
+            nextCapital,
+            movementDate: dto.movementDate,
+          },
         },
       });
     });

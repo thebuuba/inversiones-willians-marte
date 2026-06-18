@@ -269,9 +269,23 @@ export class ClientsService {
     }
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
-    return prisma.client.update({ where: { id }, data: { active: false } });
+  async remove(id: number, userId?: string) {
+    const previous = await this.findOne(id);
+    const updated = await prisma.client.update({ where: { id }, data: { active: false } });
+
+    if (userId) {
+      await this.audit.log({
+        userId,
+        clientId: id,
+        entityType: 'Client',
+        entityId: String(id),
+        action: 'CLIENT_DELETED',
+        oldValues: { active: previous.active },
+        newValues: { active: false },
+      });
+    }
+
+    return updated;
   }
 }
 

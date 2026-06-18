@@ -152,8 +152,20 @@ export class PortfoliosService {
     return this.mapPortfolio(portfolio);
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, userId?: string) {
+    const portfolio = await this.findOne(id);
     await prisma.portfolio.delete({ where: { id } });
+
+    if (userId) {
+      await prisma.auditLog.create({
+        data: {
+          userId,
+          action: 'PORTFOLIO_DELETED',
+          entityType: 'Portfolio',
+          entityId: id,
+          oldValues: { name: portfolio.name },
+        },
+      });
+    }
   }
 }

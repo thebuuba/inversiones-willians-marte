@@ -17,7 +17,7 @@ export class InvestorPaymentsService {
     const receiptNumber = (lastReceipt?.receiptNumber ?? 0) + 1;
 
     try {
-      return await prisma.investorPayment.create({
+      const payment = await prisma.investorPayment.create({
         data: {
           investorId: investment.investorId,
           investmentId: investment.id,
@@ -33,6 +33,23 @@ export class InvestorPaymentsService {
         },
         include: { receivedBy: { select: { id: true, name: true } } },
       });
+      await prisma.auditLog.create({
+        data: {
+          userId,
+          action: 'INVESTOR_PAYMENT_CREATED',
+          entityType: 'InvestorPayment',
+          entityId: payment.id,
+          newValues: {
+            investorId: investment.investorId,
+            investmentId: investment.id,
+            amount: dto.amount,
+            periodMonth: dto.periodMonth,
+            periodYear: dto.periodYear,
+            receiptNumber,
+          },
+        },
+      });
+      return payment;
     } catch (error: unknown) {
       if (
         typeof error === 'object' &&

@@ -59,6 +59,9 @@ describe('PaymentsService', () => {
         }),
         update: loanUpdate,
       },
+      auditLog: {
+        create: jest.fn(),
+      },
     };
 
     jest.mocked(prisma.loan.findUnique).mockResolvedValue(loan as any);
@@ -88,6 +91,63 @@ describe('PaymentsService', () => {
         balance: 0,
         status: 'PAID',
       },
+    });
+    expect(tx.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        action: 'LOAN_STATUS_CHANGED',
+        entityType: 'Loan',
+        entityId: 'loan-1',
+        clientId: 1,
+        oldValues: { status: 'ACTIVE' },
+        newValues: { status: 'PAID', balance: 0 },
+      }),
+    });
+  });
+
+  it('writes an audit event when a payment is created', async () => {
+    const auditCreate = jest.fn();
+    const tx = {
+      payment: {
+        create: jest.fn().mockResolvedValue({ id: 'payment-1', amount: 100, allocations: [] }),
+      },
+      paymentSchedule: {
+        update: jest.fn(),
+      },
+      loan: {
+        findUnique: jest.fn().mockResolvedValue({
+          ...loan,
+          schedule: [{ ...schedule, paidAmount: 100, status: 'PAID' }],
+        }),
+        update: jest.fn(),
+      },
+      auditLog: {
+        create: auditCreate,
+      },
+    };
+
+    jest.mocked(prisma.loan.findUnique).mockResolvedValue(loan as any);
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
+
+    await service.create(
+      {
+        loanId: 'loan-1',
+        clientId: 1,
+        amount: 100,
+        paymentDate,
+      },
+      'user-1',
+    );
+
+    expect(auditCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        action: 'PAYMENT_CREATED',
+        entityType: 'Payment',
+        entityId: 'payment-1',
+        clientId: 1,
+        newValues: expect.objectContaining({ loanId: 'loan-1', amount: 100 }),
+      }),
     });
   });
 });

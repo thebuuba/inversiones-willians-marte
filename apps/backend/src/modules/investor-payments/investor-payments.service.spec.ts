@@ -8,6 +8,9 @@ jest.mock('@inversiones/database', () => ({
       create: jest.fn(),
       findFirst: jest.fn(),
     },
+    auditLog: {
+      create: jest.fn(),
+    },
     investorInvestment: {
       findUnique: jest.fn(),
     },
@@ -62,5 +65,32 @@ describe('InvestorPaymentsService', () => {
         }),
       }),
     );
+  });
+
+  it('writes an audit event when an investor payment is created', async () => {
+    await service.create(
+      {
+        investmentId: 'investment-1',
+        amount: 3000,
+        periodMonth: 7,
+        periodYear: 2026,
+        paymentDate: '2026-07-12',
+      },
+      'user-1',
+    );
+
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        action: 'INVESTOR_PAYMENT_CREATED',
+        entityType: 'InvestorPayment',
+        entityId: 'payment-2',
+        newValues: expect.objectContaining({
+          investmentId: 'investment-1',
+          investorId: 'investor-1',
+          amount: 3000,
+        }),
+      }),
+    });
   });
 });

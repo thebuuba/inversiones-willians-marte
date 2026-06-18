@@ -48,8 +48,23 @@ export class LoanProductsService {
     return prisma.loanProduct.update({ where: { id }, data: dto });
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
-    return prisma.loanProduct.update({ where: { id }, data: { active: false } });
+  async remove(id: string, userId?: string) {
+    const product = await this.findOne(id);
+    const updated = await prisma.loanProduct.update({ where: { id }, data: { active: false } });
+
+    if (userId) {
+      await prisma.auditLog.create({
+        data: {
+          userId,
+          action: 'LOAN_PRODUCT_DELETED',
+          entityType: 'LoanProduct',
+          entityId: id,
+          oldValues: { active: product.active, name: product.name },
+          newValues: { active: false },
+        },
+      });
+    }
+
+    return updated;
   }
 }

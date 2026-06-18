@@ -5,13 +5,13 @@ import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UsersService {
-  async create(dto: CreateUserDto) {
+  async create(dto: CreateUserDto, actorUserId?: string) {
     const exists = await prisma.user.findUnique({ where: { email: dto.email } });
     if (exists) throw new ConflictException('Email already registered');
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    return prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         name: dto.name,
         username: dto.username?.trim().toLowerCase(),
@@ -29,6 +29,26 @@ export class UsersService {
         createdAt: true,
       },
     });
+
+    if (actorUserId) {
+      await prisma.auditLog.create({
+        data: {
+          userId: actorUserId,
+          action: 'USER_CREATED',
+          entityType: 'User',
+          entityId: user.id,
+          newValues: {
+            name: user.name,
+            username: user.username ?? null,
+            email: user.email,
+            role: user.role,
+            active: user.active,
+          },
+        },
+      });
+    }
+
+    return user;
   }
 
   async findAll() {
@@ -63,14 +83,29 @@ export class UsersService {
     return user;
   }
 
-  async toggleActive(id: string) {
+  async toggleActive(id: string, actorUserId?: string) {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
-    return prisma.user.update({
+    const updated = await prisma.user.update({
       where: { id },
       data: { active: !user.active },
       select: { id: true, name: true, username: true, email: true, role: true, active: true },
     });
+
+    if (actorUserId) {
+      await prisma.auditLog.create({
+        data: {
+          userId: actorUserId,
+          action: 'USER_ACTIVE_TOGGLED',
+          entityType: 'User',
+          entityId: id,
+          oldValues: { active: user.active },
+          newValues: { active: updated.active },
+        },
+      });
+    }
+
+    return updated;
   }
 }

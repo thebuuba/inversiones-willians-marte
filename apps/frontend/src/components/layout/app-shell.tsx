@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/sidebar';
+import { NetworkStatusBanner } from '@/components/layout/network-status-banner';
 import { useAuth } from '@/lib/auth-context';
 
 const publicRoutes = ['/login'];
@@ -66,6 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         {children}
       </main>
+      <NetworkStatusBanner />
     </>
   );
 }

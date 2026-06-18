@@ -14,7 +14,10 @@ jest.mock('@inversiones/database', () => ({
 describe('ReportsService', () => {
   const service = new ReportsService();
 
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.clearAllMocks();
+  });
 
   it('binds the six-month cutoff in the monthly collections query', async () => {
     jest.mocked(prisma.$queryRaw).mockResolvedValue([]);
@@ -50,6 +53,29 @@ describe('ReportsService', () => {
     resolveActiveLoans(4);
     await expect(result).resolves.toEqual(
       expect.objectContaining({ activeLoans: 4, overdueLoans: 2 }),
+    );
+  });
+
+  it('uses a UTC calendar-day window for today payments', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-06-18T12:34:56.789Z'));
+    jest.mocked(prisma.loan.count).mockResolvedValue(0);
+    jest.mocked(prisma.client.count).mockResolvedValue(0);
+    jest.mocked(prisma.payment.aggregate).mockResolvedValue({ _sum: { amount: 0 } } as never);
+    jest
+      .mocked(prisma.loan.aggregate)
+      .mockResolvedValue({ _sum: { balance: 0, principal: 0 }, _count: 0 } as never);
+
+    await service.dashboard();
+
+    expect(prisma.payment.aggregate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          paymentDate: {
+            gte: new Date('2026-06-18T00:00:00.000Z'),
+            lt: new Date('2026-06-19T00:00:00.000Z'),
+          },
+        },
+      }),
     );
   });
 

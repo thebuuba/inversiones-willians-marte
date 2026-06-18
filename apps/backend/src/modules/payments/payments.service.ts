@@ -100,7 +100,24 @@ export class PaymentsService {
         });
       }
 
-      await this.updateLoanBalanceTx(tx, loan.id);
+      await this.updateLoanBalanceTx(tx, loan.id, userId, dto.clientId);
+
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'PAYMENT_CREATED',
+          entityType: 'Payment',
+          entityId: p.id,
+          clientId: dto.clientId,
+          newValues: {
+            loanId: dto.loanId,
+            amount: dto.amount,
+            paymentDate: dto.paymentDate,
+            paymentMethod: dto.paymentMethod ?? null,
+            reference: dto.reference ?? null,
+          },
+        },
+      });
 
       return p;
     });
@@ -119,7 +136,12 @@ export class PaymentsService {
     });
   }
 
-  private async updateLoanBalanceTx(tx: Prisma.TransactionClient, loanId: string) {
+  private async updateLoanBalanceTx(
+    tx: Prisma.TransactionClient,
+    loanId: string,
+    userId: string,
+    clientId: number,
+  ) {
     const loan = await tx.loan.findUnique({
       where: { id: loanId },
       include: { schedule: true },
@@ -131,12 +153,27 @@ export class PaymentsService {
 
     const allPaid = loan.schedule.every((s) => s.status === 'PAID');
 
+    const nextStatus = allPaid ? 'PAID' : loan.status;
     await tx.loan.update({
       where: { id: loanId },
       data: {
         balance: newBalance,
-        status: allPaid ? 'PAID' : loan.status,
+        status: nextStatus,
       },
     });
+
+    if (loan.status !== nextStatus) {
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'LOAN_STATUS_CHANGED',
+          entityType: 'Loan',
+          entityId: loanId,
+          clientId,
+          oldValues: { status: loan.status },
+          newValues: { status: nextStatus, balance: newBalance },
+        },
+      });
+    }
   }
 }

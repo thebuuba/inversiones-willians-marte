@@ -5,6 +5,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { requestIdMiddleware } from './common/middleware/request-id';
 import { parseCorsOrigins } from './config/cors-origins';
 
 async function bootstrap() {
@@ -12,6 +13,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
   app.use(helmet());
+  app.use(requestIdMiddleware);
 
   app.enableCors({
     origin: parseCorsOrigins(process.env.FRONTEND_URL),

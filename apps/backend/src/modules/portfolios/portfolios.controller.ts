@@ -30,7 +30,7 @@ export class PortfoliosController {
 
   @Delete(':id')
   @Roles('ADMIN')
-  remove(@Param('id') id: string) {
-    return this.portfolios.remove(id);
+  remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.portfolios.remove(id, userId);
   }
 }

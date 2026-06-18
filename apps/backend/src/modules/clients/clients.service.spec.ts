@@ -162,8 +162,17 @@ describe('ClientsService', () => {
       jest.mocked(prisma.client.findUnique).mockResolvedValue(mockClient as any);
       jest.mocked(prisma.client.update).mockResolvedValue({ ...mockClient, active: false } as any);
 
-      const result = await service.remove(1);
+      const result = await service.remove(1, 'user-1');
       expect(result.active).toBe(false);
+      expect(audit.log).toHaveBeenCalledWith({
+        userId: 'user-1',
+        clientId: 1,
+        entityType: 'Client',
+        entityId: '1',
+        action: 'CLIENT_DELETED',
+        oldValues: { active: true },
+        newValues: { active: false },
+      });
     });
   });
 });

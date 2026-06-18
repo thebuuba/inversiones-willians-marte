@@ -66,7 +66,7 @@ export class ClientsController {
 
   @Delete(':id')
   @Roles('ADMIN')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.clients.remove(id);
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') userId: string) {
+    return this.clients.remove(id, userId);
   }
 }

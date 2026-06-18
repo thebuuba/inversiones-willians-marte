@@ -1,7 +1,21 @@
 import { InvestmentsService } from './investments.service';
+import { prisma } from '@inversiones/database';
 
 jest.mock('@inversiones/database', () => ({
-  prisma: {},
+  prisma: {
+    investor: {
+      findUnique: jest.fn(),
+    },
+    investorInvestment: {
+      count: jest.fn(),
+      create: jest.fn(),
+      findUnique: jest.fn(),
+    },
+    auditLog: {
+      create: jest.fn(),
+    },
+    $transaction: jest.fn(),
+  },
   Prisma: {},
 }));
 
@@ -61,5 +75,79 @@ describe('InvestmentsService', () => {
 
     expect(status.paymentStatus).toBe('PENDING');
     expect(status.nextDueDate?.toISOString().slice(0, 10)).toBe('2026-08-20');
+  });
+
+  it('writes an audit event when an investment is created', async () => {
+    jest
+      .mocked(prisma.investor.findUnique)
+      .mockResolvedValue({ id: 'investor-1', code: 'INV-001' } as any);
+    jest.mocked(prisma.investorInvestment.count).mockResolvedValue(0);
+    jest.mocked(prisma.investorInvestment.create).mockResolvedValue({
+      id: 'investment-1',
+      investorId: 'investor-1',
+      code: 'INV-001-01',
+      capital: 100000,
+      monthlyPayment: 3000,
+      rate: 3,
+      startDate: null,
+      payments: [],
+      movements: [],
+      investor: {},
+    } as any);
+
+    await service.create('investor-1', { capital: 100000, rate: 3 }, 'user-1');
+
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        action: 'INVESTMENT_CREATED',
+        entityType: 'InvestorInvestment',
+        entityId: 'investment-1',
+        newValues: expect.objectContaining({ investorId: 'investor-1', capital: 100000 }),
+      }),
+    });
+  });
+
+  it('writes an audit event when capital is added to an investment', async () => {
+    const tx = {
+      investorInvestment: {
+        update: jest.fn(),
+      },
+      investorInvestmentMovement: {
+        create: jest.fn().mockResolvedValue({ id: 'movement-1' }),
+      },
+      auditLog: {
+        create: jest.fn(),
+      },
+    };
+    jest.mocked(prisma.investorInvestment.findUnique).mockResolvedValue({
+      id: 'investment-1',
+      investorId: 'investor-1',
+      capital: 100000,
+      rate: 3,
+      status: 'ACTIVE',
+    } as any);
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
+    jest.spyOn(service, 'findOne').mockResolvedValue({ id: 'investment-1' } as any);
+
+    await service.addCapital(
+      'investment-1',
+      { amount: 50000, movementDate: '2026-06-18' },
+      'user-1',
+    );
+
+    expect(tx.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        action: 'INVESTMENT_CAPITAL_ADDED',
+        entityType: 'InvestorInvestmentMovement',
+        entityId: 'movement-1',
+        newValues: expect.objectContaining({
+          investmentId: 'investment-1',
+          previousCapital: 100000,
+          nextCapital: 150000,
+        }),
+      }),
+    });
   });
 });

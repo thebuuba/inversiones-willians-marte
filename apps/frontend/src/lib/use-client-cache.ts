@@ -7,6 +7,7 @@ import {
   invalidateClientCachePrefix,
   readClientCache,
 } from './client-cache';
+import { emitNetworkEvent, STALE_DATA_EVENT } from './network-status';
 
 const defaultTTL = 30_000;
 
@@ -48,6 +49,7 @@ export function useClientCache<T>(
       })
       .catch(() => {
         if (cancelled) return;
+        if (cached) emitNetworkEvent(STALE_DATA_EVENT);
         setState({
           key,
           data: cached?.data ?? null,

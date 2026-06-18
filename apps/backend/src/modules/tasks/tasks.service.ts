@@ -47,8 +47,22 @@ export class TasksService {
     });
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
-    return prisma.task.delete({ where: { id } });
+  async remove(id: string, userId?: string) {
+    const task = await this.findOne(id);
+    const deleted = await prisma.task.delete({ where: { id } });
+
+    if (userId) {
+      await prisma.auditLog.create({
+        data: {
+          userId,
+          action: 'TASK_DELETED',
+          entityType: 'Task',
+          entityId: id,
+          oldValues: { title: task.title },
+        },
+      });
+    }
+
+    return deleted;
   }
 }

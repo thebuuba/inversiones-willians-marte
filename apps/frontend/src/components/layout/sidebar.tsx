@@ -24,6 +24,7 @@ import { useAuth } from '@/lib/auth-context';
 import { getRequestsCount } from '@/lib/api/requests';
 import { getTasksCount } from '@/lib/api/tasks';
 import { navItems } from '@/components/ui/visual-system';
+import { canRefreshSidebarCounters, SIDEBAR_COUNTER_REFRESH_MS } from './sidebar-refresh';
 
 const navIconMap = {
   briefcase: Briefcase,
@@ -54,11 +55,12 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
 
   useEffect(() => {
     function refresh() {
+      if (!canRefreshSidebarCounters(document.visibilityState)) return;
       getRequestsCount('PENDING').then(setPendingRequests).catch(() => {});
       getTasksCount('PENDING').then(setPendingTasks).catch(() => {});
     }
     refresh();
-    const interval = setInterval(refresh, 10000);
+    const interval = setInterval(refresh, SIDEBAR_COUNTER_REFRESH_MS);
     addEventListener('visibilitychange', refresh);
     addEventListener('focus', refresh);
     return () => {

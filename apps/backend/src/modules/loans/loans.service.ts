@@ -91,6 +91,23 @@ export class LoansService {
       },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action: 'LOAN_CREATED',
+        entityType: 'Loan',
+        entityId: loan.id,
+        clientId: dto.clientId,
+        newValues: {
+          loanNumber: loan.loanNumber,
+          principal: dto.principal,
+          totalAmount: Number(loan.totalAmount),
+          productId: dto.productId,
+          portfolioId: dto.portfolioId ?? null,
+        },
+      },
+    });
+
     return loan;
   }
 

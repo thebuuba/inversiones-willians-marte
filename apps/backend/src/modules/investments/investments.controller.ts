@@ -13,7 +13,7 @@ export class InvestmentsController {
   constructor(private investments: InvestmentsService) {}
 
   @Post('investors/:investorId/investments')
-  @Roles('ADMIN', 'COLLECTOR')
+  @Roles('ADMIN')
   create(
     @Param('investorId') investorId: string,
     @Body() dto: CreateInvestmentDto,
@@ -35,7 +35,7 @@ export class InvestmentsController {
   }
 
   @Post('investments/:investmentId/capital-additions')
-  @Roles('ADMIN', 'COLLECTOR')
+  @Roles('ADMIN')
   addCapital(
     @Param('investmentId') investmentId: string,
     @Body() dto: AddCapitalDto,
