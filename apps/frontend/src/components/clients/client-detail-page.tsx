@@ -19,6 +19,12 @@ import { api } from '@/lib/api';
 import { compressImage } from '@/lib/compress-image';
 import { formatDop } from '@/lib/currency';
 import { getClientLoanStats, getLoanCollectionStatus, getLoanProgress, getRegularInstallment } from '@/components/loans/loan-detail.helpers';
+import {
+  countClientNotes,
+  formatClientNotesPreview,
+  parseClientNotes,
+  type ClientNote,
+} from './client-notes';
 import type { ClientDetail, LoanSummary, DocumentItem, ApiResponse } from '@inversiones/shared';
 import {
   ArrowLeft,
@@ -75,7 +81,7 @@ function buildInfoCards(clientData: ClientDetail) {
     { label: 'Fecha de nacimiento', value: clientData.birthDate ? fmtLong(clientData.birthDate) : '—' },
     { label: 'Dependientes', value: clientData.dependents != null ? String(clientData.dependents) : '—' },
     { label: 'Cliente desde', value: fmtLong(clientData.createdAt) },
-    { label: 'Notas', value: clientData.notes ?? '—' },
+    { label: 'Notas', value: formatClientNotesPreview(clientData.notes) },
   ];
 }
 
@@ -87,13 +93,6 @@ interface HistoryEvent {
   author: string;
   date: string;
 }
-
-type ClientNote = {
-  id: number;
-  text: string;
-  author: string;
-  date: string;
-};
 
 function StatusBadge({ active }: { active: boolean }) {
   return active ? (
@@ -857,17 +856,17 @@ function NewNoteCard({
   );
 }
 
-function ClientNotesTab({ clientId, clientNotes }: { clientId: number; clientNotes?: string | null }) {
+function ClientNotesTab({
+  clientId,
+  clientNotes,
+  onNotesChange,
+}: {
+  clientId: number;
+  clientNotes?: string | null;
+  onNotesChange: (notes: string) => void;
+}) {
   const { user } = useAuth();
-  const parsed = useMemo(() => {
-    if (!clientNotes) return [];
-    try {
-      const arr = JSON.parse(clientNotes);
-      return Array.isArray(arr) ? arr : [];
-    } catch {
-      return [];
-    }
-  }, [clientNotes]);
+  const parsed = useMemo(() => parseClientNotes(clientNotes), [clientNotes]);
   const [notes, setNotes] = useState<ClientNote[]>(parsed);
   const [isCreating, setIsCreating] = useState(false);
   const [draft, setDraft] = useState('');
@@ -887,11 +886,13 @@ function ClientNotesTab({ clientId, clientNotes }: { clientId: number; clientNot
   const persistNotes = useCallback(
     async (updated: ClientNote[]) => {
       setNotes(updated);
+      const serialized = JSON.stringify(updated);
+      onNotesChange(serialized);
       try {
-        await updateClient(clientId, { notes: JSON.stringify(updated) });
+        await updateClient(clientId, { notes: serialized });
       } catch {}
     },
-    [clientId],
+    [clientId, onNotesChange],
   );
 
   const startCreate = () => {
@@ -1075,9 +1076,9 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   }, [clientId]);
 
   useEffect(() => {
-    if (activeTab !== 'Historial' || historyLoaded || historyLoading) return;
+    if (activeTab !== 'Historial' || historyLoaded) return;
     return loadHistory();
-  }, [activeTab, historyLoaded, historyLoading, loadHistory]);
+  }, [activeTab, historyLoaded, loadHistory]);
 
   if (loading) {
     return (
@@ -1101,6 +1102,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   const fullName = `${clientData.firstName} ${clientData.lastName}`;
   const activeLoans = clientData.loans.filter((l) => l.status === 'ACTIVE').length;
   const { totalLoaned, totalPaid, totalBalance } = getClientLoanStats(clientData.loans);
+  const notesCount = countClientNotes(clientData.notes);
 
   const statsCards = [
     { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, accent: '#eaf5ed', color: '#5a9a7a' },
@@ -1214,6 +1216,16 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
               >
                 <Icon className="h-4 w-4" />
                 {t.label}
+                {t.label === 'Notas' && notesCount > 0 ? (
+                  <span
+                    aria-label={`${notesCount} notas`}
+                    className={`flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold ${
+                      active ? 'bg-white text-[#C96F4A]' : 'bg-[#FFE3D2] text-[#C96F4A]'
+                    }`}
+                  >
+                    {notesCount}
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -1226,7 +1238,11 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
         ) : activeTab === 'Historial' ? (
           <ClientHistoryTab events={auditEvents} loading={historyLoading} />
         ) : activeTab === 'Notas' ? (
-          <ClientNotesTab clientId={clientData.id} clientNotes={clientData.notes} />
+          <ClientNotesTab
+            clientId={clientData.id}
+            clientNotes={clientData.notes}
+            onNotesChange={(notes) => setClientData((current) => (current ? { ...current, notes } : current))}
+          />
         ) : activeTab === 'Información' ? (
           <ClientInfoGrid clientData={clientData} />
         ) : null}
