@@ -101,7 +101,7 @@ function SectionHeader({
     <div className="mb-5 flex items-start justify-between gap-4">
       <div>
         <h2 className="text-lg font-bold leading-tight text-[#173D2C]">{title}</h2>
-        <p className="mt-1 text-sm text-[#A9CDBB]">{subtitle}</p>
+        <p className="mt-1 text-sm text-[#5C6D63]">{subtitle}</p>
       </div>
       {right}
     </div>
@@ -124,9 +124,9 @@ export function DashboardHome() {
   const overdueLoans = dash?.overdueLoans ?? 0;
 
   const metricCards = [
-    { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, accent: '#eaf5ed', color: '#5a9a7a' },
-    { label: 'Clientes registrados', value: String(totalClients), icon: Users, accent: '#fde4d4', color: '#c2410c' },
-    { label: 'Cobrado hoy', value: formatCurrency(collectionsToday), icon: DollarSign, accent: '#fef3c7', color: '#a16207' },
+    { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, accent: '#eaf5ed', color: '#2f7654' },
+    { label: 'Clientes registrados', value: String(totalClients), icon: Users, accent: '#fde4d4', color: '#9f3f25' },
+    { label: 'Cobrado hoy', value: formatCurrency(collectionsToday), icon: DollarSign, accent: '#fef3c7', color: '#7a5a0a' },
     { label: 'Saldo cartera', value: formatCompact(portfolioBalance), icon: Wallet, accent: '#dbeafe', color: '#1d4ed8' },
   ];
 
@@ -149,7 +149,7 @@ export function DashboardHome() {
       icon: AlertTriangle,
       bg: '#FFF7EF',
       border: '#F7D6BD',
-      text: '#C96F4A',
+      text: '#9F3F25',
     },
     collectionsToday > 0 && {
       title: `${formatCurrency(collectionsToday)} cobrados hoy`,
@@ -158,7 +158,7 @@ export function DashboardHome() {
       icon: Clock3,
       bg: '#FFFBEA',
       border: '#F7E7AE',
-      text: '#A98219',
+      text: '#7A5A0A',
     },
     {
       title: 'Sistema operativo',
@@ -167,7 +167,7 @@ export function DashboardHome() {
       icon: ShieldCheck,
       bg: '#F3FAF6',
       border: '#DDEBE3',
-      text: '#5FA37D',
+      text: '#2F7654',
     },
   ].filter(Boolean) as Array<{ title: string; detail: string; action: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; bg: string; border: string; text: string }>;
 
@@ -181,7 +181,7 @@ export function DashboardHome() {
     time: timeAgo(entry.createdAt),
     icon: actionIcon(entry.action),
     bg: actionBg(entry.action),
-    color: '#5FA37D',
+    color: '#2F7654',
   }));
 
   return (
@@ -189,23 +189,23 @@ export function DashboardHome() {
       <div className="mb-5 flex flex-col items-start justify-between gap-4 2xl:flex-row 2xl:items-end">
         <div>
           <div className="mb-3 flex items-center gap-3">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#DDEBE3] bg-[#E7F4EC] px-3.5 py-1.5 text-xs font-bold text-[#5FA37D]">
-              <span className="h-2 w-2 rounded-full bg-[#5FA37D]" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#DDEBE3] bg-[#E7F4EC] px-3.5 py-1.5 text-xs font-bold text-[#2F7654]">
+              <span className="h-2 w-2 rounded-full bg-[#2F7654]" />
               En línea
             </span>
-            <span className="text-sm text-[#A9CDBB]">{today}</span>
+            <span className="text-sm text-[#5C6D63]">{today}</span>
           </div>
           <h1 className="text-[28px] font-bold leading-tight text-[#173D2C]">
             Hola, {user?.name ?? 'Usuario'} 👋
           </h1>
-          <p className="mt-1.5 text-base text-[#7A8A80]">Aquí tienes un resumen de tu cartera hoy.</p>
+          <p className="mt-1.5 text-base text-[#5C6D63]">Aquí tienes un resumen de tu cartera hoy.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="h-11 rounded-full border border-[#DDEBE3] bg-white px-5 text-sm font-bold text-[#5FA37D] shadow-sm">
+          <button className="h-11 rounded-full border border-[#DDEBE3] bg-white px-5 text-sm font-bold text-[#2F7654] shadow-sm">
             Ver reportes
           </button>
           <Link
-            className="flex h-11 items-center gap-2 rounded-full bg-[#5a9a7a] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)]"
+            className="flex h-11 items-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)]"
             href="/prestamos/nuevo"
           >
             <Plus className="h-4 w-4" />
@@ -274,13 +274,13 @@ export function DashboardHome() {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-sm text-[#A9CDBB]">Total</span>
+              <span className="text-sm text-[#5C6D63]">Total</span>
               <span className="text-[24px] font-bold text-[#173D2C]">{portfolioTotal}</span>
             </div>
           </div>
           <div className="mt-3 space-y-2">
             {portfolioPie.map((entry) => (
-              <div key={entry.name} className="flex items-center justify-between text-sm font-semibold text-[#5FA37D]">
+              <div key={entry.name} className="flex items-center justify-between text-sm font-semibold text-[#2F7654]">
                 <span className="flex items-center gap-2.5">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
                   {entry.name}
@@ -312,7 +312,7 @@ export function DashboardHome() {
           <SectionHeader
             title="Alertas"
             subtitle="Requieren tu atención"
-            right={<span className="rounded-full bg-[#FFE8D8] px-2.5 py-1 text-sm font-bold text-[#C96F4A]">{alerts.length}</span>}
+            right={<span className="rounded-full bg-[#FFE8D8] px-2.5 py-1 text-sm font-bold text-[#9F3F25]">{alerts.length}</span>}
           />
           <div className="space-y-3">
             {alerts.map((alert) => {
@@ -323,7 +323,7 @@ export function DashboardHome() {
                     <Icon className="mt-0.5 h-4 w-4 shrink-0" style={{ color: alert.text }} />
                     <div>
                       <p className="text-sm font-bold" style={{ color: alert.text }}>{alert.title}</p>
-                      <p className="mt-1 text-xs text-[#A9CDBB]">{alert.detail}</p>
+                      <p className="mt-1 text-xs text-[#5C6D63]">{alert.detail}</p>
                       {alert.action && <p className="mt-1 text-xs font-bold" style={{ color: alert.text }}>{alert.action}</p>}
                     </div>
                   </div>
@@ -348,18 +348,18 @@ export function DashboardHome() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                       <span className="text-sm font-bold text-[#173D2C]">{row.name}</span>
-                      <span className="text-sm text-[#A9CDBB]">{row.action}</span>
+                      <span className="text-sm text-[#5C6D63]">{row.action}</span>
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className="rounded-lg border border-[#DDEBE3] bg-[#F3FAF6] px-2.5 py-0.5 font-mono text-xs font-bold text-[#5FA37D]">{row.ref}</span>
+                      <span className="rounded-lg border border-[#DDEBE3] bg-[#F3FAF6] px-2.5 py-0.5 font-mono text-xs font-bold text-[#2F7654]">{row.ref}</span>
                       {row.amount && <span className="text-sm font-bold text-[#173D2C]">{row.amount}</span>}
                     </div>
                   </div>
-                  <span className="shrink-0 text-sm text-[#A9CDBB]">{row.time}</span>
+                  <span className="shrink-0 text-sm text-[#5C6D63]">{row.time}</span>
                 </div>
               );
             }) : (
-              <p className="py-6 text-center text-sm text-[#A9CDBB]">No hay actividad reciente</p>
+              <p className="py-6 text-center text-sm text-[#5C6D63]">No hay actividad reciente</p>
             )}
           </div>
         </Card>
@@ -368,7 +368,7 @@ export function DashboardHome() {
           <SectionHeader title="Próximos cobros" subtitle="Agenda de los próximos días" />
           <div className="space-y-3">
             {(upcomingPayments ?? []).length === 0 ? (
-              <p className="py-6 text-center text-sm text-[#A9CDBB]">No hay cobros próximos</p>
+              <p className="py-6 text-center text-sm text-[#5C6D63]">No hay cobros próximos</p>
             ) : (upcomingPayments ?? []).map((payment) => {
               const due = new Date(payment.dueDate);
               const today2 = new Date();
@@ -381,18 +381,18 @@ export function DashboardHome() {
 
               return (
                 <div key={payment.id} className={`flex items-center gap-3 rounded-[16px] border p-3 ${warm ? 'border-[#F7D6BD] bg-[#FFF7EF]' : 'border-[#DDEBE3] bg-[#F3FAF6]'}`}>
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-[11px] font-bold ${warm ? 'bg-[#FFB174] text-white' : 'bg-white text-[#5FA37D]'}`}>
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-[11px] font-bold ${warm ? 'bg-[#9F3F25] text-white' : 'bg-white text-[#2F7654]'}`}>
                     {tag}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-[#173D2C]">{payment.clientName}</p>
-                    <p className="mt-0.5 text-xs text-[#A9CDBB]">{due.toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                    <p className="mt-0.5 text-xs text-[#5C6D63]">{due.toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                   </div>
                   <span className="shrink-0 text-sm font-bold text-[#173D2C]">{formatCurrency(payment.amount)}</span>
                 </div>
               );
             })}
-            <button className="mt-3 h-11 w-full rounded-[16px] bg-[#F3FAF6] text-sm font-bold text-[#5FA37D]">Ver agenda completa</button>
+            <button className="mt-3 h-11 w-full rounded-[16px] bg-[#F3FAF6] text-sm font-bold text-[#2F7654]">Ver agenda completa</button>
           </div>
         </Card>
       </div>

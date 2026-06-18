@@ -73,7 +73,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f5f7f6] px-5 py-8">
       <section className="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eaf5ed] text-[#5a9a7a]">
+        <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eaf5ed] text-[#2f7654]">
           {state === 'success' ? (
             <CheckCircle2 className="h-6 w-6" />
           ) : state === 'loading' || state === 'uploading' ? (
@@ -104,7 +104,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
         />
 
         <button
-          className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#5a9a7a] px-5 text-sm font-semibold text-white transition hover:bg-[#4a866a] disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-semibold text-white transition hover:bg-[#285c43] disabled:cursor-not-allowed disabled:opacity-50"
           disabled={!isReady}
           onClick={() => inputRef.current?.click()}
           type="button"

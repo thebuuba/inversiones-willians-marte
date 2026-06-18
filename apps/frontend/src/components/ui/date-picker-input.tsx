@@ -83,7 +83,7 @@ export function DatePickerInput({
         className={`${className} flex items-center justify-between text-left ${invalid ? 'border-[#e4a58b]' : ''}`}
       >
         <span className={value ? '' : 'text-[#8f9691]'}>{value || placeholder}</span>
-        <CalendarDays className="h-4 w-4 shrink-0 text-[#6f8076]" />
+        <CalendarDays className="h-4 w-4 shrink-0 text-[#5c6d63]" />
       </button>
 
       {open && (
@@ -124,7 +124,7 @@ export function DatePickerInput({
                     ? 'bg-[#2f6f9f] font-bold text-white'
                     : day.inCurrentMonth
                       ? 'text-[#4b535b] hover:bg-[#eef3f6]'
-                      : 'text-[#757b80] hover:bg-[#f4f6f7]'
+                      : 'text-[#4b535b] hover:bg-[#f4f6f7]'
                 }`}
               >
                 {day.date}

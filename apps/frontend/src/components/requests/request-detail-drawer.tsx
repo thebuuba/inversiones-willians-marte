@@ -27,13 +27,13 @@ interface RequestDetailDrawerProps {
 
 const statusMap: Record<string, { label: string; bg: string; text: string; dot: string }> = {
   PENDING: { label: 'Pendiente', bg: '#FFF4C8', text: '#B89A22', dot: '#E2C64F' },
-  UNDER_REVIEW: { label: 'En revisión', bg: '#E4F0FF', text: '#5C82B7', dot: '#6EA8E8' },
-  APPROVED: { label: 'Aprobada', bg: '#E7F4EC', text: '#2F7654', dot: '#5FA37D' },
-  REJECTED: { label: 'Rechazada', bg: '#FFE8D8', text: '#C96F4A', dot: '#E6A07A' },
+  UNDER_REVIEW: { label: 'En revisión', bg: '#E4F0FF', text: '#2F5F91', dot: '#6EA8E8' },
+  APPROVED: { label: 'Aprobada', bg: '#E7F4EC', text: '#2F7654', dot: '#2F7654' },
+  REJECTED: { label: 'Rechazada', bg: '#FFE8D8', text: '#9F3F25', dot: '#E6A07A' },
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const style = statusMap[status] ?? { label: status, bg: '#F3FAF6', text: '#5C6D63', dot: '#A9CDBB' };
+  const style = statusMap[status] ?? { label: status, bg: '#F3FAF6', text: '#5C6D63', dot: '#5C6D63' };
   return (
     <span
       className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
@@ -73,7 +73,7 @@ function formatRequestDate(value: string, options?: Intl.DateTimeFormatOptions):
 }
 
 function getPrintableStatus(status: string) {
-  return statusMap[status] ?? { label: status, bg: '#F3FAF6', text: '#5C6D63', dot: '#A9CDBB' };
+  return statusMap[status] ?? { label: status, bg: '#F3FAF6', text: '#5C6D63', dot: '#5C6D63' };
 }
 
 export function RequestDetailDrawer({
@@ -147,7 +147,7 @@ export function RequestDetailDrawer({
           justify-content: center;
           border-radius: 14px;
           background: #E7F4EC;
-          color: #5FA37D;
+          color: #2F7654;
           font-size: 18px;
           font-weight: 900;
         }
@@ -159,7 +159,7 @@ export function RequestDetailDrawer({
         }
         .brand-subtitle {
           margin: 3px 0 0;
-          color: #6F8076;
+          color: #5C6D63;
           font-size: 11px;
           font-weight: 700;
           letter-spacing: .08em;
@@ -176,7 +176,7 @@ export function RequestDetailDrawer({
         }
         .doc-code {
           margin-top: 5px;
-          color: #6F8076;
+          color: #5C6D63;
           font-size: 12px;
           font-weight: 700;
         }
@@ -207,7 +207,7 @@ export function RequestDetailDrawer({
         }
         .eyebrow {
           margin: 0;
-          color: #6F8076;
+          color: #5C6D63;
           font-size: 10px;
           font-weight: 800;
           letter-spacing: .11em;
@@ -221,7 +221,7 @@ export function RequestDetailDrawer({
         }
         .received {
           margin-top: 8px;
-          color: #6F8076;
+          color: #5C6D63;
           font-size: 12px;
           font-weight: 700;
         }
@@ -252,7 +252,7 @@ export function RequestDetailDrawer({
           height: 8px;
           width: 8px;
           border-radius: 999px;
-          background: #5FA37D;
+          background: #2F7654;
         }
         .info-grid {
           display: grid;
@@ -270,7 +270,7 @@ export function RequestDetailDrawer({
           box-shadow: 0 5px 16px rgba(40, 92, 67, 0.035);
         }
         .label {
-          color: #6F8076;
+          color: #5C6D63;
           font-size: 10px;
           font-weight: 900;
           letter-spacing: .06em;
@@ -304,7 +304,7 @@ export function RequestDetailDrawer({
           margin-top: auto;
           border-top: 1px solid #DDEBE3;
           padding-top: 12px;
-          color: #8CA096;
+          color: #5C6D63;
           font-size: 10px;
           font-weight: 700;
         }
@@ -505,7 +505,7 @@ export function RequestDetailDrawer({
                     Imprimir
                   </button>
                   <button
-                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#DDEBE3] bg-white text-sm font-bold text-[#25D366] transition hover:bg-[#F3FAF6]"
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#DDEBE3] bg-white text-sm font-bold text-[#0F7A3A] transition hover:bg-[#F3FAF6]"
                     onClick={handleWhatsApp}
                     type="button"
                   >
@@ -515,7 +515,7 @@ export function RequestDetailDrawer({
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#F7D6BD] bg-white text-sm font-bold text-[#C96F4A] transition hover:bg-[#FFF7EF]"
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#F7D6BD] bg-white text-sm font-bold text-[#9F3F25] transition hover:bg-[#FFF7EF]"
                     onClick={onReject}
                     type="button"
                   >

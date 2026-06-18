@@ -83,7 +83,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         </div>
         <div className={cn('min-w-0 flex-1', compact && 'hidden')}>
           <h1 className="truncate text-[15px] font-bold leading-tight text-[#285C43]">Willians Marte</h1>
-          <p className="mt-1 truncate text-[13px] leading-tight text-[#6F8076]">
+          <p className="mt-1 truncate text-[13px] leading-tight text-[#5C6D63]">
             Sistema de Préstamos
           </p>
         </div>
@@ -131,7 +131,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                 )}
               >
                 <Icon
-                  className={cn('h-[18px] w-[18px] shrink-0', active ? 'text-[#5FA37D]' : 'text-[#8CA096]')}
+                  className={cn('h-[18px] w-[18px] shrink-0', active ? 'text-[#2F7654]' : 'text-[#5C6D63]')}
                   strokeWidth={2}
                   aria-hidden="true"
                 />
@@ -141,7 +141,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
                   <span
                     className={cn(
                       'flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold',
-                      item.href === '/solicitudes' ? 'bg-[#FFE3D2] text-[#C96F4A]' : 'bg-[#E4F0FF] text-[#5C82B7]',
+                      item.href === '/solicitudes' ? 'bg-[#FFE3D2] text-[#9F3F25]' : 'bg-[#E4F0FF] text-[#2F5F91]',
                       compact && 'absolute -right-1 -top-1 h-5 min-w-5 px-1 text-[10px]',
                     )}
                   >
@@ -164,10 +164,10 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           >
             <button
               onClick={logout}
-              className="flex h-10 w-full items-center gap-2.5 rounded-[12px] px-3 text-left text-sm font-semibold text-[#5FA37D] transition-colors hover:bg-[#F3FAF6] hover:text-[#285C43]"
+              className="flex h-10 w-full items-center gap-2.5 rounded-[12px] px-3 text-left text-sm font-semibold text-[#2F7654] transition-colors hover:bg-[#F3FAF6] hover:text-[#285C43]"
               type="button"
             >
-              <LogOut className="h-4 w-4 text-[#8CA096]" strokeWidth={2} aria-hidden="true" />
+              <LogOut className="h-4 w-4 text-[#5C6D63]" strokeWidth={2} aria-hidden="true" />
               Cerrar sesión
             </button>
           </div>
@@ -188,7 +188,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             <p className="truncate text-[15px] font-bold leading-tight text-[#285C43]">
               {user?.name ?? 'Administrador'}
             </p>
-            <p className="mt-1 truncate text-[13px] leading-tight text-[#7E9086]">
+            <p className="mt-1 truncate text-[13px] leading-tight text-[#5C6D63]">
               {user?.username ?? user?.email ?? 'admin'}
             </p>
           </div>
@@ -206,7 +206,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           </div>
           <div>
             <p className="text-sm font-bold leading-tight">Willians Marte</p>
-            <p className="text-xs leading-tight text-[#6F8076]">Sistema de Préstamos</p>
+            <p className="text-xs leading-tight text-[#5C6D63]">Sistema de Préstamos</p>
           </div>
         </div>
         <button

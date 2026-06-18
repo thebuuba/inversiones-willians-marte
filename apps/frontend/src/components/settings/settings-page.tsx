@@ -69,11 +69,11 @@ function SettingsHeader() {
     >
       <div>
         <span className="inline-flex items-center gap-2 rounded-full bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#285C43]">
-          <span className="h-2 w-2 rounded-full bg-[#5FA37D]" />
+          <span className="h-2 w-2 rounded-full bg-[#2F7654]" />
           Sistema
         </span>
         <h1 className="mt-3 text-[28px] font-bold leading-tight text-[#173D2C]">Configuración</h1>
-        <p className="mt-1.5 text-sm font-medium text-[#7A8A80]">
+        <p className="mt-1.5 text-sm font-medium text-[#5C6D63]">
           Ajusta los parámetros de tu sistema de préstamos.
         </p>
       </div>
@@ -86,7 +86,7 @@ function SettingsHeader() {
           Cancelar
         </button>
         <button
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#5a9a7a] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.2)] transition hover:-translate-y-0.5 hover:bg-[#4a866a]"
+          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#2f7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285c43]"
           type="button"
         >
           <Check className="h-4 w-4" />
@@ -141,12 +141,12 @@ function CardTitle({
 }) {
   return (
     <div className="mb-6 flex items-start gap-4">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] bg-[#E7F4EC] text-[#4F9B76]">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] bg-[#E7F4EC] text-[#285C43]">
         {icon}
       </div>
       <div>
         <h2 className="text-lg font-bold text-[#173D2C]">{title}</h2>
-        <p className="mt-1 text-sm font-medium text-[#7A8A80]">{subtitle}</p>
+        <p className="mt-1 text-sm font-medium text-[#5C6D63]">{subtitle}</p>
       </div>
     </div>
   );
@@ -161,7 +161,7 @@ function LogoUploader() {
         </div>
         <div>
           <p className="text-base font-bold text-[#173D2C]">Logo de la empresa</p>
-          <p className="mt-1 text-sm font-medium text-[#7A8A80]">
+          <p className="mt-1 text-sm font-medium text-[#5C6D63]">
             PNG o SVG, recomendado 512×512px. Máximo 2MB.
           </p>
         </div>
@@ -198,17 +198,17 @@ function FormInput({
       <span className="mb-2 block text-sm font-bold text-[#5C6D63]">{label}</span>
       {multiline ? (
         <textarea
-          className="h-[96px] w-full resize-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 py-3 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-[#4F9B76] focus:ring-2 focus:ring-[#DDEBE3]"
+          className="h-[96px] w-full resize-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 py-3 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#DDEBE3]"
           defaultValue={value}
         />
       ) : (
-        <div className="flex h-11 w-full items-center rounded-[10px] border border-[#DDEBE3] bg-white px-4 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] transition focus-within:border-[#4F9B76] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
-          {prefix && <span className="mr-3 shrink-0 text-[#7A8A80]">{prefix}</span>}
+        <div className="flex h-11 w-full items-center rounded-[10px] border border-[#DDEBE3] bg-white px-4 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] transition focus-within:border-[#285C43] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
+          {prefix && <span className="mr-3 shrink-0 text-[#5C6D63]">{prefix}</span>}
           <input
             className="h-full min-w-0 flex-1 bg-transparent outline-none"
             defaultValue={value}
           />
-          {suffix && <span className="ml-3 shrink-0 text-[#7A8A80]">{suffix}</span>}
+          {suffix && <span className="ml-3 shrink-0 text-[#5C6D63]">{suffix}</span>}
         </div>
       )}
       {helper && <span className="mt-2 block text-sm font-medium text-[#A7B5AD]">{helper}</span>}
@@ -232,7 +232,7 @@ function FormSelect({
       <span className="mb-2 block text-sm font-bold text-[#5C6D63]">{label}</span>
       <div className="relative">
         <select
-          className="h-11 w-full appearance-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 pr-10 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-[#4F9B76] focus:ring-2 focus:ring-[#DDEBE3]"
+          className="h-11 w-full appearance-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 pr-10 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#DDEBE3]"
           defaultValue={value}
         >
           {options.map((option) => (
@@ -330,7 +330,7 @@ function SwitchRow({
     <div className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-[#EDF2EF]' : ''}`}>
       <div>
         <p className="text-base font-bold text-[#173D2C]">{title}</p>
-        <p className="mt-1 text-sm font-medium text-[#7A8A80]">{description}</p>
+        <p className="mt-1 text-sm font-medium text-[#5C6D63]">{description}</p>
       </div>
       <ToggleSwitch defaultChecked={defaultChecked} />
     </div>
@@ -402,11 +402,11 @@ function LoanProductsCard() {
       />
 
       <div className="space-y-4">
-        <p className="py-6 text-center text-sm font-medium text-[#A9CDBB]">No hay productos configurados</p>
+        <p className="py-6 text-center text-sm font-medium text-[#5C6D63]">No hay productos configurados</p>
       </div>
 
       <button
-        className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-[16px] border border-dashed border-[#B8EBC9] bg-[#F7FCF9] text-base font-bold text-[#2F7D57] transition hover:bg-[#EAF6EF]"
+        className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-[16px] border border-dashed border-[#B8EBC9] bg-[#F7FCF9] text-base font-bold text-[#285C43] transition hover:bg-[#EAF6EF]"
         onClick={() => undefined}
         type="button"
       >
@@ -487,19 +487,19 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
           >
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-bold text-[#173D2C]">Nuevo usuario</h2>
-              <button onClick={onClose} type="button" className="rounded-full p-1 text-[#A9CDBB] hover:bg-[#F3F4F6]">
+              <button onClick={onClose} type="button" className="rounded-full p-1 text-[#5C6D63] hover:bg-[#F3F4F6]">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {error && (
-              <p className="mb-4 rounded-[12px] bg-[#FFE8D8] p-3 text-sm text-[#B45B38]">{error}</p>
+              <p className="mb-4 rounded-[12px] bg-[#FFE8D8] p-3 text-sm text-[#9F3F25]">{error}</p>
             )}
 
             <div className="space-y-4">
               <div>
                 <label className="mb-1 flex items-center gap-2 text-sm font-medium text-[#173D2C]">
-                  <UserRound className="h-4 w-4 text-[#5FA37D]" />
+                  <UserRound className="h-4 w-4 text-[#2F7654]" />
                   Nombre completo
                 </label>
                 <input
@@ -512,7 +512,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
               </div>
               <div>
                 <label className="mb-1 flex items-center gap-2 text-sm font-medium text-[#173D2C]">
-                  <Mail className="h-4 w-4 text-[#5FA37D]" />
+                  <Mail className="h-4 w-4 text-[#2F7654]" />
                   Correo electrónico
                 </label>
                 <input
@@ -526,7 +526,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
               </div>
               <div>
                 <label className="mb-1 flex items-center gap-2 text-sm font-medium text-[#173D2C]">
-                  <KeyRound className="h-4 w-4 text-[#5FA37D]" />
+                  <KeyRound className="h-4 w-4 text-[#2F7654]" />
                   Contraseña
                 </label>
                 <input
@@ -541,7 +541,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
               </div>
               <div>
                 <label className="mb-1 flex items-center gap-2 text-sm font-medium text-[#173D2C]">
-                  <ShieldCheck className="h-4 w-4 text-[#5FA37D]" />
+                  <ShieldCheck className="h-4 w-4 text-[#2F7654]" />
                   Rol
                 </label>
                 <select
@@ -557,7 +557,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
 
             <div className="mt-6 flex gap-3">
               <button
-                className="flex-1 rounded-full bg-[#F3F4F6] py-2.5 text-sm font-bold text-[#7E9086] transition hover:bg-[#E7F4EC]"
+                className="flex-1 rounded-full bg-[#F3F4F6] py-2.5 text-sm font-bold text-[#5C6D63] transition hover:bg-[#E7F4EC]"
                 onClick={onClose}
                 type="button"
               >
@@ -565,7 +565,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
               </button>
               <button
                 className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
-                  saving ? 'bg-[#A9CDBB]' : 'bg-[#5a9a7a] shadow-[0_8px_16px_rgba(90,154,122,0.22)] hover:-translate-y-0.5'
+                  saving ? 'bg-[#5C6D63]' : 'bg-[#2f7654] shadow-[0_8px_16px_rgba(90,154,122,0.22)] hover:-translate-y-0.5'
                 }`}
                 disabled={saving}
                 type="submit"
@@ -581,12 +581,12 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
 }
 
 const roleBadgeColors: Record<string, { bg: string; text: string }> = {
-  ADMIN: { bg: '#FFE8D8', text: '#B45B38' },
+  ADMIN: { bg: '#FFE8D8', text: '#9F3F25' },
   COLLECTOR: { bg: '#E7F4EC', text: '#3E8A61' },
 };
 
 const statusStyles = {
-  Activo: { bg: '#E7F4EC', text: '#2F7D57', dot: '#5FA37D' },
+  Activo: { bg: '#E7F4EC', text: '#285C43', dot: '#2F7654' },
   Inactivo: { bg: '#F0ECE5', text: '#8D7A5F', dot: '#CDBA97' },
 } as const;
 
@@ -673,10 +673,10 @@ function SettingsUsersRolesTab() {
         </div>
 
         <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <p className="text-sm font-medium text-[#7A8A80]">{users.length} miembros · {activeCount} activos</p>
+          <p className="text-sm font-medium text-[#5C6D63]">{users.length} miembros · {activeCount} activos</p>
           {isAdmin && (
             <button
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#5a9a7a] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.2)] transition hover:-translate-y-0.5 hover:bg-[#4a866a]"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2f7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285c43]"
               onClick={() => setShowCreate(true)}
               type="button"
             >
@@ -687,10 +687,10 @@ function SettingsUsersRolesTab() {
         </div>
 
         {users.length === 0 ? (
-          <p className="py-12 text-center text-sm font-medium text-[#A9CDBB]">No hay usuarios registrados</p>
+          <p className="py-12 text-center text-sm font-medium text-[#5C6D63]">No hay usuarios registrados</p>
         ) : (
           <div className="overflow-hidden rounded-[18px] border border-[#EDF2EF]">
-            <div className="hidden grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] bg-[#F3F8F5] px-5 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#8CA096] md:grid">
+            <div className="hidden grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] bg-[#F3F8F5] px-5 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63] md:grid">
               <span>Miembro</span>
               <span>Rol</span>
               <span>Estado</span>
@@ -707,27 +707,27 @@ function SettingsUsersRolesTab() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-base font-bold leading-tight text-[#173D2C]">{u.name}</p>
-                    <p className="mt-1 truncate text-sm font-medium text-[#7A8A80]">{u.email}</p>
+                    <p className="mt-1 truncate text-sm font-medium text-[#5C6D63]">{u.email}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between gap-3 md:block">
-                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#8CA096] md:hidden">Rol</span>
+                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63] md:hidden">Rol</span>
                   <RoleBadge role={u.role} />
                 </div>
 
                 <div className="flex items-center justify-between gap-3 md:block">
-                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#8CA096] md:hidden">Estado</span>
+                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63] md:hidden">Estado</span>
                   <StatusBadge active={u.active} />
                 </div>
 
-                <div className="flex items-center justify-end gap-4 text-[#7A8A80]">
+                <div className="flex items-center justify-end gap-4 text-[#5C6D63]">
                   {isAdmin && (
                     <>
                       <button
                         aria-label={`${u.active ? 'Desactivar' : 'Activar'} ${u.name}`}
                         className={`rounded-full p-1.5 transition hover:bg-[#EAF6EF] ${
-                          u.active ? 'hover:text-[#285C43]' : 'hover:text-[#2F7D57]'
+                          u.active ? 'hover:text-[#285C43]' : 'hover:text-[#285C43]'
                         }`}
                         onClick={() => handleToggle(u.id)}
                         type="button"
@@ -736,7 +736,7 @@ function SettingsUsersRolesTab() {
                       </button>
                       <button
                         aria-label={`Eliminar ${u.name}`}
-                        className="rounded-full p-1.5 transition hover:bg-[#FFE3D2] hover:text-[#B45B38]"
+                        className="rounded-full p-1.5 transition hover:bg-[#FFE3D2] hover:text-[#9F3F25]"
                         onClick={() => handleToggle(u.id)}
                         type="button"
                       >
@@ -769,7 +769,7 @@ function SettingsUsersRolesTab() {
                   <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: roleDot[role] ?? '#ccc' }} />
                   <p className="truncate text-base font-bold text-[#173D2C]">{roleLabel[role] ?? role}</p>
                 </div>
-                <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-[#E7F4EC] px-2 text-sm font-bold text-[#2F7D57]">
+                <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-[#E7F4EC] px-2 text-sm font-bold text-[#285C43]">
                   {count}
                 </span>
               </div>
@@ -813,7 +813,7 @@ function NotificationChannelItem({
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-base font-bold text-[#173D2C]">{channel.title}</p>
-        <p className="mt-1 truncate text-sm font-medium text-[#7A8A80]">{channel.detail}</p>
+        <p className="mt-1 truncate text-sm font-medium text-[#5C6D63]">{channel.detail}</p>
       </div>
       <ToggleSwitch defaultChecked={channel.enabled} />
     </div>
@@ -849,7 +849,7 @@ function InternalAlertItem({
     <div className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-[#EDF2EF]' : ''}`}>
       <div>
         <p className="text-base font-bold text-[#173D2C]">{alert.title}</p>
-        <p className="mt-1 text-sm font-medium text-[#7A8A80]">{alert.detail}</p>
+        <p className="mt-1 text-sm font-medium text-[#5C6D63]">{alert.detail}</p>
       </div>
       <ToggleSwitch defaultChecked={alert.enabled} />
     </div>
@@ -923,7 +923,7 @@ function SecurityOptionItem({
     <div className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-[#EDF2EF]' : ''}`}>
       <div>
         <p className="text-base font-bold text-[#173D2C]">{option.title}</p>
-        <p className="mt-1 text-sm font-medium text-[#7A8A80]">{option.detail}</p>
+        <p className="mt-1 text-sm font-medium text-[#5C6D63]">{option.detail}</p>
       </div>
       <ToggleSwitch defaultChecked={option.enabled} />
     </div>
@@ -974,7 +974,7 @@ function BackupsCard() {
         title="Respaldos"
       />
 
-      <p className="py-6 text-center text-sm font-medium text-[#A9CDBB]">No hay respaldos configurados</p>
+      <p className="py-6 text-center text-sm font-medium text-[#5C6D63]">No hay respaldos configurados</p>
 
       <div className="space-y-5">
         <FormSelect

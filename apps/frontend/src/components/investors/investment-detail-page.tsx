@@ -80,7 +80,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
   return (
     <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-neutral-900">
       <div className="mx-auto max-w-7xl">
-        <Link className="mb-6 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#5a9a7a]" href={investorHref}>
+        <Link className="mb-6 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#2f7654]" href={investorHref}>
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver al inversionista
         </Link>
@@ -88,17 +88,17 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
         <div className="mb-6 rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-sm font-semibold text-[#5a9a7a]">{investment.investor?.name}</p>
+              <p className="text-sm font-semibold text-[#2f7654]">{investment.investor?.name}</p>
               <h1 className="mt-1 text-3xl font-bold">{investment.code}</h1>
               <p className="mt-2 text-sm text-neutral-500">
                 Inicio {investment.startDate ? fmtDate(investment.startDate) : '—'} · Plazo {investment.term ?? 'Indefinido'}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className={`rounded-full px-3 py-2 text-sm font-bold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-[#c96f4a]' : investment.paymentStatus === 'PAID' ? 'bg-[#eaf5ed] text-[#5a9a7a]' : 'bg-[#fef3c7] text-[#a16207]'}`}>
+              <span className={`rounded-full px-3 py-2 text-sm font-bold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-[#9f3f25]' : investment.paymentStatus === 'PAID' ? 'bg-[#eaf5ed] text-[#2f7654]' : 'bg-[#fef3c7] text-[#7a5a0a]'}`}>
                 {status}
               </span>
-              <Link className="rounded-full bg-[#5a9a7a] px-5 py-2 text-sm font-bold text-white" href={`/inversionistas/pago?investmentId=${investment.id}`}>
+              <Link className="rounded-full bg-[#2f7654] px-5 py-2 text-sm font-bold text-white" href={`/inversionistas/pago?investmentId=${investment.id}`}>
                 Registrar pago
               </Link>
             </div>
@@ -126,7 +126,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
                         <p className="text-sm font-bold">Periodo {payment.periodMonth}/{payment.periodYear}</p>
                         <p className="text-xs text-neutral-400">{fmtDate(payment.paymentDate)}</p>
                       </div>
-                      <span className="text-sm font-bold text-[#5a9a7a]">{fmt(payment.amount)}</span>
+                      <span className="text-sm font-bold text-[#2f7654]">{fmt(payment.amount)}</span>
                     </div>
                   ))}
                 </div>
@@ -146,7 +146,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
                         <p className="text-xs text-neutral-400">{fmtDate(movement.movementDate)}</p>
                         {movement.notes && <p className="mt-1 text-xs text-neutral-500">{movement.notes}</p>}
                       </div>
-                      <span className="text-sm font-bold text-[#5a9a7a]">{fmt(movement.amount)}</span>
+                      <span className="text-sm font-bold text-[#2f7654]">{fmt(movement.amount)}</span>
                     </div>
                   ))}
                 </div>
@@ -157,7 +157,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           <section className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf5ed]">
-                <Banknote className="h-5 w-5 text-[#5a9a7a]" />
+                <Banknote className="h-5 w-5 text-[#2f7654]" />
               </div>
               <div>
                 <h2 className="text-lg font-bold">Sumar capital</h2>
@@ -167,18 +167,18 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
             <form onSubmit={handleAddCapital} className="space-y-4">
               <label className="block">
                 <span className="mb-2 block text-sm font-bold text-neutral-600">Monto</span>
-                <input className="h-11 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none focus:border-[#5a9a7a]" inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="100,000" />
+                <input className="h-11 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none focus:border-[#2f7654]" inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="100,000" />
               </label>
               <label className="block">
                 <span className="mb-2 block text-sm font-bold text-neutral-600">Fecha</span>
-                <input className="h-11 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none focus:border-[#5a9a7a]" type="date" value={movementDate} onChange={(event) => setMovementDate(event.target.value)} />
+                <input className="h-11 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none focus:border-[#2f7654]" type="date" value={movementDate} onChange={(event) => setMovementDate(event.target.value)} />
               </label>
               <label className="block">
                 <span className="mb-2 block text-sm font-bold text-neutral-600">Nota</span>
-                <textarea className="h-24 w-full resize-none rounded-xl border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-[#5a9a7a]" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" />
+                <textarea className="h-24 w-full resize-none rounded-xl border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-[#2f7654]" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" />
               </label>
-              {error && <p className="text-sm font-semibold text-[#c96f4a]">{error}</p>}
-              <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#5a9a7a] px-5 text-sm font-bold text-white disabled:opacity-60" disabled={saving} type="submit">
+              {error && <p className="text-sm font-semibold text-[#9f3f25]">{error}</p>}
+              <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white disabled:opacity-60" disabled={saving} type="submit">
                 <Plus className="h-4 w-4" />
                 {saving ? 'Guardando...' : 'Sumar capital'}
               </button>

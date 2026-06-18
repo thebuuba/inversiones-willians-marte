@@ -60,7 +60,7 @@ export default function LoginPage() {
         <div className="mb-9 text-left">
           {mode === 'register' && (
             <button
-              className="mb-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#5FA37D] transition hover:text-[#173D2C]"
+              className="mb-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#2F7654] transition hover:text-[#173D2C]"
               onClick={() => switchMode('login')}
               type="button"
             >
@@ -71,7 +71,7 @@ export default function LoginPage() {
           <h1 className="text-[34px] font-bold leading-tight tracking-[-0.02em] text-[#173D2C]">
             {mode === 'register' ? 'Crear cuenta' : 'Bienvenido de vuelta'}
           </h1>
-          <p className="mt-3 text-[19px] font-normal leading-7 text-[#5FA37D]">
+          <p className="mt-3 text-[19px] font-normal leading-7 text-[#2F7654]">
             {mode === 'register'
               ? 'Registra un usuario para acceder al sistema'
               : 'Ingresa tus credenciales para continuar'}
@@ -94,8 +94,8 @@ export default function LoginPage() {
                 <label htmlFor="name" className="mb-3 block text-[16px] font-bold text-[#173D2C]">
                   Nombre completo
                 </label>
-                <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#A9CDBB] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
-                  <User className="h-5 w-5 text-[#A9CDBB]" aria-hidden="true" />
+                <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#5C6D63] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
+                  <User className="h-5 w-5 text-[#5C6D63]" aria-hidden="true" />
                   <input
                     id="name"
                     type="text"
@@ -103,7 +103,7 @@ export default function LoginPage() {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Nombre del usuario"
                     required
-                    className="h-full flex-1 bg-transparent text-[16px] text-[#173D2C] outline-none placeholder:text-[#A9CDBB]"
+                    className="h-full flex-1 bg-transparent text-[16px] text-[#173D2C] outline-none placeholder:text-[#5C6D63]"
                   />
                 </div>
               </div>
@@ -113,8 +113,8 @@ export default function LoginPage() {
               <label htmlFor="username" className="mb-3 block text-[16px] font-bold text-[#173D2C]">
                 Nombre de usuario
               </label>
-              <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#A9CDBB] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
-                <User className="h-5 w-5 text-[#A9CDBB]" aria-hidden="true" />
+              <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#5C6D63] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
+                <User className="h-5 w-5 text-[#5C6D63]" aria-hidden="true" />
                 <input
                   id="username"
                   type="text"
@@ -122,7 +122,7 @@ export default function LoginPage() {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="usuario"
                   required
-                  className="h-full flex-1 bg-transparent text-[16px] text-[#173D2C] outline-none placeholder:text-[#A9CDBB]"
+                  className="h-full flex-1 bg-transparent text-[16px] text-[#173D2C] outline-none placeholder:text-[#5C6D63]"
                 />
               </div>
             </div>
@@ -135,14 +135,14 @@ export default function LoginPage() {
                 {mode === 'login' && (
                   <button
                     type="button"
-                    className="text-[14px] font-bold text-[#5FA37D] transition-colors hover:text-[#173D2C]"
+                    className="text-[14px] font-bold text-[#2F7654] transition-colors hover:text-[#173D2C]"
                   >
                     ¿Olvidaste tu contraseña?
                   </button>
                 )}
               </div>
-              <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#A9CDBB] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
-                <Lock className="h-5 w-5 text-[#A9CDBB]" aria-hidden="true" />
+              <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#5C6D63] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
+                <Lock className="h-5 w-5 text-[#5C6D63]" aria-hidden="true" />
                 <input
                   id="password"
                   type="password"
@@ -150,11 +150,11 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="h-full flex-1 bg-transparent text-[16px] tracking-[0.22em] text-[#173D2C] outline-none placeholder:text-[#A9CDBB]"
+                  className="h-full flex-1 bg-transparent text-[16px] tracking-[0.22em] text-[#173D2C] outline-none placeholder:text-[#5C6D63]"
                 />
                 <button
                   type="button"
-                  className="text-[#A9CDBB] transition-colors hover:text-[#5FA37D]"
+                  className="text-[#5C6D63] transition-colors hover:text-[#2F7654]"
                   aria-label="Mostrar contraseña"
                 >
                   <Eye className="h-5 w-5" aria-hidden="true" />
@@ -167,8 +167,8 @@ export default function LoginPage() {
                 <label htmlFor="confirm-password" className="mb-3 block text-[16px] font-bold text-[#173D2C]">
                   Confirmar contraseña
                 </label>
-                <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#A9CDBB] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
-                  <Lock className="h-5 w-5 text-[#A9CDBB]" aria-hidden="true" />
+                <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#5C6D63] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
+                  <Lock className="h-5 w-5 text-[#5C6D63]" aria-hidden="true" />
                   <input
                     id="confirm-password"
                     type="password"
@@ -176,14 +176,14 @@ export default function LoginPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="h-full flex-1 bg-transparent text-[16px] tracking-[0.22em] text-[#173D2C] outline-none placeholder:text-[#A9CDBB]"
+                    className="h-full flex-1 bg-transparent text-[16px] tracking-[0.22em] text-[#173D2C] outline-none placeholder:text-[#5C6D63]"
                   />
                 </div>
               </div>
             )}
 
             {mode === 'login' && (
-              <label className="flex w-fit items-center gap-3 text-[17px] font-normal text-[#5FA37D]">
+              <label className="flex w-fit items-center gap-3 text-[17px] font-normal text-[#2F7654]">
                 <input
                   type="checkbox"
                   checked={remember}
@@ -197,7 +197,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="h-[54px] w-full rounded-[999px] bg-gradient-to-r from-[#7DBD9A] to-[#5FA37D] text-[18px] font-bold text-white shadow-[0_14px_24px_rgba(95,163,125,0.22)] transition-opacity hover:opacity-95 disabled:pointer-events-none disabled:opacity-60"
+              className="h-[54px] w-full rounded-[999px] bg-gradient-to-r from-[#7DBD9A] to-[#2F7654] text-[18px] font-bold text-white shadow-[0_14px_24px_rgba(95,163,125,0.22)] transition-opacity hover:opacity-95 disabled:pointer-events-none disabled:opacity-60"
             >
               {loading ? (mode === 'register' ? 'Registrando...' : 'Iniciando...') : mode === 'register' ? 'Registrarse' : 'Iniciar sesión'}
             </button>
@@ -206,11 +206,11 @@ export default function LoginPage() {
           </div>
         </form>
 
-        <p className="mt-8 text-center text-[14px] text-[#A9CDBB]">
+        <p className="mt-8 text-center text-[14px] text-[#5C6D63]">
           ¿Problemas para acceder?{' '}
           <button
             type="button"
-            className="font-bold text-[#5FA37D] transition-colors hover:text-[#173D2C]"
+            className="font-bold text-[#2F7654] transition-colors hover:text-[#173D2C]"
           >
             Contactar soporte
           </button>

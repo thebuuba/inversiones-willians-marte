@@ -80,7 +80,7 @@ export function RegisterPaymentModal({
           <label className="block">
             <span className="mb-2 block text-sm font-bold text-[#5c6d63]">Monto</span>
             <div className="relative">
-              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[#6f8076]">RD$</span>
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[#5c6d63]">RD$</span>
               <input className={`${inputClass} pl-14 ${invalidAmount ? 'border-[#e4a58b]' : ''}`} inputMode="decimal" onChange={(event) => setAmount(event.target.value)} placeholder="0.00" value={amount} />
             </div>
           </label>
@@ -102,7 +102,7 @@ export function RegisterPaymentModal({
             <span className="mb-2 block text-sm font-bold text-[#5c6d63]">Notas</span>
             <textarea className="h-24 w-full resize-none rounded-xl border border-[#ddebe3] bg-white px-4 py-3 text-sm font-medium text-[#173d2c] outline-none transition focus:border-[#5fa37d]" onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" value={notes} />
           </label>
-          {error ? <p className="text-sm font-medium text-[#c96f4a] sm:col-span-2">{error}</p> : null}
+          {error ? <p className="text-sm font-medium text-[#9f3f25] sm:col-span-2">{error}</p> : null}
         </div>
 
         <footer className="flex justify-end gap-3 border-t border-[#edf2ef] px-6 py-4">

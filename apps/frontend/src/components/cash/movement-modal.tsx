@@ -52,7 +52,7 @@ const initialValues: MovementFormValues = {
 };
 
 function inputClass(hasError = false) {
-  return `h-11 w-full rounded-[10px] border bg-white px-4 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#5FA37D] ${
+  return `h-11 w-full rounded-[10px] border bg-white px-4 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#2F7654] ${
     hasError ? 'border-[#E4A58B]' : 'border-[#DDEBE3]'
   }`;
 }
@@ -79,7 +79,7 @@ function MovementTypeCard({
       className={`flex h-[82px] flex-1 items-center gap-4 rounded-[18px] border px-5 text-left transition hover:-translate-y-0.5 ${
         active
           ? isIncome
-            ? 'border-[#5FA37D] bg-[#EAF6EF] shadow-[0_8px_20px_rgba(95,163,125,0.1)]'
+            ? 'border-[#2F7654] bg-[#EAF6EF] shadow-[0_8px_20px_rgba(95,163,125,0.1)]'
             : 'border-[#E6B89A] bg-[#FFF2E8] shadow-[0_8px_20px_rgba(201,111,74,0.08)]'
           : 'border-[#DDEBE3] bg-white shadow-[0_5px_14px_rgba(40,92,67,0.035)]'
       }`}
@@ -88,14 +88,14 @@ function MovementTypeCard({
     >
       <span
         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] ${
-          isIncome ? 'bg-[#B8DCC5] text-[#173D2C]' : 'bg-[#FFE3D2] text-[#C96F4A]'
+          isIncome ? 'bg-[#B8DCC5] text-[#173D2C]' : 'bg-[#FFE3D2] text-[#9F3F25]'
         }`}
       >
         {icon}
       </span>
       <span>
         <span className="block text-base font-bold text-[#173D2C]">{label}</span>
-        <span className="mt-0.5 block text-sm font-medium text-[#6F8076]">{subtitle}</span>
+        <span className="mt-0.5 block text-sm font-medium text-[#5C6D63]">{subtitle}</span>
       </span>
     </button>
   );
@@ -114,7 +114,7 @@ function FormField({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className={`mb-2 block text-sm font-bold ${error ? 'text-[#C96F4A]' : 'text-[#5C6D63]'}`}>{label}</span>
+      <span className={`mb-2 block text-sm font-bold ${error ? 'text-[#9F3F25]' : 'text-[#5C6D63]'}`}>{label}</span>
       {children}
     </label>
   );
@@ -212,7 +212,7 @@ function ClientSearch({
               type="button"
             >
               <span className="font-bold text-[#173D2C]">{client.firstName} {client.lastName}</span>
-              <span className="text-[#A9CDBB]">{client.identification}</span>
+              <span className="text-[#5C6D63]">{client.identification}</span>
             </button>
           ))}
         </div>
@@ -321,7 +321,7 @@ export const MovementModal = memo(function MovementModal({ isOpen, onClose, onSu
             </span>
             <div>
               <h2 className="text-xl font-bold leading-tight text-[#173D2C]">Registrar movimiento</h2>
-              <p className="mt-1 text-sm font-medium text-[#7E9086]">
+              <p className="mt-1 text-sm font-medium text-[#5C6D63]">
                 Las entradas suman al saldo y las salidas lo descuentan.
               </p>
             </div>
@@ -375,7 +375,7 @@ export const MovementModal = memo(function MovementModal({ isOpen, onClose, onSu
 
             <FormField error={errors.amount} label="Monto">
               <div className="relative">
-                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[#6F8076]">
+                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[#5C6D63]">
                   RD$
                 </span>
                 <input
@@ -405,7 +405,7 @@ export const MovementModal = memo(function MovementModal({ isOpen, onClose, onSu
 
             <FormField className="sm:col-span-2" label="Descripción">
               <textarea
-                className="h-[95px] w-full resize-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 py-3 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#5FA37D]"
+                className="h-[95px] w-full resize-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 py-3 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition placeholder:text-[#8F9691] focus:border-[#2F7654]"
                 onChange={(event) => updateValue('description', event.target.value)}
                 placeholder="Detalles del movimiento..."
                 value={values.description}
@@ -443,7 +443,7 @@ export const MovementModal = memo(function MovementModal({ isOpen, onClose, onSu
             Cancelar
           </button>
           <button
-            className="h-11 rounded-full bg-[#5a9a7a] px-8 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.18)] transition hover:bg-[#4a866a]"
+            className="h-11 rounded-full bg-[#2f7654] px-8 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.18)] transition hover:bg-[#285c43]"
             type="submit"
           >
             Registrar movimiento

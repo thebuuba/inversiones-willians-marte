@@ -96,8 +96,8 @@ interface HistoryEvent {
 
 function StatusBadge({ active }: { active: boolean }) {
   return active ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-semibold text-[#5a9a7a]">
-      <span className="h-1.5 w-1.5 rounded-full bg-[#7fb89a]" />
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-semibold text-[#2f7654]">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#2f7654]" />
       Activo
     </span>
   ) : (
@@ -116,15 +116,15 @@ function LoanStatusBadge({ status }: { status: string }) {
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
         isPaid
-          ? 'bg-[#eaf5ed] text-[#5a9a7a]'
+          ? 'bg-[#eaf5ed] text-[#2f7654]'
           : isOverdue
-            ? 'bg-[#fadccb] text-[#d94e1f]'
+            ? 'bg-[#fadccb] text-[#9f3f25]'
             : isLate
-              ? 'bg-[#fadccb] text-[#d94e1f]'
-              : 'bg-[#fff1c7] text-[#b7791f]'
+              ? 'bg-[#fadccb] text-[#9f3f25]'
+              : 'bg-[#fff1c7] text-[#7a5a0a]'
       }`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-[#7fb89a]' : isOverdue || isLate ? 'bg-[#ff6a00]' : 'bg-[#f3b51b]'}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-[#2f7654]' : isOverdue || isLate ? 'bg-[#ff6a00]' : 'bg-[#f3b51b]'}`} />
       {status}
     </span>
   );
@@ -139,7 +139,7 @@ function ProgressBar({ value, compact = false }: { value: number; compact?: bool
       </div>
       <div className={`${compact ? 'h-1.5' : 'h-2.5'} overflow-hidden rounded-full bg-[#F3F4F6]`}>
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[#7fb89a] to-[#5a9a7a]"
+          className="h-full rounded-full bg-gradient-to-r from-[#2f7654] to-[#2f7654]"
           style={{ width: `${value}%` }}
         />
       </div>
@@ -151,7 +151,7 @@ function LoanMetric({ label, value, accent = false }: { label: string; value: st
   return (
     <div>
       <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-400">{label}</p>
-      <p className={`mt-1 text-sm font-bold ${accent ? 'text-[#c2410c]' : 'text-neutral-900'}`}>{value}</p>
+      <p className={`mt-1 text-sm font-bold ${accent ? 'text-[#9f3f25]' : 'text-neutral-900'}`}>{value}</p>
     </div>
   );
 }
@@ -168,12 +168,12 @@ function LoanRow({ loan }: { loan: LoanSummary }) {
     >
       <div className="grid gap-4 lg:grid-cols-[1.55fr_.75fr_1fr_.72fr_.58fr] lg:items-center">
         <div className="flex min-w-0 items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf5ed] text-[#5a9a7a]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf5ed] text-[#2f7654]">
             <TrendingUp className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <h3 className="truncate text-sm font-bold leading-tight text-neutral-900">Préstamo #{loan.loanNumber}</h3>
-            {loan.portfolio?.name ? <p className="mt-1 truncate text-xs font-bold text-[#5a9a7a]">{loan.portfolio.name}</p> : null}
+            {loan.portfolio?.name ? <p className="mt-1 truncate text-xs font-bold text-[#2f7654]">{loan.portfolio.name}</p> : null}
             <p className="mt-1 text-xs font-medium text-neutral-500">
               {loan.term} cuotas · {frequency}
             </p>
@@ -296,14 +296,14 @@ function DocumentCard({
     >
       <div className="flex min-w-0 items-center gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf5ed]">
-          <FileText className="h-5 w-5 text-[#5a9a7a]" />
+          <FileText className="h-5 w-5 text-[#2f7654]" />
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-neutral-900">
             {doc.name}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-            <span className="rounded-full bg-[#eaf5ed] px-2.5 py-0.5 text-xs font-semibold text-[#5a9a7a]">
+            <span className="rounded-full bg-[#eaf5ed] px-2.5 py-0.5 text-xs font-semibold text-[#2f7654]">
               {documentTypeLabels[typeKey] ?? typeKey}
             </span>
             {status && StatusIcon ? (
@@ -322,7 +322,7 @@ function DocumentCard({
         {doc.fileUrl && (
           <button
             aria-label={`Ver ${doc.name}`}
-            className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#5a9a7a]"
+            className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#2f7654]"
             onClick={(e) => {
               e.stopPropagation();
               viewDocument(doc.id);
@@ -335,7 +335,7 @@ function DocumentCard({
         {doc.fileUrl && (
           <button
             aria-label={`Descargar ${doc.name}`}
-            className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#5a9a7a]"
+            className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#2f7654]"
             onClick={(e) => {
               e.stopPropagation();
               downloadDocument(doc.id, doc.name);
@@ -347,7 +347,7 @@ function DocumentCard({
         )}
         <button
           aria-label={`Eliminar ${doc.name}`}
-          className="rounded-full p-1.5 transition hover:bg-[#fde4d4] hover:text-[#c2410c]"
+          className="rounded-full p-1.5 transition hover:bg-[#fde4d4] hover:text-[#9f3f25]"
           onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }}
           type="button"
         >
@@ -475,7 +475,7 @@ function UploadModal({
               <p className="mt-1 text-xs text-neutral-500">Genera un QR para tomar la foto desde el celular.</p>
             </div>
             <button
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#5a9a7a] text-white transition hover:bg-[#4a866a] disabled:opacity-50"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2f7654] text-white transition hover:bg-[#285c43] disabled:opacity-50"
               disabled={creatingCaptureSession}
               onClick={handleCreateCaptureSession}
               title="Generar QR de captura"
@@ -510,7 +510,7 @@ function UploadModal({
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-neutral-500">
             Archivo
           </label>
-          <label className="flex h-24 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50 text-sm text-neutral-400 transition hover:border-[#5a9a7a] hover:bg-[#eaf5ed]/30">
+          <label className="flex h-24 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50 text-sm text-neutral-400 transition hover:border-[#2f7654] hover:bg-[#eaf5ed]/30">
             {file ? (
               <span className="font-medium text-neutral-700">{file.name}</span>
             ) : (
@@ -531,7 +531,7 @@ function UploadModal({
             Nombre <span className="text-neutral-300">(opcional)</span>
           </label>
           <input
-            className="h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-[#5a9a7a] focus:ring-2 focus:ring-[#eaf5ed]"
+            className="h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-[#2f7654] focus:ring-2 focus:ring-[#eaf5ed]"
             onChange={(e) => setName(e.target.value)}
             placeholder="Nombre del documento"
             value={name}
@@ -548,7 +548,7 @@ function UploadModal({
             Cancelar
           </button>
           <button
-            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm font-semibold text-white transition hover:bg-[#4a866a] disabled:opacity-50"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm font-semibold text-white transition hover:bg-[#285c43] disabled:opacity-50"
             disabled={!file || uploading}
             onClick={handleSubmit}
             type="button"
@@ -608,7 +608,7 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <p className="text-sm text-neutral-500">{documents.length} documentos archivados</p>
         <button
-          className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm text-white hover:bg-[#4a866a]"
+          className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm text-white hover:bg-[#285c43]"
           onClick={() => setShowModal(true)}
           type="button"
         >
@@ -645,11 +645,11 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
 
 function historyTone(type: string) {
   const styles: Record<string, { bg: string; text: string; dot: string; icon: typeof CreditCard }> = {
-    Pago: { bg: '#eaf5ed', text: '#5a9a7a', dot: '#7fb89a', icon: CreditCard },
+    Pago: { bg: '#eaf5ed', text: '#2f7654', dot: '#2f7654', icon: CreditCard },
     Cliente: { bg: '#dbeafe', text: '#1d4ed8', dot: '#3b82f6', icon: UserRound },
     Préstamo: { bg: '#e9ddfb', text: '#7c3aed', dot: '#8b5cf6', icon: TrendingUp },
-    Nota: { bg: '#fef3c7', text: '#a16207', dot: '#eab308', icon: StickyNote },
-    Documento: { bg: '#eaf5ed', text: '#5a9a7a', dot: '#7fb89a', icon: NotebookPen },
+    Nota: { bg: '#fef3c7', text: '#7a5a0a', dot: '#eab308', icon: StickyNote },
+    Documento: { bg: '#eaf5ed', text: '#2f7654', dot: '#2f7654', icon: NotebookPen },
   };
   return styles[type] ?? styles.Nota;
 }
@@ -680,7 +680,7 @@ function TimelineItem({ event }: { event: HistoryEvent }) {
                 {event.type}
               </span>
               {event.amount && (
-                <span className="text-sm font-bold text-[#5a9a7a]">{event.amount}</span>
+                <span className="text-sm font-bold text-[#2f7654]">{event.amount}</span>
               )}
             </div>
             <h3 className="text-sm font-medium text-neutral-900">{event.title}</h3>
@@ -715,7 +715,7 @@ function ClientHistoryTab({ events, loading }: { events: HistoryEvent[]; loading
 
 function NoteIcon() {
   return (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fef3c7] text-[#a16207]">
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fef3c7] text-[#7a5a0a]">
       <FileText className="h-4 w-4" />
     </span>
   );
@@ -739,7 +739,7 @@ function NoteActions({
         Cancelar
       </button>
       <button
-        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#5a9a7a] px-4 text-sm font-semibold text-white transition hover:bg-[#4a866a]"
+        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#2f7654] px-4 text-sm font-semibold text-white transition hover:bg-[#285c43]"
         onClick={onSave}
         type="button"
       >
@@ -754,7 +754,7 @@ function NoteTextarea({ value, onChange, placeholder }: { value: string; onChang
   return (
     <textarea
       autoFocus
-      className="h-[78px] w-full resize-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium leading-relaxed text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-[#5a9a7a] focus:ring-2 focus:ring-[#eaf5ed]"
+      className="h-[78px] w-full resize-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium leading-relaxed text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-[#2f7654] focus:ring-2 focus:ring-[#eaf5ed]"
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
       value={value}
@@ -776,7 +776,7 @@ function EditableNoteCard({
   onSave: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-[#7fb89a] bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-[#2f7654] bg-white p-4 shadow-sm">
       <div className="grid grid-cols-[36px_1fr] gap-4">
         <NoteIcon />
         <div>
@@ -816,7 +816,7 @@ function NoteCard({
       <div className="flex shrink-0 items-center gap-3 text-neutral-400">
         <button
           aria-label="Editar nota"
-          className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#5a9a7a]"
+          className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#2f7654]"
           onClick={onEdit}
           type="button"
         >
@@ -824,7 +824,7 @@ function NoteCard({
         </button>
         <button
           aria-label="Eliminar nota"
-          className="rounded-full p-1.5 transition hover:bg-[#fde4d4] hover:text-[#c2410c]"
+          className="rounded-full p-1.5 transition hover:bg-[#fde4d4] hover:text-[#9f3f25]"
           onClick={onDelete}
           type="button"
         >
@@ -938,7 +938,7 @@ function ClientNotesTab({
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <p className="text-sm text-neutral-500">{notes.length} notas</p>
         <button
-          className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm text-white hover:bg-[#4a866a]"
+          className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm text-white hover:bg-[#285c43]"
           onClick={startCreate}
           type="button"
         >
@@ -1092,7 +1092,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#F3F4F6] font-sans">
         <p className="text-sm font-medium text-neutral-400">Cliente no encontrado.</p>
-        <Link className="mt-4 text-sm font-bold text-[#5a9a7a] underline" href="/clientes">
+        <Link className="mt-4 text-sm font-bold text-[#2f7654] underline" href="/clientes">
           Volver a clientes
         </Link>
       </div>
@@ -1105,9 +1105,9 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   const notesCount = countClientNotes(clientData.notes);
 
   const statsCards = [
-    { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, accent: '#eaf5ed', color: '#5a9a7a' },
-    { label: 'Total prestado', value: fmt(totalLoaned), icon: Banknote, accent: '#c2dfcb', color: '#5a9a7a' },
-    { label: 'Saldo pendiente', value: fmt(totalBalance), icon: CircleAlert, accent: '#fde4d4', color: '#c2410c' },
+    { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, accent: '#eaf5ed', color: '#2f7654' },
+    { label: 'Total prestado', value: fmt(totalLoaned), icon: Banknote, accent: '#c2dfcb', color: '#2f7654' },
+    { label: 'Saldo pendiente', value: fmt(totalBalance), icon: CircleAlert, accent: '#fde4d4', color: '#9f3f25' },
     { label: 'Total pagado', value: fmt(totalPaid), icon: CircleCheck, accent: '#dbeafe', color: '#1d4ed8' },
   ];
 
@@ -1115,7 +1115,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
     <div className="min-h-screen bg-[#F3F4F6] font-sans">
       <div className="mx-auto max-w-[1720px] px-6 py-8">
         <Link
-          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#5a9a7a] hover:text-[#7fb89a]"
+          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#2f7654] hover:text-[#2f7654]"
           href="/clientes"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -1135,7 +1135,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                   />
                 ) : (
                   <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-[#eaf5ed] shadow-md">
-                    <UserRound className="h-8 w-8 text-[#5a9a7a]" />
+                    <UserRound className="h-8 w-8 text-[#2f7654]" />
                   </div>
                 )}
                 <div className="pb-1">
@@ -1169,7 +1169,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                   Editar
                 </Link>
                 <Link
-                  className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm text-white hover:bg-[#4a866a]"
+                  className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm text-white hover:bg-[#285c43]"
                   href={`/prestamos/nuevo?cliente=${clientId}`}
                 >
                   <Plus className="h-4 w-4" />
@@ -1211,7 +1211,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                 key={t.label}
                 onClick={() => setActiveTab(t.label)}
                 className={`flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold transition ${
-                  active ? 'bg-[#5a9a7a] text-white shadow-sm' : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#5a9a7a]'
+                  active ? 'bg-[#2f7654] text-white shadow-sm' : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#2f7654]'
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -1220,7 +1220,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                   <span
                     aria-label={`${notesCount} notas`}
                     className={`flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold ${
-                      active ? 'bg-white text-[#C96F4A]' : 'bg-[#FFE3D2] text-[#C96F4A]'
+                      active ? 'bg-white text-[#9F3F25]' : 'bg-[#FFE3D2] text-[#9F3F25]'
                     }`}
                   >
                     {notesCount}

@@ -67,16 +67,16 @@ function TextInput({
 }) {
   return (
     <label className={`block ${className}`}>
-      {label && <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">{label}</span>}
-      <div className="flex h-[42px] items-center rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] transition focus-within:border-[#4F9B76] focus-within:ring-2 focus-within:ring-[#EAF6EF]">
-        {prefix && <span className="mr-2 shrink-0 text-xs text-[#7A8A80]">{prefix}</span>}
+      {label && <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">{label}</span>}
+      <div className="flex h-[42px] items-center rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] transition focus-within:border-[#285C43] focus-within:ring-2 focus-within:ring-[#EAF6EF]">
+        {prefix && <span className="mr-2 shrink-0 text-xs text-[#5C6D63]">{prefix}</span>}
         <input
           className="h-full min-w-0 flex-1 bg-transparent outline-none"
           onChange={onChange ? (event) => onChange(event.target.value) : undefined}
           value={value}
           readOnly={readOnly}
         />
-        {suffix && <span className="ml-2 shrink-0 text-xs text-[#7A8A80]">{suffix}</span>}
+        {suffix && <span className="ml-2 shrink-0 text-xs text-[#5C6D63]">{suffix}</span>}
       </div>
     </label>
   );
@@ -97,10 +97,10 @@ function SelectInput({
 }) {
   return (
     <label className={`block ${className}`}>
-      {label && <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">{label}</span>}
+      {label && <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">{label}</span>}
       <div className="relative">
         <select
-          className="h-[42px] w-full appearance-none rounded-[8px] border border-[#DDEBE3] bg-white px-3 pr-8 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
+          className="h-[42px] w-full appearance-none rounded-[8px] border border-[#DDEBE3] bg-white px-3 pr-8 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#EAF6EF]"
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
         >
@@ -147,7 +147,7 @@ function ClientSearchCard({
       <div className="rounded-[14px] border border-[#EDF2EF] bg-white shadow-[0_4px_14px_rgba(40,92,67,0.03)]">
         <div className="flex min-h-[72px] items-center gap-3 px-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[2px] border-white bg-[#EAF6EF] shadow-[0_4px_12px_rgba(40,92,67,0.1)]">
-            <UserRound className="h-5 w-5 text-[#5FA37D]" />
+            <UserRound className="h-5 w-5 text-[#2F7654]" />
           </div>
           <button
             className="min-w-0 flex-1 text-left"
@@ -155,10 +155,10 @@ function ClientSearchCard({
             type="button"
           >
             <p className="truncate text-base font-bold leading-tight text-[#173D2C]">{fullName}</p>
-            <p className="mt-0.5 text-xs font-medium text-[#7A8A80]">{selectedClient.identification ?? '—'}</p>
+            <p className="mt-0.5 text-xs font-medium text-[#5C6D63]">{selectedClient.identification ?? '—'}</p>
           </button>
           <button
-            className="shrink-0 rounded-lg border border-[#DDEBE3] px-2.5 py-1 text-xs font-bold text-[#5FA37D] transition hover:bg-[#F0F7F3]"
+            className="shrink-0 rounded-lg border border-[#DDEBE3] px-2.5 py-1 text-xs font-bold text-[#2F7654] transition hover:bg-[#F0F7F3]"
             onClick={() => setShowSearch(true)}
             type="button"
           >
@@ -173,10 +173,10 @@ function ClientSearchCard({
     <div className="rounded-[14px] border border-[#EDF2EF] bg-white shadow-[0_4px_14px_rgba(40,92,67,0.03)]">
       <div className="px-4 py-3">
         <div className="relative mb-2">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#A9CDBB]" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#5C6D63]" />
           <input
             autoFocus
-            className="h-[42px] w-full rounded-[10px] border border-[#DDEBE3] bg-[#F8FBF9] pl-9 pr-3 text-sm font-medium text-[#173D2C] outline-none transition placeholder:text-[#A0AFA8] focus:border-[#285C43] focus:bg-white"
+            className="h-[42px] w-full rounded-[10px] border border-[#DDEBE3] bg-[#F8FBF9] pl-9 pr-3 text-sm font-medium text-[#173D2C] outline-none transition placeholder:text-[#5C6D63] focus:border-[#285C43] focus:bg-white"
             placeholder="Buscar cliente por nombre, cédula o teléfono…"
             type="text"
             value={query}
@@ -196,17 +196,17 @@ function ClientSearchCard({
                 type="button"
               >
                 <p className="font-bold text-[#173D2C]">{c.firstName} {c.lastName}</p>
-                <p className="mt-0.5 text-[#777D7A]">{c.identification ?? '—'} · {c.phone ?? '—'}</p>
+                <p className="mt-0.5 text-[#5C6D63]">{c.identification ?? '—'} · {c.phone ?? '—'}</p>
               </button>
             ))}
           </div>
         )}
         {query.length >= 2 && results.length === 0 && (
-          <p className="text-xs text-[#777D7A]">Sin resultados</p>
+          <p className="text-xs text-[#5C6D63]">Sin resultados</p>
         )}
         {selectedClient && (
           <button
-            className="mt-2 text-xs font-bold text-[#5FA37D] transition hover:text-[#285C43]"
+            className="mt-2 text-xs font-bold text-[#2F7654] transition hover:text-[#285C43]"
             onClick={() => setShowSearch(false)}
             type="button"
           >
@@ -252,43 +252,43 @@ function LoanSummaryPanel({
   return (
     <section className="rounded-xl border border-neutral-100 bg-white p-4 shadow-sm lg:p-5">
       <div className="mb-4 flex items-center gap-2 text-[#173D2C]">
-        <Calculator className="h-4 w-4 text-[#5FA37D]" />
+        <Calculator className="h-4 w-4 text-[#2F7654]" />
         <h2 className="text-sm font-bold">Resumen del préstamo</h2>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-lg border border-[#EDF2EF] bg-[#F8FBF9] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8A80]">Capital</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Capital</p>
           <p className="mt-1 text-lg font-bold text-[#173D2C]">{formatCurrency(amount)}</p>
         </div>
         <div className="rounded-lg border border-[#EDF2EF] bg-[#F8FBF9] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8A80]">Interés generado</p>
-          <p className="mt-1 text-lg font-bold text-[#B45B38]">{formatCurrency(interest)}</p>
-          <p className="mt-0.5 text-[10px] text-[#7A8A80]">{interestPercent.toFixed(1)}% del capital</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Interés generado</p>
+          <p className="mt-1 text-lg font-bold text-[#9F3F25]">{formatCurrency(interest)}</p>
+          <p className="mt-0.5 text-[10px] text-[#5C6D63]">{interestPercent.toFixed(1)}% del capital</p>
         </div>
         <div className="rounded-lg border border-[#EDF2EF] bg-[#F8FBF9] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8A80]">Total a pagar</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Total a pagar</p>
           <p className="mt-1 text-lg font-bold text-[#2F7654]">{formatCurrency(total)}</p>
         </div>
       </div>
 
       <div className="mt-4 rounded-lg border border-[#EDF2EF] bg-[#FAFBFA] p-3">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8A80]">Datos del préstamo</p>
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Datos del préstamo</p>
         <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
           <div className="flex justify-between">
-            <span className="text-[#7A8A80]">Amortización</span>
+            <span className="text-[#5C6D63]">Amortización</span>
             <span className="font-medium text-[#173D2C]">{amortLabels[amortizationType]}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[#7A8A80]">Interés</span>
+            <span className="text-[#5C6D63]">Interés</span>
             <span className="font-medium text-[#173D2C]">{customInterestRate || '—'}%</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[#7A8A80]">Frecuencia</span>
+            <span className="text-[#5C6D63]">Frecuencia</span>
             <span className="font-medium text-[#173D2C]">{freqLabels[paymentFrequency] || '—'}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[#7A8A80]">Primera cuota</span>
+            <span className="text-[#5C6D63]">Primera cuota</span>
             <span className="font-medium text-[#173D2C]">{firstPaymentDate || '—'}</span>
           </div>
         </div>
@@ -377,7 +377,7 @@ function MainInfoCard({
             />
             {amortizationType !== 'INDEFINITE' && (
               <div>
-                <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Plazo</span>
+                <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">Plazo</span>
                 <TextInput label="" onChange={onTermChange} value={term} />
               </div>
             )}
@@ -394,11 +394,11 @@ function MainInfoCard({
               onChange={(v) => onPaymentFrequencyChange(freqOptions.find((o) => o.label === v)?.value ?? 'MONTHLY')}
             />
             <label className="block">
-              <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Primera cuota</span>
+              <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">Primera cuota</span>
               <DatePickerInput
                 value={firstPaymentDate}
                 onChange={onFirstPaymentDateChange}
-                className="h-[42px] w-full rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
+                className="h-[42px] w-full rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#EAF6EF]"
               />
             </label>
             <TextInput
@@ -409,9 +409,9 @@ function MainInfoCard({
             />
           </div>
           <label className="block">
-            <span className="mb-1.5 block text-xs font-bold text-[#6F8076]">Descripción / propósito</span>
+            <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">Descripción / propósito</span>
             <textarea
-              className="h-[72px] w-full resize-none rounded-[8px] border border-[#DDEBE3] bg-white px-3 py-2.5 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition placeholder:text-[#8F9691] focus:border-[#4F9B76] focus:ring-2 focus:ring-[#EAF6EF]"
+              className="h-[72px] w-full resize-none rounded-[8px] border border-[#DDEBE3] bg-white px-3 py-2.5 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition placeholder:text-[#8F9691] focus:border-[#285C43] focus:ring-2 focus:ring-[#EAF6EF]"
               placeholder="Ej. Capital de trabajo para negocio familiar..."
               value={purpose}
               onChange={(e) => onPurposeChange(e.target.value)}
@@ -625,9 +625,9 @@ function AmortizationRow({
         total ? 'bg-[#F3FAF6] font-bold' : row.number === 5 ? 'bg-[#F6FAF7]' : 'bg-white'
       }`}
     >
-      <span className={total ? 'text-[#6F8076]' : 'font-medium text-[#7A8A80]'}>{installmentLabel}</span>
+      <span className={total ? 'text-[#5C6D63]' : 'font-medium text-[#5C6D63]'}>{installmentLabel}</span>
       <span className="font-medium text-[#173D2C]">{row.date ?? '—'}</span>
-      <span className="text-right font-medium text-[#B45B38]">{fmt(row.interest)}</span>
+      <span className="text-right font-medium text-[#9F3F25]">{fmt(row.interest)}</span>
       <span className="text-right font-medium text-[#2F7654]">{fmt(row.principal)}</span>
       <span className="text-right font-bold text-[#173D2C]">{fmt(row.payment)}</span>
       <span className={`text-right font-bold ${total ? 'text-[#A7B5AD]' : 'text-[#173D2C]'}`}>{fmt(row.balance)}</span>
@@ -661,13 +661,13 @@ function AmortizationTableCard({
     >
       <div className="flex items-center justify-between gap-4 px-5 py-4">
         <h2 className="text-sm font-bold text-[#173D2C]">Tabla de amortización</h2>
-        <p className="text-xs font-medium text-[#7A8A80]">{term} {term === 1 ? 'cuota' : 'cuotas'} en total</p>
+        <p className="text-xs font-medium text-[#5C6D63]">{term} {term === 1 ? 'cuota' : 'cuotas'} en total</p>
       </div>
 
       <div className="max-h-[400px] overflow-y-auto">
         <div className="overflow-x-auto">
           <div className="min-w-[980px]">
-            <div className="grid grid-cols-[90px_1.2fr_1.2fr_1.2fr_1.2fr_1.2fr] bg-[#F3FAF6] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8A80]">
+            <div className="grid grid-cols-[90px_1.2fr_1.2fr_1.2fr_1.2fr_1.2fr] bg-[#F3FAF6] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-[#5C6D63]">
               <span>CUOTA</span>
               <span>FECHA</span>
               <span className="text-right">INTERÉS</span>
@@ -723,7 +723,7 @@ function Header() {
           <h1 className="text-2xl font-bold leading-tight text-[#173D2C]">
             Crear préstamo
           </h1>
-          <p className="mt-4 max-w-[720px] text-base font-medium leading-7 text-[#7A8A80]">
+          <p className="mt-4 max-w-[720px] text-base font-medium leading-7 text-[#5C6D63]">
             Configura los parámetros y revisa el cálculo antes de confirmar.
           </p>
         </div>
@@ -835,7 +835,7 @@ export function NewLoanPage() {
         )}
 
         {productsError && (
-          <p className="mt-6 rounded-[14px] border border-[#F1C9B7] bg-[#FFF4EE] px-4 py-3 text-sm font-medium text-[#B45B38]">
+          <p className="mt-6 rounded-[14px] border border-[#F1C9B7] bg-[#FFF4EE] px-4 py-3 text-sm font-medium text-[#9F3F25]">
             {productsError}
           </p>
         )}

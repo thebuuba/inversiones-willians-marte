@@ -123,14 +123,14 @@ function Header({ onNewMovement }: { onNewMovement: () => void }) {
     >
       <div>
         <span className="inline-flex items-center gap-2 rounded-full bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#173D2C]">
-          <span className="h-2 w-2 rounded-full bg-[#5FA37D]" />
+          <span className="h-2 w-2 rounded-full bg-[#2F7654]" />
           Movimientos en vivo
         </span>
         <h1 className="mt-3 text-[28px] font-bold leading-tight text-[#173D2C]">Caja</h1>
-        <p className="mt-1.5 text-sm text-[#7E9086]">Controla las entradas y salidas de dinero del negocio.</p>
+        <p className="mt-1.5 text-sm text-[#5C6D63]">Controla las entradas y salidas de dinero del negocio.</p>
       </div>
       <button
-        className="flex h-11 items-center gap-2 rounded-full bg-[#5a9a7a] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
+        className="flex h-11 items-center gap-2 rounded-full bg-[#2f7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
         onClick={onNewMovement}
         type="button"
       >
@@ -159,7 +159,7 @@ function SummaryCard({
   index: number;
 }) {
   const isBalance = variant === 'balance';
-  const tone = variant === 'expense' ? '#C96F4A' : '#5FA37D';
+  const tone = variant === 'expense' ? '#9F3F25' : '#2F7654';
 
   return (
     <ShellCard
@@ -173,10 +173,10 @@ function SummaryCard({
         >
           {icon}
         </div>
-        <p className="text-xs font-bold uppercase tracking-[0.09em] text-[#6F8076]">{title}</p>
+        <p className="text-xs font-bold uppercase tracking-[0.09em] text-[#5C6D63]">{title}</p>
       </div>
       <p className="mt-6 text-[28px] font-bold leading-none text-[#173D2C]">{value}</p>
-      <div className="mt-4 text-sm font-medium text-[#6F8076]">{detail}</div>
+      <div className="mt-4 text-sm font-medium text-[#5C6D63]">{detail}</div>
       {!isBalance && (
         <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[#EEF3EF]">
           <div
@@ -205,13 +205,13 @@ function FilterBar() {
             </button>
           ))}
         </div>
-        <div className="flex h-10 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-4 text-[#A9CDBB] xl:ml-auto xl:max-w-[380px]">
+        <div className="flex h-10 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-4 text-[#5C6D63] xl:ml-auto xl:max-w-[380px]">
           <Search className="h-4 w-4 shrink-0" />
           <span className="truncate text-sm">Buscar por persona o concepto...</span>
         </div>
         <button className="flex h-10 items-center justify-between rounded-full border border-[#DDEBE3] bg-white px-4 text-sm font-semibold text-[#173D2C] shadow-sm transition hover:bg-[#F3FAF6] xl:w-[235px]">
           Todas las categorías
-          <ChevronDown className="h-4 w-4 text-[#A9CDBB]" />
+          <ChevronDown className="h-4 w-4 text-[#5C6D63]" />
         </button>
       </div>
     </ShellCard>
@@ -221,10 +221,10 @@ function FilterBar() {
 function Tag({ label, tone, icon }: Movement['tags'][number]) {
   const styles = {
     green: 'bg-[#E7F4EC] text-[#173D2C]',
-    orange: 'bg-[#FFE3D2] text-[#C96F4A]',
-    blue: 'bg-[#D8E9FF] text-[#3F7FBD]',
+    orange: 'bg-[#FFE3D2] text-[#9F3F25]',
+    blue: 'bg-[#D8E9FF] text-[#2F5F91]',
     purple: 'bg-[#E8DDF6] text-[#6F55A5]',
-    yellow: 'bg-[#FFF4C8] text-[#A98219]',
+    yellow: 'bg-[#FFF4C8] text-[#7A5A0A]',
     gray: 'bg-[#F3FAF6] text-[#5C6D63] border border-[#DDEBE3]',
   }[tone];
 
@@ -267,7 +267,7 @@ function TransactionItem({ movement }: { movement: Movement }) {
       <div className="flex min-w-0 items-center gap-4">
         <div
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${
-            isIncome ? 'bg-[#E7F4EC] text-[#173D2C]' : 'bg-[#FFE3D2] text-[#C96F4A]'
+            isIncome ? 'bg-[#E7F4EC] text-[#173D2C]' : 'bg-[#FFE3D2] text-[#9F3F25]'
           }`}
         >
           <DirectionIcon className="h-4 w-4" />
@@ -276,10 +276,10 @@ function TransactionItem({ movement }: { movement: Movement }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-sm font-bold text-[#173D2C]">{movement.name}</h3>
-            <span className="text-[#A9CDBB]">·</span>
-            <span className="text-xs text-[#A9CDBB]">{movement.code}</span>
+            <span className="text-[#5C6D63]">·</span>
+            <span className="text-xs text-[#5C6D63]">{movement.code}</span>
           </div>
-          <p className="mt-0.5 text-xs text-[#7E9086]">{movement.description}</p>
+          <p className="mt-0.5 text-xs text-[#5C6D63]">{movement.description}</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {movement.tags.map((tag) => (
               <Tag key={`${movement.code}-${tag.label}`} {...tag} />
@@ -300,10 +300,10 @@ function TransactionGroup({ group, index }: { group: MovementGroup; index: numbe
     <motion.section animate="visible" custom={index} initial="hidden" variants={fadeUp}>
       <div className="mb-3 flex items-center justify-between gap-4 px-1">
         <div className="flex items-center gap-2.5">
-          <Calendar className="h-4 w-4 text-[#7E9086]" />
+          <Calendar className="h-4 w-4 text-[#5C6D63]" />
           <p className="text-sm font-bold text-[#173D2C]">
             {group.date}
-            <span className="px-2 text-[#A9CDBB]">·</span>
+            <span className="px-2 text-[#5C6D63]">·</span>
             <span className="font-medium text-[#A9B8AE]">{group.count}</span>
           </p>
         </div>

@@ -11,7 +11,7 @@ test('pwa manifest uses installable standalone settings', () => {
   assert.equal(data.start_url, '/inicio');
   assert.equal(data.display, 'standalone');
   assert.equal(data.background_color, '#F3F4F6');
-  assert.equal(data.theme_color, '#5a9a7a');
+  assert.equal(data.theme_color, '#2f7654');
   assert.equal(data.icons?.some((icon) => icon.src === '/icons/icon-192.png' && icon.sizes === '192x192'), true);
   assert.equal(data.icons?.some((icon) => icon.src === '/icons/icon-512.png' && icon.sizes === '512x512'), true);
 });

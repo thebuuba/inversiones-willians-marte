@@ -82,7 +82,7 @@ function FormHeaderActions({
         Cancelar
       </Link>
       <button
-        className="inline-flex h-12 items-center justify-center gap-3 rounded-full bg-[#5a9a7a] px-7 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.24)] transition hover:-translate-y-0.5 hover:bg-[#4a866a] disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex h-12 items-center justify-center gap-3 rounded-full bg-[#2f7654] px-7 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.24)] transition hover:-translate-y-0.5 hover:bg-[#285c43] disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={saving}
         onClick={onSave}
         type="button"
@@ -113,7 +113,7 @@ function StyledInput({
     <label className="block">
       <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">{label}</span>
       <input
-        className="h-[52px] w-full rounded-[14px] border border-[#DDEBE3] bg-white px-4 text-sm font-medium text-[#173D2C] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition placeholder:text-[#7E808A] focus:border-[#5FA37D] focus:ring-4 focus:ring-[#EAF6EF]"
+        className="h-[52px] w-full rounded-[14px] border border-[#DDEBE3] bg-white px-4 text-sm font-medium text-[#173D2C] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition placeholder:text-[#7E808A] focus:border-[#2F7654] focus:ring-4 focus:ring-[#EAF6EF]"
         placeholder={placeholder}
         type={type}
         value={value}
@@ -140,7 +140,7 @@ function StyledSelect({
       <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">{label}</span>
       <div className="relative">
         <select
-          className="h-[52px] w-full appearance-none rounded-[14px] border border-[#DDEBE3] bg-white px-4 pr-12 text-sm font-medium text-[#151918] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition focus:border-[#5FA37D] focus:ring-4 focus:ring-[#EAF6EF]"
+          className="h-[52px] w-full appearance-none rounded-[14px] border border-[#DDEBE3] bg-white px-4 pr-12 text-sm font-medium text-[#151918] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition focus:border-[#2F7654] focus:ring-4 focus:ring-[#EAF6EF]"
           value={value}
           onChange={(e) => onChange(e.target.value)}
         >
@@ -169,7 +169,7 @@ function StyledTextarea({
     <label className="block">
       <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">{label}</span>
       <textarea
-        className="min-h-[116px] w-full resize-y rounded-[14px] border border-[#DDEBE3] bg-white px-4 py-4 text-sm font-medium text-[#173D2C] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition placeholder:text-[#7E808A] focus:border-[#5FA37D] focus:ring-4 focus:ring-[#EAF6EF]"
+        className="min-h-[116px] w-full resize-y rounded-[14px] border border-[#DDEBE3] bg-white px-4 py-4 text-sm font-medium text-[#173D2C] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition placeholder:text-[#7E808A] focus:border-[#2F7654] focus:ring-4 focus:ring-[#EAF6EF]"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -181,7 +181,7 @@ function StyledTextarea({
 function CardHeader({
   icon,
   iconBg = '#EAF6EF',
-  iconColor = '#4F9B76',
+  iconColor = '#285C43',
   title,
   subtitle,
 }: {
@@ -201,7 +201,7 @@ function CardHeader({
       </div>
       <div>
         <h2 className="text-xl font-bold leading-tight text-[#151918]">{title}</h2>
-        {subtitle && <p className="mt-1 text-sm font-medium text-[#777D7A]">{subtitle}</p>}
+        {subtitle && <p className="mt-1 text-sm font-medium text-[#5C6D63]">{subtitle}</p>}
       </div>
     </div>
   );
@@ -263,7 +263,7 @@ function ClientPhotoUploader({
       ) : (
         <button
           className={`flex h-[280px] w-full flex-col items-center justify-center rounded-[22px] border-2 border-dashed px-6 text-center transition ${
-            dragging ? 'border-[#5FA37D] bg-[#EAF6EF]' : 'border-[#B8EBC9] bg-[#F7FCF9] hover:border-[#5FA37D]'
+            dragging ? 'border-[#2F7654] bg-[#EAF6EF]' : 'border-[#B8EBC9] bg-[#F7FCF9] hover:border-[#2F7654]'
           }`}
           onClick={() => inputRef.current?.click()}
           onDragLeave={() => setDragging(false)}
@@ -274,11 +274,11 @@ function ClientPhotoUploader({
           onDrop={handleDrop}
           type="button"
         >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#4F9B76] shadow-[0_7px_18px_rgba(40,92,67,0.1)]">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#285C43] shadow-[0_7px_18px_rgba(40,92,67,0.1)]">
             <ImageIcon className="h-7 w-7" />
           </span>
           <span className="mt-5 text-base font-bold text-[#3F4542]">Arrastra una foto aquí</span>
-          <span className="mt-4 text-sm font-medium text-[#777D7A]">o haz click para subir</span>
+          <span className="mt-4 text-sm font-medium text-[#5C6D63]">o haz click para subir</span>
           <input accept="image/jpeg,image/png" className="hidden" onChange={handleChange} ref={inputRef} type="file" />
         </button>
       )}
@@ -286,7 +286,7 @@ function ClientPhotoUploader({
       {!value && (
         <>
           <button
-            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-3 rounded-[10px] border border-[#B8EBC9] bg-white text-sm font-bold text-[#5FA37D] shadow-[0_5px_12px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:bg-[#F7FCF9]"
+            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-3 rounded-[10px] border border-[#B8EBC9] bg-white text-sm font-bold text-[#2F7654] shadow-[0_5px_12px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:bg-[#F7FCF9]"
             onClick={() => inputRef.current?.click()}
             type="button"
           >
@@ -294,7 +294,7 @@ function ClientPhotoUploader({
             Subir foto
           </button>
 
-          <p className="mt-6 text-sm font-medium leading-7 text-[#777D7A]">
+          <p className="mt-6 text-sm font-medium leading-7 text-[#5C6D63]">
             Formatos aceptados: JPG, PNG · Tamaño máximo 5 MB. Una foto clara del rostro ayuda a verificar la identidad del cliente.
           </p>
         </>
@@ -307,7 +307,7 @@ function RequiredFieldsNotice() {
   return (
     <motion.aside
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-[22px] border border-[#E8EDE9] bg-[#F5F7F6] p-7 text-sm font-medium leading-7 text-[#777D7A]"
+      className="rounded-[22px] border border-[#E8EDE9] bg-[#F5F7F6] p-7 text-sm font-medium leading-7 text-[#5C6D63]"
       initial={{ opacity: 0, y: 18 }}
       transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1], delay: 0.11 }}
     >
@@ -357,7 +357,7 @@ function ContactInfoCard({
       <CardHeader
         icon={<Phone className="h-6 w-6" />}
         iconBg="#D8E9FF"
-        iconColor="#3F7FBD"
+        iconColor="#2F5F91"
         title="Información de contacto"
         subtitle="Cómo localizar al cliente."
       />
@@ -371,7 +371,7 @@ function ContactInfoCard({
         <div className="md:col-span-2">
           <label className="block">
             <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">Dirección</span>
-            <div className="flex items-start gap-3 rounded-[14px] border border-[#DDEBE3] bg-white px-4 shadow-[0_4px_10px_rgba(40,92,67,0.07)] transition focus-within:border-[#5FA37D] focus-within:ring-4 focus-within:ring-[#EAF6EF]">
+            <div className="flex items-start gap-3 rounded-[14px] border border-[#DDEBE3] bg-white px-4 shadow-[0_4px_10px_rgba(40,92,67,0.07)] transition focus-within:border-[#2F7654] focus-within:ring-4 focus-within:ring-[#EAF6EF]">
               <MapPin className="mt-4 h-5 w-5 shrink-0 text-[#9DA5A0]" />
               <input
                 className="h-[52px] w-full bg-transparent text-sm font-medium text-[#173D2C] outline-none placeholder:text-[#7E808A]"
@@ -481,7 +481,7 @@ export function AddClientPage({ clientId }: { clientId?: number }) {
         >
           <div>
             <Link
-              className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.14em] text-[#5FA37D] transition hover:text-[#173D2C]"
+              className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.14em] text-[#2F7654] transition hover:text-[#173D2C]"
               href={returnHref}
             >
               <ArrowLeft className="h-4 w-4" />

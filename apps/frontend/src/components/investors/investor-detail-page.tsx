@@ -79,7 +79,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#F3F4F6] font-sans">
         <p className="text-sm font-medium text-neutral-400">Inversionista no encontrado.</p>
-        <Link className="mt-4 text-sm font-bold text-[#5a9a7a] underline" href="/inversionistas">
+        <Link className="mt-4 text-sm font-bold text-[#2f7654] underline" href="/inversionistas">
           Volver a inversionistas
         </Link>
       </div>
@@ -87,9 +87,9 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
   }
 
   const statsCards = [
-    { label: 'Capital invertido', value: fmt(capital), icon: Banknote, accent: '#eaf5ed', color: '#5a9a7a' },
-    { label: 'Total pagado', value: fmt(0), icon: CircleCheck, accent: '#c2dfcb', color: '#5a9a7a' },
-    { label: 'Tasa de retorno', value: `${rate}% mensual`, icon: TrendingUp, accent: '#fef3c7', color: '#a16207' },
+    { label: 'Capital invertido', value: fmt(capital), icon: Banknote, accent: '#eaf5ed', color: '#2f7654' },
+    { label: 'Total pagado', value: fmt(0), icon: CircleCheck, accent: '#c2dfcb', color: '#2f7654' },
+    { label: 'Tasa de retorno', value: `${rate}% mensual`, icon: TrendingUp, accent: '#fef3c7', color: '#7a5a0a' },
   ];
 
   const conditions = [
@@ -135,7 +135,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
     <div className="min-h-screen bg-[#F3F4F6] font-sans">
       <div className="mx-auto max-w-7xl px-6 py-8">
         <Link
-          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#5a9a7a] hover:text-[#7fb89a]"
+          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#2f7654] hover:text-[#2f7654]"
           href="/inversionistas"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -155,13 +155,13 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                   />
                 ) : (
                   <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-[#eaf5ed] shadow-md">
-                    <TrendingUp className="h-8 w-8 text-[#5a9a7a]" />
+                    <TrendingUp className="h-8 w-8 text-[#2f7654]" />
                   </div>
                 )}
                 <div className="pb-1">
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold text-neutral-900">{data.name}</h1>
-                    <span className="rounded-full bg-[#eaf5ed] px-3 py-0.5 text-xs font-semibold text-[#5a9a7a]">
+                    <span className="rounded-full bg-[#eaf5ed] px-3 py-0.5 text-xs font-semibold text-[#2f7654]">
                       ✦ {data.status === 'ACTIVE' ? 'Activo' : data.status === 'PAUSED' ? 'Pausado' : 'Retirado'}
                     </span>
                   </div>
@@ -188,7 +188,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                   Exportar
                 </button>
                 <Link
-                  className="inline-flex h-10 items-center gap-1.5 rounded-full border border-[#5a9a7a] bg-white px-5 text-sm text-[#5a9a7a] hover:bg-[#eaf5ed]"
+                  className="inline-flex h-10 items-center gap-1.5 rounded-full border border-[#2f7654] bg-white px-5 text-sm text-[#2f7654] hover:bg-[#eaf5ed]"
                   href={`/inversionistas/nuevo?sourceInvestorId=${investorId}`}
                 >
                   <Plus className="h-4 w-4" />
@@ -196,7 +196,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                 </Link>
                 {investments.length === 1 && (
                   <Link
-                    className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm text-white hover:bg-[#4a866a]"
+                    className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm text-white hover:bg-[#285c43]"
                     href={`/inversionistas/pago?investmentId=${investments[0].id}`}
                   >
                     <Plus className="h-4 w-4" />
@@ -236,7 +236,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
               key={t}
               onClick={() => setTab(i)}
               className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${
-                tab === i ? 'bg-[#5a9a7a] text-white shadow-sm' : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#5a9a7a]'
+                tab === i ? 'bg-[#2f7654] text-white shadow-sm' : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#2f7654]'
               }`}
             >
               {t}
@@ -250,7 +250,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
               <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <h3 className="text-base font-semibold text-neutral-900">Inversiones</h3>
-                  <span className="rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-semibold text-[#5a9a7a]">
+                  <span className="rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-semibold text-[#2f7654]">
                     {investments.length} activas/historicas
                   </span>
                 </div>
@@ -268,7 +268,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                             <div>
                               <div className="flex flex-wrap items-center gap-2">
                                 <p className="text-sm font-bold text-neutral-900">{investment.code}</p>
-                                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-[#c96f4a]' : investment.paymentStatus === 'PAID' ? 'bg-[#eaf5ed] text-[#5a9a7a]' : 'bg-[#fef3c7] text-[#a16207]'}`}>
+                                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-[#9f3f25]' : investment.paymentStatus === 'PAID' ? 'bg-[#eaf5ed] text-[#2f7654]' : 'bg-[#fef3c7] text-[#7a5a0a]'}`}>
                                   {status}
                                 </span>
                               </div>
@@ -280,7 +280,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                               <Link className="rounded-full border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50" href={`/inversiones/${investment.id}`}>
                                 Ver detalle
                               </Link>
-                              <Link className="rounded-full bg-[#5a9a7a] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4a866a]" href={`/inversionistas/pago?investmentId=${investment.id}`}>
+                              <Link className="rounded-full bg-[#2f7654] px-3 py-2 text-xs font-semibold text-white hover:bg-[#285c43]" href={`/inversionistas/pago?investmentId=${investment.id}`}>
                                 Registrar pago
                               </Link>
                             </div>
@@ -325,7 +325,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
               </div>
               {data.notes && (
                 <div className="rounded-2xl bg-[#eaf5ed] p-5 border border-[#c2dfcb]/60">
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#5a9a7a]">Notas</p>
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#2f7654]">Notas</p>
                   <p className="text-sm text-neutral-700">{data.notes}</p>
                 </div>
               )}
@@ -353,7 +353,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
         {tab === 2 && (
           <div className="space-y-3">
             <div className="flex justify-end">
-              <label className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm text-white hover:bg-[#4a866a]">
+              <label className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm text-white hover:bg-[#285c43]">
                 <Upload className="h-4 w-4" />
                 Subir documento
                 <input type="file" className="hidden" onChange={handleUpload} />
@@ -366,7 +366,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                 <div key={d.id} className="flex items-center justify-between rounded-2xl bg-white px-6 py-4 shadow-sm border border-neutral-100 hover:bg-[#eaf5ed]/30 transition">
                   <div className="flex items-center gap-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf5ed]">
-                      <File className="h-5 w-5 text-[#5a9a7a]" />
+                      <File className="h-5 w-5 text-[#2f7654]" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-neutral-900">{d.name}</p>
@@ -377,7 +377,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                   </div>
                   {d.fileUrl && (
                     <button
-                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#5a9a7a]"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#2f7654]"
                       onClick={() => downloadDocument(d.id, d.name)}
                       type="button"
                     >

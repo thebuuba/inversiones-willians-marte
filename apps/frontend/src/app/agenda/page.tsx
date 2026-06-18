@@ -30,16 +30,16 @@ const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 
 const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
 const priorityConfig: Record<string, { bg: string; text: string; dot: string }> = {
-  URGENT: { bg: '#fde4d4', text: '#c2410c', dot: '#f97316' },
-  HIGH: { bg: '#fde4d4', text: '#c2410c', dot: '#f97316' },
-  MEDIUM: { bg: '#fef3c7', text: '#a16207', dot: '#eab308' },
-  LOW: { bg: '#eaf5ed', text: '#5a9a7a', dot: '#7fb89a' },
+  URGENT: { bg: '#fde4d4', text: '#9f3f25', dot: '#f97316' },
+  HIGH: { bg: '#fde4d4', text: '#9f3f25', dot: '#f97316' },
+  MEDIUM: { bg: '#fef3c7', text: '#7a5a0a', dot: '#eab308' },
+  LOW: { bg: '#eaf5ed', text: '#2f7654', dot: '#2f7654' },
 };
 
 const categoryConfig: Record<string, { bg: string; text: string; label: string }> = {
-  oficina: { bg: '#eaf5ed', text: '#5a9a7a', label: 'Oficina' },
+  oficina: { bg: '#eaf5ed', text: '#2f7654', label: 'Oficina' },
   prestamo: { bg: '#dbeafe', text: '#1d4ed8', label: 'Préstamo' },
-  cobro: { bg: '#fde4d4', text: '#c2410c', label: 'Cobro' },
+  cobro: { bg: '#fde4d4', text: '#9f3f25', label: 'Cobro' },
   reunion: { bg: '#e9e2f5', text: '#6d28d9', label: 'Reunión' },
   admin: { bg: '#F3F4F6', text: '#525252', label: 'Admin' },
 };
@@ -73,8 +73,8 @@ function MiniCalendar({ selectedDate, onDateChange }: { selectedDate: Date; onDa
       <div className="mb-4 flex items-center justify-between">
         <span className="text-sm font-semibold text-neutral-800">{MONTHS[month]} {year}</span>
         <div className="flex gap-1">
-          <button onClick={prevMonth} className="rounded-lg p-1 hover:bg-[#eaf5ed] text-neutral-500 hover:text-[#5a9a7a]"><ChevronRight className="h-4 w-4 rotate-180" /></button>
-          <button onClick={nextMonth} className="rounded-lg p-1 hover:bg-[#eaf5ed] text-neutral-500 hover:text-[#5a9a7a]"><ChevronRight className="h-4 w-4" /></button>
+          <button onClick={prevMonth} className="rounded-lg p-1 hover:bg-[#eaf5ed] text-neutral-500 hover:text-[#2f7654]"><ChevronRight className="h-4 w-4 rotate-180" /></button>
+          <button onClick={nextMonth} className="rounded-lg p-1 hover:bg-[#eaf5ed] text-neutral-500 hover:text-[#2f7654]"><ChevronRight className="h-4 w-4" /></button>
         </div>
       </div>
       <div className="grid grid-cols-7 gap-0.5 text-center">
@@ -89,7 +89,7 @@ function MiniCalendar({ selectedDate, onDateChange }: { selectedDate: Date; onDa
               key={i}
               onClick={() => day && onDateChange(new Date(year, month, day))}
               className={`relative flex h-8 w-full items-center justify-center rounded-xl text-sm transition cursor-pointer ${
-                sel ? 'bg-[#5a9a7a] font-bold text-white shadow-sm' : tod ? 'border border-[#5a9a7a] font-bold text-[#5a9a7a]' : day ? 'text-neutral-700 hover:bg-[#eaf5ed]' : ''
+                sel ? 'bg-[#2f7654] font-bold text-white shadow-sm' : tod ? 'border border-[#2f7654] font-bold text-[#2f7654]' : day ? 'text-neutral-700 hover:bg-[#eaf5ed]' : ''
               }`}
             >
               {day}
@@ -120,19 +120,19 @@ function NewTaskModal({ onClose, onSave }: { onClose: () => void; onSave: (f: { 
       <div className="w-full max-w-md rounded-3xl bg-white shadow-xl border border-neutral-100 overflow-hidden">
         <div className="flex items-center justify-between border-b border-neutral-100 bg-[#fafafa] px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#eaf5ed]"><ListTodo className="h-4 w-4 text-[#5a9a7a]" /></div>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#eaf5ed]"><ListTodo className="h-4 w-4 text-[#2f7654]" /></div>
             <p className="text-base font-semibold text-neutral-900">Nueva tarea</p>
           </div>
           <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition"><X className="h-4 w-4" /></button>
         </div>
         <div className="space-y-4 px-6 py-5">
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-neutral-500">Título <span className="text-[#7fb89a]">*</span></label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-neutral-500">Título <span className="text-[#2f7654]">*</span></label>
             <input
               value={title}
               onChange={(e) => { setTitle(e.target.value); setError(''); }}
               placeholder="Ej: Llamar a cliente por cuota atrasada"
-              className={`h-11 w-full rounded-xl border bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-[#7fb89a] ${error ? 'border-red-400' : 'border-neutral-200'}`}
+              className={`h-11 w-full rounded-xl border bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-[#2f7654] ${error ? 'border-red-400' : 'border-neutral-200'}`}
               autoFocus
             />
             {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
@@ -144,7 +144,7 @@ function NewTaskModal({ onClose, onSave }: { onClose: () => void; onSave: (f: { 
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Detalles adicionales..."
               rows={2}
-              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-[#7fb89a] resize-none"
+              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-[#2f7654] resize-none"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -154,7 +154,7 @@ function NewTaskModal({ onClose, onSave }: { onClose: () => void; onSave: (f: { 
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-[#7fb89a]"
+                className="h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-[#2f7654]"
               />
             </div>
             <div>
@@ -162,7 +162,7 @@ function NewTaskModal({ onClose, onSave }: { onClose: () => void; onSave: (f: { 
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                className="h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-[#7fb89a]"
+                className="h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-[#2f7654]"
               >
                 <option value="LOW">Baja</option>
                 <option value="MEDIUM">Media</option>
@@ -176,7 +176,7 @@ function NewTaskModal({ onClose, onSave }: { onClose: () => void; onSave: (f: { 
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-[#7fb89a]"
+              className="h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-[#2f7654]"
             >
               {Object.entries(categoryConfig).map(([key, c]) => (
                 <option key={key} value={key}>{c.label}</option>
@@ -186,7 +186,7 @@ function NewTaskModal({ onClose, onSave }: { onClose: () => void; onSave: (f: { 
         </div>
         <div className="flex items-center justify-end gap-2 border-t border-neutral-100 bg-[#fafafa] px-6 py-4">
           <button onClick={onClose} className="h-10 rounded-xl border border-neutral-200 bg-white px-5 text-sm font-semibold text-neutral-600 hover:bg-neutral-50">Cancelar</button>
-          <button onClick={handleSubmit} className="h-10 rounded-xl bg-[#5a9a7a] px-5 text-sm font-semibold text-white shadow-sm hover:bg-[#4a866a]">Crear tarea</button>
+          <button onClick={handleSubmit} className="h-10 rounded-xl bg-[#2f7654] px-5 text-sm font-semibold text-white shadow-sm hover:bg-[#285c43]">Crear tarea</button>
         </div>
       </div>
     </div>
@@ -252,13 +252,13 @@ export default function AgendaPage() {
       <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-[#7fb89a]">Panel de trabajo</p>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-[#2f7654]">Panel de trabajo</p>
             <h1 className="text-3xl font-bold tracking-tight text-neutral-900">Agenda</h1>
             <p className="mt-1 text-sm capitalize text-neutral-500">{dateStr}</p>
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="h-11 rounded-full bg-[#5a9a7a] px-6 text-white shadow-sm hover:bg-[#4a866a] inline-flex items-center"
+            className="h-11 rounded-full bg-[#2f7654] px-6 text-white shadow-sm hover:bg-[#285c43] inline-flex items-center"
           >
             <Plus className="mr-1.5 h-4 w-4" />
             Nueva tarea
@@ -272,8 +272,8 @@ export default function AgendaPage() {
             <MotionCard index={1} className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100 space-y-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Resumen de hoy</p>
               {[
-                { label: 'Tareas completadas', value: `${doneCount}/${tasks.length}`, color: '#7fb89a', bg: '#eaf5ed' },
-                { label: 'Pendientes', value: String(pendientes.length), color: '#a16207', bg: '#fef3c7' },
+                { label: 'Tareas completadas', value: `${doneCount}/${tasks.length}`, color: '#2f7654', bg: '#eaf5ed' },
+                { label: 'Pendientes', value: String(pendientes.length), color: '#7a5a0a', bg: '#fef3c7' },
                 { label: 'Citas del día', value: String(appointments.length), color: '#1d4ed8', bg: '#dbeafe' },
               ].map((s) => (
                 <div key={s.label} className="flex items-center justify-between rounded-xl px-3 py-2" style={{ backgroundColor: s.bg }}>
@@ -288,15 +288,15 @@ export default function AgendaPage() {
             <MotionCard index={2} className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <ListTodo className="h-5 w-5 text-[#5a9a7a]" />
+                  <ListTodo className="h-5 w-5 text-[#2f7654]" />
                   <span className="text-base font-semibold text-neutral-900">Tareas del día</span>
                 </div>
-                <span className="text-sm font-bold text-[#5a9a7a]">{doneCount}/{tasks.length}</span>
+                <span className="text-sm font-bold text-[#2f7654]">{doneCount}/{tasks.length}</span>
               </div>
               {tasks.length > 0 && (
                 <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-[#F3F4F6]">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#7fb89a] to-[#5a9a7a] transition-all duration-500"
+                    className="h-full rounded-full bg-gradient-to-r from-[#2f7654] to-[#2f7654] transition-all duration-500"
                     style={{ width: `${(doneCount / tasks.length) * 100}%` }}
                   />
                 </div>
@@ -307,7 +307,7 @@ export default function AgendaPage() {
                     key={f}
                     onClick={() => setFilter(f)}
                     className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                      filter === f ? 'bg-[#1f3b2c] text-white shadow-sm' : 'bg-[#eaf5ed] text-[#5a9a7a] hover:bg-[#c2dfcb]/60'
+                      filter === f ? 'bg-[#1f3b2c] text-white shadow-sm' : 'bg-[#eaf5ed] text-[#2f7654] hover:bg-[#eaf5ed]'
                     }`}
                   >
                     {filterLabels[f]}
@@ -337,7 +337,7 @@ export default function AgendaPage() {
                     className={`group flex items-start gap-3 rounded-xl px-4 py-3 transition hover:bg-[#eaf5ed]/50 ${done ? 'opacity-60' : ''}`}
                   >
                     <button onClick={() => toggleTask(task.id)} className="mt-0.5 shrink-0 transition">
-                      {done ? <CircleCheck className="h-5 w-5 text-[#7fb89a]" /> : <Circle className="h-5 w-5 text-neutral-300 group-hover:text-[#7fb89a]" />}
+                      {done ? <CircleCheck className="h-5 w-5 text-[#2f7654]" /> : <Circle className="h-5 w-5 text-neutral-300 group-hover:text-[#2f7654]" />}
                     </button>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -375,7 +375,7 @@ export default function AgendaPage() {
 
             <MotionCard index={4} className="rounded-2xl bg-white shadow-sm border border-neutral-100 overflow-hidden">
               <div className="flex items-center gap-3 border-b border-neutral-100 bg-[#fafafa] px-5 py-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#fef3c7]"><Banknote className="h-4 w-4 text-[#a16207]" /></div>
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#fef3c7]"><Banknote className="h-4 w-4 text-[#7a5a0a]" /></div>
                 <div>
                   <p className="text-sm font-semibold text-neutral-900">Desembolsos pendientes</p>
                   <p className="text-xs text-neutral-500">Clientes que esperan recibir su préstamo</p>
@@ -389,7 +389,7 @@ export default function AgendaPage() {
                     const initial = t.title.charAt(0).toUpperCase();
                     return (
                       <div key={t.id} className="flex items-start gap-4 px-5 py-4 hover:bg-[#eaf5ed]/30 transition">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#5a9a7a] text-sm font-bold text-white border-2 border-white shadow-sm">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2f7654] text-sm font-bold text-white border-2 border-white shadow-sm">
                           {initial}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -398,7 +398,7 @@ export default function AgendaPage() {
                           </div>
                           <p className="mt-0.5 text-xs text-neutral-500">{t.category} · {t.description?.slice(0, 40) ?? 'Sin detalles'}</p>
                           {t.time && (
-                            <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#fef3c7] px-2.5 py-0.5 text-[10px] font-semibold text-[#a16207]">
+                            <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#fef3c7] px-2.5 py-0.5 text-[10px] font-semibold text-[#7a5a0a]">
                               <Clock className="h-3 w-3" />{t.time}
                             </div>
                           )}
@@ -426,13 +426,13 @@ export default function AgendaPage() {
                     appointments.map((a) => (
                       <div key={a.id} className={`relative flex items-start gap-3 ${a.status === 'COMPLETED' ? 'opacity-50' : ''}`}>
                         <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-white shadow-sm"
-                          style={{ backgroundColor: a.status === 'COMPLETED' ? '#eaf5ed' : '#dbeafe', color: a.status === 'COMPLETED' ? '#5a9a7a' : '#1d4ed8' }}>
+                          style={{ backgroundColor: a.status === 'COMPLETED' ? '#eaf5ed' : '#dbeafe', color: a.status === 'COMPLETED' ? '#2f7654' : '#1d4ed8' }}>
                           <Clock className="h-3.5 w-3.5" />
                         </div>
                         <div className="min-w-0 flex-1 pb-1">
                           <div className="flex items-center gap-2">
                             <span className="rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-bold text-neutral-600">{a.time}</span>
-                            {a.status === 'COMPLETED' && <span className="text-[10px] font-semibold text-[#7fb89a]">✓ Hecho</span>}
+                            {a.status === 'COMPLETED' && <span className="text-[10px] font-semibold text-[#2f7654]">✓ Hecho</span>}
                           </div>
                           <p className={`mt-0.5 text-xs font-semibold ${a.status === 'COMPLETED' ? 'line-through text-neutral-400' : 'text-neutral-800'}`}>
                             {a.title}

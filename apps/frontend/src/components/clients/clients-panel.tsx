@@ -65,9 +65,9 @@ export function ClientsPanel() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const stats = [
-    { label: 'Total clientes', value: String(total), icon: UsersRound, bg: '#E7F4EC', color: '#5FA37D' },
+    { label: 'Total clientes', value: String(total), icon: UsersRound, bg: '#E7F4EC', color: '#2F7654' },
     { label: 'Activos', value: String(total), icon: UsersRound, bg: '#DDEFE5', color: '#285C43' },
-      { label: 'Sin préstamos', value: String(clients.filter((c) => (c._count?.loans ?? 0) === 0).length), icon: UserRound, bg: '#FFF4C8', color: '#A98219' },
+      { label: 'Sin préstamos', value: String(clients.filter((c) => (c._count?.loans ?? 0) === 0).length), icon: UserRound, bg: '#FFF4C8', color: '#7A5A0A' },
     {
       label: 'Nuevos (30d)',
       value: String(clients.filter((c) => new Date(c.createdAt).getTime() >= recentThreshold).length),
@@ -107,7 +107,7 @@ export function ClientsPanel() {
             Exportar
           </button>
           <Link
-            className="flex h-11 items-center gap-2 rounded-full bg-[#5a9a7a] px-5 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="flex h-11 items-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             href="/clientes/nuevo"
           >
             <Plus className="h-4 w-4" />
@@ -203,7 +203,7 @@ export function ClientsPanel() {
                     )}
                     <span
                       className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white ${
-                        client.active ? 'bg-[#7CC99B]' : 'bg-[#A9CDBB]'
+                        client.active ? 'bg-[#7CC99B]' : 'bg-[#5C6D63]'
                       }`}
                     />
                   </div>

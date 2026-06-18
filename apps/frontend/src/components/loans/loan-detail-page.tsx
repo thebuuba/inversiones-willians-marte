@@ -43,11 +43,11 @@ const summaryTones = {
     value: 'text-[#B63B0B]',
   },
   paid: {
-    icon: 'bg-[#dbeafe] text-[#2563eb]',
+    icon: 'bg-[#dbeafe] text-[#2f5f91]',
     value: 'text-[#1E4E9A]',
   },
   quota: {
-    icon: 'bg-[#FFF2CC] text-[#A67812]',
+    icon: 'bg-[#FFF2CC] text-[#7A5A0A]',
     value: 'text-[#6F5310]',
   },
 } as const;
@@ -60,7 +60,7 @@ function SummaryCard({ icon, label, tone, value }: { icon: React.ReactNode; labe
   return (
     <div className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
       <div className={`flex h-10 w-10 items-center justify-center rounded-full ${classes.icon}`}>{icon}</div>
-      <p className="mt-4 text-xs font-bold uppercase tracking-[0.08em] text-[#9B9F9D]">{label}</p>
+      <p className="mt-4 text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63]">{label}</p>
       <p className={`mt-1 text-xl font-bold ${classes.value}`}>{value}</p>
     </div>
   );
@@ -69,7 +69,7 @@ function SummaryCard({ icon, label, tone, value }: { icon: React.ReactNode; labe
 function DataRow({ label, tone = 'text-text-primary', value }: { label: string; tone?: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 border-b border-[#EDF2EF] py-2.5 last:border-b-0">
-      <span className="text-sm font-semibold text-[#7A8A80]">{label}</span>
+      <span className="text-sm font-semibold text-[#5C6D63]">{label}</span>
       <span className={`text-right text-sm font-bold ${tone}`}>{value}</span>
     </div>
   );
@@ -79,7 +79,7 @@ function InfoPanel({ icon, title, children }: { icon: React.ReactNode; title: st
   return (
     <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
       <div className="flex items-center gap-3 border-b border-[#EDF2EF] bg-[#FBFCFB] px-5 py-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eaf5ed] text-[#5a9a7a]">{icon}</div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eaf5ed] text-[#2f7654]">{icon}</div>
         <h2 className="text-base font-bold text-[#173D2C]">{title}</h2>
       </div>
       <div className="p-5">{children}</div>
@@ -187,7 +187,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
   return (
     <main className="min-h-screen bg-page p-5">
       <div className="mx-auto max-w-[1480px]">
-        <Link className="inline-flex items-center gap-2 text-sm font-bold text-[#7A8A80] transition hover:text-[#5a9a7a]" href={`/clientes/${loan.clientId}`}>
+        <Link className="inline-flex items-center gap-2 text-sm font-bold text-[#5C6D63] transition hover:text-[#2f7654]" href={`/clientes/${loan.clientId}`}>
           <ArrowLeft className="h-4 w-4" />
           Volver al cliente
         </Link>
@@ -198,13 +198,13 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-2xl font-bold text-neutral-900">{getLoanTitle(loan)}</h1>
                 <StatusBadge status={loan.status} />
-                <span className="inline-flex rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-bold text-[#5a9a7a]">{totals.paidInstallments}/{totals.totalInstallments} cuotas pagadas</span>
+                <span className="inline-flex rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-bold text-[#2f7654]">{totals.paidInstallments}/{totals.totalInstallments} cuotas pagadas</span>
                 <span className="inline-flex rounded-full bg-neutral-100 px-3 py-1 text-xs font-bold text-neutral-600">#{loan.loanNumber}</span>
               </div>
-              <p className="mt-2 text-sm font-semibold text-[#7A8A80]">{loan.client.firstName} {loan.client.lastName} · {frequency}</p>
-              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#eaf5ed] px-3 py-1 text-sm font-bold text-[#5a9a7a]"><CalendarDays className="h-4 w-4" /> Inicio: {fmtDate(loan.startDate)}</p>
+              <p className="mt-2 text-sm font-semibold text-[#5C6D63]">{loan.client.firstName} {loan.client.lastName} · {frequency}</p>
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#eaf5ed] px-3 py-1 text-sm font-bold text-[#2f7654]"><CalendarDays className="h-4 w-4" /> Inicio: {fmtDate(loan.startDate)}</p>
             </div>
-            <button className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#5a9a7a] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-[#4a866a]" onClick={() => { setPaymentError(null); setModalOpen(true); }} type="button">
+            <button className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-[#285c43]" onClick={() => { setPaymentError(null); setModalOpen(true); }} type="button">
               <Plus className="h-4 w-4" />
               Registrar cobro
             </button>
@@ -223,23 +223,23 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-base font-bold text-[#173D2C]">Progreso de pago</h2>
-                  <p className="mt-1 text-sm font-medium text-[#7A8A80]">{totals.paidInstallments} de {totals.totalInstallments} cuotas pagadas</p>
+                  <p className="mt-1 text-sm font-medium text-[#5C6D63]">{totals.paidInstallments} de {totals.totalInstallments} cuotas pagadas</p>
                 </div>
-                <span className="text-xl font-bold text-[#5a9a7a]">{totals.progress}%</span>
+                <span className="text-xl font-bold text-[#2f7654]">{totals.progress}%</span>
               </div>
               <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#EDF2EF]">
-                <div className="h-full rounded-full bg-[#5a9a7a]" style={{ width: `${totals.progress}%` }} />
+                <div className="h-full rounded-full bg-[#2f7654]" style={{ width: `${totals.progress}%` }} />
               </div>
             </section>
 
             <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
               <div className="border-b border-[#EDF2EF] px-5 py-4">
                 <h2 className="text-base font-bold text-[#173D2C]">Calendario de cuotas</h2>
-                <p className="mt-1 text-sm font-medium text-[#7A8A80]">Detalle de vencimientos y pagos aplicados.</p>
+                <p className="mt-1 text-sm font-medium text-[#5C6D63]">Detalle de vencimientos y pagos aplicados.</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-[860px] w-full text-left">
-                  <thead className="bg-[#FBFCFB] text-xs font-bold uppercase tracking-[0.08em] text-[#7A8A80]">
+                  <thead className="bg-[#FBFCFB] text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63]">
                     <tr>
                       <th className="px-5 py-3">Cuota</th>
                       <th className="px-5 py-3">Vencimiento</th>

@@ -121,7 +121,7 @@ export function RegisterInvestorPaymentPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#F3F4F6] font-sans">
         <p className="text-sm font-medium text-neutral-400">Inversionista no encontrado.</p>
-        <Link className="mt-4 text-sm font-bold text-[#5a9a7a] underline" href="/inversionistas">
+        <Link className="mt-4 text-sm font-bold text-[#2f7654] underline" href="/inversionistas">
           Volver a inversionistas
         </Link>
       </div>
@@ -169,7 +169,7 @@ export function RegisterInvestorPaymentPage() {
     <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans">
       <div className="mx-auto max-w-7xl">
         <Link
-          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#5a9a7a] hover:text-[#7fb89a]"
+          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#2f7654] hover:text-[#2f7654]"
           href={`/inversionistas/${investor.id}`}
         >
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -182,12 +182,12 @@ export function RegisterInvestorPaymentPage() {
             <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
               <div className="flex items-center gap-4">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#eaf5ed]">
-                  <TrendingUp className="h-7 w-7 text-[#5a9a7a]" />
+                  <TrendingUp className="h-7 w-7 text-[#2f7654]" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-neutral-900">{investor.name}</h2>
                   <p className="text-sm text-neutral-500">{investment.code}</p>
-                  <span className="mt-1 inline-block rounded-full bg-[#eaf5ed] px-3 py-0.5 text-xs font-semibold text-[#5a9a7a]">
+                  <span className="mt-1 inline-block rounded-full bg-[#eaf5ed] px-3 py-0.5 text-xs font-semibold text-[#2f7654]">
                     {investor.status === 'ACTIVE' ? 'Activo' : investor.status === 'PAUSED' ? 'Pausado' : 'Retirado'}
                   </span>
                 </div>
@@ -207,7 +207,7 @@ export function RegisterInvestorPaymentPage() {
                 </div>
                 <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
                   <span className="text-xs text-neutral-500">Retorno mensual (cuota)</span>
-                  <span className="text-sm font-bold text-[#5a9a7a]">{fmt(cuota)}</span>
+                  <span className="text-sm font-bold text-[#2f7654]">{fmt(cuota)}</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
                   <span className="text-xs text-neutral-500">Período</span>
@@ -218,11 +218,11 @@ export function RegisterInvestorPaymentPage() {
                   {checkingPeriod ? (
                     <span className="text-sm font-medium text-neutral-400">Verificando...</span>
                   ) : periodPaid ? (
-                    <span className="inline-flex items-center gap-1 text-sm font-bold text-[#5a9a7a]">
+                    <span className="inline-flex items-center gap-1 text-sm font-bold text-[#2f7654]">
                       <CheckCircle2 className="h-4 w-4" /> Pagado
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-sm font-bold text-[#a16207]">
+                    <span className="inline-flex items-center gap-1 text-sm font-bold text-[#7a5a0a]">
                       <Clock className="h-4 w-4" /> Pendiente
                     </span>
                   )}
@@ -244,7 +244,7 @@ export function RegisterInvestorPaymentPage() {
                         </p>
                         <p className="text-xs text-neutral-400">{fmtDate(p.paymentDate)}</p>
                       </div>
-                      <span className="text-sm font-bold text-[#5a9a7a]">{fmt(Number(p.amount))}</span>
+                      <span className="text-sm font-bold text-[#2f7654]">{fmt(Number(p.amount))}</span>
                     </div>
                   ))}
                 </div>
@@ -262,8 +262,8 @@ export function RegisterInvestorPaymentPage() {
             {periodPaid && (
               <div className="rounded-xl bg-[#eaf5ed] p-5 border border-[#c2dfcb]/60">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-[#5a9a7a]" />
-                  <p className="font-semibold text-[#5a9a7a]">Este período ya tiene pagos</p>
+                  <CheckCircle2 className="h-5 w-5 text-[#2f7654]" />
+                  <p className="font-semibold text-[#2f7654]">Este período ya tiene pagos</p>
                 </div>
                 <p className="mt-2 text-sm text-neutral-600">
                   Ya existe un pago de <strong>{fmt(Number(periodPaid.amount))}</strong> para{' '}
@@ -309,7 +309,7 @@ export function RegisterInvestorPaymentPage() {
                   <label className="block">
                     <span className="mb-2 block text-sm font-bold text-[#5c6d63]">Monto</span>
                     <div className="relative">
-                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[#6f8076]">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[#5c6d63]">
                         RD$
                       </span>
                       <input
@@ -367,7 +367,7 @@ export function RegisterInvestorPaymentPage() {
                     />
                   </label>
 
-                  {error && <p className="text-sm font-medium text-[#c96f4a] sm:col-span-2">{error}</p>}
+                  {error && <p className="text-sm font-medium text-[#9f3f25] sm:col-span-2">{error}</p>}
                 </div>
 
                 <div className="mt-6 flex justify-end gap-3 border-t border-[#edf2ef] pt-4">
