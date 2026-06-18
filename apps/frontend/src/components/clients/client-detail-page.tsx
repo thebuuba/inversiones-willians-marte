@@ -1005,7 +1005,7 @@ function ClientInfoGrid({ clientData }: { clientData: ClientDetail }) {
 }
 
 export function ClientDetailPage({ clientId }: { clientId: number }) {
-  const [activeTab, setActiveTab] = useState<ClientTab>('Información');
+  const [activeTab, setActiveTab] = useState<ClientTab>('Préstamos');
   const [clientData, setClientData] = useState<ClientDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [auditEvents, setAuditEvents] = useState<HistoryEvent[]>([]);
@@ -1159,10 +1159,13 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 pb-1">
-                <button className="inline-flex h-10 items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-700 hover:bg-neutral-50">
+                <Link
+                  className="inline-flex h-10 items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-700 hover:bg-neutral-50"
+                  href={`/clientes/${clientId}/editar`}
+                >
                   <Pencil className="h-4 w-4" />
                   Editar
-                </button>
+                </Link>
                 <Link
                   className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#5a9a7a] px-5 text-sm text-white hover:bg-[#4a866a]"
                   href={`/prestamos/nuevo?cliente=${clientId}`}

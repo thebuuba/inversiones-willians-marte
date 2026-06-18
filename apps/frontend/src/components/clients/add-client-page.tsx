@@ -2,10 +2,16 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from 'react';
-import { createClient } from '@/lib/api/clients';
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from 'react';
+import { createClient, getClient, updateClient } from '@/lib/api/clients';
 import { compressImage } from '@/lib/compress-image';
 import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
+import {
+  getClientFormFromClient,
+  getClientPayload,
+  getEmptyClientForm,
+  type ClientFormState,
+} from './client-form';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -58,9 +64,11 @@ function PageCard({ children, className = '', index = 0 }: { children: ReactNode
 }
 
 function FormHeaderActions({
+  cancelHref,
   onSave,
   saving,
 }: {
+  cancelHref: string;
   onSave: () => void;
   saving: boolean;
 }) {
@@ -68,7 +76,7 @@ function FormHeaderActions({
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap xl:justify-end">
       <Link
         className="inline-flex h-12 items-center justify-center gap-3 rounded-full border border-[#DDEBE3] bg-white px-7 text-sm font-bold text-[#3F4542] shadow-[0_5px_14px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-md"
-        href="/clientes"
+        href={cancelHref}
       >
         <X className="h-5 w-5" />
         Cancelar
@@ -308,29 +316,12 @@ function RequiredFieldsNotice() {
   );
 }
 
-interface FormState {
-  firstName: string;
-  lastName: string;
-  identification: string;
-  birthDate: string;
-  gender: string;
-  maritalStatus: string;
-  nationality: string;
-  dependents: string;
-  phone: string;
-  altPhone: string;
-  email: string;
-  address: string;
-  notes: string;
-  photo: string;
-}
-
 function PersonalInfoCard({
   values,
   onChange,
 }: {
-  values: FormState;
-  onChange: (field: keyof FormState, value: string) => void;
+  values: ClientFormState;
+  onChange: (field: keyof ClientFormState, value: string) => void;
 }) {
   return (
     <PageCard className="p-7" index={1}>
@@ -358,8 +349,8 @@ function ContactInfoCard({
   values,
   onChange,
 }: {
-  values: FormState;
-  onChange: (field: keyof FormState, value: string) => void;
+  values: ClientFormState;
+  onChange: (field: keyof ClientFormState, value: string) => void;
 }) {
   return (
     <PageCard className="p-7" index={2}>
@@ -415,28 +406,34 @@ function AdditionalNotesCard({
   );
 }
 
-export function AddClientPage() {
+export function AddClientPage({ clientId }: { clientId?: number }) {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>({
-    firstName: '',
-    lastName: '',
-    identification: '',
-    birthDate: '',
-    gender: '',
-    maritalStatus: '',
-    nationality: '',
-    dependents: '',
-    phone: '',
-    altPhone: '',
-    email: '',
-    address: '',
-    notes: '',
-    photo: '',
-  });
+  const isEditing = clientId !== undefined;
+  const returnHref = isEditing ? `/clientes/${clientId}` : '/clientes';
+  const [form, setForm] = useState<ClientFormState>(getEmptyClientForm);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(isEditing);
   const [error, setError] = useState('');
 
-  function updateField(field: keyof FormState, value: string) {
+  useEffect(() => {
+    if (!clientId) return;
+    let active = true;
+    getClient(clientId)
+      .then((client) => {
+        if (active) setForm(getClientFormFromClient(client));
+      })
+      .catch(() => {
+        if (active) setError('No se pudo cargar el cliente.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [clientId]);
+
+  function updateField(field: keyof ClientFormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -449,22 +446,9 @@ export function AddClientPage() {
         return;
       }
 
-      const client = await createClient({
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        identification: form.identification.trim() || undefined,
-        phone: form.phone.trim() || undefined,
-        altPhone: form.altPhone.trim() || undefined,
-        email: form.email.trim() || undefined,
-        address: form.address.trim() || undefined,
-        birthDate: form.birthDate || undefined,
-        gender: form.gender || undefined,
-        maritalStatus: form.maritalStatus || undefined,
-        nationality: form.nationality.trim() || undefined,
-        dependents: form.dependents ? Number(form.dependents) : undefined,
-        photo: form.photo || undefined,
-        notes: form.notes.trim() || undefined,
-      });
+      const payload = getClientPayload(form);
+      const client =
+        isEditing && clientId ? await updateClient(clientId, payload) : await createClient(payload);
       invalidateCachePrefix('clients:');
       invalidateCache('dashboard');
       router.push(`/clientes/${client.id}`);
@@ -498,17 +482,21 @@ export function AddClientPage() {
           <div>
             <Link
               className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.14em] text-[#5FA37D] transition hover:text-[#173D2C]"
-              href="/clientes"
+              href={returnHref}
             >
               <ArrowLeft className="h-4 w-4" />
-              Volver a clientes
+              {isEditing ? 'Volver al cliente' : 'Volver a clientes'}
             </Link>
-            <h1 className="mt-5 text-[36px] font-bold leading-none text-[#151918]">Agregar cliente</h1>
+            <h1 className="mt-5 text-[36px] font-bold leading-none text-[#151918]">
+              {isEditing ? 'Editar cliente' : 'Agregar cliente'}
+            </h1>
             <p className="mt-3 max-w-[760px] text-sm font-medium text-[#6F7280]">
-              Completa la información para registrar un nuevo cliente en tu cartera de préstamos.
+              {isEditing
+                ? 'Actualiza la información del cliente.'
+                : 'Completa la información para registrar un nuevo cliente en tu cartera de préstamos.'}
             </p>
           </div>
-          <FormHeaderActions onSave={handleSave} saving={saving} />
+          <FormHeaderActions cancelHref={returnHref} onSave={handleSave} saving={saving} />
         </motion.header>
 
         {error && (
@@ -517,18 +505,24 @@ export function AddClientPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-7 xl:grid-cols-[390px_minmax(0,1fr)]">
-          <div className="space-y-7">
-            <ClientPhotoUploader value={form.photo} onChange={(v) => updateField('photo', v)} />
-            <RequiredFieldsNotice />
+        {loading ? (
+          <div className="rounded-[24px] border border-[#DDEBE3] bg-white p-7 text-sm font-bold text-[#5C6D63]">
+            Cargando cliente...
           </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-7 xl:grid-cols-[390px_minmax(0,1fr)]">
+            <div className="space-y-7">
+              <ClientPhotoUploader value={form.photo} onChange={(v) => updateField('photo', v)} />
+              <RequiredFieldsNotice />
+            </div>
 
-          <div className="space-y-7">
-            <PersonalInfoCard values={form} onChange={updateField} />
-            <ContactInfoCard values={form} onChange={updateField} />
-            <AdditionalNotesCard value={form.notes} onChange={(v) => updateField('notes', v)} />
+            <div className="space-y-7">
+              <PersonalInfoCard values={form} onChange={updateField} />
+              <ContactInfoCard values={form} onChange={updateField} />
+              <AdditionalNotesCard value={form.notes} onChange={(v) => updateField('notes', v)} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </main>
   );

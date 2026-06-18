@@ -7,16 +7,19 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { getJwtSecret } from '../../config/jwt-secret';
 
+export function getAuthJwtOptions(config: ConfigService) {
+  return {
+    secret: getJwtSecret(config),
+  };
+}
+
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: getJwtSecret(config),
-        signOptions: { expiresIn: '8h' },
-      }),
+      useFactory: getAuthJwtOptions,
     }),
   ],
   controllers: [AuthController],
