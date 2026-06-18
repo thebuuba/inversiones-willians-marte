@@ -41,6 +41,11 @@ type ClientNote = {
   text: string;
 };
 
+type ClientNameFields = {
+  firstName: string;
+  lastName: string;
+};
+
 @Injectable()
 export class ClientsService {
   constructor(private audit: AuditService) {}
@@ -81,7 +86,7 @@ export class ClientsService {
       prisma.client.count({ where: fullWhere }),
     ]);
 
-    return { data, total };
+    return { data: data.map(formatClientNames), total };
   }
 
   async findBasic(id: number) {
@@ -97,7 +102,7 @@ export class ClientsService {
       },
     });
     if (!client) throw new NotFoundException('Client not found');
-    return client;
+    return formatClientNames(client);
   }
 
   async findOne(id: number) {
@@ -150,7 +155,7 @@ export class ClientsService {
     ]);
     if (!client) throw new NotFoundException('Client not found');
     return {
-      ...client,
+      ...formatClientNames(client),
       loans: loans.map((loan) => ({
         id: loan.id,
         loanNumber: loan.loanNumber,
@@ -296,6 +301,14 @@ export class ClientsService {
 
     return updated;
   }
+}
+
+function formatClientNames<T extends ClientNameFields>(client: T): T {
+  return {
+    ...client,
+    firstName: formatPersonName(client.firstName),
+    lastName: formatPersonName(client.lastName),
+  };
 }
 
 function isClientNote(value: unknown): value is ClientNote {

@@ -63,11 +63,16 @@ describe('ClientsService', () => {
 
   describe('findAll', () => {
     it('should return paginated active clients', async () => {
-      jest.mocked(prisma.client.findMany).mockResolvedValue([mockClient] as any);
+      jest
+        .mocked(prisma.client.findMany)
+        .mockResolvedValue([{ ...mockClient, firstName: 'alexauris', lastName: 'diaz' }] as any);
       jest.mocked(prisma.client.count).mockResolvedValue(1);
 
       const result = await service.findAll();
       expect(result.data).toHaveLength(1);
+      expect(result.data[0]).toEqual(
+        expect.objectContaining({ firstName: 'Alexauris', lastName: 'Diaz' }),
+      );
       expect(result.total).toBe(1);
       expect(prisma.client.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -88,10 +93,13 @@ describe('ClientsService', () => {
 
   describe('findOne', () => {
     it('should return a client by id', async () => {
-      jest.mocked(prisma.client.findUnique).mockResolvedValue(mockClient as any);
+      jest
+        .mocked(prisma.client.findUnique)
+        .mockResolvedValue({ ...mockClient, firstName: 'maria', lastName: 'jacquez' } as any);
 
       const result = await service.findOne(1);
       expect(result).toBeDefined();
+      expect(result).toEqual(expect.objectContaining({ firstName: 'Maria', lastName: 'Jacquez' }));
       expect(result.loans).toEqual([]);
       expect(prisma.client.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
@@ -103,6 +111,18 @@ describe('ClientsService', () => {
       jest.mocked(prisma.client.findUnique).mockResolvedValue(null);
 
       await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findBasic', () => {
+    it('should format old lowercase client names', async () => {
+      jest
+        .mocked(prisma.client.findUnique)
+        .mockResolvedValue({ ...mockClient, firstName: 'maria', lastName: 'jacquez' } as any);
+
+      await expect(service.findBasic(1)).resolves.toEqual(
+        expect.objectContaining({ firstName: 'Maria', lastName: 'Jacquez' }),
+      );
     });
   });
 
