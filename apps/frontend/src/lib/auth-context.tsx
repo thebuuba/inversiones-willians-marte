@@ -9,15 +9,14 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { api } from './api';
-
-interface User {
-  id: string;
-  name: string;
-  username?: string | null;
-  email: string;
-  role: string;
-}
+import { api } from './api.ts';
+import {
+  AUTH_STORAGE_KEY,
+  clearStoredAuth,
+  loadStoredAuthSession,
+  type StoredAuth,
+  type User,
+} from './auth-session.ts';
 
 interface AuthContextType {
   user: User | null;
@@ -28,29 +27,8 @@ interface AuthContextType {
   loading: boolean;
 }
 
-interface StoredAuth {
-  user: User | null;
-  token: string | null;
-}
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const AUTH_STORAGE_KEY = 'auth';
 const AUTH_CHANGED_EVENT = 'auth-changed';
-
-function parseStoredAuth(stored: string | null): StoredAuth {
-  if (!stored) return { user: null, token: null };
-
-  try {
-    const parsed = JSON.parse(stored) as StoredAuth;
-    return {
-      user: parsed.user ?? null,
-      token: parsed.token ?? null,
-    };
-  } catch {
-    if (typeof window !== 'undefined') localStorage.removeItem(AUTH_STORAGE_KEY);
-    return { user: null, token: null };
-  }
-}
 
 function notifyAuthChanged() {
   if (typeof window !== 'undefined') {
@@ -63,16 +41,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    function syncAuth() {
-      setAuth(parseStoredAuth(localStorage.getItem(AUTH_STORAGE_KEY)));
+    let active = true;
+
+    async function syncAuth() {
+      setLoading(true);
+      const nextAuth = await loadStoredAuthSession(async () => {
+        const { data } = await api.get('/auth/profile');
+        return data.data as User;
+      });
+      if (!active) return;
+      setAuth(nextAuth);
       setLoading(false);
     }
 
-    syncAuth();
+    void syncAuth();
     window.addEventListener('storage', syncAuth);
     window.addEventListener(AUTH_CHANGED_EVENT, syncAuth);
 
     return () => {
+      active = false;
       window.removeEventListener('storage', syncAuth);
       window.removeEventListener(AUTH_CHANGED_EVENT, syncAuth);
     };
@@ -98,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [persistAuth]);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    clearStoredAuth();
     setAuth({ user: null, token: null });
     setLoading(false);
     notifyAuthChanged();

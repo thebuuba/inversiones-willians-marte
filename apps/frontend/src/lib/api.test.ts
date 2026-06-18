@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { AxiosError, type AxiosAdapter } from 'axios';
 import { api } from './api.ts';
+import { readClientCache, writeClientCache } from './client-cache.ts';
 
 function installBrowserGlobals(storage = new Map<string, string>()) {
   const location = { href: '' };
@@ -66,4 +67,29 @@ test('does not redirect when login returns unauthorized credentials', async () =
 
   assert.equal(storage.has('auth'), true);
   assert.equal(location.href, '');
+});
+
+test('clears client cache when a saved session is rejected', async () => {
+  const { storage } = installBrowserGlobals(new Map([['auth', '{"token":"old"}']]));
+  writeClientCache('dashboard', { totalClients: 2 }, 30_000);
+  const adapter: AxiosAdapter = async (config) => {
+    throw new AxiosError(
+      'Unauthorized',
+      AxiosError.ERR_BAD_REQUEST,
+      config,
+      {},
+      {
+        config,
+        data: { message: 'Unauthorized' },
+        headers: {},
+        status: 401,
+        statusText: 'Unauthorized',
+      },
+    );
+  };
+
+  await assert.rejects(api.get('/reports/dashboard', { adapter }));
+
+  assert.equal(storage.has('auth'), false);
+  assert.equal(readClientCache('dashboard'), null);
 });
