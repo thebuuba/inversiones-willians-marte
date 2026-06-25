@@ -16,7 +16,7 @@ export interface StoredAuth {
 export const AUTH_STORAGE_KEY = 'auth';
 
 export function clearStoredAuth() {
-  if (typeof window !== 'undefined' || typeof localStorage !== 'undefined') {
+  if (typeof localStorage !== 'undefined') {
     localStorage.removeItem(AUTH_STORAGE_KEY);
   }
   clearClientCache();

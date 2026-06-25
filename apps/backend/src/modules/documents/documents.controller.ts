@@ -21,6 +21,8 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
+import { DOCUMENT_UPLOAD_LIMITS } from './document-upload-options';
+import { assertAllowedUploadedFile } from './document-upload-validation';
 
 const ALLOWED_MIME_TYPES = [
   'application/pdf',
@@ -51,7 +53,7 @@ export class DocumentsController {
           cb(null, `${unique}${extname(file.originalname)}`);
         },
       }),
-      limits: { fileSize: 10 * 1024 * 1024 },
+      limits: DOCUMENT_UPLOAD_LIMITS,
       fileFilter: (_req, file, cb) => {
         if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
           cb(null, true);
@@ -67,6 +69,7 @@ export class DocumentsController {
     @CurrentUser('id') userId: string,
   ) {
     if (!file) throw new BadRequestException('File is required');
+    assertAllowedUploadedFile(file);
     return this.documents.create(
       {
         name: dto.name || file.originalname,

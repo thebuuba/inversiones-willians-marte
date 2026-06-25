@@ -17,6 +17,8 @@ import { RolesGuard } from '../../common/guards';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { CreateDocumentCaptureSessionDto } from './dto/create-document-capture-session.dto';
 import { DocumentCaptureSessionsService } from './document-capture-sessions.service';
+import { CAPTURE_UPLOAD_LIMITS } from './document-upload-options';
+import { assertAllowedUploadedFile } from './document-upload-validation';
 
 const ALLOWED_CAPTURE_MIME_TYPES = [
   'application/pdf',
@@ -62,7 +64,7 @@ export class DocumentCaptureSessionsController {
           cb(null, `${unique}${extname(file.originalname)}`);
         },
       }),
-      limits: { fileSize: 10 * 1024 * 1024 },
+      limits: CAPTURE_UPLOAD_LIMITS,
       fileFilter: (_req, file, cb) => {
         if (ALLOWED_CAPTURE_MIME_TYPES.includes(file.mimetype)) {
           cb(null, true);
@@ -74,6 +76,7 @@ export class DocumentCaptureSessionsController {
   )
   upload(@Param('token') token: string, @UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('File is required');
+    assertAllowedUploadedFile(file);
     return this.captureSessions.upload(token, {
       name: file.originalname.replace(/\.[^/.]+$/, '') || file.originalname,
       fileUrl: file.filename,

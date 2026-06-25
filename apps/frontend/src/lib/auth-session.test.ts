@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { writeClientCache, readClientCache } from './client-cache.ts';
-import { loadStoredAuthSession } from './auth-session.ts';
+import { clearStoredAuth, loadStoredAuthSession } from './auth-session.ts';
 
 function installStorage(storage = new Map<string, string>()) {
   Object.defineProperty(globalThis, 'localStorage', {
@@ -52,4 +52,10 @@ test('clears stored auth and client cache when backend rejects the saved token',
   assert.deepEqual(auth, { user: null, token: null });
   assert.equal(storage.has('auth'), false);
   assert.equal(readClientCache('dashboard'), null);
+});
+
+test('clearing auth is safe without browser storage', () => {
+  Reflect.deleteProperty(globalThis, 'localStorage');
+
+  assert.doesNotThrow(() => clearStoredAuth());
 });
