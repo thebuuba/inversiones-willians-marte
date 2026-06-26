@@ -12,7 +12,9 @@
     "db:push:dev": "pnpm --filter @inversiones/database push:dev",
     "db:push": "pnpm --filter @inversiones/database push",
     "db:studio": "pnpm --filter @inversiones/database studio",
-    "db:seed": "pnpm --filter @inversiones/database seed"
+    "db:seed": "pnpm --filter @inversiones/database seed",
+    "ios:test": "cd apps/ios && swift test",
+    "android:check": "cd apps/android && sh check.sh"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
