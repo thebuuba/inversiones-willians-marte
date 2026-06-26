@@ -5,7 +5,8 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowLeft, Banknote, Plus } from 'lucide-react';
 import { addInvestmentCapital, getInvestment } from '@/lib/api/investments';
 import { formatDop } from '@/lib/currency';
-import type { InvestorInvestmentDetail } from '@inversiones/shared';
+import type { InvestorInvestmentDetail, InvestorInvestmentMovementItem } from '@inversiones/shared';
+import { CapitalAdditionReceiptModal } from './capital-addition-receipt-modal';
 
 const fmt = (n: number | string) => formatDop(n, { space: true });
 const fmtDate = (s: string | Date) =>
@@ -17,7 +18,10 @@ const statusLabels = {
   OVERDUE: 'Atrasada',
 } as const;
 
+const TABS = ['Historial de pagos', 'Movimientos de capital'];
+
 export function InvestmentDetailPage({ investmentId }: { investmentId: string }) {
+  const [tab, setTab] = useState(0);
   const [investment, setInvestment] = useState<InvestorInvestmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [amount, setAmount] = useState('');
@@ -25,6 +29,9 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [createdMovement, setCreatedMovement] = useState<InvestorInvestmentMovementItem | null>(null);
+  const [previousCapital, setPreviousCapital] = useState(0);
+  const [previousMonthlyPayment, setPreviousMonthlyPayment] = useState(0);
 
   useEffect(() => {
     getInvestment(investmentId)
@@ -62,11 +69,15 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
     setSaving(true);
     setError(null);
     try {
+      setPreviousCapital(Number(investment!.capital));
+      setPreviousMonthlyPayment(Number(investment!.monthlyPayment));
       const updated = await addInvestmentCapital(investmentId, {
         amount: amountNumber,
         movementDate,
         notes: notes.trim() || undefined,
       });
+      const newMovement = updated.movements?.[0];
+      if (newMovement) setCreatedMovement(newMovement);
       setInvestment(updated);
       setAmount('');
       setNotes('');
@@ -78,6 +89,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
   }
 
   return (
+    <>
     <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-neutral-900">
       <div className="mx-auto max-w-7xl">
         <Link className="mb-6 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#2f7654]" href={investorHref}>
@@ -112,8 +124,53 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           </div>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-5">
+        <section className="mb-6 rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf5ed]">
+              <Banknote className="h-5 w-5 text-[#2f7654]" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold">Sumar capital</h2>
+              <p className="text-sm text-neutral-400">Aumenta esta inversion.</p>
+            </div>
+          </div>
+          <form onSubmit={handleAddCapital} className="space-y-4">
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-neutral-600">Monto</span>
+              <input className="h-11 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none focus:border-[#2f7654]" inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="100,000" />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-neutral-600">Fecha</span>
+              <input className="h-11 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none focus:border-[#2f7654]" type="date" value={movementDate} onChange={(event) => setMovementDate(event.target.value)} />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-neutral-600">Nota</span>
+              <textarea className="h-24 w-full resize-none rounded-xl border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-[#2f7654]" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" />
+            </label>
+            {error && <p className="text-sm font-semibold text-[#9f3f25]">{error}</p>}
+            <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white disabled:opacity-60" disabled={saving} type="submit">
+              <Plus className="h-4 w-4" />
+              {saving ? 'Guardando...' : 'Sumar capital'}
+            </button>
+          </form>
+        </section>
+
+        <div>
+          <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-white p-1.5 shadow-sm border border-neutral-100">
+            {TABS.map((t, i) => (
+              <button
+                key={t}
+                onClick={() => setTab(i)}
+                className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${
+                  tab === i ? 'bg-[#2f7654] text-white shadow-sm' : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#2f7654]'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          {tab === 0 && (
             <section className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-bold">Historial de pagos</h2>
               {(investment.payments ?? []).length === 0 ? (
@@ -132,7 +189,9 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
                 </div>
               )}
             </section>
+          )}
 
+          {tab === 1 && (
             <section className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-bold">Movimientos de capital</h2>
               {(investment.movements ?? []).length === 0 ? (
@@ -152,41 +211,22 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
                 </div>
               )}
             </section>
-          </div>
-
-          <section className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf5ed]">
-                <Banknote className="h-5 w-5 text-[#2f7654]" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold">Sumar capital</h2>
-                <p className="text-sm text-neutral-400">Aumenta esta inversion.</p>
-              </div>
-            </div>
-            <form onSubmit={handleAddCapital} className="space-y-4">
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-neutral-600">Monto</span>
-                <input className="h-11 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none focus:border-[#2f7654]" inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="100,000" />
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-neutral-600">Fecha</span>
-                <input className="h-11 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none focus:border-[#2f7654]" type="date" value={movementDate} onChange={(event) => setMovementDate(event.target.value)} />
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-neutral-600">Nota</span>
-                <textarea className="h-24 w-full resize-none rounded-xl border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-[#2f7654]" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" />
-              </label>
-              {error && <p className="text-sm font-semibold text-[#9f3f25]">{error}</p>}
-              <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white disabled:opacity-60" disabled={saving} type="submit">
-                <Plus className="h-4 w-4" />
-                {saving ? 'Guardando...' : 'Sumar capital'}
-              </button>
-            </form>
-          </section>
+          )}
         </div>
       </div>
     </div>
+
+      {createdMovement && investment.investor && (
+        <CapitalAdditionReceiptModal
+          movement={createdMovement}
+          investor={investment.investor}
+          investment={investment}
+          previousCapital={previousCapital}
+          previousMonthlyPayment={previousMonthlyPayment}
+          onClose={() => setCreatedMovement(null)}
+        />
+      )}
+    </>
   );
 }
 
