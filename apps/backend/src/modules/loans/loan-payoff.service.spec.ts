@@ -29,6 +29,24 @@ describe('LoanPayoffService', () => {
     });
   });
 
+  it('does not charge generated interest until it rounds near RD$50', () => {
+    const quote = service.quote(
+      {
+        id: 'loan-1',
+        principal: 5000,
+        interestRate: 120,
+        interestType: 'INDEFINITE',
+        paymentFreq: 'MONTHLY',
+        startDate: new Date('2026-05-25T00:00:00.000Z'),
+        schedule: [],
+      },
+      new Date('2026-05-26T00:00:00.000Z'),
+    );
+
+    expect(quote.earnedInterest).toBe(0);
+    expect(quote.totalToPay).toBe(5000);
+  });
+
   it('discounts unearned interest for fixed loans paid early', () => {
     const quote = service.quote(
       {
@@ -77,8 +95,8 @@ describe('LoanPayoffService', () => {
     );
 
     expect(quote.capitalOutstanding).toBe(110000);
-    expect(quote.earnedInterest).toBe(6428.57);
-    expect(quote.unearnedInterestDiscount).toBe(17571.43);
-    expect(quote.totalToPay).toBe(116428.57);
+    expect(quote.earnedInterest).toBe(6450);
+    expect(quote.unearnedInterestDiscount).toBe(17550);
+    expect(quote.totalToPay).toBe(116450);
   });
 });

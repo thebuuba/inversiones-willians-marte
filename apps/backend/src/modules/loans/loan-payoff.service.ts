@@ -81,7 +81,7 @@ export class LoanPayoffService {
     ];
 
     const dailyRate = this.periodicRate(this.money(loan.interestRate), loan.paymentFreq) / this.periodDays(loan.paymentFreq);
-    const earnedInterest = this.round(
+    const earnedInterest = this.roundToNearestFifty(
       segments.reduce((sum, segment) => {
         const days = Math.min(this.periodDays(loan.paymentFreq), this.daysBetween(segment.from, payoffDate));
         return sum + segment.amount * dailyRate * days;
@@ -124,11 +124,12 @@ export class LoanPayoffService {
     const currentInterest = next
       ? this.money(next.interestPart) * Math.min(1, daysGenerated / periodDays)
       : 0;
-    const earnedInterest = this.round(maturedInterest + currentInterest);
+    const roundedCurrentInterest = this.roundToNearestFifty(currentInterest);
+    const earnedInterest = this.round(maturedInterest + roundedCurrentInterest);
     const futureInterest = schedule
       .filter((row) => row.dueDate > payoffDate)
       .reduce((sum, row) => sum + this.money(row.interestPart), 0);
-    const unearnedInterestDiscount = this.round(Math.max(0, futureInterest - currentInterest));
+    const unearnedInterestDiscount = this.round(Math.max(0, futureInterest - roundedCurrentInterest));
     const fees = this.unpaidFees(loan);
     const dailyInterest = this.round(next ? this.money(next.interestPart) / periodDays : 0);
 
@@ -219,5 +220,9 @@ export class LoanPayoffService {
 
   private round(value: number): number {
     return Math.round(value * 100) / 100;
+  }
+
+  private roundToNearestFifty(value: number): number {
+    return Math.round(value / 50) * 50;
   }
 }
