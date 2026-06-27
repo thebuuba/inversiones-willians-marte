@@ -76,6 +76,28 @@ public struct LoanProductItem: Decodable, Equatable, Identifiable {
     public let maxTerm: Int?
 }
 
+public struct CreateLoanProductInput: Encodable, Equatable, Sendable {
+    public let name: String
+    public let interestType: String
+    public let interestRate: Double
+    public let paymentFrequency: String
+    public let maxTerm: Int?
+
+    public init(
+        name: String,
+        interestType: String,
+        interestRate: Double,
+        paymentFrequency: String,
+        maxTerm: Int? = nil
+    ) {
+        self.name = name
+        self.interestType = interestType
+        self.interestRate = interestRate
+        self.paymentFrequency = paymentFrequency
+        self.maxTerm = maxTerm
+    }
+}
+
 public struct LoanDetail: Decodable, Equatable, Identifiable {
     public let id: String
     public let loanNumber: Int

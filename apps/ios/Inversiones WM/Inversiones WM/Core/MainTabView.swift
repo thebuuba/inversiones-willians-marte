@@ -3,17 +3,23 @@ import Combine
 
 public struct MainTabView: View {
     @State private var selectedTab = 0
-    private let userName: String
+    private let session: AuthSession
+    private let apiBaseURL: URL
     private let accessToken: String
     private let dashboardService: DashboardService
     private let clientsService: ClientsService
     private let loansService: LoansService
     private let upcomingPaymentsService: UpcomingPaymentsService
     private let requestsService: RequestsService
+    private let usersSettingsService: UsersSettingsService
+    private let settingsLoanProductsService: LoanProductsService
+    private let securitySettingsService: SecuritySettingsService
+    private let integrationsSettingsService: IntegrationsSettingsService
     private let logout: () -> Void
 
     public init(
-        userName: String,
+        session: AuthSession,
+        apiBaseURL: URL,
         accessToken: String,
         dashboardService: DashboardService,
         clientsService: ClientsService,
@@ -22,20 +28,25 @@ public struct MainTabView: View {
         requestsService: RequestsService,
         logout: @escaping () -> Void
     ) {
-        self.userName = userName
+        self.session = session
+        self.apiBaseURL = apiBaseURL
         self.accessToken = accessToken
         self.dashboardService = dashboardService
         self.clientsService = clientsService
         self.loansService = loansService
         self.upcomingPaymentsService = upcomingPaymentsService
         self.requestsService = requestsService
+        usersSettingsService = UsersSettingsService(baseURL: apiBaseURL)
+        settingsLoanProductsService = LoanProductsService(baseURL: apiBaseURL)
+        securitySettingsService = SecuritySettingsService(baseURL: apiBaseURL)
+        integrationsSettingsService = IntegrationsSettingsService(baseURL: apiBaseURL)
         self.logout = logout
     }
 
     public var body: some View {
         TabView(selection: $selectedTab) {
             DashboardView(
-                userName: userName,
+                userName: session.user.name,
                 accessToken: accessToken,
                 service: dashboardService,
                 clientsService: clientsService,
@@ -49,7 +60,7 @@ public struct MainTabView: View {
             .tag(0)
 
             ClientsListView(
-                userName: userName,
+                userName: session.user.name,
                 accessToken: accessToken,
                 service: clientsService
             )
@@ -70,7 +81,17 @@ public struct MainTabView: View {
                 }
                 .tag(3)
 
-            SettingsView(userName: userName, logout: logout)
+            SettingsView(
+                model: SettingsPanelModel(session: session, apiBaseURL: apiBaseURL),
+                apiBaseURL: apiBaseURL,
+                accessToken: accessToken,
+                userRole: session.user.role,
+                usersService: usersSettingsService,
+                loanProductsService: settingsLoanProductsService,
+                securityService: securitySettingsService,
+                integrationsService: integrationsSettingsService,
+                logout: logout
+            )
                 .tabItem {
                     Label("Configuración", systemImage: "gearshape")
                 }
@@ -244,7 +265,7 @@ private struct SearchField: View {
     }
 }
 
-private struct SectionTitle: View {
+struct SectionTitle: View {
     let title: String
 
     init(_ title: String) {
@@ -679,19 +700,96 @@ private struct CreateRequestView: View {
 }
 
 private struct SettingsView: View {
-    let userName: String
+    let model: SettingsPanelModel
+    let apiBaseURL: URL
+    let accessToken: String
+    let userRole: String
+    let usersService: UsersSettingsService
+    let loanProductsService: LoanProductsService
+    let securityService: SecuritySettingsService
+    let integrationsService: IntegrationsSettingsService
     let logout: () -> Void
+    @State private var isConfirmingLogout = false
+
+    private var canViewUsers: Bool {
+        userRole == "ADMIN" || userRole == "COLLECTOR"
+    }
+
+    private var canManageUsers: Bool {
+        userRole == "ADMIN"
+    }
+
+    private var canManageLoanProducts: Bool {
+        userRole == "ADMIN"
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    PanelHero(title: "Configuración", subtitle: userName, symbol: "gearshape.fill")
+                    PanelHero(title: "Configuración", subtitle: model.name, symbol: "gearshape.fill")
 
                     VStack(spacing: 12) {
-                        SettingsRow(symbol: "person.crop.circle", title: "Cuenta", subtitle: "Sesión activa")
-                        SettingsRow(symbol: "wifi", title: "Servidor", subtitle: "Backend web conectado a Supabase")
-                        Button(role: .destructive, action: logout) {
+                        NavigationLink {
+                            SettingsGeneralView()
+                        } label: {
+                            SettingsRow(symbol: "building.2", title: "General", subtitle: "Empresa y localización")
+                        }
+                        .buttonStyle(.plain)
+                        SettingsRow(symbol: "person.crop.circle", title: "Nombre", subtitle: model.name)
+                        SettingsRow(symbol: "person.text.rectangle", title: "Usuario", subtitle: model.username)
+                        SettingsRow(symbol: "envelope", title: "Correo", subtitle: model.email)
+                        SettingsRow(symbol: "shield.lefthalf.filled", title: "Rol", subtitle: model.role)
+                        SettingsRow(symbol: "wifi", title: "Servidor", subtitle: model.apiBaseURL)
+                        NavigationLink {
+                            SettingsLoanProductsView(
+                                accessToken: accessToken,
+                                service: loanProductsService,
+                                canManageProducts: canManageLoanProducts
+                            )
+                        } label: {
+                            SettingsRow(symbol: "creditcard", title: "Préstamos", subtitle: canManageLoanProducts ? "Crear, editar y desactivar productos" : "Consulta de productos")
+                        }
+                        .buttonStyle(.plain)
+                        NavigationLink {
+                            SettingsSecurityView(
+                                accessToken: accessToken,
+                                service: securityService,
+                                canViewAudit: userRole == "ADMIN"
+                            )
+                        } label: {
+                            SettingsRow(symbol: "lock.shield", title: "Seguridad", subtitle: userRole == "ADMIN" ? "Perfil y auditoría reciente" : "Perfil validado")
+                        }
+                        .buttonStyle(.plain)
+                        if canViewUsers {
+                            NavigationLink {
+                                SettingsUsersView(
+                                    accessToken: accessToken,
+                                    service: usersService,
+                                    canManageUsers: canManageUsers
+                                )
+                            } label: {
+                                SettingsRow(symbol: "person.2", title: "Usuarios", subtitle: canManageUsers ? "Crear, activar y desactivar usuarios" : "Consulta de usuarios")
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            SettingsRow(symbol: "lock", title: "Usuarios", subtitle: "Disponible para administradores y cobradores")
+                        }
+                        NavigationLink {
+                            SettingsNotificationsView()
+                        } label: {
+                            SettingsRow(symbol: "bell", title: "Notificaciones", subtitle: "Preferencias locales")
+                        }
+                        .buttonStyle(.plain)
+                        NavigationLink {
+                            SettingsIntegrationsView(apiBaseURL: apiBaseURL, service: integrationsService)
+                        } label: {
+                            SettingsRow(symbol: "link", title: "Integraciones", subtitle: "Estado del backend")
+                        }
+                        .buttonStyle(.plain)
+                        Button(role: .destructive) {
+                            isConfirmingLogout = true
+                        } label: {
                             HStack {
                                 Image(systemName: "rectangle.portrait.and.arrow.right")
                                 Text("Cerrar sesión")
@@ -710,11 +808,17 @@ private struct SettingsView: View {
             }
             .background(Color.appBackground)
             .navigationTitle("Configuración")
+            .confirmationDialog("Cerrar sesión", isPresented: $isConfirmingLogout, titleVisibility: .visible) {
+                Button("Cerrar sesión", role: .destructive, action: logout)
+                Button("Cancelar", role: .cancel) {}
+            } message: {
+                Text("Tendrás que iniciar sesión de nuevo para continuar.")
+            }
         }
     }
 }
 
-private struct SettingsRow: View {
+struct SettingsRow: View {
     let symbol: String
     let title: String
     let subtitle: String

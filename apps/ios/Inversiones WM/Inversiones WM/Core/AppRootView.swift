@@ -8,8 +8,10 @@ public struct AppRootView: View {
     private let upcomingPaymentsService: UpcomingPaymentsService
     private let requestsService: RequestsService
     private let sessionStore: SessionStore
+    private let apiBaseURL: URL
 
     public init(apiBaseURL: URL) {
+        self.apiBaseURL = apiBaseURL
         authService = AuthService(baseURL: apiBaseURL)
         dashboardService = DashboardService(baseURL: apiBaseURL)
         clientsService = ClientsService(baseURL: apiBaseURL)
@@ -21,6 +23,7 @@ public struct AppRootView: View {
 
     public var body: some View {
         LoginView(
+            apiBaseURL: apiBaseURL,
             dashboardService: dashboardService,
             clientsService: clientsService,
             loansService: loansService,

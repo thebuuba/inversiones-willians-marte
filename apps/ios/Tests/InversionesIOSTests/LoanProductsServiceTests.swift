@@ -41,6 +41,121 @@ final class LoanProductsServiceTests: XCTestCase {
         XCTAssertEqual(products.first?.name, "Personal")
         XCTAssertEqual(products.first?.interestRate, 10)
     }
+
+    func testCreateReturnsDecodedProduct() async throws {
+        LoanProductsURLProtocolStub.handler = { request in
+            XCTAssertEqual(request.url?.absoluteString, "http://localhost:3000/api/v1/loan-products")
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer token-123")
+
+            let data = Data("""
+            {
+              "success": true,
+              "data": {
+                "id": "product-1",
+                "name": "Personal",
+                "interestType": "FLAT",
+                "interestRate": 10,
+                "paymentFrequency": "MONTHLY",
+                "maxTerm": 12
+              }
+            }
+            """.utf8)
+            let response = HTTPURLResponse(url: request.url!, statusCode: 201, httpVersion: nil, headerFields: nil)!
+            return (response, data)
+        }
+
+        let service = LoanProductsService(
+            baseURL: URL(string: "http://localhost:3000/api/v1")!,
+            session: URLSession(configuration: .loanProductsStubbed)
+        )
+
+        let product = try await service.create(
+            accessToken: "token-123",
+            input: CreateLoanProductInput(
+                name: "Personal",
+                interestType: "FLAT",
+                interestRate: 10,
+                paymentFrequency: "MONTHLY",
+                maxTerm: 12
+            )
+        )
+
+        XCTAssertEqual(product.name, "Personal")
+    }
+
+    func testUpdateReturnsDecodedProduct() async throws {
+        LoanProductsURLProtocolStub.handler = { request in
+            XCTAssertEqual(request.url?.absoluteString, "http://localhost:3000/api/v1/loan-products/product-1")
+            XCTAssertEqual(request.httpMethod, "PATCH")
+
+            let data = Data("""
+            {
+              "success": true,
+              "data": {
+                "id": "product-1",
+                "name": "Personal Plus",
+                "interestType": "FLAT",
+                "interestRate": 12,
+                "paymentFrequency": "MONTHLY",
+                "maxTerm": 18
+              }
+            }
+            """.utf8)
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+            return (response, data)
+        }
+
+        let service = LoanProductsService(
+            baseURL: URL(string: "http://localhost:3000/api/v1")!,
+            session: URLSession(configuration: .loanProductsStubbed)
+        )
+
+        let product = try await service.update(
+            accessToken: "token-123",
+            id: "product-1",
+            input: CreateLoanProductInput(
+                name: "Personal Plus",
+                interestType: "FLAT",
+                interestRate: 12,
+                paymentFrequency: "MONTHLY",
+                maxTerm: 18
+            )
+        )
+
+        XCTAssertEqual(product.name, "Personal Plus")
+        XCTAssertEqual(product.maxTerm, 18)
+    }
+
+    func testDeleteSendsBackendRequest() async throws {
+        LoanProductsURLProtocolStub.handler = { request in
+            XCTAssertEqual(request.url?.absoluteString, "http://localhost:3000/api/v1/loan-products/product-1")
+            XCTAssertEqual(request.httpMethod, "DELETE")
+
+            let data = Data("""
+            {
+              "success": true,
+              "data": {
+                "id": "product-1",
+                "name": "Personal",
+                "interestType": "FLAT",
+                "interestRate": 10,
+                "paymentFrequency": "MONTHLY",
+                "maxTerm": 12
+              }
+            }
+            """.utf8)
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+            return (response, data)
+        }
+
+        let service = LoanProductsService(
+            baseURL: URL(string: "http://localhost:3000/api/v1")!,
+            session: URLSession(configuration: .loanProductsStubbed)
+        )
+
+        try await service.delete(accessToken: "token-123", id: "product-1")
+    }
 }
 
 private final class LoanProductsURLProtocolStub: URLProtocol {

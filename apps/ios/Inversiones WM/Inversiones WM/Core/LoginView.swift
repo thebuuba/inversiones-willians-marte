@@ -7,8 +7,10 @@ public struct LoginView: View {
     private let loansService: LoansService
     private let upcomingPaymentsService: UpcomingPaymentsService
     private let requestsService: RequestsService
+    private let apiBaseURL: URL
 
     public init(
+        apiBaseURL: URL,
         dashboardService: DashboardService,
         clientsService: ClientsService,
         loansService: LoansService,
@@ -16,6 +18,7 @@ public struct LoginView: View {
         requestsService: RequestsService,
         viewModel: @autoclosure @escaping () -> LoginViewModel
     ) {
+        self.apiBaseURL = apiBaseURL
         self.dashboardService = dashboardService
         self.clientsService = clientsService
         self.loansService = loansService
@@ -28,7 +31,8 @@ public struct LoginView: View {
         Group {
             if let session = viewModel.session {
                 MainTabView(
-                    userName: session.user.name,
+                    session: session,
+                    apiBaseURL: apiBaseURL,
                     accessToken: session.accessToken,
                     dashboardService: dashboardService,
                     clientsService: clientsService,

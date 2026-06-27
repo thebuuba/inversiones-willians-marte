@@ -10,6 +10,29 @@ public enum APIClient {
         return request
     }
 
+    public static func profileRequest(baseURL: URL, accessToken: String) throws -> URLRequest {
+        let url = baseURL.appending(path: "auth/profile")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        return request
+    }
+
+    public static func auditRequest(baseURL: URL, accessToken: String) throws -> URLRequest {
+        let url = baseURL.appending(path: "audit")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        return request
+    }
+
+    public static func healthRequest(baseURL: URL) throws -> URLRequest {
+        let url = baseURL.appending(path: "health")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        return request
+    }
+
     public static func clientsRequest(
         baseURL: URL,
         accessToken: String,
@@ -112,6 +135,43 @@ public enum APIClient {
         return request
     }
 
+    public static func createLoanProductRequest(
+        baseURL: URL,
+        accessToken: String,
+        input: CreateLoanProductInput
+    ) throws -> URLRequest {
+        let url = baseURL.appending(path: "loan-products")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(input)
+        return request
+    }
+
+    public static func updateLoanProductRequest(
+        baseURL: URL,
+        accessToken: String,
+        id: String,
+        input: CreateLoanProductInput
+    ) throws -> URLRequest {
+        let url = baseURL.appending(path: "loan-products/\(id)")
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(input)
+        return request
+    }
+
+    public static func deleteLoanProductRequest(baseURL: URL, accessToken: String, id: String) throws -> URLRequest {
+        let url = baseURL.appending(path: "loan-products/\(id)")
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        return request
+    }
+
     public static func dashboardRequest(baseURL: URL, accessToken: String) throws -> URLRequest {
         let url = baseURL.appending(path: "reports/dashboard")
         var request = URLRequest(url: url)
@@ -178,6 +238,36 @@ public enum APIClient {
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(input)
+        return request
+    }
+
+    public static func usersRequest(baseURL: URL, accessToken: String) throws -> URLRequest {
+        let url = baseURL.appending(path: "users")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        return request
+    }
+
+    public static func createUserRequest(
+        baseURL: URL,
+        accessToken: String,
+        input: CreateUserInput
+    ) throws -> URLRequest {
+        let url = baseURL.appending(path: "users")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(input)
+        return request
+    }
+
+    public static func toggleUserActiveRequest(baseURL: URL, accessToken: String, id: String) throws -> URLRequest {
+        let url = baseURL.appending(path: "users/\(id)/toggle-active")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         return request
     }
 }
