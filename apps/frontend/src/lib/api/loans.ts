@@ -1,5 +1,5 @@
 import { api } from '../api';
-import type { ApiResponse, CreateLoanDto } from '@inversiones/shared';
+import type { AddLoanCapitalDto, ApiResponse, CreateLoanDto, LoanPayoffQuote } from '@inversiones/shared';
 
 export interface LoanListClient {
   id: string;
@@ -74,6 +74,17 @@ export interface LoanDetailPayment {
   receivedBy?: LoanUserSummary | null;
 }
 
+export interface LoanCapitalMovement {
+  id: string;
+  loanId: string;
+  amount: number;
+  effectiveDate: string;
+  notes: string | null;
+  createdById: string;
+  createdAt: string;
+  createdBy?: LoanUserSummary | null;
+}
+
 export interface LoanDetailLateFee {
   id: string;
   loanId: string;
@@ -87,6 +98,7 @@ export interface LoanDetailLateFee {
 export interface LoanDetail extends LoanListItem {
   schedule: LoanScheduleItem[];
   payments: LoanDetailPayment[];
+  capitalMovements?: LoanCapitalMovement[];
   lateFees?: LoanDetailLateFee[];
 }
 
@@ -107,5 +119,17 @@ export async function getLoan(id: string): Promise<LoanDetail> {
 
 export async function createLoan(dto: CreateLoanDto) {
   const { data } = await api.post<ApiResponse>('/loans', dto);
+  return data.data;
+}
+
+export async function getPayoffQuote(loanId: string, payoffDate: string): Promise<LoanPayoffQuote> {
+  const { data } = await api.get<ApiResponse<LoanPayoffQuote>>(`/loans/${loanId}/payoff-quote`, {
+    params: { payoffDate },
+  });
+  return data.data as LoanPayoffQuote;
+}
+
+export async function addLoanCapital(loanId: string, dto: AddLoanCapitalDto) {
+  const { data } = await api.post<ApiResponse>(`/loans/${loanId}/capital-additions`, dto);
   return data.data;
 }

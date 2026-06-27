@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { prisma, Prisma } from '@inversiones/database';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { AmortizationService } from './amortization.service';
+import { AddLoanCapitalDto } from './dto/add-loan-capital.dto';
+import { LoanPayoffService } from './loan-payoff.service';
 
 type LoanListRow = {
   id: string;
@@ -28,7 +30,10 @@ type LoanListRow = {
 
 @Injectable()
 export class LoansService {
-  constructor(private amortization: AmortizationService) {}
+  constructor(
+    private amortization: AmortizationService,
+    private payoff: LoanPayoffService,
+  ) {}
 
   async create(dto: CreateLoanDto, userId: string) {
     const product = await prisma.loanProduct.findUnique({ where: { id: dto.productId } });
@@ -219,13 +224,90 @@ export class LoansService {
         schedule: { orderBy: { dueDate: 'asc' } },
         lateFees: { orderBy: { calculatedDate: 'desc' } },
         payments: {
-          include: { receivedBy: { select: { id: true, name: true } } },
+          include: {
+            allocations: true,
+            receivedBy: { select: { id: true, name: true } },
+          },
           orderBy: { paymentDate: 'desc' },
+        },
+        capitalMovements: {
+          include: { createdBy: { select: { id: true, name: true } } },
+          orderBy: { effectiveDate: 'desc' },
         },
       },
     });
     if (!loan) throw new NotFoundException('Loan not found');
     return loan;
+  }
+
+  async addCapital(id: string, dto: AddLoanCapitalDto, userId: string) {
+    const loan = await prisma.loan.findUnique({ where: { id } });
+    if (!loan) throw new NotFoundException('Loan not found');
+    if (loan.status !== 'ACTIVE') throw new BadRequestException('Loan is not active');
+    if (loan.interestType !== 'INDEFINITE') {
+      throw new BadRequestException('Capital additions are only enabled for indefinite loans');
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const movement = await tx.loanCapitalMovement.create({
+        data: {
+          loanId: id,
+          amount: dto.amount,
+          effectiveDate: new Date(dto.effectiveDate),
+          notes: dto.notes,
+          createdById: userId,
+        },
+      });
+      const principal = Number(loan.principal) + dto.amount;
+      const balance = Number(loan.balance) + dto.amount;
+      await tx.loan.update({
+        where: { id },
+        data: { principal, balance },
+      });
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'LOAN_CAPITAL_ADDED',
+          entityType: 'Loan',
+          entityId: id,
+          clientId: loan.clientId,
+          oldValues: { principal: Number(loan.principal), balance: Number(loan.balance) },
+          newValues: {
+            amount: dto.amount,
+            effectiveDate: dto.effectiveDate,
+            principal,
+            balance,
+            notes: dto.notes ?? null,
+          },
+        },
+      });
+      return movement;
+    });
+  }
+
+  async getPayoffQuote(id: string, payoffDate: string) {
+    const loan = await prisma.loan.findUnique({
+      where: { id },
+      include: {
+        schedule: { orderBy: { dueDate: 'asc' } },
+        lateFees: true,
+        payments: {
+          include: {
+            allocations: true,
+            receivedBy: { select: { id: true, name: true } },
+          },
+          orderBy: { paymentDate: 'desc' },
+        },
+        capitalMovements: {
+          orderBy: { effectiveDate: 'asc' },
+        },
+      },
+    });
+    if (!loan) throw new NotFoundException('Loan not found');
+
+    const normalizedDate = new Date(`${payoffDate}T00:00:00.000Z`);
+    if (Number.isNaN(normalizedDate.getTime())) throw new BadRequestException('Invalid payoff date');
+    return this.payoff.quote(loan, normalizedDate);
   }
 
   async getSummary(id: string) {

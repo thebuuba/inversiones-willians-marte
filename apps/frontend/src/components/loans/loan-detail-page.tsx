@@ -3,17 +3,20 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, ArrowLeft, CalendarDays, CheckCircle2, CircleDollarSign, ClipboardList, Info, Plus, WalletCards } from 'lucide-react';
-import { getLoan, type LoanDetail } from '@/lib/api/loans';
+import { addLoanCapital, getLoan, getPayoffQuote, type LoanDetail } from '@/lib/api/loans';
 import { createPayment } from '@/lib/api/payments';
 import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
 import { formatDop } from '@/lib/currency';
 import { getLoanDetailTotals, getLoanOperationalSummary, getScheduleRemaining } from './loan-detail.helpers';
 import { getLoanTitle } from './loan-title';
 import { RegisterPaymentModal, type RegisterPaymentValues } from './register-payment-modal';
+import { DatePickerInput } from '@/components/ui/date-picker-input';
+import type { LoanPayoffQuote } from '@inversiones/shared';
 
 const fmt = (value: number | string) => formatDop(value, { decimals: 2, space: true });
 const fmtDate = (value: string) => new Date(value).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
 const empty = '—';
+const today = () => new Date().toISOString().slice(0, 10);
 
 function getStatusLabel(status: string) {
   if (status === 'ACTIVE') return 'Activo';
@@ -94,6 +97,13 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [payoffDate, setPayoffDate] = useState(today);
+  const [payoffQuote, setPayoffQuote] = useState<LoanPayoffQuote | null>(null);
+  const [capitalAmount, setCapitalAmount] = useState('');
+  const [capitalDate, setCapitalDate] = useState(today);
+  const [capitalNotes, setCapitalNotes] = useState('');
+  const [capitalError, setCapitalError] = useState<string | null>(null);
+  const [capitalSaving, setCapitalSaving] = useState(false);
 
   const loadLoan = useCallback(async () => {
     try {
@@ -128,6 +138,21 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
     };
   }, [loanId]);
 
+  useEffect(() => {
+    if (!loan || loan.status !== 'ACTIVE') return;
+    let active = true;
+    getPayoffQuote(loan.id, payoffDate)
+      .then((quote) => {
+        if (active) setPayoffQuote(quote);
+      })
+      .catch(() => {
+        if (active) setPayoffQuote(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [loan, payoffDate]);
+
   const totals = useMemo(() => loan ? getLoanDetailTotals({
     principal: Number(loan.principal),
     balance: Number(loan.balance),
@@ -161,6 +186,33 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
       setPaymentError('No se pudo registrar el cobro. Verifica los datos e inténtalo nuevamente.');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAddCapital() {
+    if (!loan) return;
+    const amount = Number(capitalAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setCapitalError('Ingresa un monto válido.');
+      return;
+    }
+    setCapitalSaving(true);
+    setCapitalError(null);
+    try {
+      await addLoanCapital(loan.id, {
+        amount,
+        effectiveDate: capitalDate,
+        notes: capitalNotes.trim() || undefined,
+      });
+      invalidateCachePrefix('loans:');
+      invalidateCachePrefix('clients:');
+      setCapitalAmount('');
+      setCapitalNotes('');
+      await loadLoan();
+    } catch {
+      setCapitalError('No se pudo agregar capital a este préstamo.');
+    } finally {
+      setCapitalSaving(false);
     }
   }
 
@@ -271,6 +323,64 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
           </div>
 
           <aside className="space-y-4">
+            <InfoPanel icon={<CircleDollarSign className="h-5 w-5" />} title="Saldo anticipado">
+              <label className="mb-3 block">
+                <span className="mb-2 block text-sm font-semibold text-[#5C6D63]">Fecha de saldo</span>
+                <DatePickerInput
+                  className="h-10 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-bold text-[#173D2C] outline-none"
+                  onChange={setPayoffDate}
+                  value={payoffDate}
+                />
+              </label>
+              <DataRow label="Capital pendiente" tone="text-[#173D2C]" value={payoffQuote ? fmt(payoffQuote.capitalOutstanding) : empty} />
+              <DataRow label="Interés generado" tone="text-[#B63B0B]" value={payoffQuote ? fmt(payoffQuote.earnedInterest) : empty} />
+              <DataRow label="Interés futuro descontado" tone="text-[#2F7654]" value={payoffQuote ? fmt(payoffQuote.unearnedInterestDiscount) : empty} />
+              <DataRow label="Días generados" value={payoffQuote?.daysGenerated ?? empty} />
+              <DataRow label="Interés diario" value={payoffQuote ? fmt(payoffQuote.dailyInterest) : empty} />
+              <DataRow label="Mora/cargos" value={payoffQuote ? fmt(payoffQuote.fees) : empty} />
+              <DataRow label="Total para saldar" tone="text-[#111827]" value={payoffQuote ? fmt(payoffQuote.totalToPay) : empty} />
+            </InfoPanel>
+
+            {loan.interestType === 'INDEFINITE' && loan.status === 'ACTIVE' ? (
+              <InfoPanel icon={<Plus className="h-5 w-5" />} title="Agregar capital">
+                <div className="space-y-3">
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-[#5C6D63]">Monto</span>
+                    <input
+                      className="h-10 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-bold text-[#173D2C] outline-none"
+                      inputMode="decimal"
+                      onChange={(event) => setCapitalAmount(event.target.value)}
+                      placeholder="0.00"
+                      value={capitalAmount}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-[#5C6D63]">Fecha efectiva</span>
+                    <DatePickerInput
+                      className="h-10 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-bold text-[#173D2C] outline-none"
+                      onChange={setCapitalDate}
+                      value={capitalDate}
+                    />
+                  </label>
+                  <textarea
+                    className="h-20 w-full resize-none rounded-xl border border-[#DDEBE3] bg-white px-3 py-2 text-sm font-medium text-[#173D2C] outline-none"
+                    onChange={(event) => setCapitalNotes(event.target.value)}
+                    placeholder="Notas"
+                    value={capitalNotes}
+                  />
+                  {capitalError ? <p className="text-sm font-semibold text-[#9F3F25]">{capitalError}</p> : null}
+                  <button
+                    className="h-10 w-full rounded-full bg-[#2F7654] text-sm font-bold text-white disabled:opacity-60"
+                    disabled={capitalSaving}
+                    onClick={handleAddCapital}
+                    type="button"
+                  >
+                    {capitalSaving ? 'Guardando...' : 'Agregar capital'}
+                  </button>
+                </div>
+              </InfoPanel>
+            ) : null}
+
             <InfoPanel icon={<ClipboardList className="h-5 w-5" />} title="Próxima cuota">
               <DataRow label="Vencimiento" value={nextSchedule ? fmtDate(nextSchedule.dueDate) : empty} />
               <DataRow label="Monto" value={nextSchedule ? fmt(nextSchedule.amount) : empty} />

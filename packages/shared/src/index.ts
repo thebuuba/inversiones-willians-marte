@@ -135,6 +135,23 @@ export interface CreateLoanDto {
   amortizationType?: InterestType;
 }
 
+export interface AddLoanCapitalDto {
+  amount: number;
+  effectiveDate: string;
+  notes?: string;
+}
+
+export interface LoanPayoffQuote {
+  payoffDate: string;
+  capitalOutstanding: number;
+  earnedInterest: number;
+  unearnedInterestDiscount: number;
+  fees: number;
+  totalToPay: number;
+  dailyInterest: number;
+  daysGenerated: number;
+}
+
 export const InvestorStatusEnum = {
   ACTIVE: 'ACTIVE',
   PAUSED: 'PAUSED',

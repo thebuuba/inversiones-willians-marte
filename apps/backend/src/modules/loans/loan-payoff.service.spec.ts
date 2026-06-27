@@ -1,0 +1,84 @@
+import { LoanPayoffService } from './loan-payoff.service';
+
+describe('LoanPayoffService', () => {
+  const service = new LoanPayoffService();
+
+  it('prorates indefinite loan interest after a capital addition', () => {
+    const quote = service.quote(
+      {
+        id: 'loan-1',
+        principal: 5000,
+        interestRate: 120,
+        interestType: 'INDEFINITE',
+        paymentFreq: 'MONTHLY',
+        startDate: new Date('2026-05-25T00:00:00.000Z'),
+        schedule: [],
+        capitalMovements: [
+          { amount: 3000, effectiveDate: new Date('2026-06-20T00:00:00.000Z') },
+        ],
+      },
+      new Date('2026-06-25T00:00:00.000Z'),
+    );
+
+    expect(quote).toMatchObject({
+      capitalOutstanding: 8000,
+      earnedInterest: 550,
+      dailyInterest: 26.67,
+      daysGenerated: 30,
+      totalToPay: 8550,
+    });
+  });
+
+  it('discounts unearned interest for fixed loans paid early', () => {
+    const quote = service.quote(
+      {
+        id: 'loan-1',
+        principal: 120000,
+        interestRate: 120,
+        interestType: 'FIXED',
+        paymentFreq: 'MONTHLY',
+        startDate: new Date('2026-01-01T00:00:00.000Z'),
+        schedule: [
+          {
+            id: 's1',
+            dueDate: new Date('2026-02-01T00:00:00.000Z'),
+            amount: 22000,
+            principalPart: 10000,
+            interestPart: 12000,
+            paidAmount: 22000,
+          },
+          {
+            id: 's2',
+            dueDate: new Date('2026-03-01T00:00:00.000Z'),
+            amount: 22000,
+            principalPart: 10000,
+            interestPart: 12000,
+            paidAmount: 0,
+          },
+          {
+            id: 's3',
+            dueDate: new Date('2026-04-01T00:00:00.000Z'),
+            amount: 22000,
+            principalPart: 10000,
+            interestPart: 12000,
+            paidAmount: 0,
+          },
+        ],
+        payments: [
+          {
+            allocations: [
+              { scheduleId: 's1', amount: 12000, type: 'INTEREST' },
+              { scheduleId: 's1', amount: 10000, type: 'PRINCIPAL' },
+            ],
+          },
+        ],
+      },
+      new Date('2026-02-16T00:00:00.000Z'),
+    );
+
+    expect(quote.capitalOutstanding).toBe(110000);
+    expect(quote.earnedInterest).toBe(6428.57);
+    expect(quote.unearnedInterestDiscount).toBe(17571.43);
+    expect(quote.totalToPay).toBe(116428.57);
+  });
+});

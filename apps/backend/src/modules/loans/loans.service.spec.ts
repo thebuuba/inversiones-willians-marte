@@ -23,7 +23,7 @@ describe('LoansService', () => {
   let service: LoansService;
 
   beforeEach(() => {
-    service = new LoansService({} as any);
+    service = new LoansService({} as any, {} as any);
   });
 
   afterEach(() => {
@@ -76,7 +76,7 @@ describe('LoansService', () => {
         },
       ]),
     };
-    service = new LoansService(amortization as any);
+    service = new LoansService(amortization as any, {} as any);
     jest.mocked(prisma.loanProduct.findUnique).mockResolvedValue({
       id: 'product-1',
       active: true,

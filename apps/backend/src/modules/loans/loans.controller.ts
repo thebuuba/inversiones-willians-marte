@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Param, Query, UseGuards, Body } from '@nestjs/common';
 import { LoansService } from './loans.service';
 import { CreateLoanDto } from './dto/create-loan.dto';
+import { AddLoanCapitalDto } from './dto/add-loan-capital.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -37,6 +38,22 @@ export class LoansController {
   @Roles('ADMIN', 'COLLECTOR')
   findOne(@Param('id') id: string) {
     return this.loans.findOne(id);
+  }
+
+  @Post(':id/capital-additions')
+  @Roles('ADMIN', 'COLLECTOR')
+  addCapital(
+    @Param('id') id: string,
+    @Body() dto: AddLoanCapitalDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.loans.addCapital(id, dto, userId);
+  }
+
+  @Get(':id/payoff-quote')
+  @Roles('ADMIN', 'COLLECTOR')
+  getPayoffQuote(@Param('id') id: string, @Query('payoffDate') payoffDate: string) {
+    return this.loans.getPayoffQuote(id, payoffDate);
   }
 
   @Get(':id/summary')

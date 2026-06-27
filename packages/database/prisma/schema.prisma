@@ -92,6 +92,7 @@ model User {
   documentCaptureSessions DocumentCaptureSession[]
   tasks                  Task[]
   portfolios             Portfolio[]
+  loanCapitalMovements   LoanCapitalMovement[]
 
   @@index([role, active])
   @@map("users")
@@ -211,6 +212,7 @@ model Loan {
   schedule    PaymentSchedule[]
   payments    Payment[]
   lateFees    LateFee[]
+  capitalMovements LoanCapitalMovement[]
   portfolio   Portfolio?        @relation(fields: [portfolioId], references: [id])
 
   @@index([clientId, createdAt])
@@ -308,6 +310,22 @@ model LateFee {
   @@index([loanId])
   @@index([scheduleId])
   @@map("late_fees")
+}
+
+model LoanCapitalMovement {
+  id            String   @id @default(uuid())
+  loanId        String   @map("loan_id")
+  amount        Decimal
+  effectiveDate DateTime @map("effective_date")
+  notes         String?
+  createdById   String   @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  loan      Loan @relation(fields: [loanId], references: [id])
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  @@index([loanId, effectiveDate])
+  @@map("loan_capital_movements")
 }
 
 // ─── Investors ──────────────────────────────────────────────────────────────
