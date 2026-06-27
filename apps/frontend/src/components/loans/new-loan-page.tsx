@@ -9,8 +9,12 @@ import {
   Calculator,
   Check,
   ChevronDown,
+  Landmark,
+  ReceiptText,
   Search,
+  TrendingUp,
   UserRound,
+  WalletCards,
 } from 'lucide-react';
 import { getLoanProducts, type LoanProductItem } from '@/lib/api/loan-products';
 import { createLoan } from '@/lib/api/loans';
@@ -21,10 +25,12 @@ import {
   canCalculateLoan,
   computeSchedule,
   getInstallmentIsoDate,
+  getLoanSummaryTotals,
   getPeriodicInterestRate,
   normalizeLoanTerm,
   parseNumber,
   parseStrictNumber,
+  shouldShowCalculatedLoanActions,
   solveRate,
   type AmortizationType,
   type LoanTermUnit,
@@ -56,6 +62,7 @@ function TextInput({
   suffix,
   className = '',
   readOnly = false,
+  error,
 }: {
   label: string;
   value: string;
@@ -64,11 +71,14 @@ function TextInput({
   suffix?: string;
   className?: string;
   readOnly?: boolean;
+  error?: string;
 }) {
   return (
     <label className={`block ${className}`}>
       {label && <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">{label}</span>}
-      <div className="flex h-[42px] items-center rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] transition focus-within:border-[#285C43] focus-within:ring-2 focus-within:ring-[#EAF6EF]">
+      <div className={`flex h-[42px] items-center rounded-[8px] border bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] transition focus-within:ring-2 ${
+        error ? 'border-red-300 focus-within:border-red-400 focus-within:ring-red-100' : 'border-[#DDEBE3] focus-within:border-[#285C43] focus-within:ring-[#EAF6EF]'
+      }`}>
         {prefix && <span className="mr-2 shrink-0 text-xs text-[#5C6D63]">{prefix}</span>}
         <input
           className="h-full min-w-0 flex-1 bg-transparent outline-none"
@@ -78,6 +88,7 @@ function TextInput({
         />
         {suffix && <span className="ml-2 shrink-0 text-xs text-[#5C6D63]">{suffix}</span>}
       </div>
+      {error && <span className="mt-1 block text-xs font-medium text-red-500">{error}</span>}
     </label>
   );
 }
@@ -88,19 +99,23 @@ function SelectInput({
   options,
   onChange,
   className = '',
+  error,
 }: {
   label?: string;
   value: string;
   options: string[];
   onChange?: (v: string) => void;
   className?: string;
+  error?: string;
 }) {
   return (
     <label className={`block ${className}`}>
       {label && <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">{label}</span>}
       <div className="relative">
         <select
-          className="h-[42px] w-full appearance-none rounded-[8px] border border-[#DDEBE3] bg-white px-3 pr-8 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#EAF6EF]"
+          className={`h-[42px] w-full appearance-none rounded-[8px] border bg-white px-3 pr-8 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:ring-2 ${
+            error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-[#DDEBE3] focus:border-[#285C43] focus:ring-[#EAF6EF]'
+          }`}
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
         >
@@ -110,6 +125,7 @@ function SelectInput({
         </select>
         <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#A7B5AD]" />
       </div>
+      {error && <span className="mt-1 block text-xs font-medium text-red-500">{error}</span>}
     </label>
   );
 }
@@ -121,9 +137,10 @@ function ClientSearchCard({
   selectedClient: Client | null;
   onSelectClient: (client: Client) => void;
 }) {
-  const [showSearch, setShowSearch] = useState(!selectedClient);
+  const [changingClient, setChangingClient] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Client[]>([]);
+  const showSearch = !selectedClient || changingClient;
 
   useEffect(() => {
     if (!showSearch) return;
@@ -136,7 +153,7 @@ function ClientSearchCard({
 
   function handleSelect(client: Client) {
     onSelectClient(client);
-    setShowSearch(false);
+    setChangingClient(false);
     setQuery('');
     setResults([]);
   }
@@ -151,7 +168,7 @@ function ClientSearchCard({
           </div>
           <button
             className="min-w-0 flex-1 text-left"
-            onClick={() => setShowSearch(true)}
+            onClick={() => setChangingClient(true)}
             type="button"
           >
             <p className="truncate text-base font-bold leading-tight text-[#173D2C]">{fullName}</p>
@@ -159,7 +176,7 @@ function ClientSearchCard({
           </button>
           <button
             className="shrink-0 rounded-lg border border-[#DDEBE3] px-2.5 py-1 text-xs font-bold text-[#2F7654] transition hover:bg-[#F0F7F3]"
-            onClick={() => setShowSearch(true)}
+            onClick={() => setChangingClient(true)}
             type="button"
           >
             Cambiar
@@ -207,7 +224,7 @@ function ClientSearchCard({
         {selectedClient && (
           <button
             className="mt-2 text-xs font-bold text-[#2F7654] transition hover:text-[#285C43]"
-            onClick={() => setShowSearch(false)}
+            onClick={() => setChangingClient(false)}
             type="button"
           >
             Cancelar
@@ -222,78 +239,54 @@ function LoanSummaryPanel({
   amount,
   interest,
   total,
-  customInterestRate,
-  amortizationType,
-  paymentFrequency,
-  firstPaymentDate,
 }: {
   amount: number;
   interest: number;
   total: number;
-  customInterestRate: string;
-  amortizationType: AmortizationType;
-  paymentFrequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY';
-  firstPaymentDate: string;
 }) {
   const interestPercent = amount > 0 ? (interest / amount) * 100 : 0;
 
-  const amortLabels: Record<AmortizationType, string> = {
-    SIMPLE: 'Fija',
-    INDEFINITE: 'Plazo indefinido',
-    NO_INTEREST: 'Sin intereses',
-  };
-
-  const freqLabels: Record<string, string> = {
-    MONTHLY: 'Mensual',
-    FORTNIGHTLY: 'Quincenal',
-    WEEKLY: 'Semanal',
-  };
-
   return (
-    <section className="rounded-xl border border-neutral-100 bg-white p-4 shadow-sm lg:p-5">
-      <div className="mb-4 flex items-center gap-2 text-[#173D2C]">
-        <Calculator className="h-4 w-4 text-[#2F7654]" />
-        <h2 className="text-sm font-bold">Resumen del préstamo</h2>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-[#EDF2EF] bg-[#F8FBF9] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Capital</p>
-          <p className="mt-1 text-lg font-bold text-[#173D2C]">{formatCurrency(amount)}</p>
-        </div>
-        <div className="rounded-lg border border-[#EDF2EF] bg-[#F8FBF9] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Interés generado</p>
-          <p className="mt-1 text-lg font-bold text-[#9F3F25]">{formatCurrency(interest)}</p>
-          <p className="mt-0.5 text-[10px] text-[#5C6D63]">{interestPercent.toFixed(1)}% del capital</p>
-        </div>
-        <div className="rounded-lg border border-[#EDF2EF] bg-[#F8FBF9] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Total a pagar</p>
-          <p className="mt-1 text-lg font-bold text-[#2F7654]">{formatCurrency(total)}</p>
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-lg border border-[#EDF2EF] bg-[#FAFBFA] p-3">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Datos del préstamo</p>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
-          <div className="flex justify-between">
-            <span className="text-[#5C6D63]">Amortización</span>
-            <span className="font-medium text-[#173D2C]">{amortLabels[amortizationType]}</span>
+    <div className="relative">
+      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#2F7654] shadow-sm">
+        <ReceiptText className="h-3 w-3" />
+        Resumen del préstamo
+      </span>
+      <section className="overflow-hidden rounded-xl border border-[#DDEBE3] bg-white shadow-[0_4px_14px_rgba(40,92,67,0.05)]">
+        <div className="grid grid-cols-1 divide-y divide-[#DDEBE3] md:grid-cols-3 md:divide-x md:divide-y-0">
+          <div className="flex min-h-[74px] items-center justify-between gap-3 px-4 py-4">
+            <div className="min-w-0">
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">Capital</p>
+              <p className="mt-1.5 truncate text-xl font-bold leading-none text-[#111827]">{formatCurrency(amount)}</p>
+              <p className="mt-1 text-xs font-medium text-[#6B7280]">Monto solicitado</p>
+            </div>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F0F1F4] text-[#374151]">
+              <Landmark className="h-4 w-4" />
+            </span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-[#5C6D63]">Interés</span>
-            <span className="font-medium text-[#173D2C]">{customInterestRate || '—'}%</span>
+          <div className="flex min-h-[74px] items-center justify-between gap-3 px-4 py-4">
+            <div className="min-w-0">
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">Interés generado</p>
+              <p className="mt-1.5 truncate text-xl font-bold leading-none text-[#B73B2F]">{formatCurrency(interest)}</p>
+              <p className="mt-1 text-xs font-medium text-[#6B7280]"><span className="font-bold text-[#B73B2F]">{interestPercent.toFixed(1)}%</span> del capital</p>
+            </div>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#FBE5E3] text-[#C7392E]">
+              <TrendingUp className="h-4 w-4" />
+            </span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-[#5C6D63]">Frecuencia</span>
-            <span className="font-medium text-[#173D2C]">{freqLabels[paymentFrequency] || '—'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[#5C6D63]">Primera cuota</span>
-            <span className="font-medium text-[#173D2C]">{firstPaymentDate || '—'}</span>
+          <div className="flex min-h-[74px] items-center justify-between gap-3 px-4 py-4">
+            <div className="min-w-0">
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">Total a pagar</p>
+              <p className="mt-1.5 truncate text-xl font-bold leading-none text-[#2F7654]">{formatCurrency(total)}</p>
+              <p className="mt-1 text-xs font-medium text-[#6B7280]">Capital + intereses</p>
+            </div>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#E7F4EC] text-[#2F7654]">
+              <WalletCards className="h-4 w-4" />
+            </span>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }
 
@@ -332,6 +325,7 @@ function MainInfoCard({
   onCustomPaymentChange,
   purpose,
   onPurposeChange,
+  errors,
 }: {
   amount: string;
   onAmountChange: (v: string) => void;
@@ -349,6 +343,7 @@ function MainInfoCard({
   onCustomPaymentChange: (v: string) => void;
   purpose: string;
   onPurposeChange: (v: string) => void;
+  errors?: Record<string, string>;
 }) {
   return (
     <div className="relative">
@@ -368,17 +363,19 @@ function MainInfoCard({
               value={formatNumberInput(amount)}
               onChange={(v) => onAmountChange(v.replace(/,/g, ''))}
               prefix="RD$"
+              error={errors?.amount}
             />
             <TextInput
               label="Porcentaje de interés"
               value={customInterestRate}
               onChange={onCustomInterestRateChange}
               suffix="%"
+              error={errors?.interestRate}
             />
             {amortizationType !== 'INDEFINITE' && (
               <div>
                 <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">Plazo</span>
-                <TextInput label="" onChange={onTermChange} value={term} />
+                <TextInput label="" onChange={onTermChange} value={term} error={errors?.term} />
               </div>
             )}
             <SelectInput
@@ -386,20 +383,24 @@ function MainInfoCard({
               options={amortizationOptions.map((option) => option.label)}
               value={amortizationOptions.find((option) => option.value === amortizationType)?.label ?? 'Fija'}
               onChange={(value) => onAmortizationTypeChange(amortizationOptions.find((option) => option.label === value)?.value ?? 'SIMPLE')}
+              error={errors?.amortizationType}
             />
             <SelectInput
               label="Frecuencia"
               options={freqOptions.map((o) => o.label)}
               value={freqOptions.find((o) => o.value === paymentFrequency)?.label ?? 'Mensual'}
               onChange={(v) => onPaymentFrequencyChange(freqOptions.find((o) => o.label === v)?.value ?? 'MONTHLY')}
+              error={errors?.paymentFrequency}
             />
             <label className="block">
               <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">Primera cuota</span>
               <DatePickerInput
                 value={firstPaymentDate}
                 onChange={onFirstPaymentDateChange}
+                invalid={!!errors?.firstPaymentDate}
                 className="h-[42px] w-full rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#EAF6EF]"
               />
+              {errors?.firstPaymentDate && <span className="mt-1 block text-xs font-medium text-red-500">{errors.firstPaymentDate}</span>}
             </label>
             <TextInput
               label="Monto de cuota (opcional)"
@@ -476,6 +477,39 @@ function NewLoanStepTwo({
   const termUnit = getTermUnitForFrequency(paymentFrequency);
 
   const [showSchedule, setShowSchedule] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  function validate(): boolean {
+    const newErrors: Record<string, string> = {};
+    const parsedAmount = parseStrictNumber(amount);
+    if (!parsedAmount || parsedAmount <= 0) newErrors.amount = 'Ingresa un monto válido';
+
+    const parsedRate = parseStrictNumber(customInterestRate);
+    const parsedCustomPayment = parseStrictNumber(customPayment);
+    if ((!parsedRate || parsedRate < 0) && (!parsedCustomPayment || parsedCustomPayment <= 0)) {
+      newErrors.interestRate = 'Ingresa un interés o monto de cuota';
+    }
+
+    if (amortizationType !== 'INDEFINITE') {
+      const parsedTerm = normalizeLoanTerm(term, termUnit);
+      if (!parsedTerm || parsedTerm <= 0) newErrors.term = 'Ingresa un plazo válido';
+    }
+
+    if (!amortizationType) newErrors.amortizationType = 'Selecciona un tipo de amortización';
+
+    if (!paymentFrequency) newErrors.paymentFrequency = 'Selecciona una frecuencia';
+
+    const dateValid = /^\d{4}-\d{2}-\d{2}$/.test(firstPaymentDate) && !Number.isNaN(new Date(`${firstPaymentDate}T00:00:00Z`).getTime());
+    if (!dateValid) newErrors.firstPaymentDate = 'Selecciona una fecha válida';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+
+  function handleCalculate() {
+    if (validate()) setShowSchedule(true);
+    else setShowSchedule(false);
+  }
 
   const { adjustedRate, summary } = useMemo(() => {
     const principal = parseStrictNumber(amount) ?? 0;
@@ -524,6 +558,7 @@ function NewLoanStepTwo({
     () => computeSchedule(summary.principal, effectiveRate, summary.months, amortizationType, customPayment),
     [summary.principal, effectiveRate, summary.months, amortizationType, customPayment],
   );
+  const summaryTotals = getLoanSummaryTotals(summary.principal, scheduleData.totalInterest);
   const calculationReady = canCalculateLoan({
     amount,
     interestRate: customInterestRate,
@@ -556,6 +591,7 @@ function NewLoanStepTwo({
           onCustomPaymentChange={onCustomPaymentChange}
           purpose={purpose}
           onPurposeChange={onPurposeChange}
+          errors={errors}
         />
         <CarterasCard
           selectedPortfolioId={selectedPortfolioId}
@@ -565,11 +601,11 @@ function NewLoanStepTwo({
 
       <button
         className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#2F7654] text-sm font-bold text-white shadow-[0_6px_16px_rgba(47,118,84,0.15)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
-        onClick={() => setShowSchedule(!showSchedule)}
+        onClick={handleCalculate}
         type="button"
       >
         <Calculator className="h-4 w-4" />
-        {showSchedule ? 'Ocultar cuotas' : 'Calcular préstamo'}
+        {showSchedule ? 'Recalcular préstamo' : 'Calcular préstamo'}
       </button>
 
       {showSchedule && (
@@ -584,25 +620,25 @@ function NewLoanStepTwo({
         />
       )}
 
-      <LoanSummaryPanel
-        amount={summary.principal}
-        interest={summary.interest}
-        total={summary.total}
-        customInterestRate={effectiveRate ? String(Math.round(effectiveRate * 100) / 100) : customInterestRate}
-        amortizationType={amortizationType}
-        paymentFrequency={paymentFrequency}
-        firstPaymentDate={firstPaymentDate}
-      />
+      {shouldShowCalculatedLoanActions(showSchedule) && (
+        <LoanSummaryPanel
+          amount={summary.principal}
+          interest={summaryTotals.interest}
+          total={summaryTotals.total}
+        />
+      )}
 
-      <button
-        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#2F7654] text-sm font-bold text-white shadow-[0_8px_20px_rgba(47,118,84,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
-        disabled={!calculationReady || !selectedClient || saving}
-        onClick={onSave}
-        type="button"
-      >
-        <Check className="h-4 w-4" />
-        {saving ? 'Guardando...' : 'Guardar préstamo'}
-      </button>
+      {shouldShowCalculatedLoanActions(showSchedule) && (
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#2F7654] text-sm font-bold text-white shadow-[0_8px_20px_rgba(47,118,84,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+          disabled={!calculationReady || !selectedClient || saving}
+          onClick={onSave}
+          type="button"
+        >
+          <Check className="h-4 w-4" />
+          {saving ? 'Guardando...' : 'Guardar préstamo'}
+        </button>
+      )}
     </div>
   );
 }
@@ -707,12 +743,13 @@ function AmortizationTableCard({
   );
 }
 
-function Header() {
+function Header({ clientId }: { clientId: number | null }) {
+  const backHref = clientId ? `/clientes/${clientId}` : '/inicio';
   return (
     <>
       <Link
         className="inline-flex items-center gap-3 text-sm font-bold text-[#5C6D63] transition hover:text-[#173D2C]"
-        href="/inicio"
+        href={backHref}
       >
         <ArrowLeft className="h-5 w-5" />
         Volver
@@ -723,9 +760,6 @@ function Header() {
           <h1 className="text-2xl font-bold leading-tight text-[#173D2C]">
             Crear préstamo
           </h1>
-          <p className="mt-4 max-w-[720px] text-base font-medium leading-7 text-[#5C6D63]">
-            Configura los parámetros y revisa el cálculo antes de confirmar.
-          </p>
         </div>
       </div>
     </>
@@ -822,7 +856,7 @@ export function NewLoanPage() {
   return (
     <main className="min-h-screen bg-[#F3F4F6] px-5 py-7 font-sans text-[#173D2C] lg:px-9 lg:py-8">
       <div className="mx-auto max-w-[1720px]">
-        <Header />
+        <Header clientId={selectedClient?.id ?? null} />
 
         {loadingProducts && (
           <div className="mt-8 space-y-5">

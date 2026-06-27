@@ -8,6 +8,8 @@ import {
   getPeriodicInterestRate,
   normalizeLoanTerm,
   parseStrictNumber,
+  getLoanSummaryTotals,
+  shouldShowCalculatedLoanActions,
 } from './new-loan-form.helpers.ts';
 
 const validLoan: LoanCalculationFields = {
@@ -111,4 +113,16 @@ test('does not generate schedule rows for an empty normalized term', () => {
   const result = computeSchedule(25000, 12, normalizeLoanTerm('', 'weeks'));
 
   assert.equal(result.schedule.length, 0);
+});
+
+test('shows calculated loan actions only after calculating the loan', () => {
+  assert.equal(shouldShowCalculatedLoanActions(false), false);
+  assert.equal(shouldShowCalculatedLoanActions(true), true);
+});
+
+test('builds loan summary totals from the amortization totals', () => {
+  assert.deepEqual(getLoanSummaryTotals(12000, 400), {
+    interest: 400,
+    total: 12400,
+  });
 });

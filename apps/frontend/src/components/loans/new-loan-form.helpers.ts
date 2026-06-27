@@ -128,6 +128,14 @@ export function canCalculateLoan(fields: LoanCalculationFields): boolean {
   );
 }
 
+export function shouldShowCalculatedLoanActions(hasCalculated: boolean): boolean {
+  return hasCalculated;
+}
+
+export function getLoanSummaryTotals(principal: number, totalInterest: number): { interest: number; total: number } {
+  return { interest: totalInterest, total: principal + totalInterest };
+}
+
 export function solveRate(principal: number, payment: number, months: number): number {
   if (payment <= 0 || principal <= 0 || months <= 0) return 0;
 
