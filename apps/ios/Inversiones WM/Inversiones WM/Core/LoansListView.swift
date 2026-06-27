@@ -14,55 +14,71 @@ public struct LoansListView: View {
 
     public var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    Text("\(viewModel.total) préstamos registrados")
-                        .foregroundStyle(.secondary)
-                }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    PanelHero(
+                        title: "Préstamos",
+                        subtitle: "\(viewModel.total) registrados",
+                        symbol: "doc.text.fill"
+                    )
 
-                Section("Préstamos") {
                     if viewModel.isLoading && viewModel.loans.isEmpty {
-                        ProgressView()
+                        ProgressView("Cargando préstamos")
+                            .frame(maxWidth: .infinity, minHeight: 260)
                     } else if let errorMessage = viewModel.errorMessage {
-                        Text(errorMessage)
-                            .foregroundStyle(.red)
+                        EmptyStateCard(symbol: "wifi.exclamationmark", title: "Préstamos no disponibles", subtitle: errorMessage)
                     } else if viewModel.loans.isEmpty {
-                        Text("No se encontraron préstamos")
-                            .foregroundStyle(.secondary)
+                        EmptyStateCard(symbol: "doc.badge.plus", title: "Sin préstamos", subtitle: "Crea el primer préstamo para verlo aquí.")
                     } else {
-                        ForEach(viewModel.loans) { loan in
-                            NavigationLink {
-                                LoanDetailView(
-                                    loanId: loan.id,
-                                    accessToken: viewModel.accessToken,
-                                    service: viewModel.service
-                                )
-                            } label: {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    HStack {
-                                        Text("Préstamo #\(loan.loanNumber)")
-                                            .font(.headline)
-                                        Spacer()
-                                        Text(loan.status)
-                                            .font(.caption.weight(.semibold))
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    Text(loan.client.fullName)
+                        VStack(spacing: 12) {
+                            ForEach(viewModel.loans) { loan in
+                                NavigationLink {
+                                    LoanDetailView(
+                                        loanId: loan.id,
+                                        accessToken: viewModel.accessToken,
+                                        service: viewModel.service
+                                    )
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        HStack(alignment: .top) {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text("Préstamo #\(loan.loanNumber)")
+                                                    .font(.headline)
+                                                    .foregroundStyle(Color.appText)
+                                                Text(loan.client.fullName)
+                                                    .font(.subheadline)
+                                                    .foregroundStyle(Color.appMuted)
+                                            }
+                                            Spacer()
+                                            Text(loan.status)
+                                                .font(.caption.weight(.bold))
+                                                .padding(.horizontal, 10)
+                                                .padding(.vertical, 6)
+                                                .foregroundStyle(Color.appGreen)
+                                                .background(Color.appGreenSoft)
+                                                .clipShape(Capsule())
+                                        }
+
+                                        HStack {
+                                            Label(loan.product.name, systemImage: "briefcase")
+                                            Spacer()
+                                            Text(loan.balance, format: .currency(code: "DOP"))
+                                                .fontWeight(.bold)
+                                        }
                                         .font(.subheadline)
-                                    HStack {
-                                        Text(loan.product.name)
-                                        Spacer()
-                                        Text(loan.balance, format: .currency(code: "DOP"))
+                                        .foregroundStyle(Color.appMuted)
                                     }
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .padding(16)
+                                    .appCard()
                                 }
-                                .padding(.vertical, 4)
+                                .buttonStyle(.plain)
                             }
                         }
                     }
                 }
+                .padding(16)
             }
+            .background(Color.appBackground)
             .navigationTitle("Préstamos")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {

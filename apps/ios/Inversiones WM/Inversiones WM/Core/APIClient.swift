@@ -128,6 +128,44 @@ public enum APIClient {
         return request
     }
 
+    public static func requestsRequest(baseURL: URL, accessToken: String) throws -> URLRequest {
+        let url = baseURL.appending(path: "requests")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        return request
+    }
+
+    public static func createRequestRequest(
+        baseURL: URL,
+        accessToken: String,
+        input: CreateRequestInput
+    ) throws -> URLRequest {
+        let url = baseURL.appending(path: "requests")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(input)
+        return request
+    }
+
+    public static func approveRequestRequest(baseURL: URL, accessToken: String, id: String) throws -> URLRequest {
+        let url = baseURL.appending(path: "requests/\(id)/approve")
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        return request
+    }
+
+    public static func rejectRequestRequest(baseURL: URL, accessToken: String, id: String) throws -> URLRequest {
+        let url = baseURL.appending(path: "requests/\(id)/reject")
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        return request
+    }
+
     public static func updateClientRequest(
         baseURL: URL,
         accessToken: String,

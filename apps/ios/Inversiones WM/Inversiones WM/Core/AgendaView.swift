@@ -9,40 +9,52 @@ public struct AgendaView: View {
 
     public var body: some View {
         NavigationStack {
-            List {
-                Section("Próximos cobros") {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    PanelHero(title: "Agenda", subtitle: "Próximos cobros programados", symbol: "calendar.badge.clock")
+
                     if viewModel.isLoading && viewModel.payments.isEmpty {
-                        ProgressView()
+                        ProgressView("Cargando agenda")
+                            .frame(maxWidth: .infinity, minHeight: 260)
                     } else if let errorMessage = viewModel.errorMessage {
-                        Text(errorMessage)
-                            .foregroundStyle(.red)
+                        EmptyStateCard(symbol: "wifi.exclamationmark", title: "Agenda no disponible", subtitle: errorMessage)
                     } else if viewModel.payments.isEmpty {
-                        Text("Sin cobros próximos")
-                            .foregroundStyle(.secondary)
+                        EmptyStateCard(symbol: "calendar", title: "Sin cobros próximos", subtitle: "No hay pagos pendientes en la agenda.")
                     } else {
-                        ForEach(viewModel.payments) { payment in
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack {
-                                    Text(payment.clientName)
-                                        .font(.headline)
-                                    Spacer()
-                                    Text(payment.status)
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundStyle(.secondary)
+                        VStack(spacing: 12) {
+                            ForEach(viewModel.payments) { payment in
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack {
+                                        Text(payment.clientName)
+                                            .font(.headline)
+                                            .foregroundStyle(Color.appText)
+                                        Spacer()
+                                        Text(payment.status)
+                                            .font(.caption.weight(.bold))
+                                            .foregroundStyle(Color.appGold)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 6)
+                                            .background(Color.appGoldSoft)
+                                            .clipShape(Capsule())
+                                    }
+                                    HStack {
+                                        Text(payment.amount, format: .currency(code: "DOP"))
+                                            .fontWeight(.bold)
+                                        Spacer()
+                                        Text(shortDate(payment.dueDate))
+                                    }
+                                    .font(.subheadline)
+                                    .foregroundStyle(Color.appMuted)
                                 }
-                                HStack {
-                                    Text(payment.amount, format: .currency(code: "DOP"))
-                                    Spacer()
-                                    Text(shortDate(payment.dueDate))
-                                }
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .padding(16)
+                                .appCard()
                             }
-                            .padding(.vertical, 4)
                         }
                     }
                 }
+                .padding(16)
             }
+            .background(Color.appBackground)
             .navigationTitle("Agenda")
             .task {
                 await viewModel.load()

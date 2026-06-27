@@ -138,6 +138,70 @@ final class APIClientTests: XCTestCase {
         XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer token-123")
     }
 
+    func testRequestsRequestUsesBackendEndpoint() throws {
+        let request = try APIClient.requestsRequest(
+            baseURL: URL(string: "http://192.168.1.4:3000/api/v1")!,
+            accessToken: "token-123"
+        )
+
+        XCTAssertEqual(request.url?.absoluteString, "http://192.168.1.4:3000/api/v1/requests")
+        XCTAssertEqual(request.httpMethod, "GET")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer token-123")
+    }
+
+    func testCreateRequestRequestUsesBackendContract() throws {
+        let request = try APIClient.createRequestRequest(
+            baseURL: URL(string: "http://192.168.1.4:3000/api/v1")!,
+            accessToken: "token-123",
+            input: CreateRequestInput(
+                firstName: "Ana",
+                lastName: "Diaz",
+                identification: "001",
+                phone: "809-555-0000",
+                amount: 15000,
+                description: "Capital de trabajo",
+                reference: "Referida"
+            )
+        )
+
+        XCTAssertEqual(request.url?.absoluteString, "http://192.168.1.4:3000/api/v1/requests")
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer token-123")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Content-Type"), "application/json")
+        let body = try JSONSerialization.jsonObject(with: request.httpBody ?? Data()) as? [String: Any]
+        XCTAssertEqual(body?["firstName"] as? String, "Ana")
+        XCTAssertEqual(body?["lastName"] as? String, "Diaz")
+        XCTAssertEqual(body?["identification"] as? String, "001")
+        XCTAssertEqual(body?["phone"] as? String, "809-555-0000")
+        XCTAssertEqual(body?["amount"] as? Double, 15000)
+        XCTAssertEqual(body?["description"] as? String, "Capital de trabajo")
+        XCTAssertEqual(body?["reference"] as? String, "Referida")
+    }
+
+    func testApproveRequestRequestUsesBackendEndpoint() throws {
+        let request = try APIClient.approveRequestRequest(
+            baseURL: URL(string: "http://192.168.1.4:3000/api/v1")!,
+            accessToken: "token-123",
+            id: "request-1"
+        )
+
+        XCTAssertEqual(request.url?.absoluteString, "http://192.168.1.4:3000/api/v1/requests/request-1/approve")
+        XCTAssertEqual(request.httpMethod, "PATCH")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer token-123")
+    }
+
+    func testRejectRequestRequestUsesBackendEndpoint() throws {
+        let request = try APIClient.rejectRequestRequest(
+            baseURL: URL(string: "http://192.168.1.4:3000/api/v1")!,
+            accessToken: "token-123",
+            id: "request-1"
+        )
+
+        XCTAssertEqual(request.url?.absoluteString, "http://192.168.1.4:3000/api/v1/requests/request-1/reject")
+        XCTAssertEqual(request.httpMethod, "PATCH")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer token-123")
+    }
+
     func testCreateLoanRequestUsesBackendContract() throws {
         let request = try APIClient.createLoanRequest(
             baseURL: URL(string: "http://192.168.1.4:3000/api/v1")!,

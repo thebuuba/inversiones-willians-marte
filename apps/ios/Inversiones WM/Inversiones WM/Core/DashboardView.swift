@@ -52,10 +52,34 @@ public struct DashboardView: View {
                         )
 
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                            MetricCard(title: "Préstamos activos", value: "\(dashboard.activeLoans)", symbol: "doc.text", tint: .blue)
-                            MetricCard(title: "Clientes", value: "\(dashboard.totalClients)", symbol: "person.2", tint: .green)
-                            MetricCard(title: "Cobros hoy", value: dashboard.collectionsToday.formatted(.currency(code: "DOP")), symbol: "banknote", tint: .teal)
-                            MetricCard(title: "Atrasados", value: "\(dashboard.overdueLoans)", symbol: "exclamationmark.triangle", tint: dashboard.overdueLoans > 0 ? .red : .secondary)
+                            MetricCard(
+                                title: "Préstamos activos",
+                                value: "\(dashboard.activeLoans)",
+                                symbol: "briefcase.fill",
+                                tint: .appGreen,
+                                tintBackground: .appGreenSoft
+                            )
+                            MetricCard(
+                                title: "Clientes registrados",
+                                value: "\(dashboard.totalClients)",
+                                symbol: "person.2.fill",
+                                tint: .appRust,
+                                tintBackground: .appRustSoft
+                            )
+                            MetricCard(
+                                title: "Cobrado hoy",
+                                value: dashboard.collectionsToday.formatted(.currency(code: "DOP")),
+                                symbol: "dollarsign.circle.fill",
+                                tint: .appGold,
+                                tintBackground: .appGoldSoft
+                            )
+                            MetricCard(
+                                title: "Atrasados",
+                                value: "\(dashboard.overdueLoans)",
+                                symbol: "exclamationmark.triangle.fill",
+                                tint: dashboard.overdueLoans > 0 ? .appRust : .appGreen,
+                                tintBackground: dashboard.overdueLoans > 0 ? .appRustSoft : .appGreenSoft
+                            )
                         }
 
                         AttentionCard(overdueLoans: dashboard.overdueLoans)
@@ -63,13 +87,9 @@ public struct DashboardView: View {
                     .padding(16)
                 }
             }
-            .background(Color.dashboardBackground)
+            .background(Color.appBackground)
+            .tint(.appGreen)
             .navigationTitle("Inicio")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Salir", action: logout)
-                }
-            }
             .sheet(isPresented: $isShowingCreateClient) {
                 CreateClientView { input in
                     await createClient(input)
@@ -118,12 +138,26 @@ private struct DashboardHeader: View {
     let userName: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Bienvenido, \(userName)")
-                .font(.title2.weight(.semibold))
-            Text(Date.now.formatted(date: .complete, time: .omitted))
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(Color.appGreen)
+                    .frame(width: 8, height: 8)
+                Text("En línea")
+                    .font(.caption.weight(.bold))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .foregroundStyle(Color.appGreen)
+            .background(Color.appGreenSoft)
+            .clipShape(Capsule())
+
+            Text("Hola, \(userName)")
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.appText)
+            Text("Resumen de tu cartera para \(Date.now.formatted(date: .abbreviated, time: .omitted)).")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.appMuted)
         }
     }
 }
@@ -133,14 +167,23 @@ private struct BalanceCard: View {
     let collectionsToday: Double
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label("Balance activo", systemImage: "chart.line.uptrend.xyaxis")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Label("Balance activo", systemImage: "chart.line.uptrend.xyaxis")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color.appGreen)
+                Spacer()
+                Image(systemName: "checkmark.seal.fill")
+                    .foregroundStyle(Color.appGreen)
+                    .font(.title3)
+            }
+
             Text(balance, format: .currency(code: "DOP"))
                 .font(.system(size: 34, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.appText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.62)
+
             HStack {
                 Text("Cobrado hoy")
                 Spacer()
@@ -148,12 +191,21 @@ private struct BalanceCard: View {
                     .fontWeight(.semibold)
             }
             .font(.footnote)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.appMuted)
+            .padding(12)
+            .background(Color.white.opacity(0.72))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
-        .padding(16)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.dashboardCard)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(
+            LinearGradient(
+                colors: [.appGreenSoft, .appSurface],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .appCard()
     }
 }
 
@@ -164,9 +216,9 @@ private struct QuickActions: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            ActionButton(title: "Cliente", symbol: "person.badge.plus", action: newClient)
-            ActionButton(title: "Préstamo", symbol: "plus.rectangle.on.document", action: newLoan)
-            ActionButton(title: "Pago", symbol: "creditcard", action: registerPayment)
+            ActionButton(title: "Cliente", symbol: "person.badge.plus", action: newClient, isPrimary: false)
+            ActionButton(title: "Préstamo", symbol: "plus", action: newLoan, isPrimary: true)
+            ActionButton(title: "Pago", symbol: "creditcard", action: registerPayment, isPrimary: false)
         }
     }
 }
@@ -175,6 +227,7 @@ private struct ActionButton: View {
     let title: String
     let symbol: String
     let action: () -> Void
+    let isPrimary: Bool
 
     var body: some View {
         Button(action: action) {
@@ -187,8 +240,16 @@ private struct ActionButton: View {
                     .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity, minHeight: 68)
+            .foregroundStyle(isPrimary ? Color.white : Color.appGreen)
+            .background(isPrimary ? Color.appGreen : Color.appSurface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(isPrimary ? Color.appGreen : Color.appBorder, lineWidth: 1)
+            }
+            .shadow(color: isPrimary ? Color.appGreen.opacity(0.18) : .clear, radius: 14, y: 8)
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(.plain)
     }
 }
 
@@ -197,25 +258,34 @@ private struct MetricCard: View {
     let value: String
     let symbol: String
     let tint: Color
+    let tintBackground: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: symbol)
-                .font(.headline)
-                .foregroundStyle(tint)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: symbol)
+                    .font(.headline)
+                    .foregroundStyle(tint)
+                    .frame(width: 38, height: 38)
+                    .background(tintBackground)
+                    .clipShape(Circle())
+                Spacer()
+            }
+
             Text(value)
                 .font(.title3.weight(.bold))
+                .foregroundStyle(Color.appText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.appMuted)
                 .lineLimit(2)
         }
         .padding(14)
         .frame(maxWidth: .infinity, minHeight: 116, alignment: .leading)
-        .background(Color.dashboardCard)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(Color.appSurface)
+        .appCard()
     }
 }
 
@@ -229,19 +299,15 @@ private struct AttentionCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(overdueLoans > 0 ? "Atención requerida" : "Cartera al día")
                     .font(.headline)
+                    .foregroundStyle(Color.appText)
                 Text(overdueLoans > 0 ? "\(overdueLoans) préstamos necesitan seguimiento." : "No hay préstamos atrasados en el resumen.")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.appMuted)
             }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.dashboardCard)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(Color.appSurface)
+        .appCard()
     }
-}
-
-private extension Color {
-    static let dashboardBackground = Color(red: 0.95, green: 0.96, blue: 0.95)
-    static let dashboardCard = Color(red: 1, green: 1, blue: 1)
 }

@@ -6,18 +6,21 @@ public struct LoginView: View {
     private let clientsService: ClientsService
     private let loansService: LoansService
     private let upcomingPaymentsService: UpcomingPaymentsService
+    private let requestsService: RequestsService
 
     public init(
         dashboardService: DashboardService,
         clientsService: ClientsService,
         loansService: LoansService,
         upcomingPaymentsService: UpcomingPaymentsService,
+        requestsService: RequestsService,
         viewModel: @autoclosure @escaping () -> LoginViewModel
     ) {
         self.dashboardService = dashboardService
         self.clientsService = clientsService
         self.loansService = loansService
         self.upcomingPaymentsService = upcomingPaymentsService
+        self.requestsService = requestsService
         _viewModel = StateObject(wrappedValue: viewModel())
     }
 
@@ -30,7 +33,8 @@ public struct LoginView: View {
                     dashboardService: dashboardService,
                     clientsService: clientsService,
                     loansService: loansService,
-                    upcomingPaymentsService: upcomingPaymentsService
+                    upcomingPaymentsService: upcomingPaymentsService,
+                    requestsService: requestsService
                 ) {
                         try? viewModel.logout()
                 }
