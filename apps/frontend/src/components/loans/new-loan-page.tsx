@@ -40,6 +40,8 @@ import { DatePickerInput } from '@/components/ui/date-picker-input';
 import { getNextMonthIsoDate } from '@/components/ui/date-picker.helpers';
 import type { Client } from '@inversiones/shared';
 
+const LOAN_CARD_SHADOW = 'shadow-[0_4px_12px_rgba(17,24,39,0.16)]';
+
 function getDefaultFirstPaymentDate(): string {
   return getNextMonthIsoDate();
 }
@@ -161,7 +163,7 @@ function ClientSearchCard({
   if (selectedClient && !showSearch) {
     const fullName = `${selectedClient.firstName} ${selectedClient.lastName}`;
     return (
-      <div className="rounded-[14px] border border-[#EDF2EF] bg-white shadow-[0_4px_14px_rgba(40,92,67,0.03)]">
+      <div className={`rounded-[14px] bg-white ${LOAN_CARD_SHADOW}`}>
         <div className="flex min-h-[72px] items-center gap-3 px-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[2px] border-white bg-[#EAF6EF] shadow-[0_4px_12px_rgba(40,92,67,0.1)]">
             <UserRound className="h-5 w-5 text-[#2F7654]" />
@@ -187,7 +189,7 @@ function ClientSearchCard({
   }
 
   return (
-    <div className="rounded-[14px] border border-[#EDF2EF] bg-white shadow-[0_4px_14px_rgba(40,92,67,0.03)]">
+    <div className={`rounded-[14px] bg-white ${LOAN_CARD_SHADOW}`}>
       <div className="px-4 py-3">
         <div className="relative mb-2">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#5C6D63]" />
@@ -252,7 +254,7 @@ function LoanSummaryPanel({
         <ReceiptText className="h-3 w-3" />
         Resumen del préstamo
       </span>
-      <section className="overflow-hidden rounded-xl border border-[#DDEBE3] bg-white shadow-[0_4px_14px_rgba(40,92,67,0.05)]">
+      <section className={`overflow-hidden rounded-xl bg-white ${LOAN_CARD_SHADOW}`}>
         <div className="grid grid-cols-1 divide-y divide-[#DDEBE3] md:grid-cols-3 md:divide-x md:divide-y-0">
           <div className="flex min-h-[74px] items-center justify-between gap-3 px-4 py-4">
             <div className="min-w-0">
@@ -352,7 +354,7 @@ function MainInfoCard({
       </span>
       <motion.section
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl border border-neutral-100 bg-white p-4 pt-6 shadow-sm lg:p-5 lg:pt-7"
+        className={`rounded-xl bg-white p-4 pt-6 ${LOAN_CARD_SHADOW} lg:p-5 lg:pt-7`}
         initial={{ opacity: 0, y: 14 }}
         transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
       >
@@ -657,16 +659,16 @@ function AmortizationRow({
 
   return (
     <div
-      className={`grid min-w-[980px] grid-cols-[90px_1.2fr_1.2fr_1.2fr_1.2fr_1.2fr] items-center border-t border-[#EDF2EF] px-5 py-3 text-sm ${
-        total ? 'bg-[#F3FAF6] font-bold' : row.number === 5 ? 'bg-[#F6FAF7]' : 'bg-white'
-      }`}
+      className={`grid min-w-[980px] grid-cols-[90px_1.1fr_1.2fr_1.2fr_1.2fr_1.3fr] items-center border-t px-5 py-2.5 text-sm ${
+        total ? 'bg-[#F8FBF9] font-bold' : 'bg-white'
+      } ${total ? 'border-[#C8D7CF]' : 'border-[#DDEBE3]'}`}
     >
-      <span className={total ? 'text-[#5C6D63]' : 'font-medium text-[#5C6D63]'}>{installmentLabel}</span>
-      <span className="font-medium text-[#173D2C]">{row.date ?? '—'}</span>
-      <span className="text-right font-medium text-[#9F3F25]">{fmt(row.interest)}</span>
+      <span className={total ? 'text-[#374151]' : 'font-medium text-[#111827]'}>{installmentLabel}</span>
+      <span className={total ? 'font-medium text-[#9CA3AF]' : 'font-medium text-[#374151]'}>{row.date ?? '—'}</span>
+      <span className="text-right font-medium text-[#B73B2F]">{fmt(row.interest)}</span>
       <span className="text-right font-medium text-[#2F7654]">{fmt(row.principal)}</span>
-      <span className="text-right font-bold text-[#173D2C]">{fmt(row.payment)}</span>
-      <span className={`text-right font-bold ${total ? 'text-[#A7B5AD]' : 'text-[#173D2C]'}`}>{fmt(row.balance)}</span>
+      <span className="text-right font-bold text-[#111827]">{fmt(row.payment)}</span>
+      <span className={`text-right font-medium ${total ? 'text-[#9CA3AF]' : 'text-[#374151]'}`}>{fmt(row.balance)}</span>
     </div>
   );
 }
@@ -689,57 +691,62 @@ function AmortizationTableCard({
   paymentFrequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY';
 }) {
   return (
-    <motion.section
-      animate={{ opacity: 1, y: 0 }}
-      className="overflow-hidden rounded-xl border border-neutral-100 bg-white shadow-sm"
-      initial={{ opacity: 0, y: 14 }}
-      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
-    >
-      <div className="flex items-center justify-between gap-4 px-5 py-4">
-        <h2 className="text-sm font-bold text-[#173D2C]">Tabla de amortización</h2>
-        <p className="text-xs font-medium text-[#5C6D63]">{term} {term === 1 ? 'cuota' : 'cuotas'} en total</p>
-      </div>
+    <div className="relative">
+      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#2F7654] shadow-sm">
+        <ReceiptText className="h-3 w-3" />
+        Tabla de amortización
+      </span>
+      <motion.section
+        animate={{ opacity: 1, y: 0 }}
+        className={`overflow-hidden rounded-xl bg-white ${LOAN_CARD_SHADOW}`}
+        initial={{ opacity: 0, y: 14 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
+      >
+        <div className="flex items-center justify-end gap-4 px-5 py-4">
+          <p className="shrink-0 rounded-full bg-[#E7F4EC] px-3 py-1 text-sm font-bold text-[#2F7654]">{term} {term === 1 ? 'cuota' : 'cuotas'}</p>
+        </div>
 
-      <div className="max-h-[400px] overflow-y-auto">
-        <div className="overflow-x-auto">
-          <div className="min-w-[980px]">
-            <div className="grid grid-cols-[90px_1.2fr_1.2fr_1.2fr_1.2fr_1.2fr] bg-[#F3FAF6] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-[#5C6D63]">
-              <span>CUOTA</span>
-              <span>FECHA</span>
-              <span className="text-right">INTERÉS</span>
-              <span className="text-right">CAPITAL</span>
-              <span className="text-right">A PAGAR</span>
-              <span className="text-right">CAPITAL RESTANTE</span>
+        <div className="max-h-[360px] overflow-y-auto border-t border-[#DDEBE3]">
+          <div className="overflow-x-auto">
+            <div className="min-w-[980px]">
+              <div className="grid grid-cols-[90px_1.1fr_1.2fr_1.2fr_1.2fr_1.3fr] bg-[#F3FAF6] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.11em] text-[#4F856A]">
+                <span>CUOTA</span>
+                <span>FECHA</span>
+                <span className="text-right">INTERÉS</span>
+                <span className="text-right">CAPITAL</span>
+                <span className="text-right">A PAGAR</span>
+                <span className="text-right">CAPITAL RESTANTE</span>
+              </div>
+
+              <motion.div layout>
+                {schedule.map((row) => (
+                  <AmortizationRow
+                    key={row.number}
+                    row={{
+                      ...row,
+                      date: getInstallmentIsoDate(firstPaymentDate, row.number, paymentFrequency),
+                    }}
+                    totalInstallments={term}
+                  />
+                ))}
+              </motion.div>
+
+              <AmortizationRow
+                row={{
+                  number: 'TOTAL',
+                  payment: totalPayment,
+                  principal: totalPrincipal,
+                  interest: totalInterest,
+                  balance: 0,
+                }}
+                total
+                totalInstallments={term}
+              />
             </div>
-
-            <motion.div layout>
-              {schedule.map((row) => (
-                <AmortizationRow
-                  key={row.number}
-                  row={{
-                    ...row,
-                    date: getInstallmentIsoDate(firstPaymentDate, row.number, paymentFrequency),
-                  }}
-                  totalInstallments={term}
-                />
-              ))}
-            </motion.div>
-
-            <AmortizationRow
-              row={{
-                number: 'TOTAL',
-                payment: totalPayment,
-                principal: totalPrincipal,
-                interest: totalInterest,
-                balance: 0,
-              }}
-              total
-              totalInstallments={term}
-            />
           </div>
         </div>
-      </div>
-    </motion.section>
+      </motion.section>
+    </div>
   );
 }
 
@@ -860,10 +867,10 @@ export function NewLoanPage() {
 
         {loadingProducts && (
           <div className="mt-8 space-y-5">
-            <div className="h-[72px] animate-pulse rounded-[14px] bg-white/70" />
+            <div className={`h-[72px] animate-pulse rounded-[14px] bg-white/70 ${LOAN_CARD_SHADOW}`} />
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
-              <div className="h-[380px] animate-pulse rounded-xl bg-white/70" />
-              <div className="h-[200px] animate-pulse rounded-xl bg-white/70" />
+              <div className={`h-[380px] animate-pulse rounded-xl bg-white/70 ${LOAN_CARD_SHADOW}`} />
+              <div className={`h-[200px] animate-pulse rounded-xl bg-white/70 ${LOAN_CARD_SHADOW}`} />
             </div>
           </div>
         )}

@@ -10,6 +10,7 @@ const PRESET_COLORS = [
   '#2F7654', '#3B82F6', '#F59E0B', '#EF4444',
   '#8B5CF6', '#EC4899', '#14B8A6', '#F97316',
 ];
+const LOAN_CARD_SHADOW = 'shadow-[0_4px_12px_rgba(17,24,39,0.16)]';
 
 export function CarterasCard({
   selectedPortfolioId,
@@ -65,7 +66,7 @@ export function CarterasCard({
       </span>
       <motion.section
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl border border-neutral-100 bg-white p-4 pt-6 shadow-sm lg:p-5 lg:pt-7"
+        className={`rounded-xl bg-white p-4 pt-6 ${LOAN_CARD_SHADOW} lg:p-5 lg:pt-7`}
         initial={{ opacity: 0, y: 14 }}
         transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
       >
