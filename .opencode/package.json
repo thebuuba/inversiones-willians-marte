@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@dietrichgebert/ponytail": "^4.8.3",
     "@kilocode/plugin": "7.3.16",
     "@opencode-ai/plugin": "1.15.10"
   }

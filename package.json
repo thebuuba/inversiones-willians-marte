@@ -6,15 +6,15 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,prisma}\"",
+    "ios:test": "cd apps/ios && swift test",
+    "android:check": "cd apps/android && sh check.sh",
     "db:generate": "pnpm --filter @inversiones/database generate",
     "db:migrate": "pnpm --filter @inversiones/database migrate",
     "db:migrate:deploy": "pnpm --filter @inversiones/database migrate:deploy",
     "db:push:dev": "pnpm --filter @inversiones/database push:dev",
     "db:push": "pnpm --filter @inversiones/database push",
     "db:studio": "pnpm --filter @inversiones/database studio",
-    "db:seed": "pnpm --filter @inversiones/database seed",
-    "ios:test": "cd apps/ios && swift test",
-    "android:check": "cd apps/android && sh check.sh"
+    "db:seed": "pnpm --filter @inversiones/database seed"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
@@ -41,5 +41,8 @@
       "prisma",
       "unrs-resolver"
     ]
+  },
+  "dependencies": {
+    "@dietrichgebert/ponytail": "^4.8.3"
   }
 }
