@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -17,10 +18,12 @@ import { DocumentsModule } from './modules/documents/documents.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { PortfoliosModule } from './modules/portfolios/portfolios.module';
 import { HealthController } from './health.controller';
+import { KeepaliveService } from './common/services/keepalive.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     AuthModule,
     UsersModule,
@@ -39,5 +42,6 @@ import { HealthController } from './health.controller';
     PortfoliosModule,
   ],
   controllers: [HealthController],
+  providers: [KeepaliveService],
 })
 export class AppModule {}
