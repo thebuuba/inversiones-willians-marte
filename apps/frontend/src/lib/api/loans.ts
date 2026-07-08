@@ -49,6 +49,7 @@ export interface LoanListItem {
 export interface PaginatedLoans {
   data: LoanListItem[];
   total: number;
+  totalPrincipal: number;
 }
 
 export interface LoanScheduleItem {

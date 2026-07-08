@@ -23,6 +23,14 @@ import { getStaggerDelay } from '@/lib/animation';
 import { useClientCache } from '@/lib/use-client-cache';
 import { formatDop } from '@/lib/currency';
 
+const AMORTIZATION_LABELS: Record<string, string> = {
+  FLAT: 'Plana',
+  REDUCING: 'Reducción',
+  COMPOUND: 'Compuesto',
+  FIXED: 'Fijo',
+  INDEFINITE: 'Indefinido',
+};
+
 const statusFilters = ['Todos', 'Al día', 'Atrasados', 'Pendientes', 'Pagados'];
 const sortOptions = ['Más recientes', 'Más antiguos', 'Mayor monto', 'Menor monto'];
 
@@ -43,7 +51,7 @@ function loanToRow(loan: LoanListItem) {
   else if (loan.status === 'RESTRUCTURED') statusLabel = 'Pendiente';
   else statusLabel = 'Pendiente';
 
-  const typeLabel = loan.product?.name ?? '—';
+  const typeLabel = AMORTIZATION_LABELS[loan.interestType] ?? loan.interestType;
 
   return {
     id: loan.id,
@@ -82,7 +90,7 @@ function PanelCard({ children, className = '', index = 0 }: { children: ReactNod
   );
 }
 
-function LoansHeader({ total, amount }: { total: number; amount: string }) {
+function LoansHeader({ total, totalPrincipal }: { total: number; totalPrincipal: number }) {
   return (
     <motion.header
       animate="visible"
@@ -94,7 +102,7 @@ function LoansHeader({ total, amount }: { total: number; amount: string }) {
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#5C6D63]">GESTIÓN</p>
         <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#151918]">Préstamos</h1>
         <p className="mt-1.5 text-base font-medium text-[#7A7F7D]">
-          Administra los préstamos activos — {total} registrados, RD$ {amount} colocados.
+          Administra los préstamos activos — {total} registrados, {formatDop(totalPrincipal, { space: true })} colocados.
         </p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -114,15 +122,14 @@ function LoansHeader({ total, amount }: { total: number; amount: string }) {
   );
 }
 
-function LoanSummaryCards({ items }: { items: ReturnType<typeof loanToRow>[] }) {
+function LoanSummaryCards({ items, totalPrincipal }: { items: ReturnType<typeof loanToRow>[]; totalPrincipal: number }) {
   const total = items.length;
   const alDia = items.filter((i) => i.status === 'Al día').length;
   const atrasados = items.filter((i) => i.status === 'Atrasado').length;
   const pendientes = items.filter((i) => i.status === 'Pendiente').length;
-  const totalAmount = items.reduce((s, i) => s + i.amount, 0);
   return (
     <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
-      <SummaryCard icon={<WalletCards className="h-6 w-6" />} iconBg="#EAF6EF" iconColor="#285C43" label="CARTERA TOTAL" subtext={`${total} préstamos`} value={formatDop(totalAmount, { space: true })} />
+      <SummaryCard icon={<WalletCards className="h-6 w-6" />} iconBg="#EAF6EF" iconColor="#285C43" label="CARTERA TOTAL" subtext={`${total} préstamos`} value={formatDop(totalPrincipal, { space: true })} />
       <SummaryCard icon={<CheckCircle2 className="h-6 w-6" />} iconBg="#B8DCC5" iconColor="#285C43" label="AL DÍA" subtext="préstamos saludables" value={String(alDia)} />
       <SummaryCard icon={<AlertCircle className="h-6 w-6" />} iconBg="#FADCCB" iconColor="#E05A1A" label="ATRASADOS" subtext="requieren atención" value={String(atrasados)} />
       <SummaryCard icon={<Clock3 className="h-6 w-6" />} iconBg="#FFF1C7" iconColor="#7A5A0A" label="PENDIENTES" subtext="por desembolsar" value={String(pendientes)} />
@@ -367,7 +374,7 @@ function LoansTable({ rows, total, page, totalPages, onPrev, onNext }: { rows: L
       <div className="overflow-x-auto">
         <div className="grid min-w-[1180px] grid-cols-[2.15fr_1.35fr_1.4fr_1.85fr_1.2fr_1.65fr] bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63]">
           <span>CLIENTE</span>
-          <span>TIPO</span>
+          <span>AMORTIZACIÓN</span>
           <span>MONTO</span>
           <span>PROGRESO</span>
           <span>PRÓX. PAGO</span>
@@ -409,6 +416,7 @@ export function LoansPage() {
   );
   const loans = useMemo(() => data?.data ?? [], [data]);
   const total = data?.total ?? 0;
+  const totalPrincipal = data?.totalPrincipal ?? 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const rows = useMemo(() => {
@@ -431,14 +439,8 @@ export function LoansPage() {
   return (
     <main className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
       <div className="mx-auto max-w-[1640px]">
-        <LoansHeader total={total} amount={
-          total > 0
-            ? (loans.reduce((s, l) => s + l.principal, 0) >= 1_000_000
-              ? `${(loans.reduce((s, l) => s + l.principal, 0) / 1_000_000).toFixed(1)}M`
-              : `${(loans.reduce((s, l) => s + l.principal, 0) / 1_000).toFixed(0)}K`)
-            : '0'
-        } />
-        {!loading && <LoanSummaryCards items={rows} />}
+        <LoansHeader total={total} totalPrincipal={totalPrincipal} />
+        {!loading && <LoanSummaryCards items={rows} totalPrincipal={totalPrincipal} />}
         <LoanFilters
           onSearchChange={handleSearch}
           onSortChange={setSort}

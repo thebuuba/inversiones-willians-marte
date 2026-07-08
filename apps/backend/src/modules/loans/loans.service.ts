@@ -167,18 +167,17 @@ export class LoansService {
     `;
     const hasMore = rows.length > pageSize;
     const pageRows = rows.slice(0, pageSize);
+
+    const aggregation = await prisma.$queryRaw<Array<{ count: number; totalPrincipal: number }>>`
+      SELECT COUNT(*)::int AS count, COALESCE(SUM(l.principal)::float8, 0) AS "totalPrincipal"
+      FROM loans l
+      JOIN clients c ON c.id = l.client_id
+      ${whereSql}
+    `;
     const total = hasMore
-      ? Number(
-          (
-            await prisma.$queryRaw<Array<{ count: number }>>`
-          SELECT COUNT(*)::int AS count
-          FROM loans l
-          JOIN clients c ON c.id = l.client_id
-          ${whereSql}
-        `
-          )[0]?.count ?? 0,
-        )
+      ? Number(aggregation[0]?.count ?? 0)
       : offset + pageRows.length;
+    const totalPrincipal = Number(aggregation[0]?.totalPrincipal ?? 0);
 
     return {
       data: pageRows.map((row) => ({
@@ -210,6 +209,7 @@ export class LoansService {
         },
       })),
       total,
+      totalPrincipal,
     };
   }
 
