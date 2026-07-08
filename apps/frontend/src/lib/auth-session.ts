@@ -19,6 +19,9 @@ export function clearStoredAuth() {
   if (typeof localStorage !== 'undefined') {
     localStorage.removeItem(AUTH_STORAGE_KEY);
   }
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
+  }
   clearClientCache();
 }
 
@@ -37,8 +40,31 @@ export function parseStoredAuth(stored: string | null): StoredAuth {
   }
 }
 
+export function getStoredAuth(): StoredAuth {
+  const persistent = typeof localStorage !== 'undefined'
+    ? parseStoredAuth(localStorage.getItem(AUTH_STORAGE_KEY))
+    : { user: null, token: null };
+  if (persistent.token) return persistent;
+
+  return typeof sessionStorage !== 'undefined'
+    ? parseStoredAuth(sessionStorage.getItem(AUTH_STORAGE_KEY))
+    : { user: null, token: null };
+}
+
+export function saveStoredAuth(auth: StoredAuth, remember: boolean) {
+  const value = JSON.stringify(auth);
+  if (remember) {
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
+    localStorage.setItem(AUTH_STORAGE_KEY, value);
+    return;
+  }
+
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+  sessionStorage.setItem(AUTH_STORAGE_KEY, value);
+}
+
 export async function loadStoredAuthSession(fetchProfile: () => Promise<User>): Promise<StoredAuth> {
-  const stored = parseStoredAuth(localStorage.getItem(AUTH_STORAGE_KEY));
+  const stored = getStoredAuth();
   if (!stored.token) return stored;
 
   try {

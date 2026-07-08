@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AUTH_STORAGE_KEY, clearStoredAuth } from './auth-session.ts';
+import { clearStoredAuth, getStoredAuth } from './auth-session.ts';
 import {
   BACKEND_AVAILABLE_EVENT,
   BACKEND_UNAVAILABLE_EVENT,
@@ -12,15 +12,8 @@ export const api = axios.create({
 
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (stored) {
-      try {
-        const { token } = JSON.parse(stored);
-        if (token) config.headers.Authorization = `Bearer ${token}`;
-      } catch {
-        clearStoredAuth();
-      }
-    }
+    const { token } = getStoredAuth();
+    if (token) config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });

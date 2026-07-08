@@ -3,36 +3,26 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
-import { ArrowLeft, Eye, Lock, User } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 export default function LoginPage() {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [remember, setRemember] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, register } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
-    if (mode === 'register' && password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      return;
-    }
 
     setLoading(true);
     try {
-      if (mode === 'register') {
-        await register(name, username, password);
-      } else {
-        await login(username, password);
-      }
+      await login(username, password, remember);
       router.push('/inicio');
     } catch (err) {
       const error = err as AxiosError<{ error?: string; message?: string | string[] }>;
@@ -40,81 +30,42 @@ export default function LoginPage() {
       setError(
         Array.isArray(message)
           ? message.join(' ')
-          : message ?? error.response?.data?.error ?? (mode === 'register' ? 'Error al registrarse' : 'Error al iniciar sesión'),
+          : message ?? error.response?.data?.error ?? 'Error al iniciar sesión',
       );
     } finally {
       setLoading(false);
     }
   }
 
-  function switchMode(nextMode: 'login' | 'register') {
-    setMode(nextMode);
-    setError('');
-    setPassword('');
-    setConfirmPassword('');
-  }
-
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F6FAF7] px-5 py-8 font-sans">
-      <div className="w-full max-w-[470px]">
-        <div className="mb-9 text-left">
-          {mode === 'register' && (
-            <button
-              className="mb-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#2F7654] transition hover:text-[#173D2C]"
-              onClick={() => switchMode('login')}
-              type="button"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Volver a iniciar sesión
-            </button>
-          )}
-          <h1 className="text-[34px] font-bold leading-tight tracking-[-0.02em] text-[#173D2C]">
-            {mode === 'register' ? 'Crear cuenta' : 'Bienvenido de vuelta'}
-          </h1>
-          <p className="mt-3 text-[19px] font-normal leading-7 text-[#2F7654]">
-            {mode === 'register'
-              ? 'Registra un usuario para acceder al sistema'
-              : 'Ingresa tus credenciales para continuar'}
+    <main className="flex min-h-dvh items-center justify-center bg-[#F4F5F6] px-5 py-8 font-sans text-[#1F4A36]">
+      <div className="w-full max-w-[420px]">
+        <div className="mb-8 text-center">
+          <div className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-[18px] bg-[#E9F4EE] text-base font-bold text-[#285C43] shadow-[0_10px_24px_rgba(40,92,67,0.06)]">
+            WM
+          </div>
+          <h1 className="mt-5 text-[26px] font-bold leading-tight text-[#173D2C]">Willians Marte</h1>
+          <p className="mt-2 text-[15px] font-medium text-[#687A70]">
+            Sistema de Préstamos · Ingresa tus credenciales
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-[28px] border border-[#DDEBE3] bg-white px-8 py-8 shadow-[0_14px_45px_rgba(40,92,67,0.06)]"
+          className="rounded-[18px] bg-white px-7 py-7 shadow-[0_2px_4px_rgba(40,92,67,0.04),0_16px_34px_rgba(40,92,67,0.06)]"
         >
           {error && (
-            <div className="mb-7 rounded-2xl bg-danger-bg px-4 py-3 text-sm font-semibold text-danger">
+            <div className="mb-6 rounded-[14px] bg-danger-bg px-4 py-3 text-sm font-semibold text-danger">
               {error}
             </div>
           )}
 
-          <div className="space-y-6">
-            {mode === 'register' && (
-              <div>
-                <label htmlFor="name" className="mb-3 block text-[16px] font-bold text-[#173D2C]">
-                  Nombre completo
-                </label>
-                <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#5C6D63] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
-                  <User className="h-5 w-5 text-[#5C6D63]" aria-hidden="true" />
-                  <input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Nombre del usuario"
-                    required
-                    className="h-full flex-1 bg-transparent text-[16px] text-[#173D2C] outline-none placeholder:text-[#5C6D63]"
-                  />
-                </div>
-              </div>
-            )}
-
+          <div className="space-y-5">
             <div>
-              <label htmlFor="username" className="mb-3 block text-[16px] font-bold text-[#173D2C]">
+              <label htmlFor="username" className="mb-2.5 block text-[14px] font-bold text-[#173D2C]">
                 Nombre de usuario
               </label>
-              <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#5C6D63] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
-                <User className="h-5 w-5 text-[#5C6D63]" aria-hidden="true" />
+              <div className="flex h-[48px] items-center rounded-[14px] border border-[#E4EBE7] bg-[#FBFCFC] px-4 transition-colors focus-within:border-[#B9C8BD] focus-within:ring-2 focus-within:ring-[#E7F4EC]">
                 <input
                   id="username"
                   type="text"
@@ -122,91 +73,65 @@ export default function LoginPage() {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="usuario"
                   required
-                  className="h-full flex-1 bg-transparent text-[16px] text-[#173D2C] outline-none placeholder:text-[#5C6D63]"
+                  className="h-full flex-1 bg-transparent text-[15px] font-medium text-[#173D2C] outline-none placeholder:text-[#A1AAA5]"
                 />
               </div>
             </div>
 
             <div>
-              <div className="mb-3 flex items-center justify-between gap-4">
-                <label htmlFor="password" className="block text-[16px] font-bold text-[#173D2C]">
+              <div className="mb-2.5 flex items-center justify-between gap-4">
+                <label htmlFor="password" className="block text-[14px] font-bold text-[#173D2C]">
                   Contraseña
                 </label>
-                {mode === 'login' && (
-                  <button
-                    type="button"
-                    className="text-[14px] font-bold text-[#2F7654] transition-colors hover:text-[#173D2C]"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="text-[13px] font-medium text-[#2F7654] transition-colors hover:text-[#173D2C]"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
               </div>
-              <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#5C6D63] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
-                <Lock className="h-5 w-5 text-[#5C6D63]" aria-hidden="true" />
+              <div className="flex h-[48px] items-center gap-3 rounded-[14px] border border-[#E4EBE7] bg-[#FBFCFC] px-4 transition-colors focus-within:border-[#B9C8BD] focus-within:ring-2 focus-within:ring-[#E7F4EC]">
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="h-full flex-1 bg-transparent text-[16px] tracking-[0.22em] text-[#173D2C] outline-none placeholder:text-[#5C6D63]"
+                  className="h-full flex-1 bg-transparent text-[15px] font-medium tracking-[0.18em] text-[#173D2C] outline-none placeholder:text-[#A1AAA5]"
                 />
                 <button
                   type="button"
-                  className="text-[#5C6D63] transition-colors hover:text-[#2F7654]"
-                  aria-label="Mostrar contraseña"
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="text-[#7A8780] transition-colors hover:text-[#2F7654]"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
-                  <Eye className="h-5 w-5" aria-hidden="true" />
+                  <Eye className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
             </div>
 
-            {mode === 'register' && (
-              <div>
-                <label htmlFor="confirm-password" className="mb-3 block text-[16px] font-bold text-[#173D2C]">
-                  Confirmar contraseña
-                </label>
-                <div className="flex h-[54px] items-center gap-4 rounded-[999px] border border-[#DDEBE3] bg-[#FBFDFB] px-5 transition-colors focus-within:border-[#5C6D63] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
-                  <Lock className="h-5 w-5 text-[#5C6D63]" aria-hidden="true" />
-                  <input
-                    id="confirm-password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    className="h-full flex-1 bg-transparent text-[16px] tracking-[0.22em] text-[#173D2C] outline-none placeholder:text-[#5C6D63]"
-                  />
-                </div>
-              </div>
-            )}
-
-            {mode === 'login' && (
-              <label className="flex w-fit items-center gap-3 text-[17px] font-normal text-[#2F7654]">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                  className="h-5 w-5 rounded-[5px] border-[#DDEBE3] accent-[#285C43]"
-                />
-                Recordar sesión
-              </label>
-            )}
+            <label className="flex w-fit items-center gap-3 text-[15px] font-normal text-[#687A70]">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="h-5 w-5 rounded-[5px] border-[#DDEBE3] accent-[#285C43]"
+              />
+              Recordar sesión
+            </label>
 
             <button
               type="submit"
               disabled={loading}
-              className="h-[54px] w-full rounded-[999px] bg-gradient-to-r from-[#7DBD9A] to-[#2F7654] text-[18px] font-bold text-white shadow-[0_14px_24px_rgba(95,163,125,0.22)] transition-opacity hover:opacity-95 disabled:pointer-events-none disabled:opacity-60"
+              className="h-[48px] w-full rounded-[999px] bg-[#2B6849] text-[16px] font-bold text-white shadow-[0_9px_16px_rgba(40,92,67,0.28)] transition hover:bg-[#24583E] active:translate-y-px disabled:pointer-events-none disabled:opacity-60"
             >
-              {loading ? (mode === 'register' ? 'Registrando...' : 'Iniciando...') : mode === 'register' ? 'Registrarse' : 'Iniciar sesión'}
+              {loading ? 'Iniciando...' : 'Iniciar sesión'}
             </button>
-
-
           </div>
         </form>
 
-        <p className="mt-8 text-center text-[14px] text-[#5C6D63]">
+        <p className="mt-7 text-center text-[13px] font-medium text-[#687A70]">
           ¿Problemas para acceder?{' '}
           <button
             type="button"

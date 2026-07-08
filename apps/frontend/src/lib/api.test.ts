@@ -4,7 +4,7 @@ import { AxiosError, type AxiosAdapter } from 'axios';
 import { api } from './api.ts';
 import { readClientCache, writeClientCache } from './client-cache.ts';
 
-function installBrowserGlobals(storage = new Map<string, string>()) {
+function installBrowserGlobals(storage = new Map<string, string>(), session = new Map<string, string>()) {
   const location = { href: '' };
 
   Object.defineProperties(globalThis, {
@@ -19,9 +19,16 @@ function installBrowserGlobals(storage = new Map<string, string>()) {
         removeItem: (key: string) => storage.delete(key),
       },
     },
+    sessionStorage: {
+      configurable: true,
+      value: {
+        getItem: (key: string) => session.get(key) ?? null,
+        removeItem: (key: string) => session.delete(key),
+      },
+    },
   });
 
-  return { location, storage };
+  return { location, storage, session };
 }
 
 test('ignores corrupt stored auth when adding request authorization', async () => {
@@ -67,6 +74,26 @@ test('does not redirect when login returns unauthorized credentials', async () =
 
   assert.equal(storage.has('auth'), true);
   assert.equal(location.href, '');
+});
+
+test('adds authorization from session-only auth', async () => {
+  const { session } = installBrowserGlobals(new Map(), new Map([['auth', '{"token":"session-token"}']]));
+  let authorization: unknown;
+  const adapter: AxiosAdapter = async (config) => {
+    authorization = config.headers?.Authorization;
+    return {
+      config,
+      data: { ok: true },
+      headers: {},
+      status: 200,
+      statusText: 'OK',
+    };
+  };
+
+  await api.get('/health', { adapter });
+
+  assert.equal(session.has('auth'), true);
+  assert.equal(authorization, 'Bearer session-token');
 });
 
 test('clears client cache when a saved session is rejected', async () => {

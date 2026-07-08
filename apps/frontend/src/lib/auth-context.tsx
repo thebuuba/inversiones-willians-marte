@@ -11,9 +11,9 @@ import {
 } from 'react';
 import { api } from './api.ts';
 import {
-  AUTH_STORAGE_KEY,
   clearStoredAuth,
   loadStoredAuthSession,
+  saveStoredAuth,
   type StoredAuth,
   type User,
 } from './auth-session.ts';
@@ -21,7 +21,7 @@ import {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, remember?: boolean) => Promise<void>;
   register: (name: string, username: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
@@ -65,17 +65,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const persistAuth = useCallback((nextAuth: StoredAuth) => {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextAuth));
+  const persistAuth = useCallback((nextAuth: StoredAuth, remember = true) => {
+    saveStoredAuth(nextAuth, remember);
     setAuth(nextAuth);
     setLoading(false);
     notifyAuthChanged();
   }, []);
 
-  const login = useCallback(async (username: string, password: string) => {
+  const login = useCallback(async (username: string, password: string, remember = false) => {
     const { data } = await api.post('/auth/login', { username, password });
     const { user, accessToken } = data.data;
-    persistAuth({ user, token: accessToken });
+    persistAuth({ user, token: accessToken }, remember);
   }, [persistAuth]);
 
   const register = useCallback(async (name: string, username: string, password: string) => {

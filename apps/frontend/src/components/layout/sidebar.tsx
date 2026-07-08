@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   Briefcase,
   Calendar,
+  ChevronsUpDown,
   FileText,
   Home,
   Inbox,
@@ -21,10 +22,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
-import { getRequestsCount } from '@/lib/api/requests';
-import { getTasksCount } from '@/lib/api/tasks';
 import { navItems } from '@/components/ui/visual-system';
-import { canRefreshSidebarCounters, SIDEBAR_COUNTER_REFRESH_MS } from './sidebar-refresh';
 
 const navIconMap = {
   briefcase: Briefcase,
@@ -39,9 +37,21 @@ const navIconMap = {
   wallet: Wallet,
 } satisfies Record<(typeof navItems)[number]['icon'], LucideIcon>;
 
+const navGroups = [
+  { label: 'OPERACIÓN', hrefs: ['/inicio', '/clientes', '/prestamos', '/solicitudes'] },
+  { label: 'FINANZAS', hrefs: ['/caja', '/inversionistas', '/carteras'] },
+  { label: 'GENERAL', hrefs: ['/agenda', '/documentos'] },
+] as const;
+
+const settingsItem = navItems.find((item) => item.href === '/configuracion');
+
 interface SidebarProps {
   collapsed: boolean;
   onCollapsedChange: () => void;
+}
+
+function getNavItem(href: string) {
+  return navItems.find((item) => item.href === href);
 }
 
 export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
@@ -49,169 +59,204 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [pendingRequests, setPendingRequests] = useState(0);
-  const [pendingTasks, setPendingTasks] = useState(0);
-  const initial = user?.name?.charAt(0) ?? 'A';
+  const initial = user?.name?.charAt(0).toUpperCase() ?? 'N';
 
-  useEffect(() => {
-    function refresh() {
-      if (!canRefreshSidebarCounters(document.visibilityState)) return;
-      getRequestsCount('PENDING').then(setPendingRequests).catch(() => {});
-      getTasksCount('PENDING').then(setPendingTasks).catch(() => {});
-    }
-    refresh();
-    const interval = setInterval(refresh, SIDEBAR_COUNTER_REFRESH_MS);
-    addEventListener('visibilitychange', refresh);
-    addEventListener('focus', refresh);
-    return () => {
-      clearInterval(interval);
-      removeEventListener('visibilitychange', refresh);
-      removeEventListener('focus', refresh);
-    };
-  }, []);
+  function NavLink({
+    href,
+    label,
+    icon,
+    compact,
+    onClick,
+  }: {
+    href: string;
+    label: string;
+    icon: (typeof navItems)[number]['icon'];
+    compact: boolean;
+    onClick?: () => void;
+  }) {
+    const Icon = navIconMap[icon];
+    const active = pathname === href || pathname.startsWith(`${href}/`);
+
+    return (
+      <Link
+        aria-label={compact ? label : undefined}
+        className={cn(
+          'group/sidebar-item relative flex items-center rounded-[12px] transition-colors duration-150',
+          compact ? 'mx-auto h-10 w-10 justify-center p-0' : 'gap-3 px-3 py-2.5 text-sm',
+          active
+            ? 'bg-primary-soft font-bold text-text-primary'
+            : 'text-text-secondary hover:bg-[#f3f4f6] hover:text-text-primary',
+        )}
+        href={href}
+        onClick={onClick}
+      >
+        <Icon
+          aria-hidden="true"
+          className={cn(
+            'h-[18px] w-[18px] shrink-0 transition-colors duration-150',
+            active ? 'text-primary' : 'text-current',
+          )}
+          strokeWidth={2}
+        />
+        <span
+          className={cn(
+            'min-w-0 truncate transition-opacity duration-150',
+            compact ? 'pointer-events-none absolute opacity-0' : 'opacity-100',
+          )}
+        >
+          {label}
+        </span>
+        {compact && (
+          <span className="pointer-events-none absolute left-[calc(100%+10px)] z-50 rounded-[8px] bg-text-primary px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-card transition-opacity delay-300 duration-150 group-hover/sidebar-item:opacity-100">
+            {label}
+          </span>
+        )}
+      </Link>
+    );
+  }
 
   const sidebarContent = (compact = false) => (
-    <div className="flex h-full flex-col">
-      <div
+    <div className="flex h-full flex-col bg-card font-sans text-text-primary">
+      <header
         className={cn(
-          'flex pb-7 pt-7',
-          compact ? 'flex-col items-center gap-3 px-3' : 'items-center gap-3.5 px-6',
+          'flex shrink-0',
+          compact ? 'flex-col items-center gap-3 px-3 py-5' : 'items-center gap-3 px-5 py-5',
         )}
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#B8DCC5] text-sm font-bold text-[#285C43]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
           WM
         </div>
-        <div className={cn('min-w-0 flex-1', compact && 'hidden')}>
-          <h1 className="truncate text-[15px] font-bold leading-tight text-[#285C43]">Willians Marte</h1>
-          <p className="mt-1 truncate text-[13px] leading-tight text-[#5C6D63]">
+        <div className={cn('min-w-0 flex-1 transition-opacity duration-150', compact && 'hidden opacity-0')}>
+          <h1 className="whitespace-nowrap text-[15px] font-bold leading-tight text-text-primary">
+            Willians Marte
+          </h1>
+          <p className="mt-0.5 whitespace-nowrap text-[11.5px] leading-tight text-text-secondary">
             Sistema de Préstamos
           </p>
         </div>
         <button
-          aria-label={collapsed ? 'Mostrar sidebar' : 'Ocultar sidebar'}
-          className={cn(
-            'flex items-center justify-center rounded-full border border-[#DDEBE3] bg-[#F8FBF9] opacity-80 transition hover:bg-[#EEF3EF] hover:opacity-100',
-            compact ? 'h-7 w-7' : 'h-7 w-7 shrink-0',
-          )}
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] text-text-secondary transition-colors duration-150 hover:bg-[#f3f4f6] hover:text-text-primary"
           onClick={onCollapsedChange}
           type="button"
         >
           <Image
             alt=""
             aria-hidden="true"
-            className="h-4 w-4 opacity-70 grayscale"
+            className="h-4 w-4 opacity-80 grayscale"
             height={16}
             src={collapsed ? '/icons/sidebar-derecho.png' : '/icons/sidebar-izquierdo.png'}
             width={16}
           />
         </button>
-      </div>
+      </header>
 
-      <nav className={cn('flex-1 overflow-hidden', compact ? 'px-3' : 'px-4')}>
-        <p className={cn('mb-4 px-3 text-[11px] font-bold uppercase tracking-[0.32em] text-[#A9B8AE]', compact && 'sr-only')}>
-          MENÚ
-        </p>
-        <div className="space-y-1.5">
-          {navItems.map((item) => {
-            const Icon = navIconMap[item.icon];
-            const active = pathname.startsWith(item.href);
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                title={compact ? item.label : undefined}
-                className={cn(
-                  'relative flex h-10 items-center rounded-[16px] text-[15px] font-medium transition-colors',
-                  compact ? 'justify-center px-0' : 'gap-3.5 px-3',
-                  active
-                    ? 'bg-[#E7F4EC] text-[#285C43]'
-                    : 'text-[#5C6D63] hover:bg-[#F3FAF6]',
-                )}
-              >
-                <Icon
-                  className={cn('h-[18px] w-[18px] shrink-0', active ? 'text-[#2F7654]' : 'text-[#5C6D63]')}
-                  strokeWidth={2}
-                  aria-hidden="true"
-                />
-                <span className={cn('min-w-0 flex-1 truncate', compact && 'sr-only')}>{item.label}</span>
-                {(item.href === '/solicitudes' && pendingRequests > 0) ||
-                (item.href === '/agenda' && pendingTasks > 0) ? (
-                  <span
-                    className={cn(
-                      'flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold',
-                      item.href === '/solicitudes' ? 'bg-[#FFE3D2] text-[#9F3F25]' : 'bg-[#E4F0FF] text-[#2F5F91]',
-                      compact && 'absolute -right-1 -top-1 h-5 min-w-5 px-1 text-[10px]',
-                    )}
-                  >
-                    {item.href === '/solicitudes' ? pendingRequests : pendingTasks}
-                  </span>
-                ) : null}
-              </Link>
-            );
-          })}
-        </div>
+      <nav className={cn('flex-1 pb-5', compact ? 'overflow-visible px-3' : 'overflow-y-auto px-4')} aria-label="Navegación principal">
+        {navGroups.map((group, groupIndex) => (
+          <section key={group.label} className={cn(groupIndex > 0 && 'mt-6')}>
+            {compact ? (
+              groupIndex > 0 && <div className="mx-auto mb-4 h-px w-6 bg-border-soft" />
+            ) : (
+              <p className="mb-3 px-3 text-[10.5px] font-bold uppercase tracking-[0.14em] text-text-secondary/70">
+                {group.label}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {group.hrefs.map((href) => {
+                const item = getNavItem(href);
+                if (!item) return null;
+                return (
+                  <NavLink
+                    key={item.href}
+                    compact={compact}
+                    href={item.href}
+                    icon={item.icon}
+                    label={item.label}
+                    onClick={() => setMobileOpen(false)}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </nav>
 
-      <div className={cn('relative border-t border-[#DDEBE3] py-5', compact ? 'px-3' : 'px-6')}>
-        {profileOpen && (
-          <div
-            className={cn(
-              'absolute rounded-[16px] border border-[#DDEBE3] bg-white p-2 shadow-[0_14px_34px_rgba(40,92,67,0.12)]',
-              compact ? 'bottom-5 left-[calc(100%+8px)] w-44' : 'bottom-[78px] left-6 right-6',
-            )}
-          >
-            <button
-              onClick={logout}
-              className="flex h-10 w-full items-center gap-2.5 rounded-[12px] px-3 text-left text-sm font-semibold text-[#2F7654] transition-colors hover:bg-[#F3FAF6] hover:text-[#285C43]"
-              type="button"
-            >
-              <LogOut className="h-4 w-4 text-[#5C6D63]" strokeWidth={2} aria-hidden="true" />
-              Cerrar sesión
-            </button>
-          </div>
+      <footer className={cn('shrink-0 border-t border-border-soft py-4', compact ? 'px-3' : 'px-4')}>
+        {settingsItem && (
+          <NavLink
+            compact={compact}
+            href={settingsItem.href}
+            icon={settingsItem.icon}
+            label={settingsItem.label}
+            onClick={() => setMobileOpen(false)}
+          />
         )}
-        <button
-          onClick={() => setProfileOpen((open) => !open)}
-          className={cn(
-            'flex w-full items-center rounded-[18px] text-left transition-opacity hover:opacity-90',
-            compact ? 'justify-center' : 'gap-3 px-0 py-0',
+
+        <div className="relative mt-4">
+          {profileOpen && (
+            <div
+              className={cn(
+                'absolute rounded-[12px] border border-border-soft bg-card p-2 shadow-[0_14px_34px_rgba(40,92,67,0.12)]',
+                compact ? 'bottom-0 left-[calc(100%+10px)] w-44' : 'bottom-[58px] left-0 right-0',
+              )}
+            >
+              <button
+                className="flex h-10 w-full items-center gap-2.5 rounded-[10px] px-3 text-left text-sm font-semibold text-text-secondary transition-colors duration-150 hover:bg-[#f3f4f6] hover:text-text-primary"
+                onClick={logout}
+                type="button"
+              >
+                <LogOut className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+                Cerrar sesión
+              </button>
+            </div>
           )}
-          title={compact ? user?.name ?? 'Administrador' : undefined}
-          type="button"
-        >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E7F4EC] text-sm font-bold text-[#285C43]">
-            {initial}
-          </div>
-          <div className={cn('min-w-0 flex-1', compact && 'hidden')}>
-            <p className="truncate text-[15px] font-bold leading-tight text-[#285C43]">
-              {user?.name ?? 'Administrador'}
-            </p>
-            <p className="mt-1 truncate text-[13px] leading-tight text-[#5C6D63]">
-              {user?.username ?? user?.email ?? 'admin'}
-            </p>
-          </div>
-        </button>
-      </div>
+          <button
+            aria-label={compact ? `Perfil de ${user?.name ?? 'Nata'}` : undefined}
+            className={cn(
+              'flex w-full items-center rounded-[12px] text-left transition-colors duration-150 hover:bg-[#f3f4f6]',
+              compact ? 'h-10 justify-center p-0' : 'gap-3 p-2',
+            )}
+            onClick={() => setProfileOpen((open) => !open)}
+            type="button"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-text-primary text-sm font-bold text-white">
+              {initial}
+            </div>
+            <div className={cn('min-w-0 flex-1 transition-opacity duration-150', compact && 'hidden opacity-0')}>
+              <p className="truncate text-sm font-bold leading-tight text-text-primary">
+                {user?.name ?? 'Nata'}
+              </p>
+              <p className="mt-0.5 truncate text-xs leading-tight text-text-secondary">
+                {user?.username ?? user?.email ?? 'nata'}
+              </p>
+            </div>
+            <ChevronsUpDown
+              aria-hidden="true"
+              className={cn('h-4 w-4 shrink-0 text-text-secondary transition-opacity duration-150', compact && 'hidden opacity-0')}
+              strokeWidth={2}
+            />
+          </button>
+        </div>
+      </footer>
     </div>
   );
 
   return (
     <>
-      <div className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-end justify-between border-b border-[#DDEBE3] bg-white px-4 pb-3 pt-[env(safe-area-inset-top)] text-[#285C43] lg:hidden">
+      <div className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-end justify-between border-b border-border-soft bg-card px-4 pb-3 pt-[env(safe-area-inset-top)] text-text-primary lg:hidden">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#B8DCC5] text-xs font-bold">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">
             WM
           </div>
           <div>
             <p className="text-sm font-bold leading-tight">Willians Marte</p>
-            <p className="text-xs leading-tight text-[#5C6D63]">Sistema de Préstamos</p>
+            <p className="text-xs leading-tight text-text-secondary">Sistema de Préstamos</p>
           </div>
         </div>
         <button
           aria-label="Abrir menú"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-[#285C43] transition-colors hover:bg-[#F3FAF6]"
+          className="flex h-10 w-10 items-center justify-center rounded-[8px] text-text-secondary transition-colors duration-150 hover:bg-[#f3f4f6] hover:text-text-primary"
           onClick={() => setMobileOpen(true)}
           type="button"
         >
@@ -227,7 +272,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             onClick={() => setMobileOpen(false)}
             type="button"
           />
-          <aside className="relative h-dvh w-[260px] rounded-r-lg border border-l-0 border-[#DDEBE3] bg-white text-[#285C43]">
+          <aside className="relative h-dvh w-[260px] border-r border-border-soft bg-card">
             {sidebarContent(false)}
           </aside>
         </div>
@@ -235,8 +280,8 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
 
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 hidden h-dvh rounded-r-lg border border-l-0 border-[#DDEBE3] bg-white text-[#285C43] transition-[width] duration-200 ease-out lg:block',
-          collapsed ? 'w-[76px]' : 'w-[260px]',
+          'fixed left-0 top-0 z-40 hidden h-dvh overflow-visible border-r border-border-soft bg-card transition-[width] duration-200 ease-out lg:block',
+          collapsed ? 'w-[72px]' : 'w-[260px]',
         )}
       >
         {sidebarContent(collapsed)}

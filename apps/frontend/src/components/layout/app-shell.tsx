@@ -62,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Sidebar collapsed={sidebarCollapsed} onCollapsedChange={toggleSidebarCollapsed} />
       <main
         className={`min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] transition-[margin] duration-200 ease-out lg:pt-0 ${
-          sidebarCollapsed ? 'lg:ml-[76px]' : 'lg:ml-[260px]'
+          sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'
         }`}
       >
         {children}
