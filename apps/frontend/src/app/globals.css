@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #f0fbf4;
@@ -155,6 +155,19 @@
   --radius-control-compact: 0.5rem;
   --radius-control: 0.625rem;
   --radius-control-comfortable: 0.875rem;
+  --animate-fade-in-up: fade-in-up 0.35s ease-out;
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 body {
