@@ -115,7 +115,7 @@ export function NewRequestModal({ open, onClose, onSubmit }: NewRequestModalProp
           >
             <div className="flex items-start justify-between bg-[#F4FAF6] px-6 py-5">
               <div className="flex items-center gap-3.5">
-                <div className="flex h-12 w-12 items-center justify-center rounded-[15px] bg-[#B8DCC5] text-[#173D2C]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[var(--primary-accent)]">
                   <UserPlus className="h-6 w-6" />
                 </div>
                 <div>
@@ -182,7 +182,7 @@ export function NewRequestModal({ open, onClose, onSubmit }: NewRequestModalProp
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 border-t border-[#EDF2EF] bg-white px-6 py-4">
+            <div className="flex justify-end gap-3 border-t border-[var(--border-soft)] bg-white px-6 py-4 shadow-[0_-10px_24px_rgba(40,92,67,0.04)]">
               <button
                 className="h-11 rounded-full border border-[#DDEBE3] bg-white px-6 text-sm font-bold text-[#173D2C] transition hover:bg-[#F3FAF6]"
                 onClick={onClose}
