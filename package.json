@@ -5,6 +5,7 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
+    "test": "turbo test",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,prisma}\"",
     "ios:test": "cd apps/ios && swift test",
     "android:check": "cd apps/android && sh check.sh",
@@ -17,8 +18,8 @@
     "db:seed": "pnpm --filter @inversiones/database seed"
   },
   "devDependencies": {
-    "turbo": "^2.5.0",
-    "prettier": "^3.5.0"
+    "prettier": "^3.5.0",
+    "turbo": "^2.5.0"
   },
   "packageManager": "pnpm@10.8.0",
   "engines": {
@@ -41,8 +42,5 @@
       "prisma",
       "unrs-resolver"
     ]
-  },
-  "dependencies": {
-    "@dietrichgebert/ponytail": "^4.8.3"
   }
 }

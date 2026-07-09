@@ -65,14 +65,17 @@ export class LoanPayoffService {
       (movement) => movement.effectiveDate <= payoffDate,
     );
     const capitalOutstanding = this.round(
-      this.money(loan.principal) + movements.reduce((sum, movement) => sum + this.money(movement.amount), 0),
+      this.money(loan.principal) +
+        movements.reduce((sum, movement) => sum + this.money(movement.amount), 0),
     );
 
     const segments = [
       {
-        amount: this.money(loan.principal) + movements
-          .filter((movement) => movement.effectiveDate <= periodStart)
-          .reduce((sum, movement) => sum + this.money(movement.amount), 0),
+        amount:
+          this.money(loan.principal) +
+          movements
+            .filter((movement) => movement.effectiveDate <= periodStart)
+            .reduce((sum, movement) => sum + this.money(movement.amount), 0),
         from: periodStart,
       },
       ...movements
@@ -80,18 +83,34 @@ export class LoanPayoffService {
         .map((movement) => ({ amount: this.money(movement.amount), from: movement.effectiveDate })),
     ];
 
-    const dailyRate = this.periodicRate(this.money(loan.interestRate), loan.paymentFreq) / this.periodDays(loan.paymentFreq);
+    const dailyRate =
+      this.periodicRate(this.money(loan.interestRate), loan.paymentFreq) /
+      this.periodDays(loan.paymentFreq);
     const earnedInterest = this.roundToNearestFifty(
       segments.reduce((sum, segment) => {
-        const days = Math.min(this.periodDays(loan.paymentFreq), this.daysBetween(segment.from, payoffDate));
+        const days = Math.min(
+          this.periodDays(loan.paymentFreq),
+          this.daysBetween(segment.from, payoffDate),
+        );
         return sum + segment.amount * dailyRate * days;
       }, 0),
     );
-    const daysGenerated = Math.min(this.periodDays(loan.paymentFreq), this.daysBetween(periodStart, payoffDate));
+    const daysGenerated = Math.min(
+      this.periodDays(loan.paymentFreq),
+      this.daysBetween(periodStart, payoffDate),
+    );
     const dailyInterest = this.round(capitalOutstanding * dailyRate);
     const fees = this.unpaidFees(loan);
 
-    return this.makeQuote(payoffDate, capitalOutstanding, earnedInterest, 0, fees, dailyInterest, daysGenerated);
+    return this.makeQuote(
+      payoffDate,
+      capitalOutstanding,
+      earnedInterest,
+      0,
+      fees,
+      dailyInterest,
+      daysGenerated,
+    );
   }
 
   private quoteScheduled(loan: PayoffLoanLike, payoffDate: Date): PayoffQuote {
@@ -119,7 +138,9 @@ export class LoanPayoffService {
     const next = schedule.find((row) => row.dueDate > payoffDate);
     const previousDueDate =
       [...schedule].reverse().find((row) => row.dueDate <= payoffDate)?.dueDate ?? loan.startDate;
-    const periodDays = next ? Math.max(1, this.daysBetween(previousDueDate, next.dueDate)) : this.periodDays(loan.paymentFreq);
+    const periodDays = next
+      ? Math.max(1, this.daysBetween(previousDueDate, next.dueDate))
+      : this.periodDays(loan.paymentFreq);
     const daysGenerated = next ? Math.max(0, this.daysBetween(previousDueDate, payoffDate)) : 0;
     const currentInterest = next
       ? this.money(next.interestPart) * Math.min(1, daysGenerated / periodDays)
@@ -129,7 +150,9 @@ export class LoanPayoffService {
     const futureInterest = schedule
       .filter((row) => row.dueDate > payoffDate)
       .reduce((sum, row) => sum + this.money(row.interestPart), 0);
-    const unearnedInterestDiscount = this.round(Math.max(0, futureInterest - roundedCurrentInterest));
+    const unearnedInterestDiscount = this.round(
+      Math.max(0, futureInterest - roundedCurrentInterest),
+    );
     const fees = this.unpaidFees(loan);
     const dailyInterest = this.round(next ? this.money(next.interestPart) / periodDays : 0);
 
@@ -175,7 +198,8 @@ export class LoanPayoffService {
 
   private periodStart(startDate: Date, target: Date, frequency: PaymentFrequency): Date {
     let current = new Date(startDate);
-    while (this.addPeriod(current, frequency) < target) current = this.addPeriod(current, frequency);
+    while (this.addPeriod(current, frequency) < target)
+      current = this.addPeriod(current, frequency);
     return current;
   }
 

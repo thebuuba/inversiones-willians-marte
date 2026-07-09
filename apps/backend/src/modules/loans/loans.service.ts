@@ -174,9 +174,7 @@ export class LoansService {
       JOIN clients c ON c.id = l.client_id
       ${whereSql}
     `;
-    const total = hasMore
-      ? Number(aggregation[0]?.count ?? 0)
-      : offset + pageRows.length;
+    const total = hasMore ? Number(aggregation[0]?.count ?? 0) : offset + pageRows.length;
     const totalPrincipal = Number(aggregation[0]?.totalPrincipal ?? 0);
 
     return {
@@ -306,7 +304,8 @@ export class LoansService {
     if (!loan) throw new NotFoundException('Loan not found');
 
     const normalizedDate = new Date(`${payoffDate}T00:00:00.000Z`);
-    if (Number.isNaN(normalizedDate.getTime())) throw new BadRequestException('Invalid payoff date');
+    if (Number.isNaN(normalizedDate.getTime()))
+      throw new BadRequestException('Invalid payoff date');
     return this.payoff.quote(loan, normalizedDate);
   }
 

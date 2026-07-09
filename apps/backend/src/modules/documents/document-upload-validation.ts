@@ -24,7 +24,9 @@ export function isAllowedFileSignature(mimeType: string, bytes: Buffer) {
   if (mimeType === 'image/png')
     return startsWith(bytes, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
   if (mimeType === 'image/webp')
-    return startsWith(bytes, Buffer.from('RIFF')) && bytes.subarray(8, 12).equals(Buffer.from('WEBP'));
+    return (
+      startsWith(bytes, Buffer.from('RIFF')) && bytes.subarray(8, 12).equals(Buffer.from('WEBP'))
+    );
   if (mimeType === 'text/plain') return !bytes.includes(0);
   if (mimeType === 'application/rtf') return startsWith(bytes, Buffer.from('{\\rtf'));
   if (

@@ -13,9 +13,7 @@ describe('LoanPayoffService', () => {
         paymentFreq: 'MONTHLY',
         startDate: new Date('2026-05-25T00:00:00.000Z'),
         schedule: [],
-        capitalMovements: [
-          { amount: 3000, effectiveDate: new Date('2026-06-20T00:00:00.000Z') },
-        ],
+        capitalMovements: [{ amount: 3000, effectiveDate: new Date('2026-06-20T00:00:00.000Z') }],
       },
       new Date('2026-06-25T00:00:00.000Z'),
     );
