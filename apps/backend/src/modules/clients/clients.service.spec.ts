@@ -74,6 +74,7 @@ describe('ClientsService', () => {
         expect.objectContaining({ firstName: 'Alexauris', lastName: 'Diaz' }),
       );
       expect(result.total).toBe(1);
+      expect(result.stats).toEqual({ total: 1, active: 1, withoutLoans: 1, recent: 1 });
       expect(prisma.client.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { active: true },
@@ -88,6 +89,7 @@ describe('ClientsService', () => {
       const result = await service.findAll('Juan');
       expect(result.data).toHaveLength(1);
       expect(result.total).toBe(1);
+      expect(prisma.client.count).toHaveBeenCalledWith({ where: { active: true } });
     });
   });
 

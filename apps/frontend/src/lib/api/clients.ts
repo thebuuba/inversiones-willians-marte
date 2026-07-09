@@ -4,6 +4,12 @@ import type { ApiResponse, Client, ClientDetail, CreateClientDto } from '@invers
 export interface PaginatedClients {
   data: Client[];
   total: number;
+  stats?: {
+    total: number;
+    active: number;
+    withoutLoans: number;
+    recent: number;
+  };
 }
 
 export async function getClients(search?: string, take = 50, skip = 0): Promise<PaginatedClients> {

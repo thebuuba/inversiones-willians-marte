@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  MoreHorizontal,
   Plus,
   Search,
   UserRound,
@@ -37,18 +38,21 @@ function PanelCard({ children, className = '', index = 0 }: { children: ReactNod
       initial="hidden"
       animate="visible"
       custom={index}
-      className={`rounded-2xl border border-neutral-100 bg-white shadow-sm ${className}`}
+      className={`rounded-2xl border border-border-soft bg-card shadow-card ${className}`}
     >
       {children}
     </motion.section>
   );
 }
 
+function EmptyField() {
+  return <span className="text-[13px] text-text-secondary/40">Sin registrar</span>;
+}
+
 export function ClientsPanel() {
   const router = useRouter();
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
-  const [recentThreshold] = useState(() => Date.now() - 30 * 86400000);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const clientsFetcher = useCallback(
     () => getClients(search || undefined, PAGE_SIZE, page * PAGE_SIZE),
@@ -62,18 +66,20 @@ export function ClientsPanel() {
   );
   const clients = data?.data ?? [];
   const total = data?.total ?? 0;
+  const globalStats = data?.stats;
+  const globalTotal = globalStats?.total ?? total;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const stats = [
-    { label: 'Total clientes', value: String(total), icon: UsersRound, bg: '#E7F4EC', color: '#2F7654' },
-    { label: 'Activos', value: String(total), icon: UsersRound, bg: '#DDEFE5', color: '#285C43' },
-      { label: 'Sin préstamos', value: String(clients.filter((c) => (c._count?.loans ?? 0) === 0).length), icon: UserRound, bg: '#FFF4C8', color: '#7A5A0A' },
+    { label: 'Total clientes', value: String(globalTotal), icon: UsersRound, bg: 'bg-primary-soft', color: 'text-primary-accent' },
+    { label: 'Activos', value: String(globalStats?.active ?? globalTotal), icon: UsersRound, bg: 'bg-primary-soft', color: 'text-primary-accent' },
+    { label: 'Sin préstamos', value: String(globalStats?.withoutLoans ?? 0), icon: UserRound, bg: 'bg-[#fff4c8]', color: 'text-[#7a5a0a]' },
     {
       label: 'Nuevos (30d)',
-      value: String(clients.filter((c) => new Date(c.createdAt).getTime() >= recentThreshold).length),
+      value: String(globalStats?.recent ?? 0),
       icon: UserRound,
-      bg: '#D8E9FF',
-      color: '#4E7CAD',
+      bg: 'bg-[#e4f0ff]',
+      color: 'text-[#2f5f91]',
     },
   ];
 
@@ -88,26 +94,27 @@ export function ClientsPanel() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#F3F4F6] p-5 font-sans text-neutral-900">
+    <div className="flex min-h-screen flex-col bg-[#F3F4F6] p-5 font-sans text-text-primary">
+      <div className="flex w-full flex-1 flex-col gap-5">
       <motion.header
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end"
+        className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end"
       >
         <div>
-          <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#173D2C]">Clientes</h1>
-          <p className="mt-1.5 text-base text-neutral-500">
-            Administra tu cartera de clientes — {total} registrados en total.
+          <h1 className="text-[26px] font-bold leading-tight text-text-primary">Clientes</h1>
+          <p className="mt-1.5 text-sm text-text-secondary">
+            Administra tu cartera de clientes — {globalTotal} registrados en total.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex h-11 items-center gap-2 rounded-full border border-neutral-200 bg-white px-5 text-sm font-bold text-neutral-600 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+          <button className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-white px-5 text-sm font-bold text-text-secondary transition-colors duration-150 hover:bg-[#f9fbfa] hover:text-text-primary">
             <Download className="h-4 w-4" />
             Exportar
           </button>
           <Link
-            className="flex h-11 items-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white transition-colors duration-150 hover:bg-primary-hover"
             href="/clientes/nuevo"
           >
             <Plus className="h-4 w-4" />
@@ -116,20 +123,19 @@ export function ClientsPanel() {
         </div>
       </motion.header>
 
-      <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <PanelCard key={stat.label} className="flex items-center gap-4 p-5" index={index + 1}>
               <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-                style={{ backgroundColor: stat.bg, color: stat.color }}
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${stat.bg} ${stat.color}`}
               >
                 <Icon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-neutral-500">{stat.label}</p>
-                <p className={`mt-1 text-[24px] font-bold leading-none text-neutral-900`}>
+                <p className="text-[13px] text-text-secondary">{stat.label}</p>
+                <p className="mt-1 text-[22px] font-bold leading-none text-text-primary">
                   {loading ? '...' : stat.value}
                 </p>
               </div>
@@ -139,27 +145,23 @@ export function ClientsPanel() {
       </div>
 
       {error && (
-        <div className="mb-5 rounded-[16px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-700">
+        <div className="rounded-[16px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-700">
           {error}
         </div>
       )}
 
-      <PanelCard className="mb-5 p-5" index={5}>
-        <div className="flex flex-col gap-3 xl:flex-row">
-          <div className="flex h-12 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F4F5F6] px-5 shadow-[0_4px_10px_rgba(40,92,67,0.06)]">
-            <Search className="h-5 w-5 shrink-0 text-neutral-400" />
+      <PanelCard className="flex min-h-0 flex-1 flex-col overflow-hidden" index={5}>
+        <div className="border-b border-border-soft p-4">
+          <div className="flex h-11 items-center gap-3 rounded-xl border border-transparent bg-[#f3f4f6] px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-soft">
+            <Search className="h-4 w-4 shrink-0 text-text-secondary" />
             <input
-              className="flex-1 bg-transparent text-sm font-medium text-neutral-900 outline-none placeholder:text-neutral-400"
+              className="flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/60"
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Buscar por nombre, cédula, teléfono..."
             />
           </div>
         </div>
-      </PanelCard>
-
-      <PanelCard className="flex min-h-0 flex-1 flex-col overflow-hidden" index={6}>
-        <div className="sticky top-0 z-10 grid grid-cols-[0.5fr_2fr_1.2fr_1.4fr_0.9fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
-          <span>ID</span>
+        <div className="sticky top-0 z-10 grid grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center bg-[#f9fbfa] px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
           <span>CLIENTE</span>
           <span>CÉDULA</span>
           <span>TELÉFONO</span>
@@ -168,12 +170,12 @@ export function ClientsPanel() {
 
         <div className="flex-1 overflow-y-auto modal-scroll">
           {loading ? (
-            <div className="flex h-full items-center justify-center text-sm font-medium text-neutral-500">
+            <div className="flex h-full items-center justify-center text-sm font-medium text-text-secondary">
               Cargando clientes...
             </div>
           ) : clients.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-sm font-medium text-neutral-400">
-              No se encontraron clientes.
+            <div className="flex h-32 items-center justify-center text-center text-sm font-medium text-text-secondary">
+              {search ? `No se encontraron clientes para "${search}"` : 'No se encontraron clientes.'}
             </div>
           ) : (
             clients.map((client, index) => (
@@ -183,69 +185,80 @@ export function ClientsPanel() {
                 initial="hidden"
                 animate="visible"
                 custom={index + 7}
-                className="grid min-h-[56px] cursor-pointer grid-cols-[0.5fr_2fr_1.2fr_1.4fr_0.9fr] items-center border-t border-neutral-100 px-6 transition hover:bg-[#F4FAF6] bg-white"
+                className="group grid min-h-[64px] cursor-pointer grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center border-b border-border-soft bg-card px-6 transition-colors duration-150 last:border-b-0 hover:bg-[#f9fbfa]"
                 onClick={() => router.push(`/clientes/${client.id}`)}
               >
-                <span className="font-mono text-xs text-neutral-600">{client.id}</span>
-                <div className="flex items-center gap-4">
-                  <div className="relative h-12 w-12 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 shrink-0">
                     {client.photo ? (
                       <div
                         aria-label={fullName(client)}
-                        className="h-full w-full rounded-full border-[3px] border-white bg-cover bg-center shadow-[0_6px_14px_rgba(40,92,67,0.12)]"
+                        className="h-full w-full rounded-full bg-cover bg-center"
                         role="img"
                         style={{ backgroundImage: `url(${client.photo})` }}
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center rounded-full border-[3px] border-white bg-[#EAF6EF] shadow-[0_6px_14px_rgba(40,92,67,0.12)]">
-                        <UserRound className="h-5 w-5 text-neutral-500" />
+                      <div className="flex h-full w-full items-center justify-center rounded-full bg-primary-soft">
+                        <UserRound className="h-4 w-4 text-primary-accent" />
                       </div>
                     )}
-                    <span
-                      className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white ${
-                        client.active ? 'bg-[#7CC99B]' : 'bg-[#5C6D63]'
-                      }`}
-                    />
                   </div>
-                  <div>
-                    <p className="text-sm font-bold leading-tight text-neutral-900">{fullName(client)}</p>
-
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold leading-tight text-text-primary">{fullName(client)}</p>
+                    <p className="mt-1 text-xs leading-tight text-text-secondary/70">ID {client.id}</p>
                   </div>
                 </div>
-                <span className="font-mono text-sm text-neutral-500">{client.identification ?? '—'}</span>
-                <span className="text-sm text-neutral-500">{client.phone ?? '—'}</span>
-                <span className="inline-flex h-9 min-w-[46px] items-center justify-center justify-self-end rounded-xl bg-[#E7F4EC] px-3 text-base font-bold leading-none text-neutral-900">
+                <span className="[font-variant-numeric:tabular-nums] text-sm text-text-secondary">
+                  {client.identification ?? <EmptyField />}
+                </span>
+                <span className="[font-variant-numeric:tabular-nums] text-sm text-text-secondary">
+                  {client.phone ?? <EmptyField />}
+                </span>
+                <span
+                  className={`inline-flex h-8 min-w-8 items-center justify-center justify-self-end rounded-full px-3 text-sm font-bold leading-none ${
+                    (client._count?.loans ?? 0) > 0
+                      ? 'bg-primary-soft text-primary-accent'
+                      : 'bg-[#eef3ef] text-text-secondary'
+                  }`}
+                >
                   {client._count?.loans ?? 0}
                 </span>
+                <button
+                  aria-label={`Acciones de ${fullName(client)}`}
+                  className="flex h-8 w-8 items-center justify-center justify-self-end rounded-lg text-text-secondary opacity-0 transition-colors duration-150 hover:bg-[#eef3ef] hover:text-text-primary group-hover:opacity-100"
+                  onClick={(event) => event.stopPropagation()}
+                  type="button"
+                >
+                  <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                </button>
               </motion.div>
             ))
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-neutral-100 bg-[#F7F7F7] px-6 py-4">
-          <p className="text-sm font-semibold text-neutral-500">
+        <div className="flex items-center justify-between border-t border-border-soft bg-card px-6 py-4">
+          <p className="text-[13px] text-text-secondary">
             {!loading && (
               <>
-                Mostrando <span className="font-bold text-neutral-900">{clients.length}</span> de{' '}
-                <span className="font-bold text-neutral-900">{total}</span> clientes
+                Mostrando {clients.length} de {total} clientes
               </>
             )}
           </p>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">
               <button
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 disabled:opacity-30"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-white text-text-secondary transition-colors duration-150 hover:bg-[#f9fbfa] disabled:opacity-30"
                 disabled={page === 0}
                 onClick={() => setPage((p) => p - 1)}
                 type="button"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="text-sm font-bold text-neutral-500">
+              <span className="text-sm font-bold text-text-secondary">
                 {page + 1} / {totalPages}
               </span>
               <button
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 disabled:opacity-30"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-white text-text-secondary transition-colors duration-150 hover:bg-[#f9fbfa] disabled:opacity-30"
                 disabled={page >= totalPages - 1}
                 onClick={() => setPage((p) => p + 1)}
                 type="button"
@@ -256,7 +269,7 @@ export function ClientsPanel() {
           )}
         </div>
       </PanelCard>
-
+      </div>
     </div>
   );
 }

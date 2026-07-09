@@ -74,8 +74,9 @@ export class ClientsService {
       : {};
 
     const fullWhere = { ...where, active: true };
+    const recentThreshold = new Date(Date.now() - 30 * 86400000);
 
-    const [data, total] = await Promise.all([
+    const [data, total, activeTotal, withoutLoans, recent] = await Promise.all([
       prisma.client.findMany({
         where: fullWhere,
         include: { _count: { select: { loans: true } } },
@@ -84,9 +85,21 @@ export class ClientsService {
         skip,
       }),
       prisma.client.count({ where: fullWhere }),
+      prisma.client.count({ where: { active: true } }),
+      prisma.client.count({ where: { active: true, loans: { none: {} } } }),
+      prisma.client.count({ where: { active: true, createdAt: { gte: recentThreshold } } }),
     ]);
 
-    return { data: data.map(formatClientNames), total };
+    return {
+      data: data.map(formatClientNames),
+      total,
+      stats: {
+        total: activeTotal,
+        active: activeTotal,
+        withoutLoans,
+        recent,
+      },
+    };
   }
 
   async findBasic(id: number) {
