@@ -13,6 +13,10 @@ export class AmortizationService {
     return Math.round(value * 100) / 100;
   }
 
+  private roundAllocation(value: number, payment: number): number {
+    return Number.isInteger(payment) ? Math.round(value) : this.roundMoney(value);
+  }
+
   private createRow(params: {
     installment: number;
     dueDate: Date;
@@ -92,6 +96,54 @@ export class AmortizationService {
     return schedule;
   }
 
+  private calculateCustomPaymentSchedule(params: {
+    principal: number;
+    periodicRate: number;
+    term: number;
+    startDate: Date;
+    paymentFrequency: PaymentFrequency;
+    customPayment: number;
+  }): AmortizationRow[] {
+    const { principal, periodicRate, term, startDate, paymentFrequency, customPayment } = params;
+    const schedule: AmortizationRow[] = [];
+    let balance = principal;
+    let dueDate = new Date(startDate);
+
+    for (let i = 1; i < term; i++) {
+      dueDate = this.addPaymentInterval(dueDate, paymentFrequency);
+      const interestPart = Math.min(
+        customPayment,
+        this.roundAllocation(balance * periodicRate, customPayment),
+      );
+      const principalPart = Math.min(Math.max(customPayment - interestPart, 0), balance);
+      balance -= principalPart;
+
+      schedule.push(
+        this.createRow({
+          installment: i,
+          dueDate,
+          amount: interestPart + principalPart,
+          principalPart,
+          interestPart,
+          balanceAfter: balance,
+        }),
+      );
+    }
+
+    const finalInterestPart = this.roundAllocation(balance * periodicRate, customPayment);
+    dueDate = this.addPaymentInterval(dueDate, paymentFrequency);
+    schedule.push({
+      installment: term,
+      dueDate: new Date(dueDate),
+      amount: this.roundMoney(balance + finalInterestPart),
+      principalPart: this.roundMoney(balance),
+      interestPart: this.roundMoney(finalInterestPart),
+      balanceAfter: 0,
+    });
+
+    return schedule;
+  }
+
   calculate(params: {
     principal: number;
     interestRate: number;
@@ -99,14 +151,34 @@ export class AmortizationService {
     paymentFrequency: PaymentFrequency;
     term: number;
     startDate: Date;
+    customPayment?: number;
   }): AmortizationRow[] {
-    const { principal, interestRate, interestType, paymentFrequency, term, startDate } = params;
+    const {
+      principal,
+      interestRate,
+      interestType,
+      paymentFrequency,
+      term,
+      startDate,
+      customPayment,
+    } = params;
     const schedule: AmortizationRow[] = [];
     const periodicRate = this.getPeriodicRate(interestRate, paymentFrequency);
 
     let dueDate = new Date(startDate);
 
-    if (interestType === InterestTypeEnum.FLAT) {
+    if (customPayment && customPayment > 0 && interestType !== InterestTypeEnum.INDEFINITE) {
+      schedule.push(
+        ...this.calculateCustomPaymentSchedule({
+          principal,
+          periodicRate,
+          term,
+          startDate,
+          paymentFrequency,
+          customPayment,
+        }),
+      );
+    } else if (interestType === InterestTypeEnum.FLAT) {
       const totalInterest = principal * (periodicRate * term);
       const totalAmount = principal + totalInterest;
       const rawInstallment = totalAmount / term;

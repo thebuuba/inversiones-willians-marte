@@ -10,46 +10,50 @@ export class InvestorPaymentsService {
   async create(dto: CreateInvestorPaymentDto, userId: string) {
     const investment = await this.resolveInvestment(dto.investmentId, dto.investorId);
 
-    const lastReceipt = await prisma.investorPayment.findFirst({
-      orderBy: { receiptNumber: 'desc' },
-      select: { receiptNumber: true },
-    });
-    const receiptNumber = (lastReceipt?.receiptNumber ?? 0) + 1;
-
     try {
-      const payment = await prisma.investorPayment.create({
-        data: {
-          investorId: investment.investorId,
-          investmentId: investment.id,
-          receiptNumber,
-          amount: dto.amount,
-          periodMonth: dto.periodMonth,
-          periodYear: dto.periodYear,
-          paymentDate: new Date(dto.paymentDate),
-          paymentMethod: dto.paymentMethod,
-          reference: dto.reference,
-          notes: dto.notes,
-          receivedById: userId,
+      return await prisma.$transaction(
+        async (tx) => {
+          const lastReceipt = await tx.investorPayment.findFirst({
+            orderBy: { receiptNumber: 'desc' },
+            select: { receiptNumber: true },
+          });
+          const receiptNumber = (lastReceipt?.receiptNumber ?? 0) + 1;
+          const payment = await tx.investorPayment.create({
+            data: {
+              investorId: investment.investorId,
+              investmentId: investment.id,
+              receiptNumber,
+              amount: dto.amount,
+              periodMonth: dto.periodMonth,
+              periodYear: dto.periodYear,
+              paymentDate: new Date(dto.paymentDate),
+              paymentMethod: dto.paymentMethod,
+              reference: dto.reference,
+              notes: dto.notes,
+              receivedById: userId,
+            },
+            include: { receivedBy: { select: { id: true, name: true } } },
+          });
+          await tx.auditLog.create({
+            data: {
+              userId,
+              action: 'INVESTOR_PAYMENT_CREATED',
+              entityType: 'InvestorPayment',
+              entityId: payment.id,
+              newValues: {
+                investorId: investment.investorId,
+                investmentId: investment.id,
+                amount: dto.amount,
+                periodMonth: dto.periodMonth,
+                periodYear: dto.periodYear,
+                receiptNumber,
+              },
+            },
+          });
+          return payment;
         },
-        include: { receivedBy: { select: { id: true, name: true } } },
-      });
-      await prisma.auditLog.create({
-        data: {
-          userId,
-          action: 'INVESTOR_PAYMENT_CREATED',
-          entityType: 'InvestorPayment',
-          entityId: payment.id,
-          newValues: {
-            investorId: investment.investorId,
-            investmentId: investment.id,
-            amount: dto.amount,
-            periodMonth: dto.periodMonth,
-            periodYear: dto.periodYear,
-            receiptNumber,
-          },
-        },
-      });
-      return payment;
+        { isolationLevel: 'Serializable' },
+      );
     } catch (error: unknown) {
       if (
         typeof error === 'object' &&

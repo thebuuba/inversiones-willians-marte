@@ -1,6 +1,8 @@
 import { GoneException, Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { randomBytes } from 'crypto';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 import { DocumentsService } from './documents.service';
 import { UploadedDocumentFile } from './document-processing.service';
 
@@ -52,6 +54,7 @@ export class DocumentCaptureSessionsService {
     });
 
     if (reservation.count === 0) {
+      await this.removeUploadedFile(input.uploadedFile.filename);
       const existing = await prisma.documentCaptureSession.findUnique({ where: { token } });
       if (!existing) throw new NotFoundException('Capture session not found');
       throw new GoneException('Capture session expired');
@@ -77,6 +80,7 @@ export class DocumentCaptureSessionsService {
         session.createdById,
       );
     } catch (error) {
+      await this.removeUploadedFile(input.uploadedFile.filename);
       await prisma.documentCaptureSession
         .update({
           where: { token },
@@ -137,5 +141,10 @@ export class DocumentCaptureSessionsService {
 
   private generateToken() {
     return randomBytes(24).toString('base64url');
+  }
+
+  private async removeUploadedFile(filename: string) {
+    const uploadsDir = join(__dirname, '..', '..', '..', 'uploads');
+    await unlink(join(uploadsDir, filename)).catch(() => undefined);
   }
 }

@@ -78,19 +78,46 @@ test('uses lower per-installment interest for fortnightly schedules', () => {
   assert.ok(fortnightlySchedule.schedule[0].payment < monthlySchedule.schedule[0].payment);
 });
 
-test('does not allow custom payments to create negative principal amortization', () => {
+test('does not allow custom regular payments to create negative principal amortization', () => {
   const result = computeSchedule(1000, 10, 2, 'SIMPLE', '50');
 
+  assert.equal(result.schedule[0].payment, 50);
+  assert.equal(result.schedule[0].principal, 0);
+  assert.equal(result.schedule[0].balance, 1000);
+  assert.equal(result.schedule[1].principal, 1000);
+  assert.equal(result.schedule[1].balance, 0);
+  assert.equal(result.totalPrincipal, 1000);
+});
+
+test('adjusts the final custom installment to close the remaining balance', () => {
+  const result = computeSchedule(30000, 4, 12, 'SIMPLE', '2000');
+
+  assert.equal(result.schedule.length, 12);
   assert.deepEqual(
-    result.schedule.map((row) => row.principal),
-    [0, 0],
+    result.schedule.slice(0, -1).map((row) => row.payment),
+    Array.from({ length: 11 }, () => 2000),
   );
-  assert.deepEqual(
-    result.schedule.map((row) => row.balance),
-    [1000, 1000],
-  );
-  assert.equal(result.totalPayment, 100);
-  assert.equal(result.totalInterest, 100);
+  assert.equal(result.schedule.at(-1)?.balance, 0);
+  assert.ok((result.schedule.at(-1)?.payment ?? 0) > 2000);
+
+  const summedPayment = result.schedule.reduce((sum, row) => sum + row.payment, 0);
+  const summedPrincipal = result.schedule.reduce((sum, row) => sum + row.principal, 0);
+  const summedInterest = result.schedule.reduce((sum, row) => sum + row.interest, 0);
+
+  assert.equal(result.totalPayment, Math.round(summedPayment * 100) / 100);
+  assert.equal(result.totalPrincipal, Math.round(summedPrincipal * 100) / 100);
+  assert.equal(result.totalInterest, Math.round(summedInterest * 100) / 100);
+  assert.equal(result.totalPrincipal, 30000);
+});
+
+test('rounds integer custom installment allocation to whole pesos', () => {
+  const result = computeSchedule(30000, 4, 12, 'SIMPLE', '2000');
+
+  assert.equal(result.schedule[2].interest, 1135);
+  assert.equal(result.schedule[2].principal, 865);
+  assert.equal(result.schedule[2].balance, 27503);
+  assert.equal(result.totalInterest, Math.round(result.totalInterest));
+  assert.equal(result.totalPayment, Math.round(result.totalPayment));
 });
 
 test('derives installment dates from first payment date and payment frequency', () => {

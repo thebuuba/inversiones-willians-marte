@@ -14,6 +14,7 @@ jest.mock('@inversiones/database', () => ({
     investorInvestment: {
       findUnique: jest.fn(),
     },
+    $transaction: jest.fn(),
   },
 }));
 
@@ -35,6 +36,12 @@ describe('InvestorPaymentsService', () => {
       periodMonth: 7,
       periodYear: 2026,
     } as never);
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback({
+        investorPayment: prisma.investorPayment,
+        auditLog: prisma.auditLog,
+      } as never),
+    );
   });
 
   afterEach(() => {

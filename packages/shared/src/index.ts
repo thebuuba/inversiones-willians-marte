@@ -128,11 +128,14 @@ export interface CreateLoanDto {
   clientId: number;
   productId: string;
   principal: number;
+  interestRate?: number;
   term: number;
   startDate: string;
   notes?: string;
   portfolioId?: string;
   amortizationType?: InterestType;
+  paymentFrequency?: PaymentFrequency;
+  customPayment?: number;
 }
 
 export interface AddLoanCapitalDto {

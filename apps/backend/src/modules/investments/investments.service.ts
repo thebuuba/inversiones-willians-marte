@@ -77,47 +77,49 @@ export class InvestmentsService {
   }
 
   async addCapital(id: string, dto: AddCapitalDto, userId: string) {
-    const investment = await prisma.investorInvestment.findUnique({ where: { id } });
-    if (!investment) throw new NotFoundException('Investment not found');
-    if (investment.status !== 'ACTIVE') {
-      throw new BadRequestException('Only active investments can receive capital additions');
-    }
-
-    await prisma.$transaction(async (tx) => {
-      const nextCapital = Number(investment.capital) + dto.amount;
-      await tx.investorInvestment.update({
-        where: { id },
-        data: {
-          capital: nextCapital,
-          monthlyPayment: this.calculateMonthlyPayment(nextCapital, Number(investment.rate)),
-        },
-      });
-      const movement = await tx.investorInvestmentMovement.create({
-        data: {
-          investmentId: id,
-          type: 'CAPITAL_ADDITION',
-          amount: dto.amount,
-          movementDate: new Date(dto.movementDate),
-          notes: dto.notes,
-          createdById: userId,
-        },
-      });
-      await tx.auditLog.create({
-        data: {
-          userId,
-          action: 'INVESTMENT_CAPITAL_ADDED',
-          entityType: 'InvestorInvestmentMovement',
-          entityId: movement.id,
-          newValues: {
-            investmentId: id,
-            amount: dto.amount,
-            previousCapital: Number(investment.capital),
-            nextCapital,
-            movementDate: dto.movementDate,
+    await prisma.$transaction(
+      async (tx) => {
+        const investment = await tx.investorInvestment.findUnique({ where: { id } });
+        if (!investment) throw new NotFoundException('Investment not found');
+        if (investment.status !== 'ACTIVE') {
+          throw new BadRequestException('Only active investments can receive capital additions');
+        }
+        const nextCapital = Number(investment.capital) + dto.amount;
+        await tx.investorInvestment.update({
+          where: { id },
+          data: {
+            capital: nextCapital,
+            monthlyPayment: this.calculateMonthlyPayment(nextCapital, Number(investment.rate)),
           },
-        },
-      });
-    });
+        });
+        const movement = await tx.investorInvestmentMovement.create({
+          data: {
+            investmentId: id,
+            type: 'CAPITAL_ADDITION',
+            amount: dto.amount,
+            movementDate: new Date(dto.movementDate),
+            notes: dto.notes,
+            createdById: userId,
+          },
+        });
+        await tx.auditLog.create({
+          data: {
+            userId,
+            action: 'INVESTMENT_CAPITAL_ADDED',
+            entityType: 'InvestorInvestmentMovement',
+            entityId: movement.id,
+            newValues: {
+              investmentId: id,
+              amount: dto.amount,
+              previousCapital: Number(investment.capital),
+              nextCapital,
+              movementDate: dto.movementDate,
+            },
+          },
+        });
+      },
+      { isolationLevel: 'Serializable' },
+    );
 
     return this.findOne(id);
   }

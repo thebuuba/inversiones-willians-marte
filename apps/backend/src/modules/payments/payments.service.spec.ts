@@ -25,6 +25,7 @@ describe('PaymentsService', () => {
   };
   const loan = {
     id: 'loan-1',
+    clientId: 1,
     status: 'ACTIVE',
     totalAmount: 100,
     schedule: [schedule],
@@ -53,10 +54,13 @@ describe('PaymentsService', () => {
         update: paymentScheduleUpdate,
       },
       loan: {
-        findUnique: jest.fn().mockResolvedValue({
-          ...loan,
-          schedule: [{ ...schedule, paidAmount: 100, status: 'PAID' }],
-        }),
+        findUnique: jest
+          .fn()
+          .mockResolvedValueOnce(loan)
+          .mockResolvedValueOnce({
+            ...loan,
+            schedule: [{ ...schedule, paidAmount: 100, status: 'PAID' }],
+          }),
         update: loanUpdate,
       },
       auditLog: {
@@ -64,7 +68,6 @@ describe('PaymentsService', () => {
       },
     };
 
-    jest.mocked(prisma.loan.findUnique).mockResolvedValue(loan as any);
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
     await service.create(
@@ -115,10 +118,13 @@ describe('PaymentsService', () => {
         update: jest.fn(),
       },
       loan: {
-        findUnique: jest.fn().mockResolvedValue({
-          ...loan,
-          schedule: [{ ...schedule, paidAmount: 100, status: 'PAID' }],
-        }),
+        findUnique: jest
+          .fn()
+          .mockResolvedValueOnce(loan)
+          .mockResolvedValueOnce({
+            ...loan,
+            schedule: [{ ...schedule, paidAmount: 100, status: 'PAID' }],
+          }),
         update: jest.fn(),
       },
       auditLog: {
@@ -126,7 +132,6 @@ describe('PaymentsService', () => {
       },
     };
 
-    jest.mocked(prisma.loan.findUnique).mockResolvedValue(loan as any);
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
     await service.create(
@@ -161,13 +166,22 @@ describe('PaymentsService', () => {
         update: jest.fn(),
       },
       loan: {
-        findUnique: jest.fn().mockResolvedValue({
-          ...loan,
-          principal: 39404,
-          interestType: 'INDEFINITE',
-          totalAmount: 591.06,
-          schedule: [{ ...schedule, amount: 591.06, paidAmount: 591.06, status: 'PAID' }],
-        }),
+        findUnique: jest
+          .fn()
+          .mockResolvedValueOnce({
+            ...loan,
+            principal: 39404,
+            interestType: 'INDEFINITE',
+            totalAmount: 591.06,
+            schedule: [{ ...schedule, amount: 591.06, interestPart: 591.06 }],
+          })
+          .mockResolvedValueOnce({
+            ...loan,
+            principal: 39404,
+            interestType: 'INDEFINITE',
+            totalAmount: 591.06,
+            schedule: [{ ...schedule, amount: 591.06, paidAmount: 591.06, status: 'PAID' }],
+          }),
         update: loanUpdate,
       },
       auditLog: {
@@ -175,13 +189,6 @@ describe('PaymentsService', () => {
       },
     };
 
-    jest.mocked(prisma.loan.findUnique).mockResolvedValue({
-      ...loan,
-      principal: 39404,
-      interestType: 'INDEFINITE',
-      totalAmount: 591.06,
-      schedule: [{ ...schedule, amount: 591.06, interestPart: 591.06 }],
-    } as any);
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
     await service.create(
@@ -201,5 +208,23 @@ describe('PaymentsService', () => {
         status: 'ACTIVE',
       },
     });
+  });
+
+  it('rejects a payment when the supplied client does not own the loan', async () => {
+    const tx = { loan: { findUnique: jest.fn().mockResolvedValue(loan) } };
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
+
+    await expect(
+      service.create({ loanId: 'loan-1', clientId: 999, amount: 100, paymentDate }, 'user-1'),
+    ).rejects.toThrow('Payment client does not match the loan client');
+  });
+
+  it('rejects an amount greater than the outstanding scheduled balance', async () => {
+    const tx = { loan: { findUnique: jest.fn().mockResolvedValue(loan) } };
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
+
+    await expect(
+      service.create({ loanId: 'loan-1', clientId: 1, amount: 101, paymentDate }, 'user-1'),
+    ).rejects.toThrow('Payment exceeds the outstanding scheduled balance');
   });
 });

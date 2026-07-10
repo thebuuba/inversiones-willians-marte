@@ -28,6 +28,14 @@ type LoanListRow = {
   productName: string;
 };
 
+function annualizedManualRate(monthlyRate: number, frequency: string): number {
+  if (frequency === 'WEEKLY') return monthlyRate * 13;
+  if (frequency === 'BIWEEKLY') return monthlyRate * 13;
+  if (frequency === 'DAILY') return monthlyRate * 12;
+  if (frequency === 'QUARTERLY') return monthlyRate * 12;
+  return monthlyRate * 12;
+}
+
 @Injectable()
 export class LoansService {
   constructor(
@@ -47,14 +55,21 @@ export class LoansService {
     }
 
     const interestType = dto.amortizationType ?? product.interestType;
+    const paymentFrequency = dto.paymentFrequency ?? product.paymentFrequency;
+    const interestRate = dto.interestRate ?? Number(product.interestRate);
+    const scheduleInterestRate =
+      dto.interestRate == null
+        ? Number(product.interestRate)
+        : annualizedManualRate(dto.interestRate, paymentFrequency);
 
     const schedule = this.amortization.calculate({
       principal: dto.principal,
-      interestRate: Number(product.interestRate),
+      interestRate: scheduleInterestRate,
       interestType,
-      paymentFrequency: product.paymentFrequency,
+      paymentFrequency,
       term: dto.term,
       startDate: new Date(dto.startDate),
+      customPayment: dto.customPayment,
     });
 
     const totalAmount = schedule.reduce((sum, row) => sum + row.amount, 0);
@@ -68,10 +83,10 @@ export class LoansService {
         clientId: dto.clientId,
         productId: dto.productId,
         principal: dto.principal,
-        interestRate: product.interestRate,
+        interestRate,
         interestType,
         totalAmount: Math.round(totalAmount * 100) / 100,
-        paymentFreq: product.paymentFrequency,
+        paymentFreq: paymentFrequency,
         term: dto.term,
         startDate: new Date(dto.startDate),
         endDate: lastRow?.dueDate ?? null,

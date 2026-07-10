@@ -1,6 +1,6 @@
 import { IsInt, IsString, IsNumber, IsEnum, IsOptional, Min } from 'class-validator';
-import { InterestTypeEnum } from '@inversiones/shared';
-import type { InterestType } from '@inversiones/shared';
+import { InterestTypeEnum, PaymentFrequencyEnum } from '@inversiones/shared';
+import type { InterestType, PaymentFrequency } from '@inversiones/shared';
 
 export class CreateLoanDto {
   @IsInt()
@@ -12,6 +12,11 @@ export class CreateLoanDto {
   @IsNumber()
   @Min(1)
   principal: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  interestRate?: number;
 
   @IsNumber()
   @Min(1)
@@ -31,6 +36,15 @@ export class CreateLoanDto {
   @IsOptional()
   @IsEnum(InterestTypeEnum)
   amortizationType?: InterestType;
+
+  @IsOptional()
+  @IsEnum(PaymentFrequencyEnum)
+  paymentFrequency?: PaymentFrequency;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  customPayment?: number;
 }
 
 export interface AmortizationRow {

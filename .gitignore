@@ -14,3 +14,13 @@ dist/
 /izquierdo.png
 .vercel
 .env*
+!.env.example
+!**/.env.example
+*.bak
+*.tmp
+*.temp
+*.cache
+*.swp
+coverage/
+.nyc_output/
+test-results/

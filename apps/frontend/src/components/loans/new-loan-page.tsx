@@ -310,6 +310,10 @@ function getTermUnitForFrequency(frequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY'
   return 'months';
 }
 
+function toApiPaymentFrequency(frequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY') {
+  return frequency === 'FORTNIGHTLY' ? 'BIWEEKLY' : frequency;
+}
+
 function MainInfoCard({
   amount,
   onAmountChange,
@@ -834,6 +838,8 @@ export function NewLoanPage() {
   async function handleCreate() {
     const principal = parseStrictNumber(amount);
     if (!selectedClient || !selectedProduct || !calculationReady || principal === null) return;
+    const interestRate = parseStrictNumber(customInterestRate);
+    const payment = parseStrictNumber(customPayment);
     setSaving(true);
     try {
       const totalTerm = amortizationType === 'INDEFINITE' ? 1 : normalizeLoanTerm(term, termUnit);
@@ -841,10 +847,13 @@ export function NewLoanPage() {
         clientId: selectedClient.id,
         productId: selectedProduct.id,
         principal,
+        interestRate: interestRate ?? undefined,
         term: totalTerm,
         startDate: firstPaymentDate || new Date().toISOString(),
         portfolioId: selectedPortfolioId ?? undefined,
         amortizationType: amortizationType === 'INDEFINITE' ? 'INDEFINITE' : undefined,
+        paymentFrequency: toApiPaymentFrequency(paymentFrequency),
+        customPayment: payment && payment > 0 ? payment : undefined,
         notes: purpose || undefined,
       });
       invalidateCachePrefix('loans:');

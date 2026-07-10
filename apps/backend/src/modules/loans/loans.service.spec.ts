@@ -116,4 +116,66 @@ describe('LoansService', () => {
       }),
     });
   });
+
+  it('uses manual loan terms when creating the persisted schedule', async () => {
+    const amortization = {
+      calculate: jest.fn().mockReturnValue([
+        {
+          dueDate: new Date('2026-07-01'),
+          amount: 2000,
+          principalPart: 800,
+          interestPart: 1200,
+          balanceAfter: 29200,
+        },
+      ]),
+    };
+    service = new LoansService(amortization as any, {} as any);
+    jest.mocked(prisma.loanProduct.findUnique).mockResolvedValue({
+      id: 'product-1',
+      active: true,
+      interestRate: 10,
+      interestType: 'FIXED',
+      paymentFrequency: 'MONTHLY',
+      maxTerm: 12,
+    } as any);
+    jest.mocked(prisma.client.findUnique).mockResolvedValue({ id: 1, active: true } as any);
+    jest.mocked(prisma.loan.create).mockResolvedValue({
+      id: 'loan-1',
+      loanNumber: 16,
+      clientId: 1,
+      principal: 30000,
+      totalAmount: 2000,
+    } as any);
+
+    await service.create(
+      {
+        clientId: 1,
+        productId: 'product-1',
+        principal: 30000,
+        interestRate: 4,
+        term: 12,
+        startDate: '2026-08-09',
+        paymentFrequency: 'MONTHLY',
+        customPayment: 2000,
+      },
+      'user-1',
+    );
+
+    expect(amortization.calculate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        principal: 30000,
+        interestRate: 48,
+        paymentFrequency: 'MONTHLY',
+        customPayment: 2000,
+      }),
+    );
+    expect(prisma.loan.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          interestRate: 4,
+          paymentFreq: 'MONTHLY',
+        }),
+      }),
+    );
+  });
 });

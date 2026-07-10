@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ClientsModule } from './modules/clients/clients.module';
@@ -42,6 +44,6 @@ import { KeepaliveService } from './common/services/keepalive.service';
     PortfoliosModule,
   ],
   controllers: [HealthController],
-  providers: [KeepaliveService],
+  providers: [KeepaliveService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

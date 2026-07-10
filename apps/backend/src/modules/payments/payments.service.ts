@@ -5,124 +5,132 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 @Injectable()
 export class PaymentsService {
   async create(dto: CreatePaymentDto, userId: string) {
-    const loan = await prisma.loan.findUnique({
-      where: { id: dto.loanId },
-      include: { schedule: { orderBy: { dueDate: 'asc' } } },
-    });
-    if (!loan) throw new NotFoundException('Loan not found');
-    if (loan.status === 'PAID') throw new BadRequestException('Loan is already paid');
-
-    let allocatedAmount = 0;
-    const allocations: {
-      scheduleId: string;
-      amount: number;
-      type: 'PRINCIPAL' | 'INTEREST' | 'PENALTY';
-    }[] = [];
-
-    const pendingSchedules = loan.schedule.filter(
-      (s) => s.status === 'PENDING' || s.status === 'PARTIAL' || s.status === 'OVERDUE',
-    );
-
-    for (const schedule of pendingSchedules) {
-      if (allocatedAmount >= dto.amount) break;
-
-      const owed = Number(schedule.amount) - Number(schedule.paidAmount ?? 0);
-      if (owed <= 0) continue;
-
-      const toAllocate = Math.min(owed, dto.amount - allocatedAmount);
-
-      if (toAllocate >= Number(schedule.interestPart)) {
-        allocations.push({
-          scheduleId: schedule.id,
-          amount: Number(schedule.interestPart),
-          type: 'INTEREST',
+    return prisma.$transaction(
+      async (tx) => {
+        const loan = await tx.loan.findUnique({
+          where: { id: dto.loanId },
+          include: { schedule: { orderBy: { dueDate: 'asc' } } },
         });
-        allocatedAmount += Number(schedule.interestPart);
-
-        const principalAlloc = toAllocate - Number(schedule.interestPart);
-        if (principalAlloc > 0) {
-          allocations.push({
-            scheduleId: schedule.id,
-            amount: principalAlloc,
-            type: 'PRINCIPAL',
-          });
-          allocatedAmount += principalAlloc;
+        if (!loan) throw new NotFoundException('Loan not found');
+        if (loan.status === 'PAID') throw new BadRequestException('Loan is already paid');
+        if (loan.clientId !== dto.clientId) {
+          throw new BadRequestException('Payment client does not match the loan client');
         }
-      } else {
-        allocations.push({
-          scheduleId: schedule.id,
-          amount: toAllocate,
-          type: 'INTEREST',
-        });
-        allocatedAmount += toAllocate;
-      }
-    }
 
-    const payment = await prisma.$transaction(async (tx) => {
-      const p = await tx.payment.create({
-        data: {
-          loanId: dto.loanId,
-          clientId: dto.clientId,
-          amount: dto.amount,
-          paymentDate: new Date(dto.paymentDate),
-          paymentMethod: dto.paymentMethod,
-          reference: dto.reference,
-          notes: dto.notes,
-          receivedById: userId,
-          allocations: {
-            create: allocations,
-          },
-        },
-        include: { allocations: true },
-      });
+        let allocatedAmount = 0;
+        const allocations: {
+          scheduleId: string;
+          amount: number;
+          type: 'PRINCIPAL' | 'INTEREST' | 'PENALTY';
+        }[] = [];
 
-      const paidBySchedule = new Map<string, number>();
-      for (const alloc of allocations) {
-        paidBySchedule.set(
-          alloc.scheduleId,
-          (paidBySchedule.get(alloc.scheduleId) ?? 0) + alloc.amount,
+        const pendingSchedules = loan.schedule.filter(
+          (s) => s.status === 'PENDING' || s.status === 'PARTIAL' || s.status === 'OVERDUE',
         );
-      }
 
-      for (const [scheduleId, amount] of paidBySchedule) {
-        const schedule = loan.schedule.find((s) => s.id === scheduleId);
-        if (!schedule) continue;
-        const totalPaid = Number(schedule.paidAmount ?? 0) + amount;
-        const isFull = totalPaid >= Number(schedule.amount);
+        for (const schedule of pendingSchedules) {
+          if (allocatedAmount >= dto.amount) break;
 
-        await tx.paymentSchedule.update({
-          where: { id: scheduleId },
+          const owed = Number(schedule.amount) - Number(schedule.paidAmount ?? 0);
+          if (owed <= 0) continue;
+
+          const toAllocate = Math.min(owed, dto.amount - allocatedAmount);
+
+          if (toAllocate >= Number(schedule.interestPart)) {
+            allocations.push({
+              scheduleId: schedule.id,
+              amount: Number(schedule.interestPart),
+              type: 'INTEREST',
+            });
+            allocatedAmount += Number(schedule.interestPart);
+
+            const principalAlloc = toAllocate - Number(schedule.interestPart);
+            if (principalAlloc > 0) {
+              allocations.push({
+                scheduleId: schedule.id,
+                amount: principalAlloc,
+                type: 'PRINCIPAL',
+              });
+              allocatedAmount += principalAlloc;
+            }
+          } else {
+            allocations.push({
+              scheduleId: schedule.id,
+              amount: toAllocate,
+              type: 'INTEREST',
+            });
+            allocatedAmount += toAllocate;
+          }
+        }
+
+        if (allocatedAmount !== dto.amount) {
+          throw new BadRequestException('Payment exceeds the outstanding scheduled balance');
+        }
+
+        const p = await tx.payment.create({
           data: {
-            status: isFull ? 'PAID' : 'PARTIAL',
-            paidDate: isFull ? new Date(dto.paymentDate) : undefined,
-            paidAmount: totalPaid,
+            loanId: dto.loanId,
+            clientId: dto.clientId,
+            amount: dto.amount,
+            paymentDate: new Date(dto.paymentDate),
+            paymentMethod: dto.paymentMethod,
+            reference: dto.reference,
+            notes: dto.notes,
+            receivedById: userId,
+            allocations: {
+              create: allocations,
+            },
+          },
+          include: { allocations: true },
+        });
+
+        const paidBySchedule = new Map<string, number>();
+        for (const alloc of allocations) {
+          paidBySchedule.set(
+            alloc.scheduleId,
+            (paidBySchedule.get(alloc.scheduleId) ?? 0) + alloc.amount,
+          );
+        }
+
+        for (const [scheduleId, amount] of paidBySchedule) {
+          const schedule = loan.schedule.find((s) => s.id === scheduleId);
+          if (!schedule) continue;
+          const totalPaid = Number(schedule.paidAmount ?? 0) + amount;
+          const isFull = totalPaid >= Number(schedule.amount);
+
+          await tx.paymentSchedule.update({
+            where: { id: scheduleId },
+            data: {
+              status: isFull ? 'PAID' : 'PARTIAL',
+              paidDate: isFull ? new Date(dto.paymentDate) : undefined,
+              paidAmount: totalPaid,
+            },
+          });
+        }
+
+        await this.updateLoanBalanceTx(tx, loan.id, userId, dto.clientId);
+
+        await tx.auditLog.create({
+          data: {
+            userId,
+            action: 'PAYMENT_CREATED',
+            entityType: 'Payment',
+            entityId: p.id,
+            clientId: dto.clientId,
+            newValues: {
+              loanId: dto.loanId,
+              amount: dto.amount,
+              paymentDate: dto.paymentDate,
+              paymentMethod: dto.paymentMethod ?? null,
+              reference: dto.reference ?? null,
+            },
           },
         });
-      }
 
-      await this.updateLoanBalanceTx(tx, loan.id, userId, dto.clientId);
-
-      await tx.auditLog.create({
-        data: {
-          userId,
-          action: 'PAYMENT_CREATED',
-          entityType: 'Payment',
-          entityId: p.id,
-          clientId: dto.clientId,
-          newValues: {
-            loanId: dto.loanId,
-            amount: dto.amount,
-            paymentDate: dto.paymentDate,
-            paymentMethod: dto.paymentMethod ?? null,
-            reference: dto.reference ?? null,
-          },
-        },
-      });
-
-      return p;
-    });
-
-    return payment;
+        return p;
+      },
+      { isolationLevel: 'Serializable' },
+    );
   }
 
   async findByLoan(loanId: string) {

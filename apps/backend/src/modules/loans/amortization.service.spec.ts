@@ -100,6 +100,33 @@ describe('AmortizationService', () => {
     });
   });
 
+  describe('custom payments', () => {
+    it('keeps regular custom payments and adjusts the final installment to close the balance', () => {
+      const schedule = service.calculate({
+        principal: 30000,
+        interestRate: 48,
+        interestType: 'FIXED',
+        paymentFrequency: 'MONTHLY',
+        term: 12,
+        startDate: new Date('2026-08-09'),
+        customPayment: 2000,
+      });
+
+      expect(schedule).toHaveLength(12);
+      expect(schedule.slice(0, -1).map((row) => row.amount)).toEqual(
+        Array.from({ length: 11 }, () => 2000),
+      );
+      expect(schedule[2]).toMatchObject({
+        amount: 2000,
+        interestPart: 1135,
+        principalPart: 865,
+        balanceAfter: 27503,
+      });
+      expect(schedule[11].amount).toBeGreaterThan(2000);
+      expect(schedule[11].balanceAfter).toBe(0);
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle 1-term loan', () => {
       const schedule = service.calculate({

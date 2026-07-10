@@ -111,6 +111,13 @@ describe('InvestmentsService', () => {
   it('writes an audit event when capital is added to an investment', async () => {
     const tx = {
       investorInvestment: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'investment-1',
+          investorId: 'investor-1',
+          capital: 100000,
+          rate: 3,
+          status: 'ACTIVE',
+        }),
         update: jest.fn(),
       },
       investorInvestmentMovement: {
@@ -120,13 +127,6 @@ describe('InvestmentsService', () => {
         create: jest.fn(),
       },
     };
-    jest.mocked(prisma.investorInvestment.findUnique).mockResolvedValue({
-      id: 'investment-1',
-      investorId: 'investor-1',
-      capital: 100000,
-      rate: 3,
-      status: 'ACTIVE',
-    } as any);
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
     jest.spyOn(service, 'findOne').mockResolvedValue({ id: 'investment-1' } as any);
 

@@ -162,6 +162,14 @@ function roundToNearestHundred(value: number): number {
   return Math.round(value / 100) * 100;
 }
 
+function roundMoney(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function roundAllocation(value: number, payment: number): number {
+  return Number.isInteger(payment) ? Math.round(value) : roundMoney(value);
+}
+
 export function computeSchedule(principal: number, periodicRate: number, months: number, amortizationType: AmortizationType = 'SIMPLE', customPayment?: string) {
   if (months <= 0) {
     return { schedule: [], totalPayment: 0, totalPrincipal: 0, totalInterest: 0, payment: 0 };
@@ -213,9 +221,9 @@ export function computeSchedule(principal: number, periodicRate: number, months:
     let totalPayment = 0;
     const schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[] = [];
 
-    for (let i = 1; i <= months; i++) {
+    for (let i = 1; i < months; i++) {
       const interestDue = balance * rate;
-      const interest = Math.min(payment, interestDue);
+      const interest = Math.min(payment, roundAllocation(interestDue, payment));
       const princ = Math.min(Math.max(payment - interest, 0), balance);
       const installmentPayment = interest + princ;
       balance -= princ;
@@ -223,18 +231,31 @@ export function computeSchedule(principal: number, periodicRate: number, months:
       totalPayment += installmentPayment;
       schedule.push({
         number: i,
-        payment: Math.round(installmentPayment * 100) / 100,
-        principal: Math.round(princ * 100) / 100,
-        interest: Math.round(interest * 100) / 100,
-        balance: Math.round(Math.max(balance, 0) * 100) / 100,
+        payment: roundMoney(installmentPayment),
+        principal: roundMoney(princ),
+        interest: roundMoney(interest),
+        balance: roundMoney(Math.max(balance, 0)),
       });
     }
 
+    const finalInterest = roundAllocation(balance * rate, payment);
+    const finalPrincipal = balance;
+    const finalPayment = finalPrincipal + finalInterest;
+    totalInterest += finalInterest;
+    totalPayment += finalPayment;
+    schedule.push({
+      number: months,
+      payment: roundMoney(finalPayment),
+      principal: roundMoney(finalPrincipal),
+      interest: roundMoney(finalInterest),
+      balance: 0,
+    });
+
     return {
       schedule,
-      totalPayment: Math.round(totalPayment * 100) / 100,
-      totalPrincipal: principal,
-      totalInterest: Math.round(totalInterest * 100) / 100,
+      totalPayment: roundMoney(totalPayment),
+      totalPrincipal: roundMoney(principal),
+      totalInterest: roundMoney(totalInterest),
       payment,
     };
   }
