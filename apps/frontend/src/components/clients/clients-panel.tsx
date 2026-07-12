@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { forwardRef, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
@@ -22,18 +22,13 @@ import {
 import { useClientCache } from '@/lib/use-client-cache';
 import type { Client } from '@inversiones/shared';
 
-const PanelCard = forwardRef<HTMLDivElement, { children: ReactNode; className?: string }>(
-  ({ children, className = '' }, ref) => {
-    return (
-      <section
-        ref={ref}
-        className={`rounded-2xl border border-border-soft bg-card shadow-card ${className}`}
-      >
-        {children}
-      </section>
-    );
-  },
-);
+function PanelCard({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <section className={`rounded-2xl border border-border-soft bg-card shadow-card ${className}`}>
+      {children}
+    </section>
+  );
+}
 
 function EmptyField() {
   return <span className="text-[13px] text-text-secondary/40">Sin registrar</span>;
@@ -43,26 +38,22 @@ export function ClientsPanel() {
   const router = useRouter();
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
-  const [pageSize, setPageSize] = useState(10);
-  const tableRef = useRef<HTMLDivElement>(null);
+  const [pageSize, setPageSize] = useState(8);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    const container = tableRef.current;
+    const container = bodyRef.current;
     if (!container) return;
 
-    const HEADER_H = 77;
-    const COL_H = 48;
-    const FOOTER_H = 72;
-    const ROW_H = 64;
-    const SAFETY = 8;
+    const ROW_H = 65;
 
     const observer = new ResizeObserver(([entry]) => {
-      const available = entry.contentRect.height - HEADER_H - COL_H - FOOTER_H - SAFETY;
-      const calculated = Math.max(1, Math.floor(available / ROW_H));
+      const available = entry.contentRect.height;
+      const fits = Math.max(1, Math.floor(available / ROW_H));
       setPageSize((prev) => {
-        if (prev !== calculated) setPage(0);
-        return calculated;
+        if (prev !== fits) setPage(0);
+        return fits;
       });
     });
 
@@ -81,6 +72,7 @@ export function ClientsPanel() {
     'No se pudieron cargar los clientes. Verifica que el backend esté corriendo.',
   );
   const clients = data?.data ?? [];
+  const displayClients = clients.slice(0, pageSize);
   const total = data?.total ?? 0;
   const globalStats = data?.stats;
   const globalTotal = globalStats?.total ?? total;
@@ -185,7 +177,6 @@ export function ClientsPanel() {
         )}
 
         <PanelCard
-          ref={tableRef}
           className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-hidden`}
         >
           <div className="border-b border-border-soft p-4">
@@ -205,19 +196,19 @@ export function ClientsPanel() {
             <span className="justify-self-end text-center">PRÉSTAMOS</span>
           </div>
 
-          <div className="relative flex-1 overflow-hidden">
+          <div ref={bodyRef} className="relative flex-1 overflow-hidden">
             {loading ? (
               <div className="flex h-full items-center justify-center text-sm font-medium text-text-secondary">
                 Cargando clientes...
               </div>
-            ) : clients.length === 0 ? (
+            ) : displayClients.length === 0 ? (
               <div className="flex h-32 items-center justify-center text-center text-sm font-medium text-text-secondary">
                 {search
                   ? `No se encontraron clientes para "${search}"`
                   : 'No se encontraron clientes.'}
               </div>
             ) : (
-              clients.map((client) => (
+              displayClients.map((client) => (
                 <div
                   key={client.id}
                   className="group grid min-h-[64px] cursor-pointer grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center border-b border-border-soft bg-card px-6 transition-colors duration-150 last:border-b-0 hover:bg-[#f9fbfa]"
@@ -279,7 +270,7 @@ export function ClientsPanel() {
             <p className="text-[13px] text-text-secondary">
               {!loading && (
                 <>
-                  Mostrando {clients.length} de {total} cliente{total !== 1 ? 's' : ''}
+                  Mostrando {displayClients.length} de {total} cliente{total !== 1 ? 's' : ''}
                 </>
               )}
             </p>
