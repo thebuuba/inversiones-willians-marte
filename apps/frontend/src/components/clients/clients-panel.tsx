@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { forwardRef, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
@@ -22,15 +22,18 @@ import {
 import { useClientCache } from '@/lib/use-client-cache';
 import type { Client } from '@inversiones/shared';
 
-const PAGE_SIZE = 50;
-
-function PanelCard({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return (
-    <section className={`rounded-2xl border border-border-soft bg-card shadow-card ${className}`}>
-      {children}
-    </section>
-  );
-}
+const PanelCard = forwardRef<HTMLDivElement, { children: ReactNode; className?: string }>(
+  ({ children, className = '' }, ref) => {
+    return (
+      <section
+        ref={ref}
+        className={`rounded-2xl border border-border-soft bg-card shadow-card ${className}`}
+      >
+        {children}
+      </section>
+    );
+  },
+);
 
 function EmptyField() {
   return <span className="text-[13px] text-text-secondary/40">Sin registrar</span>;
@@ -40,10 +43,36 @@ export function ClientsPanel() {
   const router = useRouter();
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
+  const [pageSize, setPageSize] = useState(10);
+  const tableRef = useRef<HTMLDivElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    const container = tableRef.current;
+    if (!container) return;
+
+    const HEADER_H = 77;
+    const COL_H = 48;
+    const FOOTER_H = 72;
+    const ROW_H = 64;
+    const SAFETY = 8;
+
+    const observer = new ResizeObserver(([entry]) => {
+      const available = entry.contentRect.height - HEADER_H - COL_H - FOOTER_H - SAFETY;
+      const calculated = Math.max(1, Math.floor(available / ROW_H));
+      setPageSize((prev) => {
+        if (prev !== calculated) setPage(0);
+        return calculated;
+      });
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
   const clientsFetcher = useCallback(
-    () => getClients(search || undefined, PAGE_SIZE, page * PAGE_SIZE),
-    [page, search],
+    () => getClients(search || undefined, pageSize, page * pageSize),
+    [page, search, pageSize],
   );
   const { data, loading, error } = useClientCache(
     `clients:${search}:${page}`,
@@ -55,7 +84,7 @@ export function ClientsPanel() {
   const total = data?.total ?? 0;
   const globalStats = data?.stats;
   const globalTotal = globalStats?.total ?? total;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(total / pageSize);
 
   const stats = [
     {
@@ -99,7 +128,7 @@ export function ClientsPanel() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F3F4F6] p-5 font-sans text-text-primary">
+    <div className="flex h-screen flex-col overflow-hidden bg-[#F3F4F6] p-5 font-sans text-text-primary">
       <div className="flex w-full flex-1 flex-col gap-5">
         <header
           className={`${pageEntryHeaderClassName} flex flex-col justify-between gap-4 xl:flex-row xl:items-end`}
@@ -156,6 +185,7 @@ export function ClientsPanel() {
         )}
 
         <PanelCard
+          ref={tableRef}
           className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-hidden`}
         >
           <div className="border-b border-border-soft p-4">
@@ -175,7 +205,7 @@ export function ClientsPanel() {
             <span className="justify-self-end text-center">PRÉSTAMOS</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto modal-scroll">
+          <div className="relative flex-1 overflow-hidden">
             {loading ? (
               <div className="flex h-full items-center justify-center text-sm font-medium text-text-secondary">
                 Cargando clientes...
@@ -249,7 +279,7 @@ export function ClientsPanel() {
             <p className="text-[13px] text-text-secondary">
               {!loading && (
                 <>
-                  Mostrando {clients.length} de {total} clientes
+                  Mostrando {clients.length} de {total} cliente{total !== 1 ? 's' : ''}
                 </>
               )}
             </p>
