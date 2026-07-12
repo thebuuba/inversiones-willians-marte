@@ -5,6 +5,15 @@ import { useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import { Eye } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { fetchClientCache } from '@/lib/client-cache';
+import {
+  getDashboard,
+  getPortfolio,
+  getAudit,
+  getMonthlyCollections,
+  getWeeklyMovement,
+  getUpcomingPayments,
+} from '@/lib/api/dashboard';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -23,6 +32,13 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(username, password, remember);
+      const TTL = 30_000;
+      fetchClientCache('dashboard', getDashboard, TTL);
+      fetchClientCache('portfolio', getPortfolio, TTL);
+      fetchClientCache('audit', getAudit, TTL);
+      fetchClientCache('monthlyCollections', getMonthlyCollections, TTL);
+      fetchClientCache('weeklyMovement', getWeeklyMovement, TTL);
+      fetchClientCache('upcomingPayments', getUpcomingPayments, TTL);
       router.push('/inicio');
     } catch (err) {
       const error = err as AxiosError<{ error?: string; message?: string | string[] }>;
