@@ -31,8 +31,10 @@ jobs:
       - name: Generate Prisma client
         run: pnpm db:generate
 
-      - name: Build database package
-        run: pnpm --filter @inversiones/database exec tsc
+      - name: Build internal packages
+        run: |
+          pnpm --filter @inversiones/database exec tsc
+          pnpm --filter @inversiones/shared build
 
       - name: Lint
         run: pnpm lint
