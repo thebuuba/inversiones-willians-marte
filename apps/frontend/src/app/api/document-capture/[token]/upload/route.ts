@@ -16,11 +16,28 @@ export async function POST(request: Request, props: { params: Promise<{ token: s
     );
   }
 
-  const formData = await request.formData();
-  const response = await fetch(`${getBackendApiUrl()}/documents/capture-sessions/${encodeURIComponent(token)}/upload`, {
-    method: 'POST',
-    body: formData,
-  });
+  let formData: FormData;
+  try {
+    formData = await request.formData();
+  } catch {
+    return NextResponse.json(
+      { success: false, error: 'No se pudo leer el archivo seleccionado.', statusCode: 400 },
+      { status: 400 },
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${getBackendApiUrl()}/documents/capture-sessions/${encodeURIComponent(token)}/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+  } catch {
+    return NextResponse.json(
+      { success: false, error: 'El servicio de documentos no esta disponible.', statusCode: 502 },
+      { status: 502 },
+    );
+  }
   const body = await response.text();
 
   return new NextResponse(body, {

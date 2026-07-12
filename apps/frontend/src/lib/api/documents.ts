@@ -11,6 +11,20 @@ function timeoutSignal(ms: number) {
   return controller.signal;
 }
 
+async function readApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
+  const body = await response.text();
+  if (!body) return {} as ApiResponse<T>;
+
+  try {
+    return JSON.parse(body) as ApiResponse<T>;
+  } catch {
+    if (!response.ok) {
+      return { success: false, error: body } as ApiResponse<T>;
+    }
+    throw new Error('El servidor devolvio una respuesta invalida.');
+  }
+}
+
 export async function getDocuments(clientId?: number, investorId?: string): Promise<DocumentItem[]> {
   const params: Record<string, string> = {};
   if (clientId) params.clientId = String(clientId);
@@ -37,7 +51,7 @@ export async function getDocumentCaptureSession(token: string): Promise<Document
   const response = await fetch(`/api/document-capture/${encodeURIComponent(token)}`, {
     signal: timeoutSignal(10_000),
   });
-  const data = (await response.json()) as ApiResponse<DocumentCaptureSessionItem>;
+  const data = await readApiResponse<DocumentCaptureSessionItem>(response);
   if (!response.ok) throw Object.assign(new Error(data.error ?? 'Capture session request failed'), { response });
   return data.data as DocumentCaptureSessionItem;
 }
@@ -46,9 +60,9 @@ export async function uploadDocumentCapture(token: string, formData: FormData): 
   const response = await fetch(`/api/document-capture/${encodeURIComponent(token)}/upload`, {
     method: 'POST',
     body: formData,
-    signal: timeoutSignal(30_000),
+    signal: timeoutSignal(120_000),
   });
-  const data = (await response.json()) as ApiResponse<DocumentItem>;
+  const data = await readApiResponse<DocumentItem>(response);
   if (!response.ok) throw Object.assign(new Error(data.error ?? 'Capture upload request failed'), { response });
   return data.data as DocumentItem;
 }

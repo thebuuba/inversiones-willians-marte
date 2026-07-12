@@ -518,7 +518,6 @@ function UploadModal({
             )}
             <input
               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
-              capture="environment"
               className="hidden"
               onChange={handleFileChange}
               type="file"
