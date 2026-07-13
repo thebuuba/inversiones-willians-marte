@@ -7,6 +7,6 @@ describe('AuthModule', () => {
       get: jest.fn().mockReturnValue('test-secret'),
     } as unknown as ConfigService);
 
-    expect(options.signOptions).toEqual({ expiresIn: '8h' });
+    expect(options.signOptions).toBeUndefined();
   });
 });

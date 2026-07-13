@@ -46,21 +46,29 @@ export function getStoredAuth(): StoredAuth {
     : { user: null, token: null };
   if (persistent.token) return persistent;
 
-  return typeof sessionStorage !== 'undefined'
+  const session = typeof sessionStorage !== 'undefined'
     ? parseStoredAuth(sessionStorage.getItem(AUTH_STORAGE_KEY))
     : { user: null, token: null };
+
+  // Migrate sessions created before authentication became permanently persistent.
+  if (session.token) saveStoredAuth(session);
+  return session;
 }
 
-export function saveStoredAuth(auth: StoredAuth, remember: boolean) {
+export function saveStoredAuth(auth: StoredAuth) {
   const value = JSON.stringify(auth);
-  if (remember) {
+  if (typeof sessionStorage !== 'undefined') {
     sessionStorage.removeItem(AUTH_STORAGE_KEY);
-    localStorage.setItem(AUTH_STORAGE_KEY, value);
-    return;
   }
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(AUTH_STORAGE_KEY, value);
+  }
+}
 
-  localStorage.removeItem(AUTH_STORAGE_KEY);
-  sessionStorage.setItem(AUTH_STORAGE_KEY, value);
+function isRejectedSession(error: unknown) {
+  if (!error || typeof error !== 'object' || !('response' in error)) return false;
+  const response = (error as { response?: { status?: number } }).response;
+  return response?.status === 401 || response?.status === 403;
 }
 
 export async function loadStoredAuthSession(fetchProfile: () => Promise<User>): Promise<StoredAuth> {
@@ -69,8 +77,13 @@ export async function loadStoredAuthSession(fetchProfile: () => Promise<User>): 
 
   try {
     return { user: await fetchProfile(), token: stored.token };
-  } catch {
-    clearStoredAuth();
-    return { user: null, token: null };
+  } catch (error) {
+    if (isRejectedSession(error)) {
+      clearStoredAuth();
+      return { user: null, token: null };
+    }
+
+    // Keep the saved session during cold starts, outages, or offline usage.
+    return stored;
   }
 }

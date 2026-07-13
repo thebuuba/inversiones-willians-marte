@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { writeClientCache, readClientCache } from './client-cache.ts';
-import { AUTH_STORAGE_KEY, clearStoredAuth, loadStoredAuthSession, saveStoredAuth } from './auth-session.ts';
+import {
+  AUTH_STORAGE_KEY,
+  clearStoredAuth,
+  getStoredAuth,
+  loadStoredAuthSession,
+  saveStoredAuth,
+} from './auth-session.ts';
 
 function installStorage(storage = new Map<string, string>(), session = new Map<string, string>()) {
   Object.defineProperty(globalThis, 'localStorage', {
@@ -54,7 +60,7 @@ test('clears stored auth and client cache when backend rejects the saved token',
   writeClientCache('dashboard', { activeLoans: 2 }, 30_000);
 
   const auth = await loadStoredAuthSession(async () => {
-    throw new Error('Unauthorized');
+    throw { response: { status: 401 } };
   });
 
   assert.deepEqual(auth, { user: null, token: null });
@@ -62,22 +68,41 @@ test('clears stored auth and client cache when backend rejects the saved token',
   assert.equal(readClientCache('dashboard'), null);
 });
 
-test('stores non-remembered auth only for the browser session', () => {
-  const { storage, session } = installStorage();
+test('preserves stored auth when the backend is temporarily unavailable', async () => {
+  const saved = {
+    token: 'persistent-token',
+    user: { id: 'user-1', name: 'Nata', email: 'nata@example.com', role: 'ADMIN' },
+  };
+  const { storage } = installStorage(new Map([[AUTH_STORAGE_KEY, JSON.stringify(saved)]]));
 
-  saveStoredAuth({ user: null, token: 'session-token' }, false);
+  const auth = await loadStoredAuthSession(async () => {
+    throw new Error('Network Error');
+  });
 
-  assert.equal(storage.has(AUTH_STORAGE_KEY), false);
-  assert.equal(JSON.parse(session.get(AUTH_STORAGE_KEY) ?? '{}').token, 'session-token');
+  assert.deepEqual(auth, saved);
+  assert.equal(storage.has(AUTH_STORAGE_KEY), true);
 });
 
-test('stores remembered auth persistently', () => {
+test('always stores authentication persistently', () => {
   const { storage, session } = installStorage();
 
-  saveStoredAuth({ user: null, token: 'persistent-token' }, true);
+  saveStoredAuth({ user: null, token: 'persistent-token' });
 
   assert.equal(session.has(AUTH_STORAGE_KEY), false);
   assert.equal(JSON.parse(storage.get(AUTH_STORAGE_KEY) ?? '{}').token, 'persistent-token');
+});
+
+test('migrates an existing browser-session login to persistent storage', () => {
+  const { storage, session } = installStorage(
+    new Map(),
+    new Map([[AUTH_STORAGE_KEY, JSON.stringify({ user: null, token: 'old-session-token' })]]),
+  );
+
+  const auth = getStoredAuth();
+
+  assert.equal(session.has(AUTH_STORAGE_KEY), false);
+  assert.equal(auth.token, 'old-session-token');
+  assert.equal(JSON.parse(storage.get(AUTH_STORAGE_KEY) ?? '{}').token, 'old-session-token');
 });
 
 test('clearing auth is safe without browser storage', () => {

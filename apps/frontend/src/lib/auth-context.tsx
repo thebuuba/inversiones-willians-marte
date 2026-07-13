@@ -21,7 +21,7 @@ import {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (username: string, password: string, remember?: boolean) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   register: (name: string, username: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
@@ -65,17 +65,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const persistAuth = useCallback((nextAuth: StoredAuth, remember = true) => {
-    saveStoredAuth(nextAuth, remember);
+  const persistAuth = useCallback((nextAuth: StoredAuth) => {
+    saveStoredAuth(nextAuth);
     setAuth(nextAuth);
     setLoading(false);
     notifyAuthChanged();
   }, []);
 
-  const login = useCallback(async (username: string, password: string, remember = false) => {
+  const login = useCallback(async (username: string, password: string) => {
     const { data } = await api.post('/auth/login', { username, password });
     const { user, accessToken } = data.data;
-    persistAuth({ user, token: accessToken }, remember);
+    persistAuth({ user, token: accessToken });
   }, [persistAuth]);
 
   const register = useCallback(async (name: string, username: string, password: string) => {

@@ -18,7 +18,6 @@ import {
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,7 +30,7 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      await login(username, password, remember);
+      await login(username, password);
       const TTL = 30_000;
       fetchClientCache('dashboard', getDashboard, TTL);
       fetchClientCache('portfolio', getPortfolio, TTL);
@@ -126,16 +125,6 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-
-            <label className="flex w-fit items-center gap-3 text-[15px] font-normal text-[#687A70]">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                className="h-5 w-5 rounded-[5px] border-[#DDEBE3] accent-[#285C43]"
-              />
-              Recordar sesión
-            </label>
 
             <button
               type="submit"

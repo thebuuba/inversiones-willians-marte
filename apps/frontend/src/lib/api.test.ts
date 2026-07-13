@@ -16,6 +16,7 @@ function installBrowserGlobals(storage = new Map<string, string>(), session = ne
       configurable: true,
       value: {
         getItem: (key: string) => storage.get(key) ?? null,
+        setItem: (key: string, value: string) => storage.set(key, value),
         removeItem: (key: string) => storage.delete(key),
       },
     },
@@ -23,6 +24,7 @@ function installBrowserGlobals(storage = new Map<string, string>(), session = ne
       configurable: true,
       value: {
         getItem: (key: string) => session.get(key) ?? null,
+        setItem: (key: string, value: string) => session.set(key, value),
         removeItem: (key: string) => session.delete(key),
       },
     },
@@ -76,8 +78,8 @@ test('does not redirect when login returns unauthorized credentials', async () =
   assert.equal(location.href, '');
 });
 
-test('adds authorization from session-only auth', async () => {
-  const { session } = installBrowserGlobals(new Map(), new Map([['auth', '{"token":"session-token"}']]));
+test('adds authorization and migrates session-only auth to persistent storage', async () => {
+  const { storage, session } = installBrowserGlobals(new Map(), new Map([['auth', '{"token":"session-token"}']]));
   let authorization: unknown;
   const adapter: AxiosAdapter = async (config) => {
     authorization = config.headers?.Authorization;
@@ -92,7 +94,8 @@ test('adds authorization from session-only auth', async () => {
 
   await api.get('/health', { adapter });
 
-  assert.equal(session.has('auth'), true);
+  assert.equal(session.has('auth'), false);
+  assert.equal(JSON.parse(storage.get('auth') ?? '{}').token, 'session-token');
   assert.equal(authorization, 'Bearer session-token');
 });
 
