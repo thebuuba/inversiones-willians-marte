@@ -5,10 +5,38 @@ on:
     - cron: '*/10 * * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-keepalive
+  cancel-in-progress: true
+
 jobs:
   ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Ping backend health endpoint
+        shell: bash
         run: |
-          curl -sS --max-time 30 https://inversiones-willians-marte.onrender.com/api/v1/health
+          set -euo pipefail
+
+          url="https://inversiones-willians-marte.onrender.com/api/v1/health"
+
+          for attempt in 1 2 3; do
+            echo "Health check attempt ${attempt}/3"
+            if curl --fail --silent --show-error --max-time 90 "$url"; then
+              echo
+              echo "Backend health check succeeded"
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 3 ]; then
+              echo "Backend did not respond; retrying in 15 seconds..."
+              sleep 15
+            fi
+          done
+
+          echo "Backend health check failed after 3 attempts" >&2
+          exit 1
