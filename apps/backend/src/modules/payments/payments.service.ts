@@ -9,7 +9,14 @@ export class PaymentsService {
       async (tx) => {
         const loan = await tx.loan.findUnique({
           where: { id: dto.loanId },
-          include: { schedule: { orderBy: { dueDate: 'asc' } } },
+          include: {
+            schedule: {
+              orderBy: { dueDate: 'asc' },
+              include: {
+                paymentAllocs: { select: { amount: true, type: true } },
+              },
+            },
+          },
         });
         if (!loan) throw new NotFoundException('Loan not found');
         if (loan.status === 'PAID') throw new BadRequestException('Loan is already paid');
@@ -35,31 +42,29 @@ export class PaymentsService {
           if (owed <= 0) continue;
 
           const toAllocate = Math.min(owed, dto.amount - allocatedAmount);
+          const interestPaid = schedule.paymentAllocs
+            .filter((allocation) => allocation.type === 'INTEREST')
+            .reduce((sum, allocation) => sum + Number(allocation.amount), 0);
+          const remainingInterest = Math.max(0, Number(schedule.interestPart) - interestPaid);
+          const interestAllocation = Math.min(toAllocate, remainingInterest);
 
-          if (toAllocate >= Number(schedule.interestPart)) {
+          if (interestAllocation > 0) {
             allocations.push({
               scheduleId: schedule.id,
-              amount: Number(schedule.interestPart),
+              amount: interestAllocation,
               type: 'INTEREST',
             });
-            allocatedAmount += Number(schedule.interestPart);
+            allocatedAmount += interestAllocation;
+          }
 
-            const principalAlloc = toAllocate - Number(schedule.interestPart);
-            if (principalAlloc > 0) {
-              allocations.push({
-                scheduleId: schedule.id,
-                amount: principalAlloc,
-                type: 'PRINCIPAL',
-              });
-              allocatedAmount += principalAlloc;
-            }
-          } else {
+          const principalAllocation = toAllocate - interestAllocation;
+          if (principalAllocation > 0) {
             allocations.push({
               scheduleId: schedule.id,
-              amount: toAllocate,
-              type: 'INTEREST',
+              amount: principalAllocation,
+              type: 'PRINCIPAL',
             });
-            allocatedAmount += toAllocate;
+            allocatedAmount += principalAllocation;
           }
         }
 

@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsInt, IsOptional, Min, Max } from 'class-validator';
+import { IsDateString, IsString, IsNumber, IsInt, IsOptional, Min, Max } from 'class-validator';
 
 export class CreateInvestorPaymentDto {
   @IsOptional()
@@ -23,7 +23,7 @@ export class CreateInvestorPaymentDto {
   @Max(2100)
   periodYear: number;
 
-  @IsString()
+  @IsDateString()
   paymentDate: string;
 
   @IsOptional()

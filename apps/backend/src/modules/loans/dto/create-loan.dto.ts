@@ -1,4 +1,4 @@
-import { IsInt, IsString, IsNumber, IsEnum, IsOptional, Min } from 'class-validator';
+import { IsDateString, IsInt, IsString, IsNumber, IsEnum, IsOptional, Min } from 'class-validator';
 import { InterestTypeEnum, PaymentFrequencyEnum } from '@inversiones/shared';
 import type { InterestType, PaymentFrequency } from '@inversiones/shared';
 
@@ -18,11 +18,11 @@ export class CreateLoanDto {
   @Min(0)
   interestRate?: number;
 
-  @IsNumber()
+  @IsInt()
   @Min(1)
   term: number;
 
-  @IsString()
+  @IsDateString()
   startDate: string;
 
   @IsOptional()

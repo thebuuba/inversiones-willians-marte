@@ -4,6 +4,7 @@ import { CreateLoanDto } from './dto/create-loan.dto';
 import { AmortizationService } from './amortization.service';
 import { AddLoanCapitalDto } from './dto/add-loan-capital.dto';
 import { LoanPayoffService } from './loan-payoff.service';
+import { normalizePagination } from '../../common/pagination';
 
 type LoanListRow = {
   id: string;
@@ -132,8 +133,7 @@ export class LoansService {
   }
 
   async findAll(status?: string, search?: string, take = 50, skip = 0) {
-    const pageSize = Math.min(Math.max(take, 1), 100);
-    const offset = Math.max(skip, 0);
+    const { take: pageSize, skip: offset } = normalizePagination(take, skip);
     const filters: Prisma.Sql[] = [];
 
     if (status) filters.push(Prisma.sql`l.status::text = ${status}`);
@@ -262,14 +262,14 @@ export class LoansService {
   }
 
   async addCapital(id: string, dto: AddLoanCapitalDto, userId: string) {
-    const loan = await prisma.loan.findUnique({ where: { id } });
-    if (!loan) throw new NotFoundException('Loan not found');
-    if (loan.status !== 'ACTIVE') throw new BadRequestException('Loan is not active');
-    if (loan.interestType !== 'INDEFINITE') {
-      throw new BadRequestException('Capital additions are only enabled for indefinite loans');
-    }
-
     return prisma.$transaction(async (tx) => {
+      const loan = await tx.loan.findUnique({ where: { id } });
+      if (!loan) throw new NotFoundException('Loan not found');
+      if (loan.status !== 'ACTIVE') throw new BadRequestException('Loan is not active');
+      if (loan.interestType !== 'INDEFINITE') {
+        throw new BadRequestException('Capital additions are only enabled for indefinite loans');
+      }
+
       const movement = await tx.loanCapitalMovement.create({
         data: {
           loanId: id,
@@ -279,12 +279,16 @@ export class LoansService {
           createdById: userId,
         },
       });
-      const principal = Number(loan.principal) + dto.amount;
-      const balance = Number(loan.balance) + dto.amount;
-      await tx.loan.update({
+      const updatedLoan = await tx.loan.update({
         where: { id },
-        data: { principal, balance },
+        data: {
+          principal: { increment: dto.amount },
+          balance: { increment: dto.amount },
+        },
+        select: { principal: true, balance: true },
       });
+      const principal = Number(updatedLoan.principal);
+      const balance = Number(updatedLoan.balance);
       await tx.auditLog.create({
         data: {
           userId,
@@ -292,7 +296,7 @@ export class LoansService {
           entityType: 'Loan',
           entityId: id,
           clientId: loan.clientId,
-          oldValues: { principal: Number(loan.principal), balance: Number(loan.balance) },
+          oldValues: { principal: principal - dto.amount, balance: balance - dto.amount },
           newValues: {
             amount: dto.amount,
             effectiveDate: dto.effectiveDate,

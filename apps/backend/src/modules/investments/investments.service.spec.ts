@@ -118,7 +118,10 @@ describe('InvestmentsService', () => {
           rate: 3,
           status: 'ACTIVE',
         }),
-        update: jest.fn(),
+        update: jest
+          .fn()
+          .mockResolvedValueOnce({ capital: 150000, rate: 3 })
+          .mockResolvedValueOnce({}),
       },
       investorInvestmentMovement: {
         create: jest.fn().mockResolvedValue({ id: 'movement-1' }),
@@ -148,6 +151,15 @@ describe('InvestmentsService', () => {
           nextCapital: 150000,
         }),
       }),
+    });
+    expect(tx.investorInvestment.update).toHaveBeenNthCalledWith(1, {
+      where: { id: 'investment-1' },
+      data: { capital: { increment: 50000 } },
+      select: { capital: true, rate: true },
+    });
+    expect(tx.investorInvestment.update).toHaveBeenNthCalledWith(2, {
+      where: { id: 'investment-1' },
+      data: { monthlyPayment: 4500 },
     });
   });
 });

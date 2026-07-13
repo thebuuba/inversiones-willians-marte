@@ -91,6 +91,17 @@ describe('ClientsService', () => {
       expect(result.total).toBe(1);
       expect(prisma.client.count).toHaveBeenCalledWith({ where: { active: true } });
     });
+
+    it('uses bounded defaults when pagination query values are malformed', async () => {
+      jest.mocked(prisma.client.findMany).mockResolvedValue([]);
+      jest.mocked(prisma.client.count).mockResolvedValue(0);
+
+      await service.findAll(undefined, Number.NaN, Number.NaN);
+
+      expect(prisma.client.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 50, skip: 0 }),
+      );
+    });
   });
 
   describe('findOne', () => {

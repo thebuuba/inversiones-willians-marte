@@ -10,6 +10,7 @@ jest.mock('@inversiones/database', () => ({
   prisma: {
     user: {
       create: jest.fn(),
+      findFirst: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
     },
@@ -31,7 +32,7 @@ describe('UsersService', () => {
   });
 
   it('writes an audit event when an admin creates a user', async () => {
-    jest.mocked(prisma.user.findUnique).mockResolvedValue(null);
+    jest.mocked(prisma.user.findFirst).mockResolvedValue(null);
     jest.mocked(prisma.user.create).mockResolvedValue({
       id: 'user-2',
       name: 'Collector',
@@ -60,6 +61,40 @@ describe('UsersService', () => {
         newValues: expect.objectContaining({ role: 'COLLECTOR', active: true }),
       }),
     });
+  });
+
+  it('normalizes email and username so the new user can log in consistently', async () => {
+    jest.mocked(prisma.user.findFirst).mockResolvedValue(null);
+    jest.mocked(prisma.user.create).mockResolvedValue({
+      id: 'user-2',
+      name: 'Collector',
+      username: 'collector.one',
+      email: 'collector@example.com',
+      role: 'COLLECTOR',
+      active: true,
+    } as any);
+
+    await service.create({
+      name: 'Collector',
+      username: ' Collector.One ',
+      email: ' Collector@Example.COM ',
+      password: 'Secret123',
+      role: 'COLLECTOR',
+    });
+
+    expect(prisma.user.findFirst).toHaveBeenCalledWith({
+      where: {
+        OR: [{ email: 'collector@example.com' }, { username: 'collector.one' }],
+      },
+    });
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          username: 'collector.one',
+          email: 'collector@example.com',
+        }),
+      }),
+    );
   });
 
   it('writes an audit event when an admin toggles user active state', async () => {

@@ -22,6 +22,7 @@ describe('PaymentsService', () => {
     interestPart: 20,
     status: 'PENDING',
     dueDate: new Date('2026-06-15'),
+    paymentAllocs: [],
   };
   const loan = {
     id: 'loan-1',
@@ -284,5 +285,50 @@ describe('PaymentsService', () => {
     await expect(
       service.create({ loanId: 'loan-1', clientId: 1, amount: 101, paymentDate }, 'user-1'),
     ).rejects.toThrow('Payment exceeds the outstanding scheduled balance');
+  });
+
+  it('allocates only the remaining interest on a partially paid schedule', async () => {
+    const paymentCreate = jest.fn().mockResolvedValue({ id: 'payment-2', allocations: [] });
+    const partiallyPaidSchedule = {
+      ...schedule,
+      paidAmount: 10,
+      status: 'PARTIAL',
+      paymentAllocs: [{ amount: 10, type: 'INTEREST' }],
+    };
+    const tx = {
+      payment: { create: paymentCreate },
+      paymentSchedule: { update: jest.fn() },
+      paymentPromise: {
+        findMany: jest.fn().mockResolvedValue([]),
+        update: jest.fn(),
+      },
+      loan: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValueOnce({ ...loan, schedule: [partiallyPaidSchedule] })
+          .mockResolvedValueOnce({
+            ...loan,
+            schedule: [{ ...partiallyPaidSchedule, paidAmount: 100, status: 'PAID' }],
+          }),
+        update: jest.fn(),
+      },
+      auditLog: { create: jest.fn() },
+    };
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
+
+    await service.create({ loanId: 'loan-1', clientId: 1, amount: 90, paymentDate }, 'user-1');
+
+    expect(paymentCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          allocations: {
+            create: [
+              { scheduleId: 'schedule-1', amount: 10, type: 'INTEREST' },
+              { scheduleId: 'schedule-1', amount: 80, type: 'PRINCIPAL' },
+            ],
+          },
+        }),
+      }),
+    );
   });
 });

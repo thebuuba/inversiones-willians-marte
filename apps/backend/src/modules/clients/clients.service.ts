@@ -4,6 +4,7 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { AuditService } from '../audit/audit.service';
 import { formatPersonName } from '../../common/text/name-case';
+import { normalizePagination } from '../../common/pagination';
 
 type ClientLoanRow = {
   id: string;
@@ -62,6 +63,7 @@ export class ClientsService {
   }
 
   async findAll(search?: string, take = 50, skip = 0) {
+    const pagination = normalizePagination(take, skip);
     const where = search
       ? {
           OR: [
@@ -81,8 +83,8 @@ export class ClientsService {
         where: fullWhere,
         include: { _count: { select: { loans: true } } },
         orderBy: { createdAt: 'desc' },
-        take,
-        skip,
+        take: pagination.take,
+        skip: pagination.skip,
       }),
       prisma.client.count({ where: fullWhere }),
       prisma.client.count({ where: { active: true } }),

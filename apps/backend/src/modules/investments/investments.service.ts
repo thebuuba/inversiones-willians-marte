@@ -77,49 +77,50 @@ export class InvestmentsService {
   }
 
   async addCapital(id: string, dto: AddCapitalDto, userId: string) {
-    await prisma.$transaction(
-      async (tx) => {
-        const investment = await tx.investorInvestment.findUnique({ where: { id } });
-        if (!investment) throw new NotFoundException('Investment not found');
-        if (investment.status !== 'ACTIVE') {
-          throw new BadRequestException('Only active investments can receive capital additions');
-        }
-        const nextCapital = Number(investment.capital) + dto.amount;
-        await tx.investorInvestment.update({
-          where: { id },
-          data: {
-            capital: nextCapital,
-            monthlyPayment: this.calculateMonthlyPayment(nextCapital, Number(investment.rate)),
-          },
-        });
-        const movement = await tx.investorInvestmentMovement.create({
-          data: {
+    await prisma.$transaction(async (tx) => {
+      const investment = await tx.investorInvestment.findUnique({ where: { id } });
+      if (!investment) throw new NotFoundException('Investment not found');
+      if (investment.status !== 'ACTIVE') {
+        throw new BadRequestException('Only active investments can receive capital additions');
+      }
+      const updatedInvestment = await tx.investorInvestment.update({
+        where: { id },
+        data: { capital: { increment: dto.amount } },
+        select: { capital: true, rate: true },
+      });
+      const nextCapital = Number(updatedInvestment.capital);
+      await tx.investorInvestment.update({
+        where: { id },
+        data: {
+          monthlyPayment: this.calculateMonthlyPayment(nextCapital, Number(updatedInvestment.rate)),
+        },
+      });
+      const movement = await tx.investorInvestmentMovement.create({
+        data: {
+          investmentId: id,
+          type: 'CAPITAL_ADDITION',
+          amount: dto.amount,
+          movementDate: new Date(dto.movementDate),
+          notes: dto.notes,
+          createdById: userId,
+        },
+      });
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'INVESTMENT_CAPITAL_ADDED',
+          entityType: 'InvestorInvestmentMovement',
+          entityId: movement.id,
+          newValues: {
             investmentId: id,
-            type: 'CAPITAL_ADDITION',
             amount: dto.amount,
-            movementDate: new Date(dto.movementDate),
-            notes: dto.notes,
-            createdById: userId,
+            previousCapital: nextCapital - dto.amount,
+            nextCapital,
+            movementDate: dto.movementDate,
           },
-        });
-        await tx.auditLog.create({
-          data: {
-            userId,
-            action: 'INVESTMENT_CAPITAL_ADDED',
-            entityType: 'InvestorInvestmentMovement',
-            entityId: movement.id,
-            newValues: {
-              investmentId: id,
-              amount: dto.amount,
-              previousCapital: Number(investment.capital),
-              nextCapital,
-              movementDate: dto.movementDate,
-            },
-          },
-        });
-      },
-      { isolationLevel: 'Serializable' },
-    );
+        },
+      });
+    });
 
     return this.findOne(id);
   }

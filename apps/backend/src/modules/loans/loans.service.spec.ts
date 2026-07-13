@@ -16,6 +16,7 @@ jest.mock('@inversiones/database', () => ({
     auditLog: {
       create: jest.fn(),
     },
+    $transaction: jest.fn(),
   },
 }));
 
@@ -177,5 +178,46 @@ describe('LoansService', () => {
         }),
       }),
     );
+  });
+
+  it('adds indefinite-loan capital with atomic increments', async () => {
+    jest.mocked(prisma.loan.findUnique).mockResolvedValue({
+      id: 'loan-1',
+      clientId: 1,
+      status: 'ACTIVE',
+      interestType: 'INDEFINITE',
+      principal: 1000,
+      balance: 1000,
+    } as any);
+    const tx = {
+      loan: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'loan-1',
+          clientId: 1,
+          status: 'ACTIVE',
+          interestType: 'INDEFINITE',
+          principal: 1000,
+          balance: 1000,
+        }),
+        update: jest.fn().mockResolvedValue({ principal: 1500, balance: 1500 }),
+      },
+      loanCapitalMovement: {
+        create: jest.fn().mockResolvedValue({ id: 'movement-1' }),
+      },
+      auditLog: { create: jest.fn() },
+    };
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
+
+    await service.addCapital('loan-1', { amount: 500, effectiveDate: '2026-07-13' }, 'user-1');
+
+    expect(tx.loan.findUnique).toHaveBeenCalledWith({ where: { id: 'loan-1' } });
+    expect(tx.loan.update).toHaveBeenCalledWith({
+      where: { id: 'loan-1' },
+      data: {
+        principal: { increment: 500 },
+        balance: { increment: 500 },
+      },
+      select: { principal: true, balance: true },
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { IsString, MinLength, IsOptional, IsEmail, IsInt, Min } from 'class-validator';
+import { IsDate, IsString, MinLength, IsOptional, IsEmail, IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateClientDto {
@@ -32,6 +32,7 @@ export class CreateClientDto {
 
   @IsOptional()
   @Type(() => Date)
+  @IsDate()
   birthDate?: Date;
 
   @IsOptional()
