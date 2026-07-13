@@ -13,6 +13,7 @@ export interface CashLedgerMovement {
   movementDate: string;
   category: string;
   paymentMethod?: string | null;
+  affectsBalance: boolean;
   sourceType: string;
   registeredBy: string;
 }
@@ -36,6 +37,7 @@ export interface CreateManualCashMovement {
   category?: string;
   paymentMethod?: string;
   description?: string;
+  affectsBalance: boolean;
 }
 
 export async function getCashLedger(date: string): Promise<CashLedgerDay> {

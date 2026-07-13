@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 
-export type CashLedgerAmount = { type: 'IN' | 'OUT'; amount: number };
+export type CashLedgerAmount = { type: 'IN' | 'OUT'; amount: number; affectsBalance?: boolean };
 
 export function buildCashDayRange(date: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -22,6 +22,7 @@ export function buildCashDayRange(date: string) {
 export function summarizeCashMovements(movements: CashLedgerAmount[]) {
   const totals = movements.reduce(
     (current, movement) => {
+      if (movement.affectsBalance === false) return current;
       if (movement.type === 'IN') current.income += movement.amount;
       else current.expense += movement.amount;
       return current;

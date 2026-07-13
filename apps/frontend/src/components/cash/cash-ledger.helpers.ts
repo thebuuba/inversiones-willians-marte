@@ -1,6 +1,6 @@
 import type { CashLedgerMovement } from '@/lib/api/cash';
 
-export type CashMovementFilter = 'all' | 'in' | 'out';
+export type CashMovementFilter = 'all' | 'in' | 'out' | 'external';
 
 export function filterCashMovements(
   movements: CashLedgerMovement[],
@@ -13,11 +13,13 @@ export function filterCashMovements(
   return movements.filter((movement) => {
     if (filter === 'in' && movement.type !== 'IN') return false;
     if (filter === 'out' && movement.type !== 'OUT') return false;
+    if (filter === 'external' && movement.affectsBalance) return false;
     if (category && movement.category !== category) return false;
     if (!normalizedSearch) return true;
 
-    return [movement.person, movement.description, movement.code]
-      .some((value) => value.toLocaleLowerCase('es').includes(normalizedSearch));
+    return [movement.person, movement.description, movement.code].some((value) =>
+      value.toLocaleLowerCase('es').includes(normalizedSearch),
+    );
   });
 }
 

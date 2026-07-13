@@ -146,6 +146,7 @@ model CashMovement {
   category      String
   paymentMethod String?          @map("payment_method")
   description   String?
+  affectsBalance Boolean         @default(true) @map("affects_balance")
   createdById   String           @map("created_by")
   createdAt     DateTime         @default(now()) @map("created_at")
 

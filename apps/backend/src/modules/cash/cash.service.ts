@@ -13,6 +13,7 @@ type CashLedgerRow = {
   movementDate: Date;
   category: string;
   paymentMethod: string | null;
+  affectsBalance: boolean;
   sourceType: string;
   registeredBy: string;
 };
@@ -34,6 +35,7 @@ function cashLedgerUnion() {
       cm.movement_date AS "movementDate",
       cm.category,
       cm.payment_method AS "paymentMethod",
+      cm.affects_balance AS "affectsBalance",
       'MANUAL' AS "sourceType",
       u.name AS "registeredBy"
     FROM cash_movements cm
@@ -51,6 +53,7 @@ function cashLedgerUnion() {
       p.payment_date AS "movementDate",
       'Pago de préstamo' AS category,
       p.payment_method AS "paymentMethod",
+      TRUE AS "affectsBalance",
       'PAYMENT' AS "sourceType",
       u.name AS "registeredBy"
     FROM payments p
@@ -75,6 +78,7 @@ function cashLedgerUnion() {
       l.created_at AS "movementDate",
       'Desembolso' AS category,
       NULL::text AS "paymentMethod",
+      TRUE AS "affectsBalance",
       'LOAN' AS "sourceType",
       u.name AS "registeredBy"
     FROM loans l
@@ -93,6 +97,7 @@ function cashLedgerUnion() {
       lcm.effective_date AS "movementDate",
       'Desembolso' AS category,
       NULL::text AS "paymentMethod",
+      TRUE AS "affectsBalance",
       'LOAN_CAPITAL' AS "sourceType",
       u.name AS "registeredBy"
     FROM loan_capital_movements lcm
@@ -117,6 +122,7 @@ function cashLedgerUnion() {
       ii.created_at AS "movementDate",
       'Ingreso de inversionista' AS category,
       NULL::text AS "paymentMethod",
+      TRUE AS "affectsBalance",
       'INVESTMENT' AS "sourceType",
       u.name AS "registeredBy"
     FROM investor_investments ii
@@ -139,6 +145,7 @@ function cashLedgerUnion() {
       iim.movement_date AS "movementDate",
       'Ingreso de inversionista' AS category,
       NULL::text AS "paymentMethod",
+      TRUE AS "affectsBalance",
       'INVESTMENT_CAPITAL' AS "sourceType",
       u.name AS "registeredBy"
     FROM investor_investment_movements iim
@@ -158,6 +165,7 @@ function cashLedgerUnion() {
       ip.payment_date AS "movementDate",
       'Pago a inversionista' AS category,
       ip.payment_method AS "paymentMethod",
+      TRUE AS "affectsBalance",
       'INVESTOR_PAYMENT' AS "sourceType",
       u.name AS "registeredBy"
     FROM investor_payments ip
@@ -182,8 +190,8 @@ export class CashService {
       `,
       prisma.$queryRaw<CashAggregateRow[]>`
         SELECT
-          COALESCE(SUM(CASE WHEN ledger.type = 'IN' THEN ledger.amount ELSE 0 END), 0)::float8 AS income,
-          COALESCE(SUM(CASE WHEN ledger.type = 'OUT' THEN ledger.amount ELSE 0 END), 0)::float8 AS expense
+          COALESCE(SUM(CASE WHEN ledger."affectsBalance" AND ledger.type = 'IN' THEN ledger.amount ELSE 0 END), 0)::float8 AS income,
+          COALESCE(SUM(CASE WHEN ledger."affectsBalance" AND ledger.type = 'OUT' THEN ledger.amount ELSE 0 END), 0)::float8 AS expense
         FROM (${ledger}) ledger
         WHERE ledger."movementDate" >= ${start} AND ledger."movementDate" < ${end}
       `,
@@ -222,6 +230,7 @@ export class CashService {
         category,
         paymentMethod: dto.paymentMethod?.trim() || null,
         description: dto.description?.trim() || null,
+        affectsBalance: dto.affectsBalance ?? true,
         createdById: userId,
       },
       include: { createdBy: { select: { id: true, name: true } } },

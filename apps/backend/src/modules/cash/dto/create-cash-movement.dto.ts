@@ -1,4 +1,13 @@
-import { IsIn, IsISO8601, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsISO8601,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class CreateCashMovementDto {
   @IsIn(['IN', 'OUT'])
@@ -29,4 +38,8 @@ export class CreateCashMovementDto {
   @IsString()
   @MaxLength(500)
   description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  affectsBalance?: boolean;
 }

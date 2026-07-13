@@ -80,7 +80,15 @@ function categoryTone(category: string): TagTone {
   return tones[category] ?? 'gray';
 }
 
-function ShellCard({ children, className = '', index = 0 }: { children: ReactNode; className?: string; index?: number }) {
+function ShellCard({
+  children,
+  className = '',
+  index = 0,
+}: {
+  children: ReactNode;
+  className?: string;
+  index?: number;
+}) {
   return (
     <motion.section
       animate="visible"
@@ -96,14 +104,21 @@ function ShellCard({ children, className = '', index = 0 }: { children: ReactNod
 
 function Header({ onNewMovement }: { onNewMovement: () => void }) {
   return (
-    <motion.header animate="visible" className="mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end" initial="hidden" variants={fadeUp}>
+    <motion.header
+      animate="visible"
+      className="mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end"
+      initial="hidden"
+      variants={fadeUp}
+    >
       <div>
         <span className="inline-flex items-center gap-2 rounded-full bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#173D2C]">
           <span className="h-2 w-2 rounded-full bg-[#2F7654]" />
           Libro diario de caja
         </span>
         <h1 className="mt-3 text-[28px] font-bold leading-tight text-[#173D2C]">Caja</h1>
-        <p className="mt-1.5 text-sm text-[#5C6D63]">Entradas y salidas generadas por las operaciones del negocio.</p>
+        <p className="mt-1.5 text-sm text-[#5C6D63]">
+          Entradas y salidas generadas por las operaciones del negocio.
+        </p>
       </div>
       <button
         className="flex h-11 items-center gap-2 rounded-full bg-[#2f7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
@@ -136,11 +151,17 @@ function SummaryCard({
   const tone = variant === 'expense' ? '#9F3F25' : '#2F7654';
 
   return (
-    <ShellCard className={isBalance ? 'bg-gradient-to-br from-[#E7F4EC] to-[#D2E8D9] p-5' : 'p-5'} index={index}>
+    <ShellCard
+      className={isBalance ? 'bg-gradient-to-br from-[#E7F4EC] to-[#D2E8D9] p-5' : 'p-5'}
+      index={index}
+    >
       <div className="flex items-center gap-4">
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]"
-          style={{ backgroundColor: isBalance ? '#FFFFFF' : variant === 'expense' ? '#FFE3D2' : '#B8DCC5', color: tone }}
+          style={{
+            backgroundColor: isBalance ? '#FFFFFF' : variant === 'expense' ? '#FFE3D2' : '#B8DCC5',
+            color: tone,
+          }}
         >
           {icon}
         </div>
@@ -177,6 +198,7 @@ function FilterBar({
     { label: 'Todos', value: 'all' },
     { label: 'Entradas', value: 'in' },
     { label: 'Salidas', value: 'out' },
+    { label: 'Externos', value: 'external' },
   ];
 
   return (
@@ -186,7 +208,9 @@ function FilterBar({
           {tabs.map((tab) => (
             <button
               className={`h-9 rounded-[10px] px-4 text-sm font-semibold transition ${
-                filter === tab.value ? 'bg-[#E7F4EC] text-[#173D2C] shadow-sm' : 'text-[#5C6D63] hover:bg-white'
+                filter === tab.value
+                  ? 'bg-[#E7F4EC] text-[#173D2C] shadow-sm'
+                  : 'text-[#5C6D63] hover:bg-white'
               }`}
               key={tab.value}
               onClick={() => onFilterChange(tab.value)}
@@ -198,11 +222,21 @@ function FilterBar({
         </div>
         <label className="flex h-10 items-center gap-2 rounded-full border border-[#DDEBE3] bg-white px-4 text-[#5C6D63]">
           <Calendar className="h-4 w-4" />
-          <input className="bg-transparent text-sm font-semibold text-[#173D2C] outline-none" onChange={(event) => onDateChange(event.target.value)} type="date" value={date} />
+          <input
+            className="bg-transparent text-sm font-semibold text-[#173D2C] outline-none"
+            onChange={(event) => onDateChange(event.target.value)}
+            type="date"
+            value={date}
+          />
         </label>
         <label className="flex h-10 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-4 text-[#5C6D63] xl:ml-auto xl:max-w-[340px]">
           <Search className="h-4 w-4 shrink-0" />
-          <input className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#8F9691]" onChange={(event) => onSearchChange(event.target.value)} placeholder="Buscar persona o concepto..." value={search} />
+          <input
+            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#8F9691]"
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Buscar persona o concepto..."
+            value={search}
+          />
         </label>
         <select
           className="h-10 rounded-full border border-[#DDEBE3] bg-white px-4 text-sm font-semibold text-[#173D2C] outline-none"
@@ -210,7 +244,11 @@ function FilterBar({
           value={category}
         >
           <option value="">Todas las categorías</option>
-          {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+          {categories.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
         </select>
       </div>
     </ShellCard>
@@ -226,10 +264,13 @@ function Tag({ label, tone, icon }: { label: string; tone: TagTone; icon?: strin
     yellow: 'bg-[#FFF4C8] text-[#7A5A0A]',
     gray: 'bg-[#F3FAF6] text-[#5C6D63] border border-[#DDEBE3]',
   }[tone];
-  const Icon = icon === 'Transferencia' ? Repeat2 : icon === 'Tarjeta' ? CreditCard : icon ? Banknote : null;
+  const Icon =
+    icon === 'Transferencia' ? Repeat2 : icon === 'Tarjeta' ? CreditCard : icon ? Banknote : null;
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${styles}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${styles}`}
+    >
       {Icon && <Icon className="h-3 w-3" />}
       {label}
     </span>
@@ -239,15 +280,24 @@ function Tag({ label, tone, icon }: { label: string; tone: TagTone; icon?: strin
 function TransactionItem({ movement }: { movement: CashLedgerMovement }) {
   const isIncome = movement.type === 'IN';
   const DirectionIcon = isIncome ? ArrowDownLeft : ArrowUpRight;
-  const initials = movement.person.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('');
+  const initials = movement.person
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
 
   return (
     <div className="grid min-h-[76px] grid-cols-[1fr_auto] items-center gap-4 border-b border-[#EDF2EF] px-5 py-3.5 last:border-b-0 hover:bg-[#F8FBF9]">
       <div className="flex min-w-0 items-center gap-4">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${isIncome ? 'bg-[#E7F4EC] text-[#173D2C]' : 'bg-[#FFE3D2] text-[#9F3F25]'}`}>
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${isIncome ? 'bg-[#E7F4EC] text-[#173D2C]' : 'bg-[#FFE3D2] text-[#9F3F25]'}`}
+        >
           <DirectionIcon className="h-4 w-4" />
         </div>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F3FAF6] text-xs font-bold text-[#5C6D63]">{initials}</div>
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F3FAF6] text-xs font-bold text-[#5C6D63]">
+          {initials}
+        </div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-sm font-bold text-[#173D2C]">{movement.person}</h3>
@@ -257,13 +307,20 @@ function TransactionItem({ movement }: { movement: CashLedgerMovement }) {
           <p className="mt-0.5 text-xs text-[#5C6D63]">{movement.description}</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             <Tag label={movement.category} tone={categoryTone(movement.category)} />
-            {movement.paymentMethod && <Tag icon={movement.paymentMethod} label={movement.paymentMethod} tone="gray" />}
+            {!movement.affectsBalance && (
+              <Tag label="Externo · No afecta el cuadre" tone="yellow" />
+            )}
+            {movement.paymentMethod && (
+              <Tag icon={movement.paymentMethod} label={movement.paymentMethod} tone="gray" />
+            )}
             <Tag label={`Registrado por ${movement.registeredBy}`} tone="gray" />
           </div>
         </div>
       </div>
       <div className="text-right">
-        <p className={`text-base font-bold tabular-nums ${isIncome ? 'text-[#173D2C]' : 'text-[#A65B3D]'}`}>
+        <p
+          className={`text-base font-bold tabular-nums ${!movement.affectsBalance ? 'text-[#7A6A45]' : isIncome ? 'text-[#173D2C]' : 'text-[#A65B3D]'}`}
+        >
           {formatSignedDop(movement.amount, { negative: !isIncome })}
         </p>
         <p className="mt-1 text-xs text-[#A9B8AE]">{formatOfficeTime(movement.movementDate)}</p>
@@ -310,22 +367,33 @@ export function CashPanel() {
     [category, filter, ledger.movements, search],
   );
 
-  const handleCreateMovement = useCallback(async (values: MovementFormValues) => {
-    const amount = parseCurrencyInput(values.amount);
-    await createManualCashMovement({
-      type: values.type === 'in' ? 'IN' : 'OUT',
-      person: values.person,
-      amount,
-      movementDate: buildManualCashMovementDate(date),
-      paymentMethod: values.method,
-      description: values.description,
-    });
+  const handleCreateMovement = useCallback(
+    async (values: MovementFormValues) => {
+      const amount = parseCurrencyInput(values.amount);
+      await createManualCashMovement({
+        type: values.type === 'in' ? 'IN' : 'OUT',
+        person: values.person,
+        amount,
+        movementDate: buildManualCashMovementDate(date),
+        paymentMethod: values.method,
+        description: values.description,
+        affectsBalance: values.affectsBalance,
+      });
 
-    await loadLedger();
-    setIsModalOpen(false);
-  }, [date, loadLedger]);
+      await loadLedger();
+      setIsModalOpen(false);
+    },
+    [date, loadLedger],
+  );
 
   const { totals } = ledger;
+  const balanceMovements = ledger.movements.filter((movement) => movement.affectsBalance);
+  const externalIncomeCount = ledger.movements.filter(
+    (movement) => !movement.affectsBalance && movement.type === 'IN',
+  ).length;
+  const externalExpenseCount = ledger.movements.filter(
+    (movement) => !movement.affectsBalance && movement.type === 'OUT',
+  ).length;
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
@@ -341,7 +409,13 @@ export function CashPanel() {
           variant="balance"
         />
         <SummaryCard
-          detail={<span>{ledger.movements.filter((movement) => movement.type === 'IN').length} entradas en el día</span>}
+          detail={
+            <span>
+              {balanceMovements.filter((movement) => movement.type === 'IN').length} entradas en el
+              cuadre
+              {externalIncomeCount > 0 ? ` · ${externalIncomeCount} externas registradas` : ''}
+            </span>
+          }
           icon={<ArrowDownLeft className="h-5 w-5" />}
           index={2}
           title="ENTRADAS"
@@ -349,7 +423,13 @@ export function CashPanel() {
           variant="income"
         />
         <SummaryCard
-          detail={<span>{ledger.movements.filter((movement) => movement.type === 'OUT').length} salidas en el día</span>}
+          detail={
+            <span>
+              {balanceMovements.filter((movement) => movement.type === 'OUT').length} salidas en el
+              cuadre
+              {externalExpenseCount > 0 ? ` · ${externalExpenseCount} externas registradas` : ''}
+            </span>
+          }
           icon={<ArrowUpRight className="h-5 w-5" />}
           index={3}
           title="SALIDAS"
@@ -377,7 +457,9 @@ export function CashPanel() {
             <p className="text-sm font-bold capitalize text-[#173D2C]">
               {formatOfficeDate(date)}
               <span className="px-2 text-[#5C6D63]">·</span>
-              <span className="font-medium text-[#A9B8AE]">{visibleMovements.length} movimientos</span>
+              <span className="font-medium text-[#A9B8AE]">
+                {visibleMovements.length} movimientos
+              </span>
             </p>
           </div>
           <div className="hidden items-center gap-5 text-sm font-bold sm:flex">
@@ -386,16 +468,32 @@ export function CashPanel() {
           </div>
         </div>
         <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
-          {loading && <p className="px-5 py-16 text-center text-sm font-medium text-[#5C6D63]">Cargando movimientos...</p>}
-          {!loading && error && <p className="px-5 py-16 text-center text-sm font-medium text-[#9F3F25]">{error}</p>}
-          {!loading && !error && visibleMovements.length === 0 && (
-            <p className="px-5 py-16 text-center text-sm font-medium text-[#5C6D63]">No hay movimientos para esta fecha y filtros.</p>
+          {loading && (
+            <p className="px-5 py-16 text-center text-sm font-medium text-[#5C6D63]">
+              Cargando movimientos...
+            </p>
           )}
-          {!loading && !error && visibleMovements.map((movement) => <TransactionItem key={`${movement.sourceType}-${movement.id}`} movement={movement} />)}
+          {!loading && error && (
+            <p className="px-5 py-16 text-center text-sm font-medium text-[#9F3F25]">{error}</p>
+          )}
+          {!loading && !error && visibleMovements.length === 0 && (
+            <p className="px-5 py-16 text-center text-sm font-medium text-[#5C6D63]">
+              No hay movimientos para esta fecha y filtros.
+            </p>
+          )}
+          {!loading &&
+            !error &&
+            visibleMovements.map((movement) => (
+              <TransactionItem key={`${movement.sourceType}-${movement.id}`} movement={movement} />
+            ))}
         </div>
       </motion.section>
 
-      <MovementModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleCreateMovement} />
+      <MovementModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateMovement}
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ const movements: CashLedgerMovement[] = [
     amount: 1000,
     movementDate: '2026-07-13T14:00:00.000Z',
     category: 'Pago de préstamo',
+    affectsBalance: true,
     sourceType: 'PAYMENT',
     registeredBy: 'Nata',
   },
@@ -25,6 +26,7 @@ const movements: CashLedgerMovement[] = [
     amount: 5000,
     movementDate: '2026-07-13T15:00:00.000Z',
     category: 'Desembolso',
+    affectsBalance: false,
     sourceType: 'LOAN',
     registeredBy: 'Nata',
   },
@@ -33,6 +35,7 @@ const movements: CashLedgerMovement[] = [
 test('filters the daily ledger by direction, category and person', () => {
   assert.deepEqual(filterCashMovements(movements, 'in', 'ana', 'Pago de préstamo'), [movements[0]]);
   assert.deepEqual(filterCashMovements(movements, 'out', '', ''), [movements[1]]);
+  assert.deepEqual(filterCashMovements(movements, 'external', '', ''), [movements[1]]);
 });
 
 test('uses noon in Santo Domingo when entering a historical movement', () => {

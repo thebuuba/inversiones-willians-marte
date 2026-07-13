@@ -19,6 +19,8 @@ describe('cash ledger helpers', () => {
         { type: 'IN', amount: 40_000 },
         { type: 'OUT', amount: 12_000 },
         { type: 'OUT', amount: 3_000 },
+        { type: 'IN', amount: 100_000, affectsBalance: false },
+        { type: 'OUT', amount: 80_000, affectsBalance: false },
       ]),
     ).toEqual({ openingBalance: 0, income: 40_000, expense: 15_000, balance: 25_000 });
   });

@@ -8,4 +8,6 @@ test('keeps manual cash movements free of client search and category controls', 
   assert.doesNotMatch(source, /Buscar cliente/);
   assert.doesNotMatch(source, /Categoría/);
   assert.match(source, /Persona o concepto/);
+  assert.match(source, /Dinero externo al negocio/);
+  assert.match(source, /no suma ni resta en el cuadre de Caja/);
 });
