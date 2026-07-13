@@ -21,6 +21,7 @@ import {
 } from '@/lib/page-entry-animation';
 import { useClientCache } from '@/lib/use-client-cache';
 import type { Client } from '@inversiones/shared';
+import { calculateClientPageSize } from './clients-pagination';
 
 function PanelCard({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
@@ -46,11 +47,8 @@ export function ClientsPanel() {
     const container = bodyRef.current;
     if (!container) return;
 
-    const ROW_H = 65;
-
     const observer = new ResizeObserver(([entry]) => {
-      const available = entry.contentRect.height;
-      const fits = Math.max(1, Math.floor(available / ROW_H));
+      const fits = calculateClientPageSize(entry.contentRect.height);
       setPageSize((prev) => {
         if (prev !== fits) setPage(0);
         return fits;
@@ -66,7 +64,7 @@ export function ClientsPanel() {
     [page, search, pageSize],
   );
   const { data, loading, error } = useClientCache(
-    `clients:${search}:${page}`,
+    `clients:${search}:${page}:${pageSize}`,
     clientsFetcher,
     undefined,
     'No se pudieron cargar los clientes. Verifica que el backend esté corriendo.',
