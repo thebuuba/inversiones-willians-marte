@@ -49,6 +49,34 @@ enum AllocationType {
   PENALTY
 }
 
+enum CollectionChannel {
+  CALL
+  WHATSAPP
+  VISIT
+  SMS
+  EMAIL
+  OTHER
+}
+
+enum CollectionResult {
+  CONTACTED
+  NO_ANSWER
+  WRONG_NUMBER
+  PAYMENT_PROMISE
+  EXTENSION_REQUEST
+  DISPUTE
+  REFUSED
+  OTHER
+}
+
+enum PaymentPromiseStatus {
+  PENDING
+  PARTIAL
+  FULFILLED
+  BROKEN
+  CANCELLED
+}
+
 enum RequestStatus {
   PENDING
   UNDER_REVIEW
@@ -79,20 +107,22 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  createdClients    Client[]      @relation("ClientCreatedBy")
-  createdLoans      Loan[]        @relation("LoanCreatedBy")
-  receivedPayments  Payment[]     @relation("PaymentReceivedBy")
-  auditLogs         AuditLog[]
-  loanRequests      LoanRequest[]
-  investors              Investor[]
-  investorInvestments    InvestorInvestment[] @relation("InvestorInvestmentCreatedBy")
+  createdClients              Client[]                     @relation("ClientCreatedBy")
+  createdLoans                Loan[]                       @relation("LoanCreatedBy")
+  receivedPayments            Payment[]                    @relation("PaymentReceivedBy")
+  auditLogs                   AuditLog[]
+  loanRequests                LoanRequest[]
+  investors                   Investor[]
+  investorInvestments         InvestorInvestment[]         @relation("InvestorInvestmentCreatedBy")
   investorInvestmentMovements InvestorInvestmentMovement[] @relation("InvestorInvestmentMovementCreatedBy")
-  investorPayments       InvestorPayment[] @relation("InvestorPaymentReceivedBy")
-  uploadedDocuments      Document[]
-  documentCaptureSessions DocumentCaptureSession[]
-  tasks                  Task[]
-  portfolios             Portfolio[]
-  loanCapitalMovements   LoanCapitalMovement[]
+  investorPayments            InvestorPayment[]            @relation("InvestorPaymentReceivedBy")
+  uploadedDocuments           Document[]
+  documentCaptureSessions     DocumentCaptureSession[]
+  tasks                       Task[]
+  portfolios                  Portfolio[]
+  loanCapitalMovements        LoanCapitalMovement[]
+  collectionInteractions      CollectionInteraction[]      @relation("CollectionInteractionCreatedBy")
+  paymentPromises             PaymentPromise[]             @relation("PaymentPromiseCreatedBy")
 
   @@index([role, active])
   @@map("users")
@@ -121,13 +151,16 @@ model Client {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  createdBy    User          @relation("ClientCreatedBy", fields: [createdById], references: [id])
-  loans        Loan[]
-  payments     Payment[]
-  loanRequests LoanRequest[]
-  documents    Document[]
-  auditLogs    AuditLog[]
+  createdBy               User                     @relation("ClientCreatedBy", fields: [createdById], references: [id])
+  loans                   Loan[]
+  payments                Payment[]
+  loanRequests            LoanRequest[]
+  documents               Document[]
+  auditLogs               AuditLog[]
   documentCaptureSessions DocumentCaptureSession[]
+  collectionInteractions  CollectionInteraction[]
+  paymentPromises         PaymentPromise[]
+  tasks                   Task[]
 
   @@index([active, createdAt])
   @@map("clients")
@@ -205,15 +238,18 @@ model Loan {
   createdAt    DateTime         @default(now()) @map("created_at")
   updatedAt    DateTime         @updatedAt @map("updated_at")
 
-  client      Client            @relation(fields: [clientId], references: [id])
-  product     LoanProduct       @relation(fields: [productId], references: [id])
-  createdBy   User              @relation("LoanCreatedBy", fields: [createdById], references: [id])
-  portfolioId String?           @map("portfolio_id")
-  schedule    PaymentSchedule[]
-  payments    Payment[]
-  lateFees    LateFee[]
-  capitalMovements LoanCapitalMovement[]
-  portfolio   Portfolio?        @relation(fields: [portfolioId], references: [id])
+  client                 Client                  @relation(fields: [clientId], references: [id])
+  product                LoanProduct             @relation(fields: [productId], references: [id])
+  createdBy              User                    @relation("LoanCreatedBy", fields: [createdById], references: [id])
+  portfolioId            String?                 @map("portfolio_id")
+  schedule               PaymentSchedule[]
+  payments               Payment[]
+  lateFees               LateFee[]
+  capitalMovements       LoanCapitalMovement[]
+  collectionInteractions CollectionInteraction[]
+  paymentPromises        PaymentPromise[]
+  tasks                  Task[]
+  portfolio              Portfolio?              @relation(fields: [portfolioId], references: [id])
 
   @@index([clientId, createdAt])
   @@index([status, createdAt])
@@ -274,6 +310,56 @@ model Payment {
   @@index([receivedById])
   @@index([paymentDate])
   @@map("payments")
+}
+
+// ─── Collection management ─────────────────────────────────────────────────
+
+model CollectionInteraction {
+  id               String            @id @default(uuid())
+  loanId           String            @map("loan_id")
+  clientId         Int               @map("client_id")
+  channel          CollectionChannel
+  result           CollectionResult
+  notes            String
+  nextFollowUpDate DateTime?         @map("next_follow_up_date") @db.Date
+  nextFollowUpTime String?           @map("next_follow_up_time")
+  createdById      String            @map("created_by")
+  createdAt        DateTime          @default(now()) @map("created_at")
+
+  loan         Loan            @relation(fields: [loanId], references: [id])
+  client       Client          @relation(fields: [clientId], references: [id])
+  createdBy    User            @relation("CollectionInteractionCreatedBy", fields: [createdById], references: [id])
+  promise      PaymentPromise?
+  followUpTask Task?
+
+  @@index([loanId, createdAt(sort: Desc)])
+  @@index([clientId, createdAt(sort: Desc)])
+  @@index([nextFollowUpDate])
+  @@map("collection_interactions")
+}
+
+model PaymentPromise {
+  id              String               @id @default(uuid())
+  interactionId   String               @unique @map("interaction_id")
+  loanId          String               @map("loan_id")
+  clientId        Int                  @map("client_id")
+  amount          Decimal
+  fulfilledAmount Decimal              @default(0) @map("fulfilled_amount")
+  dueDate         DateTime             @map("due_date") @db.Date
+  status          PaymentPromiseStatus @default(PENDING)
+  createdById     String               @map("created_by")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  interaction CollectionInteraction @relation(fields: [interactionId], references: [id])
+  loan        Loan                  @relation(fields: [loanId], references: [id])
+  client      Client                @relation(fields: [clientId], references: [id])
+  createdBy   User                  @relation("PaymentPromiseCreatedBy", fields: [createdById], references: [id])
+
+  @@index([loanId, status, dueDate])
+  @@index([clientId, createdAt(sort: Desc)])
+  @@index([status, dueDate])
+  @@map("payment_promises")
 }
 
 // ─── Payment Allocations ────────────────────────────────────────────────────
@@ -360,10 +446,10 @@ model Investor {
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
 
-  createdBy User       @relation(fields: [createdById], references: [id])
-  documents Document[]
+  createdBy   User                 @relation(fields: [createdById], references: [id])
+  documents   Document[]
   investments InvestorInvestment[]
-  payments  InvestorPayment[]
+  payments    InvestorPayment[]
 
   @@index([createdAt])
   @@map("investors")
@@ -384,8 +470,8 @@ model InvestorInvestment {
   createdAt      DateTime                 @default(now()) @map("created_at")
   updatedAt      DateTime                 @updatedAt @map("updated_at")
 
-  investor  Investor @relation(fields: [investorId], references: [id])
-  createdBy User     @relation("InvestorInvestmentCreatedBy", fields: [createdById], references: [id])
+  investor  Investor                     @relation(fields: [investorId], references: [id])
+  createdBy User                         @relation("InvestorInvestmentCreatedBy", fields: [createdById], references: [id])
   payments  InvestorPayment[]
   movements InvestorInvestmentMovement[]
 
@@ -428,9 +514,9 @@ model InvestorPayment {
   receivedById  String   @map("received_by")
   createdAt     DateTime @default(now()) @map("created_at")
 
-  investor   Investor @relation(fields: [investorId], references: [id])
+  investor   Investor            @relation(fields: [investorId], references: [id])
   investment InvestorInvestment? @relation(fields: [investmentId], references: [id])
-  receivedBy User     @relation("InvestorPaymentReceivedBy", fields: [receivedById], references: [id])
+  receivedBy User                @relation("InvestorPaymentReceivedBy", fields: [receivedById], references: [id])
 
   @@index([receiptNumber])
   @@index([investorId, periodYear(sort: Desc), periodMonth(sort: Desc)])
@@ -442,25 +528,25 @@ model InvestorPayment {
 // ─── Documents ──────────────────────────────────────────────────────────────
 
 model Document {
-  id           String   @id @default(uuid())
-  clientId     Int?     @map("client_id")
-  investorId   String?  @map("investor_id")
-  loanId       String?  @map("loan_id")
-  name         String
-  category     String   @default("general")
-  fileUrl      String?  @map("file_url")
-  fileSize     Int?     @map("file_size")
-  mimeType     String?  @map("mime_type")
-  originalFileUrl     String? @map("original_file_url")
-  processedFileUrl    String? @map("processed_file_url")
-  documentType        String  @default("otro") @map("document_type")
-  detectionConfidence Int     @default(0) @map("detection_confidence")
-  processingStatus    String  @default("not_applicable") @map("processing_status")
-  processingNotes     String? @map("processing_notes")
-  notes        String?
-  uploadedById String   @map("uploaded_by")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id                  String   @id @default(uuid())
+  clientId            Int?     @map("client_id")
+  investorId          String?  @map("investor_id")
+  loanId              String?  @map("loan_id")
+  name                String
+  category            String   @default("general")
+  fileUrl             String?  @map("file_url")
+  fileSize            Int?     @map("file_size")
+  mimeType            String?  @map("mime_type")
+  originalFileUrl     String?  @map("original_file_url")
+  processedFileUrl    String?  @map("processed_file_url")
+  documentType        String   @default("otro") @map("document_type")
+  detectionConfidence Int      @default(0) @map("detection_confidence")
+  processingStatus    String   @default("not_applicable") @map("processing_status")
+  processingNotes     String?  @map("processing_notes")
+  notes               String?
+  uploadedById        String   @map("uploaded_by")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   uploadedBy User      @relation(fields: [uploadedById], references: [id])
   client     Client?   @relation(fields: [clientId], references: [id])
@@ -509,21 +595,29 @@ enum TaskStatus {
 }
 
 model Task {
-  id          String       @id @default(uuid())
-  title       String
-  description String?
-  dueDate     DateTime?    @map("due_date")
-  time        String?
-  priority    TaskPriority @default(MEDIUM)
-  category    String       @default("oficina")
-  status      TaskStatus   @default(PENDING)
-  createdById String       @map("created_by")
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
+  id                      String       @id @default(uuid())
+  title                   String
+  description             String?
+  dueDate                 DateTime?    @map("due_date")
+  time                    String?
+  priority                TaskPriority @default(MEDIUM)
+  category                String       @default("oficina")
+  status                  TaskStatus   @default(PENDING)
+  createdById             String       @map("created_by")
+  clientId                Int?         @map("client_id")
+  loanId                  String?      @map("loan_id")
+  collectionInteractionId String?      @unique @map("collection_interaction_id")
+  createdAt               DateTime     @default(now()) @map("created_at")
+  updatedAt               DateTime     @updatedAt @map("updated_at")
 
-  createdBy User @relation(fields: [createdById], references: [id])
+  createdBy             User                   @relation(fields: [createdById], references: [id])
+  client                Client?                @relation(fields: [clientId], references: [id])
+  loan                  Loan?                  @relation(fields: [loanId], references: [id])
+  collectionInteraction CollectionInteraction? @relation(fields: [collectionInteractionId], references: [id])
 
   @@index([status(sort: Asc), priority(sort: Desc), dueDate(sort: Asc), createdAt(sort: Desc)])
+  @@index([clientId, status])
+  @@index([loanId, status])
   @@map("tasks")
 }
 

@@ -247,6 +247,14 @@ export class LoansService {
           include: { createdBy: { select: { id: true, name: true } } },
           orderBy: { effectiveDate: 'desc' },
         },
+        collectionInteractions: {
+          include: {
+            createdBy: { select: { id: true, name: true } },
+            promise: true,
+            followUpTask: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
     if (!loan) throw new NotFoundException('Loan not found');

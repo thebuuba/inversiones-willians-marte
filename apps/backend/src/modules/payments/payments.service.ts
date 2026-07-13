@@ -109,6 +109,7 @@ export class PaymentsService {
         }
 
         await this.updateLoanBalanceTx(tx, loan.id, userId, dto.clientId);
+        await this.reconcilePaymentPromisesTx(tx, loan.id, dto.amount, userId, dto.clientId);
 
         await tx.auditLog.create({
           data: {
@@ -184,6 +185,59 @@ export class PaymentsService {
           newValues: { status: nextStatus, balance: newBalance },
         },
       });
+    }
+  }
+
+  private async reconcilePaymentPromisesTx(
+    tx: Prisma.TransactionClient,
+    loanId: string,
+    paymentAmount: number,
+    userId: string,
+    clientId: number,
+  ) {
+    const promises = await tx.paymentPromise.findMany({
+      where: { loanId, status: { in: ['PENDING', 'PARTIAL', 'BROKEN'] } },
+      orderBy: [{ dueDate: 'asc' }, { createdAt: 'asc' }],
+    });
+
+    let remainingPayment = paymentAmount;
+    for (const promise of promises) {
+      if (remainingPayment <= 0) break;
+      const promisedAmount = Number(promise.amount);
+      const currentFulfilled = Number(promise.fulfilledAmount);
+      const outstanding = Math.max(0, promisedAmount - currentFulfilled);
+      if (outstanding === 0) continue;
+
+      const applied = Math.min(outstanding, remainingPayment);
+      const fulfilledAmount = currentFulfilled + applied;
+      const fulfilled = fulfilledAmount >= promisedAmount;
+      const status = fulfilled ? 'FULFILLED' : promise.status === 'BROKEN' ? 'BROKEN' : 'PARTIAL';
+
+      await tx.paymentPromise.update({
+        where: { id: promise.id },
+        data: { fulfilledAmount, status },
+      });
+      if (fulfilled) {
+        await tx.task.updateMany({
+          where: { collectionInteractionId: promise.interactionId, status: { not: 'COMPLETED' } },
+          data: { status: 'COMPLETED' },
+        });
+      }
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'PAYMENT_PROMISE_UPDATED',
+          entityType: 'PaymentPromise',
+          entityId: promise.id,
+          clientId,
+          oldValues: {
+            fulfilledAmount: currentFulfilled,
+            status: promise.status,
+          },
+          newValues: { fulfilledAmount, status, paymentApplied: applied },
+        },
+      });
+      remainingPayment -= applied;
     }
   }
 }

@@ -2,19 +2,35 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, ArrowLeft, CalendarDays, CheckCircle2, CircleDollarSign, ClipboardList, Info, Plus, WalletCards } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  CalendarDays,
+  CheckCircle2,
+  CircleDollarSign,
+  ClipboardList,
+  Info,
+  Plus,
+  WalletCards,
+} from 'lucide-react';
 import { addLoanCapital, getLoan, getPayoffQuote, type LoanDetail } from '@/lib/api/loans';
 import { createPayment } from '@/lib/api/payments';
 import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
 import { formatDop } from '@/lib/currency';
-import { getLoanDetailTotals, getLoanOperationalSummary, getScheduleRemaining } from './loan-detail.helpers';
+import {
+  getLoanDetailTotals,
+  getLoanOperationalSummary,
+  getScheduleRemaining,
+} from './loan-detail.helpers';
 import { getLoanTitle } from './loan-title';
 import { RegisterPaymentModal, type RegisterPaymentValues } from './register-payment-modal';
 import { DatePickerInput } from '@/components/ui/date-picker-input';
 import type { LoanPayoffQuote } from '@inversiones/shared';
+import { CollectionManagementPanel } from './collection-management-panel';
 
 const fmt = (value: number | string) => formatDop(value, { decimals: 2, space: true });
-const fmtDate = (value: string) => new Date(value).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
+const fmtDate = (value: string) =>
+  new Date(value).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
 const empty = '—';
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -29,15 +45,18 @@ function getStatusLabel(status: string) {
 
 function StatusBadge({ status }: { status: string }) {
   const label = getStatusLabel(status);
-  const tone = label === 'Pagado'
-    ? 'bg-state-neutral-bg text-state-neutral'
-    : label === 'Vencido'
-      ? 'bg-state-danger-bg text-state-danger'
-      : label === 'Pendiente' || label === 'Parcial'
-        ? 'bg-state-warning-bg text-state-warning'
-        : 'bg-state-success-bg text-state-success';
+  const tone =
+    label === 'Pagado'
+      ? 'bg-state-neutral-bg text-state-neutral'
+      : label === 'Vencido'
+        ? 'bg-state-danger-bg text-state-danger'
+        : label === 'Pendiente' || label === 'Parcial'
+          ? 'bg-state-warning-bg text-state-warning'
+          : 'bg-state-success-bg text-state-success';
 
-  return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${tone}`}>{label}</span>;
+  return (
+    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${tone}`}>{label}</span>
+  );
 }
 
 const summaryTones = {
@@ -57,19 +76,39 @@ const summaryTones = {
 
 type SummaryTone = keyof typeof summaryTones;
 
-function SummaryCard({ icon, label, tone, value }: { icon: React.ReactNode; label: string; tone: SummaryTone; value: string }) {
+function SummaryCard({
+  icon,
+  label,
+  tone,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  tone: SummaryTone;
+  value: string;
+}) {
   const classes = summaryTones[tone];
 
   return (
     <div className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
-      <div className={`flex h-10 w-10 items-center justify-center rounded-full ${classes.icon}`}>{icon}</div>
+      <div className={`flex h-10 w-10 items-center justify-center rounded-full ${classes.icon}`}>
+        {icon}
+      </div>
       <p className="mt-4 text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63]">{label}</p>
       <p className={`mt-1 text-xl font-bold ${classes.value}`}>{value}</p>
     </div>
   );
 }
 
-function DataRow({ label, tone = 'text-text-primary', value }: { label: string; tone?: string; value: React.ReactNode }) {
+function DataRow({
+  label,
+  tone = 'text-text-primary',
+  value,
+}: {
+  label: string;
+  tone?: string;
+  value: React.ReactNode;
+}) {
   return (
     <div className="flex items-center justify-between gap-4 border-b border-[#EDF2EF] py-2.5 last:border-b-0">
       <span className="text-sm font-semibold text-[#5C6D63]">{label}</span>
@@ -78,11 +117,21 @@ function DataRow({ label, tone = 'text-text-primary', value }: { label: string; 
   );
 }
 
-function InfoPanel({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+function InfoPanel({
+  icon,
+  title,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
       <div className="flex items-center gap-3 border-b border-[#EDF2EF] bg-[#FBFCFB] px-5 py-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eaf5ed] text-[#2f7654]">{icon}</div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eaf5ed] text-[#2f7654]">
+          {icon}
+        </div>
         <h2 className="text-base font-bold text-[#173D2C]">{title}</h2>
       </div>
       <div className="p-5">{children}</div>
@@ -153,20 +202,32 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
     };
   }, [loan, payoffDate]);
 
-  const totals = useMemo(() => loan ? getLoanDetailTotals({
-    principal: Number(loan.principal),
-    balance: Number(loan.balance),
-    totalAmount: Number(loan.totalAmount),
-    term: loan.term,
-    payments: loan.payments.map((payment) => ({ amount: Number(payment.amount) })),
-    schedule: loan.schedule,
-  }) : null, [loan]);
+  const totals = useMemo(
+    () =>
+      loan
+        ? getLoanDetailTotals({
+            principal: Number(loan.principal),
+            balance: Number(loan.balance),
+            totalAmount: Number(loan.totalAmount),
+            term: loan.term,
+            payments: loan.payments.map((payment) => ({ amount: Number(payment.amount) })),
+            schedule: loan.schedule,
+          })
+        : null,
+    [loan],
+  );
 
-  const operational = useMemo(() => loan ? getLoanOperationalSummary({
-    schedule: loan.schedule,
-    payments: loan.payments,
-    lateFees: loan.lateFees ?? [],
-  }) : null, [loan]);
+  const operational = useMemo(
+    () =>
+      loan
+        ? getLoanOperationalSummary({
+            schedule: loan.schedule,
+            payments: loan.payments,
+            lateFees: loan.lateFees ?? [],
+          })
+        : null,
+    [loan],
+  );
 
   async function handlePayment(values: RegisterPaymentValues) {
     if (!loan) return;
@@ -217,29 +278,55 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
   }
 
   if (loading) {
-    return <main className="flex min-h-screen items-center justify-center bg-page text-sm font-medium text-text-muted">Cargando préstamo...</main>;
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-page text-sm font-medium text-text-muted">
+        Cargando préstamo...
+      </main>
+    );
   }
 
   if (!loan || !totals || !operational) {
     return (
       <main className="min-h-screen bg-page p-5">
         <div className="mx-auto max-w-[1480px] rounded-2xl border border-border-soft bg-white p-6 shadow-card">
-          <p className="text-sm font-medium text-state-danger">{loadError ?? 'Préstamo no encontrado.'}</p>
-          <Link className="mt-4 inline-flex text-sm font-bold text-primary-accent" href="/prestamos">Volver a préstamos</Link>
+          <p className="text-sm font-medium text-state-danger">
+            {loadError ?? 'Préstamo no encontrado.'}
+          </p>
+          <Link
+            className="mt-4 inline-flex text-sm font-bold text-primary-accent"
+            href="/prestamos"
+          >
+            Volver a préstamos
+          </Link>
         </div>
       </main>
     );
   }
 
-  const frequency = loan.paymentFreq === 'MONTHLY' ? 'Mensual' : loan.paymentFreq === 'DAILY' ? 'Diario' : loan.paymentFreq;
-  const interestType = loan.interestType === 'INDEFINITE' ? 'Indefinido' : loan.interestType === 'REDUCING' ? 'Reducing' : loan.interestType === 'FLAT' ? 'Simple' : loan.interestType;
+  const frequency =
+    loan.paymentFreq === 'MONTHLY'
+      ? 'Mensual'
+      : loan.paymentFreq === 'DAILY'
+        ? 'Diario'
+        : loan.paymentFreq;
+  const interestType =
+    loan.interestType === 'INDEFINITE'
+      ? 'Indefinido'
+      : loan.interestType === 'REDUCING'
+        ? 'Reducing'
+        : loan.interestType === 'FLAT'
+          ? 'Simple'
+          : loan.interestType;
   const nextSchedule = operational.nextSchedule;
   const lastPayment = operational.lastPayment;
 
   return (
     <main className="min-h-screen bg-page p-5">
       <div className="mx-auto max-w-[1480px]">
-        <Link className="inline-flex items-center gap-2 text-sm font-bold text-[#5C6D63] transition hover:text-[#2f7654]" href={`/clientes/${loan.clientId}`}>
+        <Link
+          className="inline-flex items-center gap-2 text-sm font-bold text-[#5C6D63] transition hover:text-[#2f7654]"
+          href={`/clientes/${loan.clientId}`}
+        >
           <ArrowLeft className="h-4 w-4" />
           Volver al cliente
         </Link>
@@ -250,13 +337,28 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-2xl font-bold text-neutral-900">{getLoanTitle(loan)}</h1>
                 <StatusBadge status={loan.status} />
-                <span className="inline-flex rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-bold text-[#2f7654]">{totals.paidInstallments}/{totals.totalInstallments} cuotas pagadas</span>
-                <span className="inline-flex rounded-full bg-neutral-100 px-3 py-1 text-xs font-bold text-neutral-600">#{loan.loanNumber}</span>
+                <span className="inline-flex rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-bold text-[#2f7654]">
+                  {totals.paidInstallments}/{totals.totalInstallments} cuotas pagadas
+                </span>
+                <span className="inline-flex rounded-full bg-neutral-100 px-3 py-1 text-xs font-bold text-neutral-600">
+                  #{loan.loanNumber}
+                </span>
               </div>
-              <p className="mt-2 text-sm font-semibold text-[#5C6D63]">{loan.client.firstName} {loan.client.lastName} · {frequency}</p>
-              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#eaf5ed] px-3 py-1 text-sm font-bold text-[#2f7654]"><CalendarDays className="h-4 w-4" /> Inicio: {fmtDate(loan.startDate)}</p>
+              <p className="mt-2 text-sm font-semibold text-[#5C6D63]">
+                {loan.client.firstName} {loan.client.lastName} · {frequency}
+              </p>
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#eaf5ed] px-3 py-1 text-sm font-bold text-[#2f7654]">
+                <CalendarDays className="h-4 w-4" /> Inicio: {fmtDate(loan.startDate)}
+              </p>
             </div>
-            <button className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-[#285c43]" onClick={() => { setPaymentError(null); setModalOpen(true); }} type="button">
+            <button
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-[#285c43]"
+              onClick={() => {
+                setPaymentError(null);
+                setModalOpen(true);
+              }}
+              type="button"
+            >
               <Plus className="h-4 w-4" />
               Registrar cobro
             </button>
@@ -264,30 +366,58 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
         </header>
 
         <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <SummaryCard icon={<WalletCards className="h-5 w-5" />} label="Saldo pendiente" tone="warning" value={fmt(totals.balance)} />
-          <SummaryCard icon={<CalendarDays className="h-5 w-5" />} label="Próxima cuota" tone="quota" value={fmt(operational.nextSchedulePending)} />
-          <SummaryCard icon={<CircleDollarSign className="h-5 w-5" />} label="Total pagado" tone="paid" value={fmt(totals.totalPaid)} />
+          <SummaryCard
+            icon={<WalletCards className="h-5 w-5" />}
+            label="Saldo pendiente"
+            tone="warning"
+            value={fmt(totals.balance)}
+          />
+          <SummaryCard
+            icon={<CalendarDays className="h-5 w-5" />}
+            label="Próxima cuota"
+            tone="quota"
+            value={fmt(operational.nextSchedulePending)}
+          />
+          <SummaryCard
+            icon={<CircleDollarSign className="h-5 w-5" />}
+            label="Total pagado"
+            tone="paid"
+            value={fmt(totals.totalPaid)}
+          />
         </section>
 
         <section className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-5">
+            <CollectionManagementPanel
+              altPhone={loan.client.altPhone}
+              loanId={loan.id}
+              phone={loan.client.phone}
+            />
+
             <section className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-base font-bold text-[#173D2C]">Progreso de pago</h2>
-                  <p className="mt-1 text-sm font-medium text-[#5C6D63]">{totals.paidInstallments} de {totals.totalInstallments} cuotas pagadas</p>
+                  <p className="mt-1 text-sm font-medium text-[#5C6D63]">
+                    {totals.paidInstallments} de {totals.totalInstallments} cuotas pagadas
+                  </p>
                 </div>
                 <span className="text-xl font-bold text-[#2f7654]">{totals.progress}%</span>
               </div>
               <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#EDF2EF]">
-                <div className="h-full rounded-full bg-[#2f7654]" style={{ width: `${totals.progress}%` }} />
+                <div
+                  className="h-full rounded-full bg-[#2f7654]"
+                  style={{ width: `${totals.progress}%` }}
+                />
               </div>
             </section>
 
             <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
               <div className="border-b border-[#EDF2EF] px-5 py-4">
                 <h2 className="text-base font-bold text-[#173D2C]">Calendario de cuotas</h2>
-                <p className="mt-1 text-sm font-medium text-[#5C6D63]">Detalle de vencimientos y pagos aplicados.</p>
+                <p className="mt-1 text-sm font-medium text-[#5C6D63]">
+                  Detalle de vencimientos y pagos aplicados.
+                </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-[860px] w-full text-left">
@@ -306,13 +436,20 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                       const amount = Number(row.amount);
                       const paidAmount = Number(row.paidAmount ?? 0);
                       return (
-                        <tr className="border-t border-[#EDF2EF] text-sm font-medium text-[#3F4542]" key={row.id}>
+                        <tr
+                          className="border-t border-[#EDF2EF] text-sm font-medium text-[#3F4542]"
+                          key={row.id}
+                        >
                           <td className="px-5 py-4 font-bold text-[#173D2C]">#{index + 1}</td>
                           <td className="px-5 py-4">{fmtDate(row.dueDate)}</td>
                           <td className="px-5 py-4">{fmt(amount)}</td>
                           <td className="px-5 py-4">{fmt(paidAmount)}</td>
-                          <td className="px-5 py-4">{fmt(getScheduleRemaining(amount, paidAmount))}</td>
-                          <td className="px-5 py-4"><StatusBadge status={row.status} /></td>
+                          <td className="px-5 py-4">
+                            {fmt(getScheduleRemaining(amount, paidAmount))}
+                          </td>
+                          <td className="px-5 py-4">
+                            <StatusBadge status={row.status} />
+                          </td>
                         </tr>
                       );
                     })}
@@ -325,20 +462,41 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
           <aside className="space-y-4">
             <InfoPanel icon={<CircleDollarSign className="h-5 w-5" />} title="Saldo anticipado">
               <label className="mb-3 block">
-                <span className="mb-2 block text-sm font-semibold text-[#5C6D63]">Fecha de saldo</span>
+                <span className="mb-2 block text-sm font-semibold text-[#5C6D63]">
+                  Fecha de saldo
+                </span>
                 <DatePickerInput
                   className="h-10 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-bold text-[#173D2C] outline-none"
                   onChange={setPayoffDate}
                   value={payoffDate}
                 />
               </label>
-              <DataRow label="Capital pendiente" tone="text-[#173D2C]" value={payoffQuote ? fmt(payoffQuote.capitalOutstanding) : empty} />
-              <DataRow label="Interés generado" tone="text-[#B63B0B]" value={payoffQuote ? fmt(payoffQuote.earnedInterest) : empty} />
-              <DataRow label="Interés futuro descontado" tone="text-[#2F7654]" value={payoffQuote ? fmt(payoffQuote.unearnedInterestDiscount) : empty} />
+              <DataRow
+                label="Capital pendiente"
+                tone="text-[#173D2C]"
+                value={payoffQuote ? fmt(payoffQuote.capitalOutstanding) : empty}
+              />
+              <DataRow
+                label="Interés generado"
+                tone="text-[#B63B0B]"
+                value={payoffQuote ? fmt(payoffQuote.earnedInterest) : empty}
+              />
+              <DataRow
+                label="Interés futuro descontado"
+                tone="text-[#2F7654]"
+                value={payoffQuote ? fmt(payoffQuote.unearnedInterestDiscount) : empty}
+              />
               <DataRow label="Días generados" value={payoffQuote?.daysGenerated ?? empty} />
-              <DataRow label="Interés diario" value={payoffQuote ? fmt(payoffQuote.dailyInterest) : empty} />
+              <DataRow
+                label="Interés diario"
+                value={payoffQuote ? fmt(payoffQuote.dailyInterest) : empty}
+              />
               <DataRow label="Mora/cargos" value={payoffQuote ? fmt(payoffQuote.fees) : empty} />
-              <DataRow label="Total para saldar" tone="text-[#111827]" value={payoffQuote ? fmt(payoffQuote.totalToPay) : empty} />
+              <DataRow
+                label="Total para saldar"
+                tone="text-[#111827]"
+                value={payoffQuote ? fmt(payoffQuote.totalToPay) : empty}
+              />
             </InfoPanel>
 
             {loan.interestType === 'INDEFINITE' && loan.status === 'ACTIVE' ? (
@@ -355,7 +513,9 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                     />
                   </label>
                   <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#5C6D63]">Fecha efectiva</span>
+                    <span className="mb-2 block text-sm font-semibold text-[#5C6D63]">
+                      Fecha efectiva
+                    </span>
                     <DatePickerInput
                       className="h-10 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-bold text-[#173D2C] outline-none"
                       onChange={setCapitalDate}
@@ -368,7 +528,9 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                     placeholder="Notas"
                     value={capitalNotes}
                   />
-                  {capitalError ? <p className="text-sm font-semibold text-[#9F3F25]">{capitalError}</p> : null}
+                  {capitalError ? (
+                    <p className="text-sm font-semibold text-[#9F3F25]">{capitalError}</p>
+                  ) : null}
                   <button
                     className="h-10 w-full rounded-full bg-[#2F7654] text-sm font-bold text-white disabled:opacity-60"
                     disabled={capitalSaving}
@@ -382,24 +544,44 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
             ) : null}
 
             <InfoPanel icon={<ClipboardList className="h-5 w-5" />} title="Próxima cuota">
-              <DataRow label="Vencimiento" value={nextSchedule ? fmtDate(nextSchedule.dueDate) : empty} />
+              <DataRow
+                label="Vencimiento"
+                value={nextSchedule ? fmtDate(nextSchedule.dueDate) : empty}
+              />
               <DataRow label="Monto" value={nextSchedule ? fmt(nextSchedule.amount) : empty} />
-              <DataRow label="Pagado" value={nextSchedule ? fmt(nextSchedule.paidAmount ?? 0) : empty} />
-              <DataRow label="Pendiente" tone="text-[#B63B0B]" value={fmt(operational.nextSchedulePending)} />
-              <DataRow label="Estado" value={nextSchedule ? <StatusBadge status={nextSchedule.status} /> : empty} />
+              <DataRow
+                label="Pagado"
+                value={nextSchedule ? fmt(nextSchedule.paidAmount ?? 0) : empty}
+              />
+              <DataRow
+                label="Pendiente"
+                tone="text-[#B63B0B]"
+                value={fmt(operational.nextSchedulePending)}
+              />
+              <DataRow
+                label="Estado"
+                value={nextSchedule ? <StatusBadge status={nextSchedule.status} /> : empty}
+              />
             </InfoPanel>
 
             <InfoPanel icon={<AlertCircle className="h-5 w-5" />} title="Pendiente">
               <DataRow label="Saldo total" tone="text-[#B63B0B]" value={fmt(totals.balance)} />
               <DataRow label="Cuotas vencidas" value={operational.overdueInstallments} />
               <DataRow label="Cuotas pendientes" value={operational.pendingInstallments} />
-              <DataRow label="Mora existente" tone="text-state-danger" value={fmt(operational.unpaidLateFees)} />
+              <DataRow
+                label="Mora existente"
+                tone="text-state-danger"
+                value={fmt(operational.unpaidLateFees)}
+              />
             </InfoPanel>
 
             <InfoPanel icon={<CheckCircle2 className="h-5 w-5" />} title="Último pago">
               <DataRow label="Total pagado" tone="text-[#1E4E9A]" value={fmt(totals.totalPaid)} />
               <DataRow label="Último pago" value={lastPayment ? fmt(lastPayment.amount) : empty} />
-              <DataRow label="Fecha" value={lastPayment ? fmtDate(lastPayment.paymentDate) : empty} />
+              <DataRow
+                label="Fecha"
+                value={lastPayment ? fmtDate(lastPayment.paymentDate) : empty}
+              />
               <DataRow label="Recibido por" value={lastPayment?.receivedBy?.name ?? empty} />
             </InfoPanel>
 
@@ -417,7 +599,15 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
         </section>
       </div>
 
-      {modalOpen ? <RegisterPaymentModal error={paymentError} isOpen onClose={() => setModalOpen(false)} onSubmit={handlePayment} saving={saving} /> : null}
+      {modalOpen ? (
+        <RegisterPaymentModal
+          error={paymentError}
+          isOpen
+          onClose={() => setModalOpen(false)}
+          onSubmit={handlePayment}
+          saving={saving}
+        />
+      ) : null}
     </main>
   );
 }

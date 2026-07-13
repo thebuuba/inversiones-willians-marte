@@ -53,6 +53,10 @@ describe('PaymentsService', () => {
       paymentSchedule: {
         update: paymentScheduleUpdate,
       },
+      paymentPromise: {
+        findMany: jest.fn().mockResolvedValue([]),
+        update: jest.fn(),
+      },
       loan: {
         findUnique: jest
           .fn()
@@ -117,6 +121,10 @@ describe('PaymentsService', () => {
       paymentSchedule: {
         update: jest.fn(),
       },
+      paymentPromise: {
+        findMany: jest.fn().mockResolvedValue([]),
+        update: jest.fn(),
+      },
       loan: {
         findUnique: jest
           .fn()
@@ -163,6 +171,10 @@ describe('PaymentsService', () => {
         create: jest.fn().mockResolvedValue({ id: 'payment-1', amount: 591.06, allocations: [] }),
       },
       paymentSchedule: {
+        update: jest.fn(),
+      },
+      paymentPromise: {
+        findMany: jest.fn().mockResolvedValue([]),
         update: jest.fn(),
       },
       loan: {
@@ -217,6 +229,52 @@ describe('PaymentsService', () => {
     await expect(
       service.create({ loanId: 'loan-1', clientId: 999, amount: 100, paymentDate }, 'user-1'),
     ).rejects.toThrow('Payment client does not match the loan client');
+  });
+
+  it('fulfills the oldest open promise when its payment is registered', async () => {
+    const promiseUpdate = jest.fn();
+    const tx = {
+      payment: {
+        create: jest.fn().mockResolvedValue({ id: 'payment-1', allocations: [] }),
+      },
+      paymentSchedule: { update: jest.fn() },
+      paymentPromise: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: 'promise-1',
+            interactionId: 'interaction-1',
+            amount: 100,
+            fulfilledAmount: 0,
+            status: 'PENDING',
+          },
+        ]),
+        update: promiseUpdate,
+      },
+      task: { updateMany: jest.fn() },
+      loan: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValueOnce(loan)
+          .mockResolvedValueOnce({
+            ...loan,
+            schedule: [{ ...schedule, paidAmount: 100, status: 'PAID' }],
+          }),
+        update: jest.fn(),
+      },
+      auditLog: { create: jest.fn() },
+    };
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
+
+    await service.create({ loanId: 'loan-1', clientId: 1, amount: 100, paymentDate }, 'user-1');
+
+    expect(promiseUpdate).toHaveBeenCalledWith({
+      where: { id: 'promise-1' },
+      data: { fulfilledAmount: 100, status: 'FULFILLED' },
+    });
+    expect(tx.task.updateMany).toHaveBeenCalledWith({
+      where: { collectionInteractionId: 'interaction-1', status: { not: 'COMPLETED' } },
+      data: { status: 'COMPLETED' },
+    });
   });
 
   it('rejects an amount greater than the outstanding scheduled balance', async () => {

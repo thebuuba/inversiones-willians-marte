@@ -46,6 +46,49 @@ export const AllocationTypeEnum = {
 } as const;
 export type AllocationType = (typeof AllocationTypeEnum)[keyof typeof AllocationTypeEnum];
 
+export const CollectionChannelEnum = {
+  CALL: 'CALL',
+  WHATSAPP: 'WHATSAPP',
+  VISIT: 'VISIT',
+  SMS: 'SMS',
+  EMAIL: 'EMAIL',
+  OTHER: 'OTHER',
+} as const;
+export type CollectionChannel = (typeof CollectionChannelEnum)[keyof typeof CollectionChannelEnum];
+
+export const CollectionResultEnum = {
+  CONTACTED: 'CONTACTED',
+  NO_ANSWER: 'NO_ANSWER',
+  WRONG_NUMBER: 'WRONG_NUMBER',
+  PAYMENT_PROMISE: 'PAYMENT_PROMISE',
+  EXTENSION_REQUEST: 'EXTENSION_REQUEST',
+  DISPUTE: 'DISPUTE',
+  REFUSED: 'REFUSED',
+  OTHER: 'OTHER',
+} as const;
+export type CollectionResult = (typeof CollectionResultEnum)[keyof typeof CollectionResultEnum];
+
+export const PaymentPromiseStatusEnum = {
+  PENDING: 'PENDING',
+  PARTIAL: 'PARTIAL',
+  FULFILLED: 'FULFILLED',
+  BROKEN: 'BROKEN',
+  CANCELLED: 'CANCELLED',
+} as const;
+export type PaymentPromiseStatus =
+  (typeof PaymentPromiseStatusEnum)[keyof typeof PaymentPromiseStatusEnum];
+
+export interface CreateCollectionInteractionDto {
+  loanId: string;
+  channel: CollectionChannel;
+  result: CollectionResult;
+  notes: string;
+  nextFollowUpDate?: string;
+  nextFollowUpTime?: string;
+  promiseAmount?: number;
+  promiseDate?: string;
+}
+
 export interface CreateClientDto {
   firstName: string;
   lastName: string;
@@ -307,7 +350,12 @@ export interface CreateDocumentDto {
 }
 
 export type DocumentType = 'cedula' | 'recibo' | 'acto_notarial' | 'otro';
-export type DocumentProcessingStatus = 'pending' | 'processed' | 'needs_review' | 'failed' | 'not_applicable';
+export type DocumentProcessingStatus =
+  | 'pending'
+  | 'processed'
+  | 'needs_review'
+  | 'failed'
+  | 'not_applicable';
 
 export interface DocumentItem extends CreateDocumentDto {
   id: string;
@@ -431,6 +479,9 @@ export interface TaskItem {
   category: string;
   status: TaskStatus;
   createdById: string;
+  clientId?: number | null;
+  loanId?: string | null;
+  collectionInteractionId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

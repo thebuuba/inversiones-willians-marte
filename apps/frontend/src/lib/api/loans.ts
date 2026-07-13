@@ -1,11 +1,18 @@
 import { api } from '../api';
-import type { AddLoanCapitalDto, ApiResponse, CreateLoanDto, LoanPayoffQuote } from '@inversiones/shared';
+import type {
+  AddLoanCapitalDto,
+  ApiResponse,
+  CreateLoanDto,
+  LoanPayoffQuote,
+} from '@inversiones/shared';
 
 export interface LoanListClient {
-  id: string;
+  id: number;
   firstName: string;
   lastName: string;
   identification: string | null;
+  phone?: string | null;
+  altPhone?: string | null;
 }
 
 export interface LoanListProduct {
@@ -103,7 +110,12 @@ export interface LoanDetail extends LoanListItem {
   lateFees?: LoanDetailLateFee[];
 }
 
-export async function getLoans(status?: string, search?: string, take = 50, skip = 0): Promise<PaginatedLoans> {
+export async function getLoans(
+  status?: string,
+  search?: string,
+  take = 50,
+  skip = 0,
+): Promise<PaginatedLoans> {
   const params: Record<string, string> = {};
   if (status) params.status = status;
   if (search) params.search = search;
