@@ -1,20 +1,14 @@
 import type { NextConfig } from "next";
+import { networkInterfaces } from "node:os";
+import { getAllowedDevOrigins } from "./src/lib/mobile-network";
 
-function getMobileDevOrigin() {
-  const mobileBaseUrl = process.env.NEXT_PUBLIC_MOBILE_BASE_URL;
-  if (!mobileBaseUrl) return undefined;
-
-  try {
-    return new URL(mobileBaseUrl).host;
-  } catch {
-    return undefined;
-  }
-}
-
-const mobileDevOrigin = getMobileDevOrigin();
+const allowedDevOrigins = getAllowedDevOrigins(
+  process.env.NEXT_PUBLIC_MOBILE_BASE_URL,
+  networkInterfaces(),
+);
 
 const nextConfig: NextConfig = {
-  ...(mobileDevOrigin ? { allowedDevOrigins: [mobileDevOrigin] } : {}),
+  ...(allowedDevOrigins.length > 0 ? { allowedDevOrigins } : {}),
 };
 
 export default nextConfig;

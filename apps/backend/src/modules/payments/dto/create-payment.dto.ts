@@ -7,7 +7,7 @@ export class CreatePaymentDto {
   @IsInt()
   clientId: number;
 
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
   amount: number;
 

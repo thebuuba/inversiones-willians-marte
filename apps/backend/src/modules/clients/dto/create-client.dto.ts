@@ -1,4 +1,14 @@
-import { IsDate, IsString, MinLength, IsOptional, IsEmail, IsInt, Min } from 'class-validator';
+import {
+  IsDate,
+  IsString,
+  MinLength,
+  IsOptional,
+  IsEmail,
+  IsInt,
+  MaxLength,
+  Matches,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateClientDto {
@@ -54,6 +64,10 @@ export class CreateClientDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(1_500_000)
+  @Matches(/^(?:|data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=\s]+)$/, {
+    message: 'La fotografía debe ser una imagen JPG, PNG o WebP válida',
+  })
   photo?: string;
 
   @IsOptional()

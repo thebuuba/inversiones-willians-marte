@@ -8,6 +8,54 @@ import { CreateLoanDto } from '../../modules/loans/dto/create-loan.dto';
 import { CreatePaymentDto } from '../../modules/payments/dto/create-payment.dto';
 
 describe('financial input validation', () => {
+  it('rejects monetary values with more than two decimal places', async () => {
+    const dto = plainToInstance(CreatePaymentDto, {
+      loanId: 'loan-1',
+      clientId: 1,
+      amount: 10.999,
+      paymentDate: '2026-07-13',
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors).toEqual(
+      expect.arrayContaining([expect.objectContaining({ property: 'amount' })]),
+    );
+  });
+
+  it('accepts a supported compressed client profile photograph', async () => {
+    const dto = plainToInstance(CreateClientDto, {
+      firstName: 'Ana',
+      lastName: 'Diaz',
+      photo: 'data:image/webp;base64,UklGRg==',
+    });
+
+    await expect(validate(dto)).resolves.toEqual([]);
+  });
+
+  it('accepts an empty client profile photograph so updates can remove it', async () => {
+    const dto = plainToInstance(CreateClientDto, {
+      firstName: 'Ana',
+      lastName: 'Diaz',
+      photo: '',
+    });
+
+    await expect(validate(dto)).resolves.toEqual([]);
+  });
+
+  it('rejects arbitrary client profile strings', async () => {
+    const dto = plainToInstance(CreateClientDto, {
+      firstName: 'Ana',
+      lastName: 'Diaz',
+      photo: 'https://untrusted.example/photo.svg',
+    });
+
+    const errors = await validate(dto);
+    expect(errors).toEqual(
+      expect.arrayContaining([expect.objectContaining({ property: 'photo' })]),
+    );
+  });
+
   it('rejects fractional loan terms', async () => {
     const dto = plainToInstance(CreateLoanDto, {
       clientId: 1,

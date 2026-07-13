@@ -1,10 +1,27 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from 'react';
+import QRCode from 'qrcode';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+  type ReactNode,
+} from 'react';
 import { createClient, getClient, updateClient } from '@/lib/api/clients';
 import { compressImage } from '@/lib/compress-image';
+import {
+  closeClientPhotoCaptureSession,
+  createClientPhotoCaptureSession,
+  getCapturedClientPhoto,
+  getClientPhotoCaptureStatus,
+} from '@/lib/api/client-photo-capture';
+import { buildMobileCaptureUrl } from '@/lib/mobile-capture-url';
+import { MAX_COMPRESSED_CLIENT_PHOTO_BYTES, validateClientPhoto } from './client-photo';
 import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
 import {
   getClientFormFromClient,
@@ -16,11 +33,14 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Camera,
+  CheckCircle2,
   ChevronDown,
   FileText,
   ImageIcon,
+  Loader2,
   MapPin,
   Phone,
+  QrCode,
   Save,
   Upload,
   UserRound,
@@ -50,7 +70,15 @@ function maskPhone(value: string): string {
   return formatLocal(digits.slice(0, 10));
 }
 
-function PageCard({ children, className = '', index = 0 }: { children: ReactNode; className?: string; index?: number }) {
+function PageCard({
+  children,
+  className = '',
+  index = 0,
+}: {
+  children: ReactNode;
+  className?: string;
+  index?: number;
+}) {
   return (
     <motion.section
       animate={{ opacity: 1, y: 0 }}
@@ -111,7 +139,9 @@ function StyledInput({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">{label}</span>
+      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">
+        {label}
+      </span>
       <input
         className="h-[52px] w-full rounded-[14px] border border-[#DDEBE3] bg-white px-4 text-sm font-medium text-[#173D2C] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition placeholder:text-[#7E808A] focus:border-[#2F7654] focus:ring-4 focus:ring-[#EAF6EF]"
         placeholder={placeholder}
@@ -137,7 +167,9 @@ function StyledSelect({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">{label}</span>
+      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">
+        {label}
+      </span>
       <div className="relative">
         <select
           className="h-[52px] w-full appearance-none rounded-[14px] border border-[#DDEBE3] bg-white px-4 pr-12 text-sm font-medium text-[#151918] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition focus:border-[#2F7654] focus:ring-4 focus:ring-[#EAF6EF]"
@@ -167,7 +199,9 @@ function StyledTextarea({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">{label}</span>
+      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">
+        {label}
+      </span>
       <textarea
         className="min-h-[116px] w-full resize-y rounded-[14px] border border-[#DDEBE3] bg-white px-4 py-4 text-sm font-medium text-[#173D2C] shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition placeholder:text-[#7E808A] focus:border-[#2F7654] focus:ring-4 focus:ring-[#EAF6EF]"
         placeholder={placeholder}
@@ -210,19 +244,103 @@ function CardHeader({
 function ClientPhotoUploader({
   value,
   onChange,
+  clientId,
 }: {
   value: string;
   onChange: (value: string) => void;
+  clientId?: number;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const onChangeRef = useRef(onChange);
   const [dragging, setDragging] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState('');
+  const [captureToken, setCaptureToken] = useState('');
+  const [captureUrl, setCaptureUrl] = useState('');
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [creatingQr, setCreatingQr] = useState(false);
+  const [captureError, setCaptureError] = useState('');
+  const [captureReceived, setCaptureReceived] = useState(false);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    if (!captureToken) return;
+    let active = true;
+    let receivingPhoto = false;
+
+    async function pollCapture() {
+      try {
+        const session = await getClientPhotoCaptureStatus(captureToken);
+        if (!active || !session.photoReady || receivingPhoto) return;
+        receivingPhoto = true;
+        const photo = await getCapturedClientPhoto(captureToken);
+        if (!active) return;
+        onChangeRef.current(photo);
+        setCaptureReceived(true);
+        setCaptureError('');
+        setQrDataUrl('');
+        setCaptureUrl('');
+        setCaptureToken('');
+      } catch (captureStatusError) {
+        receivingPhoto = false;
+        const status =
+          typeof captureStatusError === 'object' &&
+          captureStatusError !== null &&
+          'response' in captureStatusError
+            ? (captureStatusError.response as { status?: number } | undefined)?.status
+            : undefined;
+        if (active && (status === 404 || status === 410)) {
+          setCaptureError('El enlace expiró. Genera un QR nuevo.');
+          setCaptureToken('');
+        }
+      }
+    }
+
+    void pollCapture();
+    const interval = window.setInterval(() => void pollCapture(), 1500);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      closeClientPhotoCaptureSession(captureToken).catch(() => undefined);
+    };
+  }, [captureToken]);
 
   async function handleFile(file?: File) {
     if (!file) return;
-    const compressed = await compressImage(file, 800, 0.7);
-    const reader = new FileReader();
-    reader.onload = () => onChange(reader.result as string);
-    reader.readAsDataURL(compressed);
+    const validationError = validateClientPhoto(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setProcessing(true);
+    setError('');
+    try {
+      const compressed = await compressImage(file, 800, 0.7);
+      if (compressed.size > MAX_COMPRESSED_CLIENT_PHOTO_BYTES) {
+        setError(
+          'No se pudo reducir la fotografía lo suficiente. Selecciona una imagen más pequeña.',
+        );
+        setProcessing(false);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        onChangeRef.current(reader.result as string);
+        setProcessing(false);
+      };
+      reader.onerror = () => {
+        setError('No se pudo leer la fotografía seleccionada.');
+        setProcessing(false);
+      };
+      reader.readAsDataURL(compressed);
+    } catch {
+      setError('No se pudo procesar la fotografía seleccionada.');
+      setProcessing(false);
+    }
   }
 
   function handleDrop(event: DragEvent<HTMLButtonElement>) {
@@ -232,12 +350,47 @@ function ClientPhotoUploader({
   }
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
-    handleFile(event.target.files?.[0]);
+    void handleFile(event.target.files?.[0]);
+    event.target.value = '';
   }
 
   function handleRemove() {
-    onChange('');
+    onChangeRef.current('');
+    setError('');
+    setCaptureReceived(false);
     if (inputRef.current) inputRef.current.value = '';
+  }
+
+  async function handleCreateQr() {
+    setCreatingQr(true);
+    setCaptureError('');
+    setCaptureReceived(false);
+    let nextToken = '';
+    try {
+      if (captureToken) {
+        await closeClientPhotoCaptureSession(captureToken).catch(() => undefined);
+      }
+      const session = await createClientPhotoCaptureSession(clientId);
+      nextToken = session.token;
+      const nextCaptureUrl = await buildMobileCaptureUrl(
+        `/captura-foto-cliente/${encodeURIComponent(session.token)}`,
+      );
+      const nextQrDataUrl = await QRCode.toDataURL(nextCaptureUrl, {
+        margin: 1,
+        width: 240,
+        color: { dark: '#173D2C', light: '#FFFFFF' },
+      });
+      setCaptureToken(session.token);
+      setCaptureUrl(nextCaptureUrl);
+      setQrDataUrl(nextQrDataUrl);
+    } catch {
+      if (nextToken) {
+        await closeClientPhotoCaptureSession(nextToken).catch(() => undefined);
+      }
+      setCaptureError('No se pudo generar el QR. Intenta nuevamente.');
+    } finally {
+      setCreatingQr(false);
+    }
   }
 
   return (
@@ -253,6 +406,7 @@ function ClientPhotoUploader({
             style={{ backgroundImage: `url(${value})` }}
           />
           <button
+            aria-label="Eliminar fotografía"
             className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
             onClick={handleRemove}
             type="button"
@@ -263,7 +417,9 @@ function ClientPhotoUploader({
       ) : (
         <button
           className={`flex h-[280px] w-full flex-col items-center justify-center rounded-[22px] border-2 border-dashed px-6 text-center transition ${
-            dragging ? 'border-[#2F7654] bg-[#EAF6EF]' : 'border-[#B8EBC9] bg-[#F7FCF9] hover:border-[#2F7654]'
+            dragging
+              ? 'border-[#2F7654] bg-[#EAF6EF]'
+              : 'border-[#B8EBC9] bg-[#F7FCF9] hover:border-[#2F7654]'
           }`}
           onClick={() => inputRef.current?.click()}
           onDragLeave={() => setDragging(false)}
@@ -279,26 +435,94 @@ function ClientPhotoUploader({
           </span>
           <span className="mt-5 text-base font-bold text-[#3F4542]">Arrastra una foto aquí</span>
           <span className="mt-4 text-sm font-medium text-[#5C6D63]">o haz click para subir</span>
-          <input accept="image/jpeg,image/png" className="hidden" onChange={handleChange} ref={inputRef} type="file" />
         </button>
       )}
 
-      {!value && (
-        <>
-          <button
-            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-3 rounded-[10px] border border-[#B8EBC9] bg-white text-sm font-bold text-[#2F7654] shadow-[0_5px_12px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:bg-[#F7FCF9]"
-            onClick={() => inputRef.current?.click()}
-            type="button"
-          >
-            <Upload className="h-5 w-5" />
-            Subir foto
-          </button>
+      <input
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={handleChange}
+        ref={inputRef}
+        type="file"
+      />
 
+      <div className="mt-6 grid gap-3">
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-[12px] border border-[#B8EBC9] bg-white text-sm font-bold text-[#2F7654] shadow-[0_5px_12px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:bg-[#F7FCF9] disabled:opacity-50"
+          disabled={processing}
+          onClick={() => inputRef.current?.click()}
+          type="button"
+        >
+          <Upload className="h-5 w-5" />
+          {processing ? 'Procesando...' : value ? 'Cambiar foto' : 'Subir foto'}
+        </button>
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-[12px] bg-[#2F7654] text-sm font-bold text-white shadow-[0_10px_20px_rgba(47,118,84,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:opacity-50"
+          disabled={creatingQr}
+          onClick={() => void handleCreateQr()}
+          type="button"
+        >
+          {creatingQr ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <QrCode className="h-5 w-5" />
+          )}
+          {creatingQr ? 'Generando...' : 'Tomar con celular'}
+        </button>
+      </div>
+
+      {qrDataUrl ? (
+        <div className="mt-5 rounded-[18px] border border-[#D7EADF] bg-[#F4FBF7] p-4 text-center">
+          <p className="text-sm font-bold text-[#173D2C]">Escanea para abrir la cámara</p>
+          <div className="mx-auto mt-3 w-fit rounded-[14px] bg-white p-3 shadow-[0_8px_20px_rgba(40,92,67,0.08)]">
+            <Image
+              alt="QR para tomar la fotografía del cliente"
+              className="h-40 w-40"
+              height={160}
+              src={qrDataUrl}
+              unoptimized
+              width={160}
+            />
+          </div>
+          <p className="mt-3 text-xs font-medium leading-5 text-[#5C6D63]">
+            Usa un teléfono conectado a la misma red. La foto aparecerá aquí automáticamente.
+          </p>
+          <p className="mt-2 break-all text-[10px] text-[#8A9690]">{captureUrl}</p>
+        </div>
+      ) : null}
+
+      {captureReceived ? (
+        <p className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
+          <CheckCircle2 className="h-5 w-5" />
+          Fotografía recibida desde el celular.
+        </p>
+      ) : null}
+
+      {captureError ? (
+        <p
+          className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+          role="alert"
+        >
+          {captureError}
+        </p>
+      ) : null}
+
+      {!value ? (
+        <>
           <p className="mt-6 text-sm font-medium leading-7 text-[#5C6D63]">
-            Formatos aceptados: JPG, PNG · Tamaño máximo 5 MB. Una foto clara del rostro ayuda a verificar la identidad del cliente.
+            Formatos aceptados: JPG, PNG y WebP · Tamaño máximo 5 MB. Una foto clara del rostro
+            ayuda a verificar la identidad del cliente.
           </p>
         </>
-      )}
+      ) : null}
+      {error ? (
+        <p
+          className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+          role="alert"
+        >
+          {error}
+        </p>
+      ) : null}
     </PageCard>
   );
 }
@@ -332,14 +556,57 @@ function PersonalInfoCard({
       />
 
       <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-        <StyledInput label="Nombres" placeholder="María Isabel" value={values.firstName} onChange={(v) => onChange('firstName', v)} />
-        <StyledInput label="Apellidos" placeholder="González Pérez" value={values.lastName} onChange={(v) => onChange('lastName', v)} />
-        <StyledInput label="Cédula / Documento" placeholder="000-000000-0" value={values.identification} onChange={(v) => onChange('identification', maskCedula(v))} />
-        <StyledInput label="Fecha de nacimiento" placeholder="" type="date" value={values.birthDate} onChange={(v) => onChange('birthDate', v)} />
-        <StyledSelect label="Género" options={['', 'Femenino', 'Masculino', 'Otro']} value={values.gender} onChange={(v) => onChange('gender', v)} />
-        <StyledSelect label="Estado civil" options={['', 'Soltero/a', 'Casado/a', 'Unión libre']} value={values.maritalStatus} onChange={(v) => onChange('maritalStatus', v)} />
-        <StyledInput label="Nacionalidad" placeholder="Dominicana" value={values.nationality} onChange={(v) => onChange('nationality', v)} />
-        <StyledInput helper="Personas a cargo" label="Dependientes" placeholder="0" type="number" value={values.dependents} onChange={(v) => onChange('dependents', v)} />
+        <StyledInput
+          label="Nombres"
+          placeholder="María Isabel"
+          value={values.firstName}
+          onChange={(v) => onChange('firstName', v)}
+        />
+        <StyledInput
+          label="Apellidos"
+          placeholder="González Pérez"
+          value={values.lastName}
+          onChange={(v) => onChange('lastName', v)}
+        />
+        <StyledInput
+          label="Cédula / Documento"
+          placeholder="000-000000-0"
+          value={values.identification}
+          onChange={(v) => onChange('identification', maskCedula(v))}
+        />
+        <StyledInput
+          label="Fecha de nacimiento"
+          placeholder=""
+          type="date"
+          value={values.birthDate}
+          onChange={(v) => onChange('birthDate', v)}
+        />
+        <StyledSelect
+          label="Género"
+          options={['', 'Femenino', 'Masculino', 'Otro']}
+          value={values.gender}
+          onChange={(v) => onChange('gender', v)}
+        />
+        <StyledSelect
+          label="Estado civil"
+          options={['', 'Soltero/a', 'Casado/a', 'Unión libre']}
+          value={values.maritalStatus}
+          onChange={(v) => onChange('maritalStatus', v)}
+        />
+        <StyledInput
+          label="Nacionalidad"
+          placeholder="Dominicana"
+          value={values.nationality}
+          onChange={(v) => onChange('nationality', v)}
+        />
+        <StyledInput
+          helper="Personas a cargo"
+          label="Dependientes"
+          placeholder="0"
+          type="number"
+          value={values.dependents}
+          onChange={(v) => onChange('dependents', v)}
+        />
       </div>
     </PageCard>
   );
@@ -363,14 +630,32 @@ function ContactInfoCard({
       />
 
       <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-        <StyledInput label="Teléfono móvil" placeholder="(809) 555-0142" value={values.phone} onChange={(v) => onChange('phone', maskPhone(v))} />
-        <StyledInput label="Teléfono alternativo" placeholder="(809) 555-0000" value={values.altPhone} onChange={(v) => onChange('altPhone', maskPhone(v))} />
+        <StyledInput
+          label="Teléfono móvil"
+          placeholder="(809) 555-0142"
+          value={values.phone}
+          onChange={(v) => onChange('phone', maskPhone(v))}
+        />
+        <StyledInput
+          label="Teléfono alternativo"
+          placeholder="(809) 555-0000"
+          value={values.altPhone}
+          onChange={(v) => onChange('altPhone', maskPhone(v))}
+        />
         <div className="md:col-span-2">
-          <StyledInput label="Correo electrónico" placeholder="cliente@correo.com" type="email" value={values.email} onChange={(v) => onChange('email', v)} />
+          <StyledInput
+            label="Correo electrónico"
+            placeholder="cliente@correo.com"
+            type="email"
+            value={values.email}
+            onChange={(v) => onChange('email', v)}
+          />
         </div>
         <div className="md:col-span-2">
           <label className="block">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">Dirección</span>
+            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">
+              Dirección
+            </span>
             <div className="flex items-start gap-3 rounded-[14px] border border-[#DDEBE3] bg-white px-4 shadow-[0_4px_10px_rgba(40,92,67,0.07)] transition focus-within:border-[#2F7654] focus-within:ring-4 focus-within:ring-[#EAF6EF]">
               <MapPin className="mt-4 h-5 w-5 shrink-0 text-[#9DA5A0]" />
               <input
@@ -401,7 +686,12 @@ function AdditionalNotesCard({
         title="Notas adicionales"
         subtitle="Observaciones internas sobre el cliente."
       />
-      <StyledTextarea label="Comentarios" placeholder="Información relevante para evaluar al cliente..." value={value} onChange={onChange} />
+      <StyledTextarea
+        label="Comentarios"
+        placeholder="Información relevante para evaluar al cliente..."
+        value={value}
+        onChange={onChange}
+      />
     </PageCard>
   );
 }
@@ -446,7 +736,7 @@ export function AddClientPage({ clientId }: { clientId?: number }) {
         return;
       }
 
-      const payload = getClientPayload(form);
+      const payload = getClientPayload(form, isEditing);
       const client =
         isEditing && clientId ? await updateClient(clientId, payload) : await createClient(payload);
       invalidateCachePrefix('clients:');
@@ -461,7 +751,8 @@ export function AddClientPage({ clientId }: { clientId?: number }) {
           else if (data?.message) message = String(data.message);
           else if (data?.error) message = String(data.error);
         } else if ('request' in err) {
-          message = 'No se pudo conectar con la API. Verifica que el backend esté encendido en localhost:3000.';
+          message =
+            'No se pudo conectar con la API. Verifica que el backend esté encendido en localhost:3000.';
         }
       }
       setError(message);
@@ -512,7 +803,11 @@ export function AddClientPage({ clientId }: { clientId?: number }) {
         ) : (
           <div className="grid grid-cols-1 gap-7 xl:grid-cols-[390px_minmax(0,1fr)]">
             <div className="space-y-7">
-              <ClientPhotoUploader value={form.photo} onChange={(v) => updateField('photo', v)} />
+              <ClientPhotoUploader
+                clientId={clientId}
+                value={form.photo}
+                onChange={(v) => updateField('photo', v)}
+              />
               <RequiredFieldsNotice />
             </div>
 

@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { Prisma, RequestStatus, prisma } from '@inversiones/database';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { formatPersonName } from '../../common/text/name-case';
+import { normalizePagination } from '../../common/pagination';
 
 @Injectable()
 export class RequestsService {
@@ -26,13 +27,16 @@ export class RequestsService {
     });
   }
 
-  async findAll() {
+  async findAll(take = 100, skip = 0) {
+    const pagination = normalizePagination(take, skip, 100);
     return prisma.loanRequest.findMany({
       include: {
         createdBy: { select: { name: true } },
         client: { select: { id: true, firstName: true, lastName: true } },
       },
       orderBy: { createdAt: 'desc' },
+      take: pagination.take,
+      skip: pagination.skip,
     });
   }
 

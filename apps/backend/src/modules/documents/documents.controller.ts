@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Delete,
+  Patch,
   Param,
   Query,
   Body,
@@ -18,11 +19,13 @@ import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
+import { UpdateDocumentDto } from './dto/update-document.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
 import { DOCUMENT_UPLOAD_LIMITS } from './document-upload-options';
 import { assertAllowedUploadedFile } from './document-upload-validation';
+import { normalizePagination } from '../../common/pagination';
 
 const ALLOWED_MIME_TYPES = [
   'application/pdf',
@@ -93,8 +96,19 @@ export class DocumentsController {
 
   @Get()
   @Roles('ADMIN', 'COLLECTOR')
-  findAll(@Query('clientId') clientId?: string, @Query('investorId') investorId?: string) {
-    return this.documents.findAll(clientId ? Number(clientId) : undefined, investorId);
+  findAll(
+    @Query('clientId') clientId?: string,
+    @Query('investorId') investorId?: string,
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
+  ) {
+    const pagination = normalizePagination(Number(take ?? 100), Number(skip ?? 0), 100);
+    return this.documents.findAll(
+      clientId ? Number(clientId) : undefined,
+      investorId,
+      pagination.take,
+      pagination.skip,
+    );
   }
 
   @Get(':id/file')
@@ -115,6 +129,16 @@ export class DocumentsController {
       return res.sendFile(file.path);
     }
     return res.download(file.path, file.filename);
+  }
+
+  @Patch(':id')
+  @Roles('ADMIN', 'COLLECTOR')
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateDocumentDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.documents.updateName(id, dto.name, userId);
   }
 
   @Delete(':id')

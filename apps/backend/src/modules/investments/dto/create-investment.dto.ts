@@ -1,16 +1,16 @@
 import { IsDateString, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateInvestmentDto {
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   capital: number;
 
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 4 })
   @Min(0)
   rate: number;
 
   @IsOptional()
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   monthlyPayment?: number;
 

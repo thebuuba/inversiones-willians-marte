@@ -9,6 +9,25 @@ jobs:
   verify:
     name: Verify
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: inversiones_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d inversiones_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inversiones_test
+      JWT_SECRET: ci-only-secret-with-more-than-thirty-two-characters
+      FRONTEND_URL: http://localhost:3001
+      NODE_ENV: test
 
     steps:
       - name: Checkout
@@ -31,6 +50,11 @@ jobs:
       - name: Generate Prisma client
         run: pnpm db:generate
 
+      - name: Apply and verify database migrations
+        run: |
+          pnpm db:migrate:deploy
+          pnpm --filter @inversiones/database exec prisma migrate status --schema prisma/schema.prisma
+
       - name: Build internal packages
         run: |
           pnpm --filter @inversiones/database exec tsc
@@ -41,6 +65,9 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: End-to-end test
+        run: pnpm --filter backend test:e2e --runInBand
 
       - name: Build
         run: pnpm build

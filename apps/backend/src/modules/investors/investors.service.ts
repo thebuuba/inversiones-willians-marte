@@ -94,10 +94,12 @@ export class InvestorsService {
     return `INV-${String(lastSequence + 1).padStart(4, '0')}`;
   }
 
-  async findAll() {
+  async findAll(take = 100, skip = 0) {
     const investors = await prisma.investor.findMany({
       include: this.investorInclude(),
       orderBy: { createdAt: 'desc' },
+      take,
+      skip,
     });
     return investors.map((investor) => this.decorateInvestor(investor));
   }
@@ -210,8 +212,14 @@ export class InvestorsService {
   private investorInclude() {
     return {
       investments: {
-        include: { payments: true },
+        include: {
+          payments: {
+            orderBy: [{ periodYear: 'desc' as const }, { periodMonth: 'desc' as const }],
+            take: 200,
+          },
+        },
         orderBy: { createdAt: 'desc' as const },
+        take: 100,
       },
     };
   }

@@ -25,7 +25,10 @@ async function readApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
   }
 }
 
-export async function getDocuments(clientId?: number, investorId?: string): Promise<DocumentItem[]> {
+export async function getDocuments(
+  clientId?: number,
+  investorId?: string,
+): Promise<DocumentItem[]> {
   const params: Record<string, string> = {};
   if (clientId) params.clientId = String(clientId);
   if (investorId) params.investorId = investorId;
@@ -38,8 +41,13 @@ export async function createDocument(formData: FormData): Promise<DocumentItem> 
   return data.data as DocumentItem;
 }
 
-export async function createDocumentCaptureSession(clientId: number): Promise<DocumentCaptureSessionItem> {
-  const { data } = await api.post<ApiResponse<DocumentCaptureSessionItem>>('/documents/capture-sessions', { clientId });
+export async function createDocumentCaptureSession(
+  clientId: number,
+): Promise<DocumentCaptureSessionItem> {
+  const { data } = await api.post<ApiResponse<DocumentCaptureSessionItem>>(
+    '/documents/capture-sessions',
+    { clientId },
+  );
   return data.data as DocumentCaptureSessionItem;
 }
 
@@ -47,28 +55,40 @@ export async function closeDocumentCaptureSession(token: string): Promise<void> 
   await api.post(`/documents/capture-sessions/${encodeURIComponent(token)}/close`);
 }
 
-export async function getDocumentCaptureSession(token: string): Promise<DocumentCaptureSessionItem> {
+export async function getDocumentCaptureSession(
+  token: string,
+): Promise<DocumentCaptureSessionItem> {
   const response = await fetch(`/api/document-capture/${encodeURIComponent(token)}`, {
     signal: timeoutSignal(10_000),
   });
   const data = await readApiResponse<DocumentCaptureSessionItem>(response);
-  if (!response.ok) throw Object.assign(new Error(data.error ?? 'Capture session request failed'), { response });
+  if (!response.ok)
+    throw Object.assign(new Error(data.error ?? 'Capture session request failed'), { response });
   return data.data as DocumentCaptureSessionItem;
 }
 
-export async function uploadDocumentCapture(token: string, formData: FormData): Promise<DocumentItem> {
+export async function uploadDocumentCapture(
+  token: string,
+  formData: FormData,
+): Promise<DocumentItem> {
   const response = await fetch(`/api/document-capture/${encodeURIComponent(token)}/upload`, {
     method: 'POST',
     body: formData,
     signal: timeoutSignal(120_000),
   });
   const data = await readApiResponse<DocumentItem>(response);
-  if (!response.ok) throw Object.assign(new Error(data.error ?? 'Capture upload request failed'), { response });
+  if (!response.ok)
+    throw Object.assign(new Error(data.error ?? 'Capture upload request failed'), { response });
   return data.data as DocumentItem;
 }
 
 export async function deleteDocument(id: string): Promise<void> {
   await api.delete(`/documents/${id}`);
+}
+
+export async function renameDocument(id: string, name: string): Promise<DocumentItem> {
+  const { data } = await api.patch<ApiResponse<DocumentItem>>(`/documents/${id}`, { name });
+  return data.data as DocumentItem;
 }
 
 export async function downloadDocument(id: string, filename: string): Promise<void> {

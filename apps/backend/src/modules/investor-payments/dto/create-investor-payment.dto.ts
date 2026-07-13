@@ -9,7 +9,7 @@ export class CreateInvestorPaymentDto {
   @IsString()
   investmentId?: string;
 
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
   amount: number;
 

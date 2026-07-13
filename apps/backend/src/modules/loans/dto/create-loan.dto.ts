@@ -1,4 +1,13 @@
-import { IsDateString, IsInt, IsString, IsNumber, IsEnum, IsOptional, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsInt,
+  IsString,
+  IsNumber,
+  IsEnum,
+  IsOptional,
+  Max,
+  Min,
+} from 'class-validator';
 import { InterestTypeEnum, PaymentFrequencyEnum } from '@inversiones/shared';
 import type { InterestType, PaymentFrequency } from '@inversiones/shared';
 
@@ -9,17 +18,18 @@ export class CreateLoanDto {
   @IsString()
   productId: string;
 
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(1)
   principal: number;
 
   @IsOptional()
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 4 })
   @Min(0)
   interestRate?: number;
 
   @IsInt()
   @Min(1)
+  @Max(600)
   term: number;
 
   @IsDateString()
@@ -42,7 +52,7 @@ export class CreateLoanDto {
   paymentFrequency?: PaymentFrequency;
 
   @IsOptional()
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(1)
   customPayment?: number;
 }

@@ -55,7 +55,10 @@ export function getClientFormFromClient(client: ClientDetail): ClientFormState {
   };
 }
 
-export function getClientPayload(form: ClientFormState): CreateClientDto {
+export function getClientPayload(
+  form: ClientFormState,
+  includeEmptyPhoto = false,
+): CreateClientDto {
   return {
     firstName: form.firstName.trim(),
     lastName: form.lastName.trim(),
@@ -69,7 +72,7 @@ export function getClientPayload(form: ClientFormState): CreateClientDto {
     maritalStatus: form.maritalStatus || undefined,
     nationality: form.nationality.trim() || undefined,
     dependents: form.dependents ? Number(form.dependents) : undefined,
-    photo: form.photo || undefined,
+    photo: form.photo || (includeEmptyPhoto ? '' : undefined),
     notes: form.notes.trim() || undefined,
   };
 }

@@ -21,8 +21,8 @@ export class RequestsController {
   }
 
   @Get()
-  findAll() {
-    return this.requests.findAll();
+  findAll(@Query('take') take?: string, @Query('skip') skip?: string) {
+    return this.requests.findAll(Number(take ?? 100), Number(skip ?? 0));
   }
 
   @Get(':id')

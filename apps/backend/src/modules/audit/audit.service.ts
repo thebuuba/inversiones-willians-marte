@@ -85,17 +85,29 @@ export class AuditService {
         include: {
           createdBy: { select: { name: true } },
           loans: {
+            take: 100,
+            orderBy: { createdAt: 'desc' },
             include: {
               createdBy: { select: { name: true } },
-              payments: { include: { receivedBy: { select: { name: true } } } },
+              payments: {
+                take: 200,
+                orderBy: { createdAt: 'desc' },
+                include: { receivedBy: { select: { name: true } } },
+              },
             },
           },
-          documents: { include: { uploadedBy: { select: { name: true } } } },
+          documents: {
+            take: 200,
+            orderBy: { createdAt: 'desc' },
+            include: { uploadedBy: { select: { name: true } } },
+          },
         },
       }),
       prisma.auditLog.findMany({
         where: { clientId },
         include: { user: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 500,
       }),
     ]);
 
@@ -155,6 +167,7 @@ export class AuditService {
     const titles: Record<string, string> = {
       CLIENT_UPDATED: 'Cliente actualizado',
       DOCUMENT_DELETED: `Documento eliminado: ${getStringValue(newValues.name) ?? 'Documento'}`,
+      DOCUMENT_RENAMED: `Documento renombrado: ${getStringValue(newValues.name) ?? 'Documento'}`,
       NOTE_CREATED: 'Nota creada',
       NOTE_UPDATED: 'Nota actualizada',
       NOTE_DELETED: 'Nota eliminada',

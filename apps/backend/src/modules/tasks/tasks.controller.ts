@@ -38,8 +38,8 @@ export class TasksController {
   }
 
   @Get()
-  findAll() {
-    return this.tasks.findAll();
+  findAll(@Query('take') take?: string, @Query('skip') skip?: string) {
+    return this.tasks.findAll(Number(take ?? 100), Number(skip ?? 0));
   }
 
   @Get(':id')

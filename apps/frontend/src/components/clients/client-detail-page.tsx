@@ -11,6 +11,7 @@ import {
   createDocumentCaptureSession,
   closeDocumentCaptureSession,
   deleteDocument,
+  renameDocument,
   downloadDocument,
   viewDocument,
 } from '@/lib/api/documents';
@@ -18,7 +19,13 @@ import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { compressImage } from '@/lib/compress-image';
 import { formatDop } from '@/lib/currency';
-import { getClientLoanStats, getLoanCollectionStatus, getLoanProgress, getRegularInstallment } from '@/components/loans/loan-detail.helpers';
+import { buildMobileCaptureUrl } from '@/lib/mobile-capture-url';
+import {
+  getClientLoanStats,
+  getLoanCollectionStatus,
+  getLoanProgress,
+  getRegularInstallment,
+} from '@/components/loans/loan-detail.helpers';
 import {
   countClientNotes,
   formatClientNotesPreview,
@@ -65,8 +72,10 @@ const tabs: { label: ClientTab; icon: typeof UserRound }[] = [
 ];
 
 const fmt = (n: number | string) => formatDop(n, { space: true });
-const fmtDate = (s: string | Date) => new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
-const fmtLong = (s: string | Date) => new Date(s).toLocaleDateString('es-DO', { dateStyle: 'long' });
+const fmtDate = (s: string | Date) =>
+  new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
+const fmtLong = (s: string | Date) =>
+  new Date(s).toLocaleDateString('es-DO', { dateStyle: 'long' });
 
 function buildInfoCards(clientData: ClientDetail) {
   return [
@@ -78,8 +87,14 @@ function buildInfoCards(clientData: ClientDetail) {
     { label: 'Género', value: clientData.gender ?? '—' },
     { label: 'Estado civil', value: clientData.maritalStatus ?? '—' },
     { label: 'Nacionalidad', value: clientData.nationality ?? '—' },
-    { label: 'Fecha de nacimiento', value: clientData.birthDate ? fmtLong(clientData.birthDate) : '—' },
-    { label: 'Dependientes', value: clientData.dependents != null ? String(clientData.dependents) : '—' },
+    {
+      label: 'Fecha de nacimiento',
+      value: clientData.birthDate ? fmtLong(clientData.birthDate) : '—',
+    },
+    {
+      label: 'Dependientes',
+      value: clientData.dependents != null ? String(clientData.dependents) : '—',
+    },
     { label: 'Cliente desde', value: fmtLong(clientData.createdAt) },
     { label: 'Notas', value: formatClientNotesPreview(clientData.notes) },
   ];
@@ -124,7 +139,9 @@ function LoanStatusBadge({ status }: { status: string }) {
               : 'bg-[#fff1c7] text-[#7a5a0a]'
       }`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-[#2f7654]' : isOverdue || isLate ? 'bg-[#ff6a00]' : 'bg-[#f3b51b]'}`} />
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-[#2f7654]' : isOverdue || isLate ? 'bg-[#ff6a00]' : 'bg-[#f3b51b]'}`}
+      />
       {status}
     </span>
   );
@@ -133,7 +150,9 @@ function LoanStatusBadge({ status }: { status: string }) {
 function ProgressBar({ value, compact = false }: { value: number; compact?: boolean }) {
   return (
     <div>
-      <div className={`flex items-center justify-between font-semibold ${compact ? 'mb-1.5 text-xs' : 'mb-2 text-sm'}`}>
+      <div
+        className={`flex items-center justify-between font-semibold ${compact ? 'mb-1.5 text-xs' : 'mb-2 text-sm'}`}
+      >
         <span className="text-neutral-500">{compact ? 'Progreso' : 'Progreso de pago'}</span>
         <span className="text-neutral-900">{value}%</span>
       </div>
@@ -147,11 +166,21 @@ function ProgressBar({ value, compact = false }: { value: number; compact?: bool
   );
 }
 
-function LoanMetric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+function LoanMetric({
+  label,
+  value,
+  accent = false,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
   return (
     <div>
       <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-400">{label}</p>
-      <p className={`mt-1 text-sm font-bold ${accent ? 'text-[#9f3f25]' : 'text-neutral-900'}`}>{value}</p>
+      <p className={`mt-1 text-sm font-bold ${accent ? 'text-[#9f3f25]' : 'text-neutral-900'}`}>
+        {value}
+      </p>
     </div>
   );
 }
@@ -159,7 +188,12 @@ function LoanMetric({ label, value, accent = false }: { label: string; value: st
 function LoanRow({ loan }: { loan: LoanSummary }) {
   const progress = getLoanProgress(loan.totalAmount, loan.balance);
   const statusLabel = getLoanCollectionStatus(loan);
-  const frequency = loan.paymentFreq === 'MONTHLY' ? 'Mensual' : loan.paymentFreq === 'DAILY' ? 'Diario' : loan.paymentFreq;
+  const frequency =
+    loan.paymentFreq === 'MONTHLY'
+      ? 'Mensual'
+      : loan.paymentFreq === 'DAILY'
+        ? 'Diario'
+        : loan.paymentFreq;
 
   return (
     <Link
@@ -172,8 +206,14 @@ function LoanRow({ loan }: { loan: LoanSummary }) {
             <TrendingUp className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-bold leading-tight text-neutral-900">Préstamo #{loan.loanNumber}</h3>
-            {loan.portfolio?.name ? <p className="mt-1 truncate text-xs font-bold text-[#2f7654]">{loan.portfolio.name}</p> : null}
+            <h3 className="truncate text-sm font-bold leading-tight text-neutral-900">
+              Préstamo #{loan.loanNumber}
+            </h3>
+            {loan.portfolio?.name ? (
+              <p className="mt-1 truncate text-xs font-bold text-[#2f7654]">
+                {loan.portfolio.name}
+              </p>
+            ) : null}
             <p className="mt-1 text-xs font-medium text-neutral-500">
               {loan.term} cuotas · {frequency}
             </p>
@@ -191,7 +231,10 @@ function LoanRow({ loan }: { loan: LoanSummary }) {
               <ProgressBar compact value={progress} />
             </div>
           </div>
-          <LoanMetric label="Cuota" value={fmt(getRegularInstallment(loan.totalAmount, loan.term))} />
+          <LoanMetric
+            label="Cuota"
+            value={fmt(getRegularInstallment(loan.totalAmount, loan.term))}
+          />
           <div className="flex items-start justify-end lg:items-center">
             <LoanStatusBadge status={statusLabel} />
           </div>
@@ -207,9 +250,7 @@ function ClientLoansTab({ loans }: { loans: LoanSummary[] }) {
       {loans.length === 0 ? (
         <p className="py-12 text-center text-sm text-neutral-400">Sin préstamos registrados.</p>
       ) : (
-        loans.map((loan) => (
-          <LoanRow key={loan.id} loan={loan} />
-        ))
+        loans.map((loan) => <LoanRow key={loan.id} loan={loan} />)
       )}
     </div>
   );
@@ -223,7 +264,10 @@ const documentTypeLabels: Record<string, string> = {
   general: 'General',
 };
 
-const processingStatusLabels: Record<string, { label: string; className: string; icon: typeof CircleCheck }> = {
+const processingStatusLabels: Record<
+  string,
+  { label: string; className: string; icon: typeof CircleCheck }
+> = {
   processed: {
     label: 'Procesado',
     className: 'bg-emerald-50 text-emerald-700',
@@ -251,63 +295,143 @@ const processingStatusLabels: Record<string, { label: string; className: string;
   },
 };
 
-function buildMobileCaptureUrl(token: string) {
-  const path = `/captura-documento/${encodeURIComponent(token)}`;
-  if (typeof window === 'undefined') return path;
-
-  const configuredBase = process.env.NEXT_PUBLIC_MOBILE_BASE_URL?.replace(/\/$/, '');
-  if (configuredBase) return `${configuredBase}${path}`;
-
-  const currentUrl = new URL(window.location.href);
-  if (currentUrl.hostname !== 'localhost' && currentUrl.hostname !== '127.0.0.1') {
-    return `${currentUrl.origin}${path}`;
-  }
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (apiUrl) {
-    try {
-      const parsedApiUrl = new URL(apiUrl);
-      if (parsedApiUrl.hostname !== 'localhost' && parsedApiUrl.hostname !== '127.0.0.1') {
-        return `${currentUrl.protocol}//${parsedApiUrl.hostname}:${currentUrl.port || '3001'}${path}`;
-      }
-    } catch {
-      return `${currentUrl.origin}${path}`;
-    }
-  }
-
-  return `${currentUrl.origin}${path}`;
-}
-
 function DocumentCard({
   doc,
   onDelete,
+  onRename,
 }: {
   doc: DocumentItem;
   onDelete: (id: string) => void;
+  onRename: (id: string, name: string) => Promise<void>;
 }) {
   const typeKey = doc.documentType ?? doc.category ?? 'otro';
   const status = doc.processingStatus ? processingStatusLabels[doc.processingStatus] : null;
   const StatusIcon = status?.icon;
+  const [editing, setEditing] = useState(false);
+  const [draftName, setDraftName] = useState(doc.name);
+  const [savingName, setSavingName] = useState(false);
+  const [renameError, setRenameError] = useState('');
+  const [fileError, setFileError] = useState('');
+
+  async function openDocument() {
+    setFileError('');
+    try {
+      await viewDocument(doc.id);
+    } catch {
+      setFileError(
+        'El archivo no está disponible. Puedes eliminar este registro y subirlo otra vez.',
+      );
+    }
+  }
+
+  async function saveDocument() {
+    setFileError('');
+    try {
+      await downloadDocument(doc.id, doc.name);
+    } catch {
+      setFileError(
+        'El archivo no está disponible. Puedes eliminar este registro y subirlo otra vez.',
+      );
+    }
+  }
+
+  async function saveName() {
+    const name = draftName.trim();
+    if (!name || name === doc.name) {
+      setDraftName(doc.name);
+      setEditing(false);
+      return;
+    }
+    setSavingName(true);
+    setRenameError('');
+    try {
+      await onRename(doc.id, name);
+      setEditing(false);
+    } catch {
+      setRenameError('No se pudo cambiar el nombre.');
+    } finally {
+      setSavingName(false);
+    }
+  }
 
   return (
     <div
       className="flex cursor-pointer items-center justify-between rounded-2xl border border-neutral-100 bg-white px-5 py-4 shadow-sm transition hover:bg-[#eaf5ed]/30"
-      onClick={() => doc.fileUrl && viewDocument(doc.id)}
+      onClick={() => {
+        if (doc.fileUrl) void openDocument();
+      }}
     >
-      <div className="flex min-w-0 items-center gap-4">
+      <div className="flex min-w-0 flex-1 items-center gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf5ed]">
           <FileText className="h-5 w-5 text-[#2f7654]" />
         </div>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-neutral-900">
-            {doc.name}
-          </p>
+        <div className="min-w-0 flex-1">
+          {editing ? (
+            <div
+              className="flex min-w-0 items-center gap-2"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <input
+                aria-label="Nuevo nombre del documento"
+                autoFocus
+                className="h-9 min-w-0 flex-1 rounded-xl border border-[#2f7654] bg-white px-3 text-sm font-semibold text-neutral-900 outline-none ring-2 ring-[#eaf5ed]"
+                disabled={savingName}
+                maxLength={160}
+                onChange={(event) => setDraftName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') void saveName();
+                  if (event.key === 'Escape') {
+                    setDraftName(doc.name);
+                    setEditing(false);
+                    setRenameError('');
+                  }
+                }}
+                value={draftName}
+              />
+              <button
+                aria-label="Guardar nombre"
+                className="rounded-full bg-[#2f7654] p-2 text-white transition hover:bg-[#285c43] disabled:opacity-50"
+                disabled={savingName || !draftName.trim()}
+                onClick={() => void saveName()}
+                type="button"
+              >
+                {savingName ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Check className="h-4 w-4" />
+                )}
+              </button>
+              <button
+                aria-label="Cancelar cambio de nombre"
+                className="rounded-full border border-neutral-200 p-2 text-neutral-500 transition hover:bg-neutral-50"
+                disabled={savingName}
+                onClick={() => {
+                  setDraftName(doc.name);
+                  setEditing(false);
+                  setRenameError('');
+                }}
+                type="button"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <p className="truncate text-sm font-semibold text-neutral-900">{doc.name}</p>
+          )}
+          {renameError ? (
+            <p className="mt-1 text-xs font-semibold text-red-600">{renameError}</p>
+          ) : null}
+          {fileError ? (
+            <p className="mt-1 text-xs font-semibold text-red-600">{fileError}</p>
+          ) : null}
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
             <span className="rounded-full bg-[#eaf5ed] px-2.5 py-0.5 text-xs font-semibold text-[#2f7654]">
               {documentTypeLabels[typeKey] ?? typeKey}
             </span>
             {status && StatusIcon ? (
-              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.className}`}>
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.className}`}
+              >
                 <StatusIcon className="h-3 w-3" />
                 {status.label}
               </span>
@@ -319,13 +443,28 @@ function DocumentCard({
       </div>
 
       <div className="flex items-center gap-3 text-neutral-400">
+        {!editing ? (
+          <button
+            aria-label={`Cambiar nombre de ${doc.name}`}
+            className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+            onClick={(event) => {
+              event.stopPropagation();
+              setDraftName(doc.name);
+              setEditing(true);
+              setRenameError('');
+            }}
+            type="button"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+        ) : null}
         {doc.fileUrl && (
           <button
             aria-label={`Ver ${doc.name}`}
             className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#2f7654]"
             onClick={(e) => {
               e.stopPropagation();
-              viewDocument(doc.id);
+              void openDocument();
             }}
             type="button"
           >
@@ -338,7 +477,7 @@ function DocumentCard({
             className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#2f7654]"
             onClick={(e) => {
               e.stopPropagation();
-              downloadDocument(doc.id, doc.name);
+              void saveDocument();
             }}
             type="button"
           >
@@ -348,7 +487,10 @@ function DocumentCard({
         <button
           aria-label={`Eliminar ${doc.name}`}
           className="rounded-full p-1.5 transition hover:bg-[#fde4d4] hover:text-[#9f3f25]"
-          onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(doc.id);
+          }}
           type="button"
         >
           <Trash2 className="h-4 w-4" />
@@ -382,7 +524,11 @@ function UploadModal({
   const [creatingCaptureSession, setCreatingCaptureSession] = useState(false);
   const [captureError, setCaptureError] = useState('');
   const [captureInitialCount, setCaptureInitialCount] = useState<number | null>(null);
-  const captureReceived = open && Boolean(qrDataUrl) && captureInitialCount != null && documentsCount > captureInitialCount;
+  const captureReceived =
+    open &&
+    Boolean(qrDataUrl) &&
+    captureInitialCount != null &&
+    documentsCount > captureInitialCount;
 
   const resetForm = useCallback(() => {
     setFile(null);
@@ -430,7 +576,9 @@ function UploadModal({
         });
       }
       const session = await createDocumentCaptureSession(clientId);
-      const nextCaptureUrl = buildMobileCaptureUrl(session.token);
+      const nextCaptureUrl = await buildMobileCaptureUrl(
+        `/captura-documento/${encodeURIComponent(session.token)}`,
+      );
       const nextQrDataUrl = await QRCode.toDataURL(nextCaptureUrl, {
         margin: 1,
         width: 240,
@@ -440,7 +588,9 @@ function UploadModal({
       setQrDataUrl(nextQrDataUrl);
       setCaptureToken(session.token);
       setCaptureLimitLabel(
-        session.maxUploads ? `${session.uploadCount ?? 0}/${session.maxUploads} documentos permitidos` : '',
+        session.maxUploads
+          ? `${session.uploadCount ?? 0}/${session.maxUploads} documentos permitidos`
+          : '',
       );
       setCaptureInitialCount(documentsCount);
     } catch (error) {
@@ -460,19 +610,26 @@ function UploadModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={closeModal}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={closeModal}
+    >
       <div
         className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="mb-1 text-lg font-bold text-neutral-900">Subir documento</h3>
-        <p className="mb-5 text-sm text-neutral-500">Selecciona un archivo y asigna un nombre opcional.</p>
+        <p className="mb-5 text-sm text-neutral-500">
+          Selecciona un archivo y asigna un nombre opcional.
+        </p>
 
         <div className="mb-4 rounded-xl border border-[#d7eadf] bg-[#f4fbf7] p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-neutral-900">Capturar con teléfono</p>
-              <p className="mt-1 text-xs text-neutral-500">Genera un QR para tomar la foto desde el celular.</p>
+              <p className="mt-1 text-xs text-neutral-500">
+                Genera un QR para tomar la foto desde el celular.
+              </p>
             </div>
             <button
               className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2f7654] text-white transition hover:bg-[#285c43] disabled:opacity-50"
@@ -481,7 +638,11 @@ function UploadModal({
               title="Generar QR de captura"
               type="button"
             >
-              {creatingCaptureSession ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
+              {creatingCaptureSession ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <QrCode className="h-4 w-4" />
+              )}
             </button>
           </div>
 
@@ -496,14 +657,20 @@ function UploadModal({
                 width={176}
               />
               <p className="mt-3 text-xs font-medium text-neutral-600">
-                {captureReceived ? 'Documento recibido. Cerrando...' : 'Escanea este QR con el teléfono.'}
+                {captureReceived
+                  ? 'Documento recibido. Cerrando...'
+                  : 'Escanea este QR con el teléfono.'}
               </p>
-              {captureLimitLabel ? <p className="mt-1 text-[11px] font-medium text-neutral-500">{captureLimitLabel}</p> : null}
+              {captureLimitLabel ? (
+                <p className="mt-1 text-[11px] font-medium text-neutral-500">{captureLimitLabel}</p>
+              ) : null}
               <p className="mt-1 break-all text-[11px] text-neutral-400">{captureUrl}</p>
             </div>
           ) : null}
 
-          {captureError ? <p className="mt-3 text-xs font-semibold text-red-600">{captureError}</p> : null}
+          {captureError ? (
+            <p className="mt-3 text-xs font-semibold text-red-600">{captureError}</p>
+          ) : null}
         </div>
 
         <div className="mb-4">
@@ -599,7 +766,18 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
   }
 
   function handleDelete(id: string) {
-    deleteDocument(id).then(() => setDocuments((prev) => prev.filter((d) => d.id !== id))).catch(console.error);
+    deleteDocument(id)
+      .then(() => setDocuments((prev) => prev.filter((d) => d.id !== id)))
+      .catch(console.error);
+  }
+
+  async function handleRename(id: string, name: string) {
+    const updated = await renameDocument(id, name);
+    setDocuments((current) =>
+      current.map((document) =>
+        document.id === id ? { ...document, name: updated.name } : document,
+      ),
+    );
   }
 
   return (
@@ -627,14 +805,12 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {documents.length === 0 ? (
-          <p className="py-12 text-center text-sm text-neutral-400 lg:col-span-2">Sin documentos adjuntos.</p>
+          <p className="py-12 text-center text-sm text-neutral-400 lg:col-span-2">
+            Sin documentos adjuntos.
+          </p>
         ) : (
           documents.map((doc) => (
-            <DocumentCard
-              key={doc.id}
-              doc={doc}
-              onDelete={handleDelete}
-            />
+            <DocumentCard key={doc.id} doc={doc} onDelete={handleDelete} onRename={handleRename} />
           ))
         )}
       </div>
@@ -643,13 +819,14 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
 }
 
 function historyTone(type: string) {
-  const styles: Record<string, { bg: string; text: string; dot: string; icon: typeof CreditCard }> = {
-    Pago: { bg: '#eaf5ed', text: '#2f7654', dot: '#2f7654', icon: CreditCard },
-    Cliente: { bg: '#dbeafe', text: '#1d4ed8', dot: '#3b82f6', icon: UserRound },
-    Préstamo: { bg: '#e9ddfb', text: '#7c3aed', dot: '#8b5cf6', icon: TrendingUp },
-    Nota: { bg: '#fef3c7', text: '#7a5a0a', dot: '#eab308', icon: StickyNote },
-    Documento: { bg: '#eaf5ed', text: '#2f7654', dot: '#2f7654', icon: NotebookPen },
-  };
+  const styles: Record<string, { bg: string; text: string; dot: string; icon: typeof CreditCard }> =
+    {
+      Pago: { bg: '#eaf5ed', text: '#2f7654', dot: '#2f7654', icon: CreditCard },
+      Cliente: { bg: '#dbeafe', text: '#1d4ed8', dot: '#3b82f6', icon: UserRound },
+      Préstamo: { bg: '#e9ddfb', text: '#7c3aed', dot: '#8b5cf6', icon: TrendingUp },
+      Nota: { bg: '#fef3c7', text: '#7a5a0a', dot: '#eab308', icon: StickyNote },
+      Documento: { bg: '#eaf5ed', text: '#2f7654', dot: '#2f7654', icon: NotebookPen },
+    };
   return styles[type] ?? styles.Nota;
 }
 
@@ -720,13 +897,7 @@ function NoteIcon() {
   );
 }
 
-function NoteActions({
-  onCancel,
-  onSave,
-}: {
-  onCancel: () => void;
-  onSave: () => void;
-}) {
+function NoteActions({ onCancel, onSave }: { onCancel: () => void; onSave: () => void }) {
   return (
     <div className="flex flex-col justify-end gap-2 sm:flex-row">
       <button
@@ -749,7 +920,15 @@ function NoteActions({
   );
 }
 
-function NoteTextarea({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder?: string }) {
+function NoteTextarea({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
   return (
     <textarea
       autoFocus
@@ -845,14 +1024,7 @@ function NewNoteCard({
   onCancel: () => void;
   onSave: () => void;
 }) {
-  return (
-    <EditableNoteCard
-      onCancel={onCancel}
-      onChange={onChange}
-      onSave={onSave}
-      value={value}
-    />
-  );
+  return <EditableNoteCard onCancel={onCancel} onChange={onChange} onSave={onSave} value={value} />;
 }
 
 function ClientNotesTab({
@@ -995,7 +1167,9 @@ function ClientInfoGrid({ clientData }: { clientData: ClientDetail }) {
       <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => (
           <div key={card.label}>
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{card.label}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              {card.label}
+            </p>
             <p className="mt-1 text-sm font-semibold text-neutral-900">{card.value}</p>
           </div>
         ))}
@@ -1017,7 +1191,8 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
     queueMicrotask(() => {
       if (!cancelled) setHistoryLoading(true);
     });
-    api.get<ApiResponse<ClientHistoryEntryRaw[]>>(`/audit/client/${clientId}/history`)
+    api
+      .get<ApiResponse<ClientHistoryEntryRaw[]>>(`/audit/client/${clientId}/history`)
       .then((audit) => {
         if (!cancelled) {
           setAuditEvents(
@@ -1104,10 +1279,34 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   const notesCount = countClientNotes(clientData.notes);
 
   const statsCards = [
-    { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, accent: '#eaf5ed', color: '#2f7654' },
-    { label: 'Total prestado', value: fmt(totalLoaned), icon: Banknote, accent: '#c2dfcb', color: '#2f7654' },
-    { label: 'Saldo pendiente', value: fmt(totalBalance), icon: CircleAlert, accent: '#fde4d4', color: '#9f3f25' },
-    { label: 'Total pagado', value: fmt(totalPaid), icon: CircleCheck, accent: '#dbeafe', color: '#1d4ed8' },
+    {
+      label: 'Préstamos activos',
+      value: String(activeLoans),
+      icon: BriefcaseBusiness,
+      accent: '#eaf5ed',
+      color: '#2f7654',
+    },
+    {
+      label: 'Total prestado',
+      value: fmt(totalLoaned),
+      icon: Banknote,
+      accent: '#c2dfcb',
+      color: '#2f7654',
+    },
+    {
+      label: 'Saldo pendiente',
+      value: fmt(totalBalance),
+      icon: CircleAlert,
+      accent: '#fde4d4',
+      color: '#9f3f25',
+    },
+    {
+      label: 'Total pagado',
+      value: fmt(totalPaid),
+      icon: CircleCheck,
+      accent: '#dbeafe',
+      color: '#1d4ed8',
+    },
   ];
 
   return (
@@ -1183,7 +1382,10 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
           {statsCards.map((k) => {
             const Icon = k.icon;
             return (
-              <div key={k.label} className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100">
+              <div
+                key={k.label}
+                className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100"
+              >
                 <div className="flex items-center gap-3">
                   <div
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
@@ -1210,7 +1412,9 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                 key={t.label}
                 onClick={() => setActiveTab(t.label)}
                 className={`flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold transition ${
-                  active ? 'bg-[#2f7654] text-white shadow-sm' : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#2f7654]'
+                  active
+                    ? 'bg-[#2f7654] text-white shadow-sm'
+                    : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#2f7654]'
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -1240,7 +1444,9 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
           <ClientNotesTab
             clientId={clientData.id}
             clientNotes={clientData.notes}
-            onNotesChange={(notes) => setClientData((current) => (current ? { ...current, notes } : current))}
+            onNotesChange={(notes) =>
+              setClientData((current) => (current ? { ...current, notes } : current))
+            }
           />
         ) : activeTab === 'Información' ? (
           <ClientInfoGrid clientData={clientData} />

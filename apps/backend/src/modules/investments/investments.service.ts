@@ -60,8 +60,14 @@ export class InvestmentsService {
 
     const investments = await prisma.investorInvestment.findMany({
       where: { investorId },
-      include: { payments: true },
+      include: {
+        payments: {
+          orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }],
+          take: 200,
+        },
+      },
       orderBy: { createdAt: 'desc' },
+      take: 100,
     });
 
     return investments.map((investment) => this.toInvestmentSummary(investment));
@@ -160,8 +166,11 @@ export class InvestmentsService {
   private detailInclude() {
     return {
       investor: true,
-      payments: { orderBy: [{ periodYear: 'desc' as const }, { periodMonth: 'desc' as const }] },
-      movements: { orderBy: { movementDate: 'desc' as const } },
+      payments: {
+        orderBy: [{ periodYear: 'desc' as const }, { periodMonth: 'desc' as const }],
+        take: 500,
+      },
+      movements: { orderBy: { movementDate: 'desc' as const }, take: 500 },
     };
   }
 

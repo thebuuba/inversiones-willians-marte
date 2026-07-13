@@ -118,6 +118,7 @@ model User {
   investorPayments            InvestorPayment[]            @relation("InvestorPaymentReceivedBy")
   uploadedDocuments           Document[]
   documentCaptureSessions     DocumentCaptureSession[]
+  clientPhotoCaptureSessions  ClientPhotoCaptureSession[]
   tasks                       Task[]
   portfolios                  Portfolio[]
   loanCapitalMovements        LoanCapitalMovement[]
@@ -151,13 +152,14 @@ model Client {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  createdBy               User                     @relation("ClientCreatedBy", fields: [createdById], references: [id])
+  createdBy               User                        @relation("ClientCreatedBy", fields: [createdById], references: [id])
   loans                   Loan[]
   payments                Payment[]
   loanRequests            LoanRequest[]
   documents               Document[]
   auditLogs               AuditLog[]
   documentCaptureSessions DocumentCaptureSession[]
+  photoCaptureSessions    ClientPhotoCaptureSession[]
   collectionInteractions  CollectionInteraction[]
   paymentPromises         PaymentPromise[]
   tasks                   Task[]
@@ -501,7 +503,7 @@ model InvestorInvestmentMovement {
 
 model InvestorPayment {
   id            String   @id @default(uuid())
-  receiptNumber Int      @map("receipt_number")
+  receiptNumber Int      @unique @map("receipt_number")
   investorId    String   @map("investor_id")
   investmentId  String?  @map("investment_id")
   amount        Decimal
@@ -518,7 +520,6 @@ model InvestorPayment {
   investment InvestorInvestment? @relation(fields: [investmentId], references: [id])
   receivedBy User                @relation("InvestorPaymentReceivedBy", fields: [receivedById], references: [id])
 
-  @@index([receiptNumber])
   @@index([investorId, periodYear(sort: Desc), periodMonth(sort: Desc)])
   @@index([investmentId, periodYear(sort: Desc), periodMonth(sort: Desc)])
   @@index([paymentDate])
@@ -577,6 +578,25 @@ model DocumentCaptureSession {
   @@index([clientId, createdAt])
   @@index([token, expiresAt])
   @@map("document_capture_sessions")
+}
+
+model ClientPhotoCaptureSession {
+  id          String    @id @default(uuid())
+  token       String    @unique
+  clientId    Int?      @map("client_id")
+  createdById String    @map("created_by")
+  expiresAt   DateTime  @map("expires_at")
+  uploadedAt  DateTime? @map("uploaded_at")
+  closedAt    DateTime? @map("closed_at")
+  photoData   String?   @map("photo_data")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  client    Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  createdBy User    @relation(fields: [createdById], references: [id])
+
+  @@index([clientId, createdAt])
+  @@index([token, expiresAt])
+  @@map("client_photo_capture_sessions")
 }
 
 // ─── Tasks / Agenda ─────────────────────────────────────────────────────────

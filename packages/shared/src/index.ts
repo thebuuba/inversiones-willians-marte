@@ -382,6 +382,14 @@ export interface DocumentCaptureSessionItem {
   maxUploads?: number;
 }
 
+export interface ClientPhotoCaptureSessionItem {
+  token: string;
+  clientId?: number;
+  clientName: string;
+  expiresAt: string;
+  photoReady: boolean;
+}
+
 export const RequestStatusEnum = {
   PENDING: 'PENDING',
   UNDER_REVIEW: 'UNDER_REVIEW',

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma, type TaskStatus } from '@inversiones/database';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { normalizePagination } from '../../common/pagination';
 
 @Injectable()
 export class TasksService {
@@ -24,9 +25,12 @@ export class TasksService {
     return prisma.task.count(args);
   }
 
-  async findAll() {
+  async findAll(take = 100, skip = 0) {
+    const pagination = normalizePagination(take, skip, 100);
     return prisma.task.findMany({
       orderBy: [{ status: 'asc' }, { priority: 'desc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
+      take: pagination.take,
+      skip: pagination.skip,
     });
   }
 

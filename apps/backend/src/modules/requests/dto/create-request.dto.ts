@@ -17,7 +17,7 @@ export class CreateRequestDto {
   @IsString()
   phone?: string;
 
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(1)
   amount: number;
 

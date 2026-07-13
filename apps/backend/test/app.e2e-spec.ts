@@ -20,6 +20,8 @@ describe('App (e2e)', () => {
   let clientId = 0;
   let loanId = '';
   let paymentId = '';
+  let documentId = '';
+  let photoCaptureToken = '';
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -84,6 +86,47 @@ describe('App (e2e)', () => {
       .expect(201);
     const token = login.body.data.accessToken as string;
 
+    const photoCaptureSession = await request(app.getHttpServer())
+      .post('/api/v1/clients/photo-capture-sessions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
+      .expect(201);
+    photoCaptureToken = photoCaptureSession.body.data.token as string;
+
+    await request(app.getHttpServer())
+      .get(`/api/v1/clients/photo-capture-sessions/${photoCaptureToken}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/clients/photo-capture-sessions/${photoCaptureToken}/upload`)
+      .attach(
+        'file',
+        Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nXQAAAAASUVORK5CYII=',
+          'base64',
+        ),
+        { filename: 'foto.png', contentType: 'image/png' },
+      )
+      .expect(201);
+
+    const photoStatus = await request(app.getHttpServer())
+      .get(`/api/v1/clients/photo-capture-sessions/${photoCaptureToken}/status`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(photoStatus.body.data.photoReady).toBe(true);
+
+    const capturedPhoto = await request(app.getHttpServer())
+      .get(`/api/v1/clients/photo-capture-sessions/${photoCaptureToken}/photo`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(capturedPhoto.body.data.photo).toMatch(/^data:image\/png;base64,/);
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/clients/photo-capture-sessions/${photoCaptureToken}/close`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(201);
+    photoCaptureToken = '';
+
     const client = await request(app.getHttpServer())
       .post('/api/v1/clients')
       .set('Authorization', `Bearer ${token}`)
@@ -91,9 +134,41 @@ describe('App (e2e)', () => {
         firstName: 'Cliente',
         lastName: runId,
         phone: '8095550000',
+        photo: 'data:image/png;base64,iVBORw0KGgo=',
       })
       .expect(201);
     clientId = client.body.data.id;
+    expect(client.body.data.photo).toBe('data:image/png;base64,iVBORw0KGgo=');
+
+    const document = await request(app.getHttpServer())
+      .post('/api/v1/documents')
+      .set('Authorization', `Bearer ${token}`)
+      .field('clientId', String(clientId))
+      .field('name', 'Contrato sin clasificar')
+      .attach('file', Buffer.from('%PDF-1.4\n%%EOF'), {
+        filename: 'contrato.pdf',
+        contentType: 'application/pdf',
+      })
+      .expect(201);
+    documentId = document.body.data.id;
+
+    await request(app.getHttpServer())
+      .get(`/api/v1/documents/${documentId}/file?disposition=inline&variant=processed`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const renamedDocument = await request(app.getHttpServer())
+      .patch(`/api/v1/documents/${documentId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Contrato firmado' })
+      .expect(200);
+    expect(renamedDocument.body.data.name).toBe('Contrato firmado');
+
+    await request(app.getHttpServer())
+      .delete(`/api/v1/documents/${documentId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    documentId = '';
 
     const loan = await request(app.getHttpServer())
       .post('/api/v1/loans')
@@ -132,6 +207,10 @@ describe('App (e2e)', () => {
 
   afterAll(async () => {
     await prisma.auditLog.deleteMany({ where: { userId } });
+    if (photoCaptureToken) {
+      await prisma.clientPhotoCaptureSession.deleteMany({ where: { token: photoCaptureToken } });
+    }
+    if (documentId) await prisma.document.deleteMany({ where: { id: documentId } });
     if (loanId) {
       const allocationFilters = [{ schedule: { loanId } }];
       if (paymentId) allocationFilters.push({ paymentId });

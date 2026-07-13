@@ -1,15 +1,35 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { prisma } from '@inversiones/database';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
+import { Prisma, prisma } from '@inversiones/database';
 import { CreateInvestorPaymentDto } from './dto/create-investor-payment.dto';
 import { InvestmentsService } from '../investments/investments.service';
+
+type InvestorPaymentWithReceiver = Prisma.InvestorPaymentGetPayload<{
+  include: { receivedBy: { select: { id: true; name: true } } };
+}>;
 
 @Injectable()
 export class InvestorPaymentsService {
   constructor(private investments: InvestmentsService) {}
 
-  async create(dto: CreateInvestorPaymentDto, userId: string) {
+  async create(
+    dto: CreateInvestorPaymentDto,
+    userId: string,
+  ): Promise<InvestorPaymentWithReceiver> {
     const investment = await this.resolveInvestment(dto.investmentId, dto.investorId);
+    return this.createWithRetry(dto, userId, investment, 1);
+  }
 
+  private async createWithRetry(
+    dto: CreateInvestorPaymentDto,
+    userId: string,
+    investment: { id: string; investorId: string },
+    attempt: number,
+  ): Promise<InvestorPaymentWithReceiver> {
     try {
       return await prisma.$transaction(
         async (tx) => {
@@ -55,13 +75,13 @@ export class InvestorPaymentsService {
         { isolationLevel: 'Serializable' },
       );
     } catch (error: unknown) {
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'code' in error &&
-        (error as { code: string }).code === 'P2002'
-      ) {
-        throw new BadRequestException('Unable to create investor payment due to duplicate data');
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if ((error.code === 'P2002' || error.code === 'P2034') && attempt < 3) {
+          return this.createWithRetry(dto, userId, investment, attempt + 1);
+        }
+        if (error.code === 'P2002') {
+          throw new ConflictException('No se pudo reservar un número de recibo único');
+        }
       }
       throw error;
     }
@@ -72,6 +92,7 @@ export class InvestorPaymentsService {
       where: { investorId },
       include: { receivedBy: { select: { id: true, name: true } } },
       orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }],
+      take: 500,
     });
   }
 
@@ -80,6 +101,7 @@ export class InvestorPaymentsService {
       where: { investmentId },
       include: { receivedBy: { select: { id: true, name: true } } },
       orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }],
+      take: 500,
     });
   }
 

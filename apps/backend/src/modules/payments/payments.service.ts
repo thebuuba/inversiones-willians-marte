@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { prisma, Prisma } from '@inversiones/database';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { centsToDecimal, moneyToCents } from '../../common/money';
 
 @Injectable()
 export class PaymentsService {
@@ -24,10 +25,11 @@ export class PaymentsService {
           throw new BadRequestException('Payment client does not match the loan client');
         }
 
-        let allocatedAmount = 0;
+        const paymentAmountCents = moneyToCents(dto.amount);
+        let allocatedCents = 0;
         const allocations: {
           scheduleId: string;
-          amount: number;
+          amountCents: number;
           type: 'PRINCIPAL' | 'INTEREST' | 'PENALTY';
         }[] = [];
 
@@ -36,39 +38,42 @@ export class PaymentsService {
         );
 
         for (const schedule of pendingSchedules) {
-          if (allocatedAmount >= dto.amount) break;
+          if (allocatedCents >= paymentAmountCents) break;
 
-          const owed = Number(schedule.amount) - Number(schedule.paidAmount ?? 0);
-          if (owed <= 0) continue;
+          const owedCents = moneyToCents(schedule.amount) - moneyToCents(schedule.paidAmount ?? 0);
+          if (owedCents <= 0) continue;
 
-          const toAllocate = Math.min(owed, dto.amount - allocatedAmount);
-          const interestPaid = schedule.paymentAllocs
+          const toAllocateCents = Math.min(owedCents, paymentAmountCents - allocatedCents);
+          const interestPaidCents = schedule.paymentAllocs
             .filter((allocation) => allocation.type === 'INTEREST')
-            .reduce((sum, allocation) => sum + Number(allocation.amount), 0);
-          const remainingInterest = Math.max(0, Number(schedule.interestPart) - interestPaid);
-          const interestAllocation = Math.min(toAllocate, remainingInterest);
+            .reduce((sum, allocation) => sum + moneyToCents(allocation.amount), 0);
+          const remainingInterestCents = Math.max(
+            0,
+            moneyToCents(schedule.interestPart) - interestPaidCents,
+          );
+          const interestAllocationCents = Math.min(toAllocateCents, remainingInterestCents);
 
-          if (interestAllocation > 0) {
+          if (interestAllocationCents > 0) {
             allocations.push({
               scheduleId: schedule.id,
-              amount: interestAllocation,
+              amountCents: interestAllocationCents,
               type: 'INTEREST',
             });
-            allocatedAmount += interestAllocation;
+            allocatedCents += interestAllocationCents;
           }
 
-          const principalAllocation = toAllocate - interestAllocation;
-          if (principalAllocation > 0) {
+          const principalAllocationCents = toAllocateCents - interestAllocationCents;
+          if (principalAllocationCents > 0) {
             allocations.push({
               scheduleId: schedule.id,
-              amount: principalAllocation,
+              amountCents: principalAllocationCents,
               type: 'PRINCIPAL',
             });
-            allocatedAmount += principalAllocation;
+            allocatedCents += principalAllocationCents;
           }
         }
 
-        if (allocatedAmount !== dto.amount) {
+        if (allocatedCents !== paymentAmountCents) {
           throw new BadRequestException('Payment exceeds the outstanding scheduled balance');
         }
 
@@ -83,7 +88,11 @@ export class PaymentsService {
             notes: dto.notes,
             receivedById: userId,
             allocations: {
-              create: allocations,
+              create: allocations.map(({ scheduleId, amountCents, type }) => ({
+                scheduleId,
+                amount: centsToDecimal(amountCents),
+                type,
+              })),
             },
           },
           include: { allocations: true },
@@ -93,22 +102,22 @@ export class PaymentsService {
         for (const alloc of allocations) {
           paidBySchedule.set(
             alloc.scheduleId,
-            (paidBySchedule.get(alloc.scheduleId) ?? 0) + alloc.amount,
+            (paidBySchedule.get(alloc.scheduleId) ?? 0) + alloc.amountCents,
           );
         }
 
-        for (const [scheduleId, amount] of paidBySchedule) {
+        for (const [scheduleId, amountCents] of paidBySchedule) {
           const schedule = loan.schedule.find((s) => s.id === scheduleId);
           if (!schedule) continue;
-          const totalPaid = Number(schedule.paidAmount ?? 0) + amount;
-          const isFull = totalPaid >= Number(schedule.amount);
+          const totalPaidCents = moneyToCents(schedule.paidAmount ?? 0) + amountCents;
+          const isFull = totalPaidCents >= moneyToCents(schedule.amount);
 
           await tx.paymentSchedule.update({
             where: { id: scheduleId },
             data: {
               status: isFull ? 'PAID' : 'PARTIAL',
               paidDate: isFull ? new Date(dto.paymentDate) : undefined,
-              paidAmount: totalPaid,
+              paidAmount: centsToDecimal(totalPaidCents),
             },
           });
         }
@@ -162,18 +171,21 @@ export class PaymentsService {
     });
     if (!loan) return;
 
-    const totalPaid = loan.schedule.reduce((sum, s) => sum + Number(s.paidAmount ?? 0), 0);
+    const totalPaidCents = loan.schedule.reduce(
+      (sum, schedule) => sum + moneyToCents(schedule.paidAmount ?? 0),
+      0,
+    );
     const allPaid = loan.schedule.every((s) => s.status === 'PAID');
     const isIndefinite = loan.interestType === 'INDEFINITE';
-    const newBalance = isIndefinite
-      ? Number(loan.principal)
-      : Math.max(0, Number(loan.totalAmount) - totalPaid);
+    const newBalanceCents = isIndefinite
+      ? moneyToCents(loan.principal)
+      : Math.max(0, moneyToCents(loan.totalAmount) - totalPaidCents);
 
     const nextStatus = !isIndefinite && allPaid ? 'PAID' : loan.status;
     await tx.loan.update({
       where: { id: loanId },
       data: {
-        balance: newBalance,
+        balance: centsToDecimal(newBalanceCents),
         status: nextStatus,
       },
     });
@@ -187,7 +199,7 @@ export class PaymentsService {
           entityId: loanId,
           clientId,
           oldValues: { status: loan.status },
-          newValues: { status: nextStatus, balance: newBalance },
+          newValues: { status: nextStatus, balance: newBalanceCents / 100 },
         },
       });
     }
@@ -205,22 +217,22 @@ export class PaymentsService {
       orderBy: [{ dueDate: 'asc' }, { createdAt: 'asc' }],
     });
 
-    let remainingPayment = paymentAmount;
+    let remainingPaymentCents = moneyToCents(paymentAmount);
     for (const promise of promises) {
-      if (remainingPayment <= 0) break;
-      const promisedAmount = Number(promise.amount);
-      const currentFulfilled = Number(promise.fulfilledAmount);
-      const outstanding = Math.max(0, promisedAmount - currentFulfilled);
-      if (outstanding === 0) continue;
+      if (remainingPaymentCents <= 0) break;
+      const promisedAmountCents = moneyToCents(promise.amount);
+      const currentFulfilledCents = moneyToCents(promise.fulfilledAmount);
+      const outstandingCents = Math.max(0, promisedAmountCents - currentFulfilledCents);
+      if (outstandingCents === 0) continue;
 
-      const applied = Math.min(outstanding, remainingPayment);
-      const fulfilledAmount = currentFulfilled + applied;
-      const fulfilled = fulfilledAmount >= promisedAmount;
+      const appliedCents = Math.min(outstandingCents, remainingPaymentCents);
+      const fulfilledAmountCents = currentFulfilledCents + appliedCents;
+      const fulfilled = fulfilledAmountCents >= promisedAmountCents;
       const status = fulfilled ? 'FULFILLED' : promise.status === 'BROKEN' ? 'BROKEN' : 'PARTIAL';
 
       await tx.paymentPromise.update({
         where: { id: promise.id },
-        data: { fulfilledAmount, status },
+        data: { fulfilledAmount: centsToDecimal(fulfilledAmountCents), status },
       });
       if (fulfilled) {
         await tx.task.updateMany({
@@ -236,13 +248,17 @@ export class PaymentsService {
           entityId: promise.id,
           clientId,
           oldValues: {
-            fulfilledAmount: currentFulfilled,
+            fulfilledAmount: currentFulfilledCents / 100,
             status: promise.status,
           },
-          newValues: { fulfilledAmount, status, paymentApplied: applied },
+          newValues: {
+            fulfilledAmount: fulfilledAmountCents / 100,
+            status,
+            paymentApplied: appliedCents / 100,
+          },
         },
       });
-      remainingPayment -= applied;
+      remainingPaymentCents -= appliedCents;
     }
   }
 }

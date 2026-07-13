@@ -46,6 +46,21 @@ describe('AmortizationService', () => {
   });
 
   describe('REDUCING interest', () => {
+    it('creates a finite no-interest schedule when the reducing rate is zero', () => {
+      const schedule = service.calculate({
+        ...baseParams,
+        principal: 1000,
+        interestRate: 0,
+        term: 3,
+        interestType: 'REDUCING',
+      });
+
+      expect(schedule).toHaveLength(3);
+      expect(schedule.every((row) => Number.isFinite(row.amount))).toBe(true);
+      expect(schedule.reduce((sum, row) => sum + row.amount, 0)).toBe(1000);
+      expect(schedule.at(-1)?.balanceAfter).toBe(0);
+    });
+
     it('should calculate reducing balance schedule', () => {
       const schedule = service.calculate({ ...baseParams, interestType: 'REDUCING' });
 
@@ -128,6 +143,22 @@ describe('AmortizationService', () => {
   });
 
   describe('edge cases', () => {
+    it('calculates date-only monthly installments independently of the server timezone', () => {
+      const schedule = service.calculate({
+        principal: 1000,
+        interestRate: 0,
+        interestType: 'REDUCING',
+        paymentFrequency: 'MONTHLY',
+        term: 2,
+        startDate: new Date('2026-01-01'),
+      });
+
+      expect(schedule.map((row) => row.dueDate.toISOString().slice(0, 10))).toEqual([
+        '2026-02-01',
+        '2026-03-01',
+      ]);
+    });
+
     it('should handle 1-term loan', () => {
       const schedule = service.calculate({
         ...baseParams,

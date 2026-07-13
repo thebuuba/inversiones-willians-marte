@@ -7,7 +7,7 @@ import { NetworkStatusBanner } from '@/components/layout/network-status-banner';
 import { useAuth } from '@/lib/auth-context';
 
 const publicRoutes = ['/login'];
-const publicRoutePrefixes = ['/captura-documento/'];
+const publicRoutePrefixes = ['/captura-documento/', '/captura-foto-cliente/'];
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
 export function AppShell({ children }: { children: ReactNode }) {

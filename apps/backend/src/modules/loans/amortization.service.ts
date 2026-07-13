@@ -144,6 +144,33 @@ export class AmortizationService {
     return schedule;
   }
 
+  private calculateZeroRateSchedule(params: {
+    principal: number;
+    term: number;
+    startDate: Date;
+    paymentFrequency: PaymentFrequency;
+  }): AmortizationRow[] {
+    const principalCents = Math.round(params.principal * 100);
+    const regularPrincipalCents = Math.floor(principalCents / params.term);
+    let remainingCents = principalCents;
+    let dueDate = new Date(params.startDate);
+
+    return Array.from({ length: params.term }, (_, index) => {
+      dueDate = this.addPaymentInterval(dueDate, params.paymentFrequency);
+      const installmentCents = index === params.term - 1 ? remainingCents : regularPrincipalCents;
+      remainingCents -= installmentCents;
+
+      return {
+        installment: index + 1,
+        dueDate: new Date(dueDate),
+        amount: installmentCents / 100,
+        principalPart: installmentCents / 100,
+        interestPart: 0,
+        balanceAfter: remainingCents / 100,
+      };
+    });
+  }
+
   calculate(params: {
     principal: number;
     interestRate: number;
@@ -213,6 +240,14 @@ export class AmortizationService {
         balanceAfter: 0,
       });
     } else if (interestType === InterestTypeEnum.REDUCING) {
+      if (periodicRate === 0) {
+        return this.calculateZeroRateSchedule({
+          principal,
+          term,
+          startDate,
+          paymentFrequency,
+        });
+      }
       const rawInstallment =
         (principal * (periodicRate * Math.pow(1 + periodicRate, term))) /
         (Math.pow(1 + periodicRate, term) - 1);
@@ -312,21 +347,31 @@ export class AmortizationService {
     const d = new Date(date);
     switch (frequency) {
       case 'DAILY':
-        d.setDate(d.getDate() + 1);
+        d.setUTCDate(d.getUTCDate() + 1);
         break;
       case 'WEEKLY':
-        d.setDate(d.getDate() + 7);
+        d.setUTCDate(d.getUTCDate() + 7);
         break;
       case 'BIWEEKLY':
-        d.setDate(d.getDate() + 14);
+        d.setUTCDate(d.getUTCDate() + 14);
         break;
       case 'MONTHLY':
-        d.setMonth(d.getMonth() + 1);
-        break;
+        return this.addUtcMonthsClamped(d, 1);
       case 'QUARTERLY':
-        d.setMonth(d.getMonth() + 3);
-        break;
+        return this.addUtcMonthsClamped(d, 3);
     }
     return d;
+  }
+
+  private addUtcMonthsClamped(date: Date, months: number): Date {
+    const day = date.getUTCDate();
+    const result = new Date(date);
+    result.setUTCDate(1);
+    result.setUTCMonth(result.getUTCMonth() + months);
+    const lastDayOfTargetMonth = new Date(
+      Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0),
+    ).getUTCDate();
+    result.setUTCDate(Math.min(day, lastDayOfTargetMonth));
+    return result;
   }
 }

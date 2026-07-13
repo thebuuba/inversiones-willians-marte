@@ -9,9 +9,11 @@ import { requestIdMiddleware } from './common/middleware/request-id';
 import { parseCorsOrigins } from './config/cors-origins';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
 
   app.setGlobalPrefix('api/v1');
+  app.useBodyParser('json', { limit: '2mb' });
+  app.useBodyParser('urlencoded', { limit: '2mb', extended: true });
   app.use(helmet());
   app.use(requestIdMiddleware);
 

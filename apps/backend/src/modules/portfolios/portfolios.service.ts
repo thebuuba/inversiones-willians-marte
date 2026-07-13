@@ -74,12 +74,13 @@ export class PortfoliosService {
     });
   }
 
-  async findAll() {
+  async findAll(take = 100, skip = 0) {
     const portfolios = await prisma.portfolio.findMany({
       include: {
         _count: { select: { loans: true } },
         loans: {
           orderBy: { createdAt: 'desc' },
+          take: 200,
           select: {
             id: true,
             loanNumber: true,
@@ -108,6 +109,8 @@ export class PortfoliosService {
         },
       },
       orderBy: { createdAt: 'desc' },
+      take,
+      skip,
     });
 
     return portfolios.map((portfolio) => this.mapPortfolio(portfolio));
@@ -120,6 +123,7 @@ export class PortfoliosService {
         _count: { select: { loans: true } },
         loans: {
           orderBy: { createdAt: 'desc' },
+          take: 200,
           select: {
             id: true,
             loanNumber: true,

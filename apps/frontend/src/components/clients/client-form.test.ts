@@ -58,3 +58,27 @@ test('builds a clean client payload from form values', () => {
     notes: undefined,
   });
 });
+
+test('includes an empty photo when editing so an existing profile photo can be removed', () => {
+  const payload = getClientPayload(
+    {
+      firstName: 'Ana',
+      lastName: 'Diaz',
+      identification: '',
+      birthDate: '',
+      gender: '',
+      maritalStatus: '',
+      nationality: '',
+      dependents: '',
+      phone: '',
+      altPhone: '',
+      email: '',
+      address: '',
+      notes: '',
+      photo: '',
+    },
+    true,
+  );
+
+  assert.equal(payload.photo, '');
+});

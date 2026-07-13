@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
-import { join, normalize } from 'path';
+import { access, unlink } from 'fs/promises';
+import { join, resolve, sep } from 'path';
 import { AuditService } from '../audit/audit.service';
 import {
   DocumentProcessingResult,
@@ -23,6 +24,7 @@ interface CreateDocumentInput {
 
 @Injectable()
 export class DocumentsService {
+  private readonly logger = new Logger(DocumentsService.name);
   constructor(
     private audit: AuditService,
     private documentProcessing: DocumentProcessingService,
@@ -35,26 +37,35 @@ export class DocumentsService {
       ? await this.documentProcessing.analyze(dto.uploadedFile)
       : this.defaultProcessing(dto.fileUrl);
 
-    return prisma.document.create({
-      data: {
-        name: dto.name,
-        category: dto.category,
-        clientId: dto.clientId ?? null,
-        investorId: dto.investorId ?? null,
-        loanId: dto.loanId ?? null,
-        notes: dto.notes ?? null,
-        fileUrl: dto.fileUrl,
-        fileSize: dto.fileSize,
-        mimeType: dto.mimeType,
-        originalFileUrl: processing.originalFileUrl,
-        processedFileUrl: processing.processedFileUrl ?? null,
-        documentType: processing.documentType,
-        detectionConfidence: processing.detectionConfidence,
-        processingStatus: processing.processingStatus,
-        processingNotes: processing.processingNotes ?? null,
-        uploadedById: userId,
-      },
-    });
+    try {
+      return await prisma.document.create({
+        data: {
+          name: dto.name,
+          category: dto.category,
+          clientId: dto.clientId ?? null,
+          investorId: dto.investorId ?? null,
+          loanId: dto.loanId ?? null,
+          notes: dto.notes ?? null,
+          fileUrl: dto.fileUrl,
+          fileSize: dto.fileSize,
+          mimeType: dto.mimeType,
+          originalFileUrl: processing.originalFileUrl,
+          processedFileUrl: processing.processedFileUrl ?? null,
+          documentType: processing.documentType,
+          detectionConfidence: processing.detectionConfidence,
+          processingStatus: processing.processingStatus,
+          processingNotes: processing.processingNotes ?? null,
+          uploadedById: userId,
+        },
+      });
+    } catch (error) {
+      await this.removeStoredFiles([
+        dto.fileUrl,
+        processing.originalFileUrl,
+        processing.processedFileUrl,
+      ]);
+      throw error;
+    }
   }
 
   private defaultProcessing(fileUrl: string): DocumentProcessingResult {
@@ -67,37 +78,74 @@ export class DocumentsService {
     };
   }
 
-  async findAll(clientId?: number, investorId?: string) {
+  async findAll(clientId?: number, investorId?: string, take = 100, skip = 0) {
     const where: Record<string, unknown> = {};
     if (clientId) where.clientId = clientId;
     if (investorId) where.investorId = investorId;
     return prisma.document.findMany({
       where,
       orderBy: { createdAt: 'desc' },
+      take,
+      skip,
     });
+  }
+
+  async updateName(id: string, name: string, userId: string) {
+    const document = await prisma.document.findUnique({ where: { id } });
+    if (!document) throw new NotFoundException('Document not found');
+
+    const normalizedName = name.trim();
+    const updated = await prisma.document.update({
+      where: { id },
+      data: { name: normalizedName },
+    });
+
+    if (document.clientId) {
+      await this.audit.log({
+        userId,
+        clientId: document.clientId,
+        entityType: 'Document',
+        entityId: document.id,
+        action: 'DOCUMENT_RENAMED',
+        oldValues: { name: document.name },
+        newValues: { name: normalizedName },
+      });
+    }
+
+    return updated;
   }
 
   async getFileForDownload(id: string, preferProcessed = false) {
     const document = await prisma.document.findUnique({ where: { id } });
     if (!document?.fileUrl) throw new NotFoundException('Document file not found');
 
-    const storedFile =
-      preferProcessed && document.processedFileUrl ? document.processedFileUrl : document.fileUrl;
-    const filename = normalize(storedFile).replace(/^(\.\.(\/|\\|$))+/, '');
-    const path = join(this.uploadsDir, filename);
+    const candidates =
+      preferProcessed && document.processedFileUrl
+        ? [
+            { storedFile: document.processedFileUrl, mimeType: 'image/webp' },
+            { storedFile: document.fileUrl, mimeType: document.mimeType },
+          ]
+        : [{ storedFile: document.fileUrl, mimeType: document.mimeType }];
+    const uploadsRoot = resolve(this.uploadsDir);
 
-    if (!path.startsWith(this.uploadsDir)) {
-      throw new NotFoundException('Document file not found');
+    for (const candidate of candidates) {
+      const path = resolve(uploadsRoot, candidate.storedFile);
+      if (!path.startsWith(`${uploadsRoot}${sep}`)) continue;
+
+      try {
+        await access(path);
+        return {
+          path,
+          filename: document.name,
+          mimeType: candidate.mimeType ?? 'application/octet-stream',
+        };
+      } catch (error) {
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code !== 'ENOENT' && code !== 'ENOTDIR') throw error;
+      }
     }
 
-    return {
-      path,
-      filename: document.name,
-      mimeType:
-        preferProcessed && document.processedFileUrl
-          ? 'image/webp'
-          : (document.mimeType ?? 'application/octet-stream'),
-    };
+    throw new NotFoundException('Document file not found');
   }
 
   async remove(id: string, userId: string) {
@@ -105,6 +153,11 @@ export class DocumentsService {
     if (!document) throw new NotFoundException('Document not found');
 
     await prisma.document.delete({ where: { id } });
+    await this.removeStoredFiles([
+      document.fileUrl,
+      document.originalFileUrl,
+      document.processedFileUrl,
+    ]);
     if (document?.clientId) {
       await this.audit.log({
         userId,
@@ -115,5 +168,24 @@ export class DocumentsService {
         newValues: { name: document.name },
       });
     }
+  }
+
+  private async removeStoredFiles(filenames: Array<string | null | undefined>) {
+    const uploadsRoot = resolve(this.uploadsDir);
+    const uniqueFilenames = new Set(filenames.filter((value): value is string => Boolean(value)));
+
+    await Promise.all(
+      [...uniqueFilenames].map(async (filename) => {
+        const filePath = resolve(uploadsRoot, filename);
+        if (!filePath.startsWith(`${uploadsRoot}${sep}`)) return;
+        try {
+          await unlink(filePath);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+            this.logger.error(`No se pudo eliminar el archivo ${filename}`, error);
+          }
+        }
+      }),
+    );
   }
 }

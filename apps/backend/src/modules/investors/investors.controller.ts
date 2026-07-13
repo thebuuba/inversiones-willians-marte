@@ -1,10 +1,21 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { InvestorsService } from './investors.service';
 import { CreateInvestorDto } from './dto/create-investor.dto';
 import { UpdateInvestorDto } from './dto/update-investor.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
+import { normalizePagination } from '../../common/pagination';
 
 @Controller('investors')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -19,8 +30,9 @@ export class InvestorsController {
 
   @Get()
   @Roles('ADMIN', 'COLLECTOR')
-  findAll() {
-    return this.investors.findAll();
+  findAll(@Query('take') take?: string, @Query('skip') skip?: string) {
+    const pagination = normalizePagination(Number(take ?? 100), Number(skip ?? 0), 100);
+    return this.investors.findAll(pagination.take, pagination.skip);
   }
 
   @Get(':id')

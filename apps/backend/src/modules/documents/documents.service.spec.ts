@@ -4,6 +4,8 @@ import { DocumentsService } from './documents.service';
 import { DocumentProcessingService } from './document-processing.service';
 import { AuditService } from '../audit/audit.service';
 import { prisma } from '@inversiones/database';
+import { access, mkdir, rm, writeFile } from 'fs/promises';
+import { join } from 'path';
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -98,6 +100,68 @@ describe('DocumentsService', () => {
     });
   });
 
+  it('removes the stored original and processed files when deleting a document', async () => {
+    const uploadsDir = join(__dirname, '..', '..', '..', 'uploads');
+    const originalName = `document-delete-${Date.now()}.jpg`;
+    const processedName = `document-delete-${Date.now()}-processed.webp`;
+    const originalPath = join(uploadsDir, originalName);
+    const processedPath = join(uploadsDir, processedName);
+    await mkdir(uploadsDir, { recursive: true });
+    await writeFile(originalPath, 'original');
+    await writeFile(processedPath, 'processed');
+
+    jest.mocked(prisma.document.findUnique).mockResolvedValue({
+      id: 'doc-files',
+      clientId: null,
+      name: 'Documento',
+      fileUrl: originalName,
+      originalFileUrl: originalName,
+      processedFileUrl: processedName,
+    } as any);
+    jest.mocked(prisma.document.delete).mockResolvedValue({ id: 'doc-files' } as any);
+
+    try {
+      await service.remove('doc-files', 'user-1');
+      await expect(access(originalPath)).rejects.toMatchObject({ code: 'ENOENT' });
+      await expect(access(processedPath)).rejects.toMatchObject({ code: 'ENOENT' });
+    } finally {
+      await rm(originalPath, { force: true });
+      await rm(processedPath, { force: true });
+    }
+  });
+
+  it('renames a client document and records the old and new names', async () => {
+    jest.mocked(prisma.document.findUnique).mockResolvedValue({
+      id: 'doc-1',
+      clientId: 7,
+      name: 'Documento sin nombre',
+    } as any);
+    jest.mocked(prisma.document.update).mockResolvedValue({
+      id: 'doc-1',
+      clientId: 7,
+      name: 'Cédula frontal',
+    } as any);
+
+    await expect(
+      service.updateName('doc-1', '  Cédula frontal  ', 'user-1'),
+    ).resolves.toMatchObject({
+      name: 'Cédula frontal',
+    });
+    expect(prisma.document.update).toHaveBeenCalledWith({
+      where: { id: 'doc-1' },
+      data: { name: 'Cédula frontal' },
+    });
+    expect(audit.log).toHaveBeenCalledWith({
+      userId: 'user-1',
+      clientId: 7,
+      entityType: 'Document',
+      entityId: 'doc-1',
+      action: 'DOCUMENT_RENAMED',
+      oldValues: { name: 'Documento sin nombre' },
+      newValues: { name: 'Cédula frontal' },
+    });
+  });
+
   it('lists documents without reprocessing pending images', async () => {
     const document = {
       id: 'doc-1',
@@ -117,18 +181,67 @@ describe('DocumentsService', () => {
   });
 
   it('resolves a stored file path for authenticated downloads', async () => {
+    const uploadsDir = join(__dirname, '..', '..', '..', 'uploads');
+    const storedName = `receipt-${Date.now()}.pdf`;
+    const storedPath = join(uploadsDir, storedName);
+    await mkdir(uploadsDir, { recursive: true });
+    await writeFile(storedPath, 'receipt');
+
     jest.mocked(prisma.document.findUnique).mockResolvedValue({
       id: 'doc-1',
-      fileUrl: 'receipt.pdf',
+      fileUrl: storedName,
       name: 'Receipt',
       mimeType: 'application/pdf',
     } as any);
 
-    await expect(service.getFileForDownload('doc-1')).resolves.toMatchObject({
-      filename: 'Receipt',
-      mimeType: 'application/pdf',
-      path: expect.stringContaining('receipt.pdf'),
-    });
+    try {
+      await expect(service.getFileForDownload('doc-1')).resolves.toMatchObject({
+        filename: 'Receipt',
+        mimeType: 'application/pdf',
+        path: storedPath,
+      });
+    } finally {
+      await rm(storedPath, { force: true });
+    }
+  });
+
+  it('falls back to the original file when the processed variant is missing', async () => {
+    const uploadsDir = join(__dirname, '..', '..', '..', 'uploads');
+    const originalName = `document-fallback-${Date.now()}.jpg`;
+    const originalPath = join(uploadsDir, originalName);
+    await mkdir(uploadsDir, { recursive: true });
+    await writeFile(originalPath, 'original');
+
+    jest.mocked(prisma.document.findUnique).mockResolvedValue({
+      id: 'doc-fallback',
+      fileUrl: originalName,
+      processedFileUrl: `${originalName}-missing.webp`,
+      name: 'Cédula',
+      mimeType: 'image/jpeg',
+    } as any);
+
+    try {
+      await expect(service.getFileForDownload('doc-fallback', true)).resolves.toMatchObject({
+        path: originalPath,
+        mimeType: 'image/jpeg',
+      });
+    } finally {
+      await rm(originalPath, { force: true });
+    }
+  });
+
+  it('throws NotFoundException when every stored file variant is missing', async () => {
+    jest.mocked(prisma.document.findUnique).mockResolvedValue({
+      id: 'doc-missing-file',
+      fileUrl: 'missing-original.jpg',
+      processedFileUrl: 'missing-processed.webp',
+      name: 'Cédula',
+      mimeType: 'image/jpeg',
+    } as any);
+
+    await expect(service.getFileForDownload('doc-missing-file', true)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('throws NotFoundException when deleting a missing document', async () => {

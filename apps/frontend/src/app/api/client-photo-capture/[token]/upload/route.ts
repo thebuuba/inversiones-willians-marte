@@ -1,0 +1,50 @@
+import { NextResponse } from 'next/server';
+
+function getBackendApiUrl() {
+  return (
+    process.env.INTERNAL_API_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    'http://localhost:3000/api/v1'
+  );
+}
+
+const MAX_CAPTURE_UPLOAD_BYTES = 5 * 1024 * 1024;
+
+export async function POST(request: Request, props: { params: Promise<{ token: string }> }) {
+  const { token } = await props.params;
+  const contentLength = Number(request.headers.get('content-length') ?? '0');
+  if (contentLength > MAX_CAPTURE_UPLOAD_BYTES) {
+    return NextResponse.json(
+      { success: false, error: 'La fotografía supera el límite de 5 MB.', statusCode: 413 },
+      { status: 413 },
+    );
+  }
+
+  let formData: FormData;
+  try {
+    formData = await request.formData();
+  } catch {
+    return NextResponse.json(
+      { success: false, error: 'No se pudo leer la fotografía.', statusCode: 400 },
+      { status: 400 },
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getBackendApiUrl()}/clients/photo-capture-sessions/${encodeURIComponent(token)}/upload`,
+      { method: 'POST', body: formData },
+    );
+  } catch {
+    return NextResponse.json(
+      { success: false, error: 'El servicio de captura no está disponible.', statusCode: 502 },
+      { status: 502 },
+    );
+  }
+
+  return new NextResponse(await response.text(), {
+    status: response.status,
+    headers: { 'content-type': response.headers.get('content-type') ?? 'application/json' },
+  });
+}
