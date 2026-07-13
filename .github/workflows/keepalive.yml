@@ -2,7 +2,7 @@ name: Keepalive
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '7,17,27,37,47,57 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Ping backend health endpoint
+      - name: Ping Render and Supabase health endpoint
         shell: bash
         run: |
           set -euo pipefail
