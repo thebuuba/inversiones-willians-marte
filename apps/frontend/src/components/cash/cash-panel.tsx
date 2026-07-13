@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -8,7 +8,6 @@ import {
   ArrowUpRight,
   Banknote,
   Calendar,
-  ChevronDown,
   CreditCard,
   Plus,
   Repeat2,
@@ -16,38 +15,27 @@ import {
   Wallet,
 } from 'lucide-react';
 import { MovementModal, type MovementFormValues } from './movement-modal';
-import { createPayment } from '@/lib/api/payments';
+import {
+  createManualCashMovement,
+  getCashLedger,
+  type CashLedgerDay,
+  type CashLedgerMovement,
+} from '@/lib/api/cash';
 import { getStaggerDelay } from '@/lib/animation';
-import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
 import { formatDop, formatSignedDop, parseCurrencyInput } from '@/lib/currency';
+import {
+  buildManualCashMovementDate,
+  filterCashMovements,
+  type CashMovementFilter,
+} from './cash-ledger.helpers';
 
-type MovementType = 'in' | 'out';
+type TagTone = 'green' | 'orange' | 'blue' | 'purple' | 'yellow' | 'gray';
 
-export interface Movement {
-  type: MovementType;
-  name: string;
-  code: string;
-  description: string;
-  amount: string;
-  time: string;
-  avatar?: string;
-  initials?: string;
-  tags: Array<{ label: string; tone: 'green' | 'orange' | 'blue' | 'purple' | 'yellow' | 'gray'; icon?: 'cash' | 'transfer' | 'card' }>;
-}
-
-export interface MovementGroup {
-  date: string;
-  count: string;
-  income: string;
-  expense: string;
-  movements: Movement[];
-}
-
-interface CashTotals {
-  balance: number;
-  income: number;
-  expense: number;
-}
+const emptyLedger: CashLedgerDay = {
+  date: '',
+  movements: [],
+  totals: { openingBalance: 0, income: 0, expense: 0, balance: 0 },
+};
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 16 },
@@ -58,45 +46,38 @@ const fadeUp: Variants = {
   }),
 };
 
-const emptyTotals: CashTotals = {
-  balance: 0,
-  income: 0,
-  expense: 0,
-};
-
-function formatCurrency(value: number, options: { signed?: boolean; negative?: boolean } = {}) {
-  if (options.signed) {
-    return formatSignedDop(value, { negative: options.negative });
-  }
-
-  return formatDop(value);
+function todayInOffice() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santo_Domingo' });
 }
 
-function parseCurrency(value: string) {
-  return parseCurrencyInput(value);
+function formatOfficeDate(date: string) {
+  return new Intl.DateTimeFormat('es-DO', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'America/Santo_Domingo',
+  }).format(new Date(`${date}T12:00:00-04:00`));
 }
 
-function categoryTone(category: string): Movement['tags'][number]['tone'] {
-  const tones: Record<string, Movement['tags'][number]['tone']> = {
+function formatOfficeTime(date: string) {
+  return new Intl.DateTimeFormat('es-DO', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'America/Santo_Domingo',
+  }).format(new Date(date));
+}
+
+function categoryTone(category: string): TagTone {
+  const tones: Record<string, TagTone> = {
     'Pago de préstamo': 'green',
     Desembolso: 'orange',
     'Gasto operativo': 'blue',
     'Ingreso de inversionista': 'purple',
+    'Pago a inversionista': 'yellow',
     'Retiro de socio': 'yellow',
   };
-
-  return tones[category] ?? 'green';
-}
-
-function paymentIcon(method: string): Movement['tags'][number]['icon'] {
-  if (method === 'Transferencia') return 'transfer';
-  if (method === 'Tarjeta') return 'card';
-  return 'cash';
-}
-
-function updateGroupAmount(amount: string, delta: number, negative = false) {
-  const current = parseCurrency(amount);
-  return formatCurrency(current + delta, { signed: true, negative });
+  return tones[category] ?? 'gray';
 }
 
 function ShellCard({ children, className = '', index = 0 }: { children: ReactNode; className?: string; index?: number }) {
@@ -115,19 +96,14 @@ function ShellCard({ children, className = '', index = 0 }: { children: ReactNod
 
 function Header({ onNewMovement }: { onNewMovement: () => void }) {
   return (
-    <motion.header
-      animate="visible"
-      className="mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end"
-      initial="hidden"
-      variants={fadeUp}
-    >
+    <motion.header animate="visible" className="mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end" initial="hidden" variants={fadeUp}>
       <div>
         <span className="inline-flex items-center gap-2 rounded-full bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#173D2C]">
           <span className="h-2 w-2 rounded-full bg-[#2F7654]" />
-          Movimientos en vivo
+          Libro diario de caja
         </span>
         <h1 className="mt-3 text-[28px] font-bold leading-tight text-[#173D2C]">Caja</h1>
-        <p className="mt-1.5 text-sm text-[#5C6D63]">Controla las entradas y salidas de dinero del negocio.</p>
+        <p className="mt-1.5 text-sm text-[#5C6D63]">Entradas y salidas generadas por las operaciones del negocio.</p>
       </div>
       <button
         className="flex h-11 items-center gap-2 rounded-full bg-[#2f7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
@@ -135,7 +111,7 @@ function Header({ onNewMovement }: { onNewMovement: () => void }) {
         type="button"
       >
         <Plus className="h-4 w-4" />
-        Nuevo movimiento
+        Movimiento manual
       </button>
     </motion.header>
   );
@@ -147,7 +123,6 @@ function SummaryCard({
   title,
   value,
   detail,
-  progress,
   index,
 }: {
   variant: 'balance' | 'income' | 'expense';
@@ -155,17 +130,13 @@ function SummaryCard({
   title: string;
   value: string;
   detail: ReactNode;
-  progress?: number;
   index: number;
 }) {
   const isBalance = variant === 'balance';
   const tone = variant === 'expense' ? '#9F3F25' : '#2F7654';
 
   return (
-    <ShellCard
-      className={`${isBalance ? 'bg-gradient-to-br from-[#E7F4EC] to-[#D2E8D9] p-5 xl:col-span-1' : 'p-5'}`}
-      index={index}
-    >
+    <ShellCard className={isBalance ? 'bg-gradient-to-br from-[#E7F4EC] to-[#D2E8D9] p-5' : 'p-5'} index={index}>
       <div className="flex items-center gap-4">
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]"
@@ -177,48 +148,76 @@ function SummaryCard({
       </div>
       <p className="mt-6 text-[28px] font-bold leading-none text-[#173D2C]">{value}</p>
       <div className="mt-4 text-sm font-medium text-[#5C6D63]">{detail}</div>
-      {!isBalance && (
-        <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[#EEF3EF]">
-          <div
-            className="h-full rounded-full"
-            style={{ width: `${progress ?? 48}%`, backgroundColor: tone }}
-          />
-        </div>
-      )}
     </ShellCard>
   );
 }
 
-function FilterBar() {
+function FilterBar({
+  date,
+  filter,
+  search,
+  category,
+  categories,
+  onDateChange,
+  onFilterChange,
+  onSearchChange,
+  onCategoryChange,
+}: {
+  date: string;
+  filter: CashMovementFilter;
+  search: string;
+  category: string;
+  categories: string[];
+  onDateChange: (value: string) => void;
+  onFilterChange: (value: CashMovementFilter) => void;
+  onSearchChange: (value: string) => void;
+  onCategoryChange: (value: string) => void;
+}) {
+  const tabs: Array<{ label: string; value: CashMovementFilter }> = [
+    { label: 'Todos', value: 'all' },
+    { label: 'Entradas', value: 'in' },
+    { label: 'Salidas', value: 'out' },
+  ];
+
   return (
     <ShellCard className="mb-5 p-3.5" index={4}>
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="flex shrink-0 items-center gap-4">
-          {['Todos', 'Entradas', 'Salidas'].map((tab) => (
+        <div className="flex shrink-0 items-center gap-1 rounded-[12px] bg-[#F8FBF9] p-1">
+          {tabs.map((tab) => (
             <button
-              className={`h-9 rounded-[12px] px-4 text-sm font-semibold transition hover:-translate-y-0.5 ${
-                tab === 'Todos' ? 'bg-[#E7F4EC] text-[#173D2C] shadow-[0_8px_18px_rgba(40,92,67,0.05)]' : 'text-[#5C6D63]'
+              className={`h-9 rounded-[10px] px-4 text-sm font-semibold transition ${
+                filter === tab.value ? 'bg-[#E7F4EC] text-[#173D2C] shadow-sm' : 'text-[#5C6D63] hover:bg-white'
               }`}
-              key={tab}
+              key={tab.value}
+              onClick={() => onFilterChange(tab.value)}
+              type="button"
             >
-              {tab}
+              {tab.label}
             </button>
           ))}
         </div>
-        <div className="flex h-10 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-4 text-[#5C6D63] xl:ml-auto xl:max-w-[380px]">
+        <label className="flex h-10 items-center gap-2 rounded-full border border-[#DDEBE3] bg-white px-4 text-[#5C6D63]">
+          <Calendar className="h-4 w-4" />
+          <input className="bg-transparent text-sm font-semibold text-[#173D2C] outline-none" onChange={(event) => onDateChange(event.target.value)} type="date" value={date} />
+        </label>
+        <label className="flex h-10 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-4 text-[#5C6D63] xl:ml-auto xl:max-w-[340px]">
           <Search className="h-4 w-4 shrink-0" />
-          <span className="truncate text-sm">Buscar por persona o concepto...</span>
-        </div>
-        <button className="flex h-10 items-center justify-between rounded-full border border-[#DDEBE3] bg-white px-4 text-sm font-semibold text-[#173D2C] shadow-sm transition hover:bg-[#F3FAF6] xl:w-[235px]">
-          Todas las categorías
-          <ChevronDown className="h-4 w-4 text-[#5C6D63]" />
-        </button>
+          <input className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#8F9691]" onChange={(event) => onSearchChange(event.target.value)} placeholder="Buscar persona o concepto..." value={search} />
+        </label>
+        <select
+          className="h-10 rounded-full border border-[#DDEBE3] bg-white px-4 text-sm font-semibold text-[#173D2C] outline-none"
+          onChange={(event) => onCategoryChange(event.target.value)}
+          value={category}
+        >
+          <option value="">Todas las categorías</option>
+          {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+        </select>
       </div>
     </ShellCard>
   );
 }
 
-function Tag({ label, tone, icon }: Movement['tags'][number]) {
+function Tag({ label, tone, icon }: { label: string; tone: TagTone; icon?: string | null }) {
   const styles = {
     green: 'bg-[#E7F4EC] text-[#173D2C]',
     orange: 'bg-[#FFE3D2] text-[#9F3F25]',
@@ -227,8 +226,7 @@ function Tag({ label, tone, icon }: Movement['tags'][number]) {
     yellow: 'bg-[#FFF4C8] text-[#7A5A0A]',
     gray: 'bg-[#F3FAF6] text-[#5C6D63] border border-[#DDEBE3]',
   }[tone];
-
-  const Icon = icon === 'transfer' ? Repeat2 : icon === 'card' ? CreditCard : icon === 'cash' ? Banknote : null;
+  const Icon = icon === 'Transferencia' ? Repeat2 : icon === 'Tarjeta' ? CreditCard : icon ? Banknote : null;
 
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${styles}`}>
@@ -238,172 +236,96 @@ function Tag({ label, tone, icon }: Movement['tags'][number]) {
   );
 }
 
-function Avatar({ movement }: { movement: Movement }) {
-  if (movement.avatar) {
-    return (
-      <div
-        className="h-8 w-8 shrink-0 rounded-full bg-cover bg-center shadow-[0_5px_12px_rgba(40,92,67,0.1)]"
-        style={{ backgroundImage: `url(${movement.avatar})` }}
-      />
-    );
-  }
-
-  return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F3FAF6] text-xs font-bold text-[#5C6D63]">
-      {movement.initials}
-    </div>
-  );
-}
-
-function TransactionItem({ movement }: { movement: Movement }) {
-  const isIncome = movement.type === 'in';
+function TransactionItem({ movement }: { movement: CashLedgerMovement }) {
+  const isIncome = movement.type === 'IN';
   const DirectionIcon = isIncome ? ArrowDownLeft : ArrowUpRight;
+  const initials = movement.person.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('');
 
   return (
-    <motion.div
-      className="grid min-h-[76px] grid-cols-[1fr_auto] items-center gap-4 border-b border-[#EDF2EF] px-5 py-3.5 last:border-b-0 hover:bg-[#F8FBF9]"
-      whileHover={{ y: -1 }}
-    >
+    <div className="grid min-h-[76px] grid-cols-[1fr_auto] items-center gap-4 border-b border-[#EDF2EF] px-5 py-3.5 last:border-b-0 hover:bg-[#F8FBF9]">
       <div className="flex min-w-0 items-center gap-4">
-        <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${
-            isIncome ? 'bg-[#E7F4EC] text-[#173D2C]' : 'bg-[#FFE3D2] text-[#9F3F25]'
-          }`}
-        >
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${isIncome ? 'bg-[#E7F4EC] text-[#173D2C]' : 'bg-[#FFE3D2] text-[#9F3F25]'}`}>
           <DirectionIcon className="h-4 w-4" />
         </div>
-        <Avatar movement={movement} />
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F3FAF6] text-xs font-bold text-[#5C6D63]">{initials}</div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-sm font-bold text-[#173D2C]">{movement.name}</h3>
+            <h3 className="truncate text-sm font-bold text-[#173D2C]">{movement.person}</h3>
             <span className="text-[#5C6D63]">·</span>
             <span className="text-xs text-[#5C6D63]">{movement.code}</span>
           </div>
           <p className="mt-0.5 text-xs text-[#5C6D63]">{movement.description}</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {movement.tags.map((tag) => (
-              <Tag key={`${movement.code}-${tag.label}`} {...tag} />
-            ))}
+            <Tag label={movement.category} tone={categoryTone(movement.category)} />
+            {movement.paymentMethod && <Tag icon={movement.paymentMethod} label={movement.paymentMethod} tone="gray" />}
+            <Tag label={`Registrado por ${movement.registeredBy}`} tone="gray" />
           </div>
         </div>
       </div>
       <div className="text-right">
-        <p className={`text-base font-bold ${isIncome ? 'text-[#173D2C]' : 'text-[#A65B3D]'}`}>{movement.amount}</p>
-        <p className="mt-1 text-xs text-[#A9B8AE]">{movement.time}</p>
+        <p className={`text-base font-bold tabular-nums ${isIncome ? 'text-[#173D2C]' : 'text-[#A65B3D]'}`}>
+          {formatSignedDop(movement.amount, { negative: !isIncome })}
+        </p>
+        <p className="mt-1 text-xs text-[#A9B8AE]">{formatOfficeTime(movement.movementDate)}</p>
       </div>
-    </motion.div>
-  );
-}
-
-function TransactionGroup({ group, index }: { group: MovementGroup; index: number }) {
-  return (
-    <motion.section animate="visible" custom={index} initial="hidden" variants={fadeUp}>
-      <div className="mb-3 flex items-center justify-between gap-4 px-1">
-        <div className="flex items-center gap-2.5">
-          <Calendar className="h-4 w-4 text-[#5C6D63]" />
-          <p className="text-sm font-bold text-[#173D2C]">
-            {group.date}
-            <span className="px-2 text-[#5C6D63]">·</span>
-            <span className="font-medium text-[#A9B8AE]">{group.count}</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-5 text-sm font-bold">
-          <span className="text-[#173D2C]">{group.income}</span>
-          <span className="text-[#A65B3D]">{group.expense}</span>
-        </div>
-      </div>
-      <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
-        {group.movements.map((movement) => (
-          <TransactionItem key={movement.code} movement={movement} />
-        ))}
-      </div>
-    </motion.section>
+    </div>
   );
 }
 
 export function CashPanel() {
-  const [groups, setGroups] = useState<MovementGroup[]>([]);
-  const [totals, setTotals] = useState<CashTotals>(emptyTotals);
+  const [date, setDate] = useState(todayInOffice);
+  const [ledger, setLedger] = useState<CashLedgerDay>(emptyLedger);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [filter, setFilter] = useState<CashMovementFilter>('all');
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const requestIdRef = useRef(0);
+
+  const loadLedger = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
+    setLoading(true);
+    setError('');
+    try {
+      const result = await getCashLedger(date);
+      if (requestId === requestIdRef.current) setLedger(result);
+    } catch {
+      if (requestId === requestIdRef.current) setError('No se pudo cargar el libro de caja.');
+    } finally {
+      if (requestId === requestIdRef.current) setLoading(false);
+    }
+  }, [date]);
+
+  useEffect(() => {
+    queueMicrotask(() => void loadLedger());
+  }, [loadLedger]);
+
+  const categories = useMemo(
+    () => Array.from(new Set(ledger.movements.map((movement) => movement.category))).sort(),
+    [ledger.movements],
+  );
+  const visibleMovements = useMemo(
+    () => filterCashMovements(ledger.movements, filter, search, category),
+    [category, filter, ledger.movements, search],
+  );
 
   const handleCreateMovement = useCallback(async (values: MovementFormValues) => {
-    const amount = parseCurrency(values.amount);
-    const isIncome = values.type === 'in';
-    const isLoanPayment = values.category === 'Pago de préstamo' && values.clientId && values.loanId;
+    const amount = parseCurrencyInput(values.amount);
+    await createManualCashMovement({
+      type: values.type === 'in' ? 'IN' : 'OUT',
+      person: values.person,
+      amount,
+      movementDate: buildManualCashMovementDate(date),
+      paymentMethod: values.method,
+      description: values.description,
+    });
 
-    if (isLoanPayment) {
-      try {
-        await createPayment({
-          loanId: values.loanId!,
-          clientId: values.clientId!,
-          amount,
-          paymentDate: new Date().toISOString(),
-          paymentMethod: values.method,
-          notes: values.description,
-        });
-        invalidateCachePrefix('loans:');
-        invalidateCachePrefix('clients:');
-        invalidateCache('dashboard');
-        invalidateCache('portfolio');
-        invalidateCache('monthlyCollections');
-        invalidateCache('upcomingPayments');
-      } catch {
-        return;
-      }
-      setIsModalOpen(false);
-      return;
-    }
-
-    const nextCodeNumber = groups.reduce((max, group) => {
-      return group.movements.reduce((movementMax, movement) => {
-        const codeNumber = Number(movement.code.replace(/\D/g, '')) || 0;
-        return Math.max(movementMax, codeNumber);
-      }, max);
-    }, 0) + 1;
-
-    const newMovement: Movement = {
-      type: values.type,
-      name: values.person,
-      code: `MOV-${nextCodeNumber}`,
-      description: values.description || 'Movimiento registrado en caja',
-      amount: formatCurrency(amount, { signed: true, negative: !isIncome }),
-      time: 'Ahora',
-      initials: values.person
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase())
-        .join(''),
-      tags: [
-        { label: values.category, tone: categoryTone(values.category) },
-        { label: values.method, tone: 'gray', icon: paymentIcon(values.method) },
-      ],
-    };
-
-    setGroups((currentGroups) =>
-      currentGroups.map((group, index) => {
-        if (index !== 0) return group;
-
-        const nextMovements = [newMovement, ...group.movements];
-
-        return {
-          ...group,
-          count: `${nextMovements.length} movimientos`,
-          income: isIncome ? updateGroupAmount(group.income, amount) : group.income,
-          expense: isIncome ? group.expense : updateGroupAmount(group.expense, amount, true),
-          movements: nextMovements,
-        };
-      }),
-    );
-
-    setTotals((currentTotals) => ({
-      balance: isIncome ? currentTotals.balance + amount : currentTotals.balance - amount,
-      income: isIncome ? currentTotals.income + amount : currentTotals.income,
-      expense: isIncome ? currentTotals.expense : currentTotals.expense + amount,
-    }));
-
+    await loadLedger();
     setIsModalOpen(false);
-  }, [groups]);
+  }, [date, loadLedger]);
+
+  const { totals } = ledger;
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
@@ -411,59 +333,69 @@ export function CashPanel() {
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
         <SummaryCard
-          detail={
-            <span className="inline-flex items-center gap-2">
-              <ArrowUpRight className="h-4 w-4" />
-              RD$0 hoy
-            </span>
-          }
+          detail={<span>Entradas del día menos salidas del día</span>}
           icon={<Wallet className="h-5 w-5" />}
           index={1}
-          title="SALDO ACTUAL"
-          value={formatCurrency(totals.balance)}
+          title="CUADRE DEL DÍA"
+          value={formatDop(totals.balance)}
           variant="balance"
         />
         <SummaryCard
-          detail={
-            <span>
-              Hoy <strong className="text-[#173D2C]">+RD$0</strong>
-            </span>
-          }
+          detail={<span>{ledger.movements.filter((movement) => movement.type === 'IN').length} entradas en el día</span>}
           icon={<ArrowDownLeft className="h-5 w-5" />}
           index={2}
-          progress={47}
           title="ENTRADAS"
-          value={formatCurrency(totals.income)}
+          value={formatDop(totals.income)}
           variant="income"
         />
         <SummaryCard
-          detail={
-            <span>
-              Hoy <strong className="text-[#A65B3D]">−RD$0</strong>
-            </span>
-          }
+          detail={<span>{ledger.movements.filter((movement) => movement.type === 'OUT').length} salidas en el día</span>}
           icon={<ArrowUpRight className="h-5 w-5" />}
           index={3}
-          progress={53}
           title="SALIDAS"
-          value={formatCurrency(totals.expense)}
+          value={formatDop(totals.expense)}
           variant="expense"
         />
       </div>
 
-      <FilterBar />
-
-      <div className="space-y-6">
-        {groups.map((group, index) => (
-          <TransactionGroup group={group} index={index + 5} key={group.date} />
-        ))}
-      </div>
-
-      <MovementModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateMovement}
+      <FilterBar
+        categories={categories}
+        category={category}
+        date={date}
+        filter={filter}
+        onCategoryChange={setCategory}
+        onDateChange={setDate}
+        onFilterChange={setFilter}
+        onSearchChange={setSearch}
+        search={search}
       />
+
+      <motion.section animate="visible" initial="hidden" variants={fadeUp}>
+        <div className="mb-3 flex items-center justify-between gap-4 px-1">
+          <div className="flex items-center gap-2.5">
+            <Calendar className="h-4 w-4 text-[#5C6D63]" />
+            <p className="text-sm font-bold capitalize text-[#173D2C]">
+              {formatOfficeDate(date)}
+              <span className="px-2 text-[#5C6D63]">·</span>
+              <span className="font-medium text-[#A9B8AE]">{visibleMovements.length} movimientos</span>
+            </p>
+          </div>
+          <div className="hidden items-center gap-5 text-sm font-bold sm:flex">
+            <span className="text-[#173D2C]">+{formatDop(totals.income)}</span>
+            <span className="text-[#A65B3D]">−{formatDop(totals.expense)}</span>
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
+          {loading && <p className="px-5 py-16 text-center text-sm font-medium text-[#5C6D63]">Cargando movimientos...</p>}
+          {!loading && error && <p className="px-5 py-16 text-center text-sm font-medium text-[#9F3F25]">{error}</p>}
+          {!loading && !error && visibleMovements.length === 0 && (
+            <p className="px-5 py-16 text-center text-sm font-medium text-[#5C6D63]">No hay movimientos para esta fecha y filtros.</p>
+          )}
+          {!loading && !error && visibleMovements.map((movement) => <TransactionItem key={`${movement.sourceType}-${movement.id}`} movement={movement} />)}
+        </div>
+      </motion.section>
+
+      <MovementModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleCreateMovement} />
     </div>
   );
 }

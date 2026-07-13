@@ -94,6 +94,11 @@ enum InvestorInvestmentMovementType {
   CAPITAL_ADDITION
 }
 
+enum CashMovementType {
+  IN
+  OUT
+}
+
 // ─── Users ──────────────────────────────────────────────────────────────────
 
 model User {
@@ -124,9 +129,31 @@ model User {
   loanCapitalMovements        LoanCapitalMovement[]
   collectionInteractions      CollectionInteraction[]      @relation("CollectionInteractionCreatedBy")
   paymentPromises             PaymentPromise[]             @relation("PaymentPromiseCreatedBy")
+  cashMovements               CashMovement[]
 
   @@index([role, active])
   @@map("users")
+}
+
+// ─── Manual cash movements ────────────────────────────────────────────────
+
+model CashMovement {
+  id            String           @id @default(uuid())
+  type          CashMovementType
+  person        String
+  amount        Decimal
+  movementDate  DateTime         @map("movement_date")
+  category      String
+  paymentMethod String?          @map("payment_method")
+  description   String?
+  createdById   String           @map("created_by")
+  createdAt     DateTime         @default(now()) @map("created_at")
+
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  @@index([movementDate(sort: Desc)])
+  @@index([type, movementDate(sort: Desc)])
+  @@map("cash_movements")
 }
 
 // ─── Clients ────────────────────────────────────────────────────────────────

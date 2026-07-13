@@ -20,6 +20,7 @@ import { DocumentsModule } from './modules/documents/documents.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { PortfoliosModule } from './modules/portfolios/portfolios.module';
 import { CollectionInteractionsModule } from './modules/collection-interactions/collection-interactions.module';
+import { CashModule } from './modules/cash/cash.module';
 import { HealthController } from './health.controller';
 import { KeepaliveService } from './common/services/keepalive.service';
 
@@ -44,6 +45,7 @@ import { KeepaliveService } from './common/services/keepalive.service';
     TasksModule,
     PortfoliosModule,
     CollectionInteractionsModule,
+    CashModule,
   ],
   controllers: [HealthController],
   providers: [KeepaliveService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
