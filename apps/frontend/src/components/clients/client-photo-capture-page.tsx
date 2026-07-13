@@ -7,7 +7,7 @@ import {
   getPublicClientPhotoCaptureSession,
   uploadClientPhotoCapture,
 } from '@/lib/api/client-photo-capture';
-import { compressImage } from '@/lib/compress-image';
+import { cropClientPhotoToFace } from '@/lib/face-crop';
 import { MAX_COMPRESSED_CLIENT_PHOTO_BYTES, validateClientPhoto } from './client-photo';
 
 type CaptureState = 'loading' | 'ready' | 'uploading' | 'success' | 'error' | 'expired';
@@ -58,14 +58,14 @@ export function ClientPhotoCapturePage({ token }: { token: string }) {
     }
 
     setState('uploading');
-    setMessage('Preparando y enviando fotografía...');
+    setMessage('Detectando el rostro y ajustando el encuadre...');
     try {
-      const compressed = await compressImage(file, 800, 0.7);
-      if (compressed.size > MAX_COMPRESSED_CLIENT_PHOTO_BYTES) {
+      const cropped = await cropClientPhotoToFace(file);
+      if (cropped.size > MAX_COMPRESSED_CLIENT_PHOTO_BYTES) {
         throw new Error('La fotografía no pudo reducirse al tamaño permitido.');
       }
       const formData = new FormData();
-      formData.append('file', compressed, compressed.name || 'foto-cliente.webp');
+      formData.append('file', cropped, cropped.name || 'foto-cliente.webp');
       await uploadClientPhotoCapture(token, formData);
       setState('success');
       setMessage('Fotografía recibida. Ya puedes volver a la computadora.');

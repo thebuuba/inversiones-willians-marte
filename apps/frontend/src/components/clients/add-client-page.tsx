@@ -13,7 +13,7 @@ import {
   type ReactNode,
 } from 'react';
 import { createClient, getClient, updateClient } from '@/lib/api/clients';
-import { compressImage } from '@/lib/compress-image';
+import { cropClientPhotoToFace } from '@/lib/face-crop';
 import {
   closeClientPhotoCaptureSession,
   createClientPhotoCaptureSession,
@@ -319,7 +319,7 @@ function ClientPhotoUploader({
     setProcessing(true);
     setError('');
     try {
-      const compressed = await compressImage(file, 800, 0.7);
+      const compressed = await cropClientPhotoToFace(file);
       if (compressed.size > MAX_COMPRESSED_CLIENT_PHOTO_BYTES) {
         setError(
           'No se pudo reducir la fotografía lo suficiente. Selecciona una imagen más pequeña.',
@@ -337,8 +337,12 @@ function ClientPhotoUploader({
         setProcessing(false);
       };
       reader.readAsDataURL(compressed);
-    } catch {
-      setError('No se pudo procesar la fotografía seleccionada.');
+    } catch (processingError) {
+      setError(
+        processingError instanceof Error
+          ? processingError.message
+          : 'No se pudo procesar la fotografía seleccionada.',
+      );
       setProcessing(false);
     }
   }
@@ -401,7 +405,7 @@ function ClientPhotoUploader({
         <div className="relative">
           <div
             aria-label="Foto del cliente"
-            className="h-[280px] w-full rounded-[22px] bg-cover bg-center"
+            className="aspect-square w-full rounded-[22px] bg-[#F7FCF9] bg-contain bg-center bg-no-repeat"
             role="img"
             style={{ backgroundImage: `url(${value})` }}
           />
@@ -416,7 +420,7 @@ function ClientPhotoUploader({
         </div>
       ) : (
         <button
-          className={`flex h-[280px] w-full flex-col items-center justify-center rounded-[22px] border-2 border-dashed px-6 text-center transition ${
+          className={`flex aspect-square w-full flex-col items-center justify-center rounded-[22px] border-2 border-dashed px-6 text-center transition ${
             dragging
               ? 'border-[#2F7654] bg-[#EAF6EF]'
               : 'border-[#B8EBC9] bg-[#F7FCF9] hover:border-[#2F7654]'

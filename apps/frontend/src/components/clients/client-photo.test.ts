@@ -23,3 +23,10 @@ test('offers QR capture in the shared create and edit client photo uploader', as
   assert.match(source, /captura-foto-cliente/);
   assert.match(source, /getClientPhotoCaptureStatus/);
 });
+
+test('shows the square face crop without applying a second preview crop', async () => {
+  const source = await readFile(new URL('./add-client-page.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /aria-label="Foto del cliente"[\s\S]{0,160}aspect-square/);
+  assert.doesNotMatch(source, /aria-label="Foto del cliente"[\s\S]{0,160}bg-cover/);
+});
