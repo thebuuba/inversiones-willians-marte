@@ -23,7 +23,7 @@ conserva únicamente como referencia histórica.
 
 ## Requisitos
 
-- Node.js 20 o posterior.
+- Node.js 22 o posterior; Node.js 24 es la versión utilizada por CI.
 - pnpm 10.8.0.
 - PostgreSQL compatible con el esquema Prisma.
 - Swift instalado para compilar o probar la aplicación iOS.
