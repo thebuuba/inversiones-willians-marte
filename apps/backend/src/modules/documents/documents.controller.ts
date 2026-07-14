@@ -10,11 +10,11 @@ import {
   UseGuards,
   Res,
   UseInterceptors,
-  UploadedFile,
+  UploadedFiles,
   BadRequestException,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
@@ -47,25 +47,47 @@ export class DocumentsController {
   @Post()
   @Roles('ADMIN', 'COLLECTOR')
   @UseInterceptors(
-    FileInterceptor('file', {
-      limits: DOCUMENT_UPLOAD_LIMITS,
-      fileFilter: (_req, file, cb) => {
-        if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-          cb(null, true);
-        } else {
-          cb(new BadRequestException(`Tipo de archivo no permitido: ${file.mimetype}`), false);
-        }
+    FileFieldsInterceptor(
+      [
+        { name: 'file', maxCount: 1 },
+        { name: 'processedFile', maxCount: 1 },
+      ],
+      {
+        limits: DOCUMENT_UPLOAD_LIMITS,
+        fileFilter: (_req, file, cb) => {
+          const allowed =
+            file.fieldname === 'processedFile'
+              ? file.mimetype === 'image/webp'
+              : ALLOWED_MIME_TYPES.includes(file.mimetype);
+          if (allowed) {
+            cb(null, true);
+          } else {
+            cb(new BadRequestException(`Tipo de archivo no permitido: ${file.mimetype}`), false);
+          }
+        },
       },
-    }),
+    ),
   )
   create(
-    @UploadedFile() file: MemoryUploadedFile,
+    @UploadedFiles()
+    files: { file?: MemoryUploadedFile[]; processedFile?: MemoryUploadedFile[] },
     @Body() dto: CreateDocumentDto,
     @CurrentUser('id') userId: string,
   ) {
+    const file = files?.file?.[0];
+    const processedFile = files?.processedFile?.[0];
     if (!file) throw new BadRequestException('File is required');
     assertAllowedUploadedFile(file);
+    if (processedFile) {
+      if (!file.mimetype.startsWith('image/')) {
+        throw new BadRequestException('Processed file requires an image original');
+      }
+      assertAllowedUploadedFile(processedFile);
+    }
     const storageKey = createDocumentStorageKey(file.originalname);
+    const processedStorageKey = processedFile
+      ? createDocumentStorageKey(processedFile.originalname)
+      : undefined;
     return this.documents.create(
       {
         name: dto.name || file.originalname,
@@ -82,6 +104,14 @@ export class DocumentsController {
           originalname: file.originalname,
           mimetype: file.mimetype,
           buffer: file.buffer,
+          processedFile:
+            processedFile && processedStorageKey
+              ? {
+                  filename: processedStorageKey,
+                  mimetype: processedFile.mimetype,
+                  buffer: processedFile.buffer,
+                }
+              : undefined,
         },
       },
       userId,

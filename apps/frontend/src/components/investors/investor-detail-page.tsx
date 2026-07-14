@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { getInvestor } from '@/lib/api/investors';
 import { getDocuments, createDocument, downloadDocument } from '@/lib/api/documents';
+import { appendDocumentUploadFiles } from '@/lib/document-image-processing';
 import { formatDop } from '@/lib/currency';
 import type { InvestorItem, DocumentItem } from '@inversiones/shared';
 import {
@@ -21,7 +22,8 @@ import {
 } from 'lucide-react';
 
 const fmt = (n: number | string) => formatDop(n, { space: true });
-const fmtDate = (s: string | Date) => new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
+const fmtDate = (s: string | Date) =>
+  new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
 const paymentStatusLabel = {
   PAID: 'Al dia',
   PENDING: 'Pendiente',
@@ -87,9 +89,27 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
   }
 
   const statsCards = [
-    { label: 'Capital invertido', value: fmt(capital), icon: Banknote, accent: '#eaf5ed', color: '#2f7654' },
-    { label: 'Total pagado', value: fmt(0), icon: CircleCheck, accent: '#c2dfcb', color: '#2f7654' },
-    { label: 'Tasa de retorno', value: `${rate}% mensual`, icon: TrendingUp, accent: '#fef3c7', color: '#7a5a0a' },
+    {
+      label: 'Capital invertido',
+      value: fmt(capital),
+      icon: Banknote,
+      accent: '#eaf5ed',
+      color: '#2f7654',
+    },
+    {
+      label: 'Total pagado',
+      value: fmt(0),
+      icon: CircleCheck,
+      accent: '#c2dfcb',
+      color: '#2f7654',
+    },
+    {
+      label: 'Tasa de retorno',
+      value: `${rate}% mensual`,
+      icon: TrendingUp,
+      accent: '#fef3c7',
+      color: '#7a5a0a',
+    },
   ];
 
   const conditions = [
@@ -119,7 +139,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
     if (!file) return;
     try {
       const fd = new FormData();
-      fd.append('file', file);
+      await appendDocumentUploadFiles(fd, file);
       fd.append('name', file.name);
       fd.append('category', 'general');
       fd.append('investorId', investorId);
@@ -162,7 +182,12 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold text-neutral-900">{data.name}</h1>
                     <span className="rounded-full bg-[#eaf5ed] px-3 py-0.5 text-xs font-semibold text-[#2f7654]">
-                      ✦ {data.status === 'ACTIVE' ? 'Activo' : data.status === 'PAUSED' ? 'Pausado' : 'Retirado'}
+                      ✦{' '}
+                      {data.status === 'ACTIVE'
+                        ? 'Activo'
+                        : data.status === 'PAUSED'
+                          ? 'Pausado'
+                          : 'Retirado'}
                     </span>
                   </div>
                   <p className="mt-0.5 text-sm text-neutral-500">
@@ -212,7 +237,10 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
           {statsCards.map((k) => {
             const Icon = k.icon;
             return (
-              <div key={k.label} className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100">
+              <div
+                key={k.label}
+                className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100"
+              >
                 <div className="flex items-center gap-3">
                   <div
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
@@ -236,7 +264,9 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
               key={t}
               onClick={() => setTab(i)}
               className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${
-                tab === i ? 'bg-[#2f7654] text-white shadow-sm' : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#2f7654]'
+                tab === i
+                  ? 'bg-[#2f7654] text-white shadow-sm'
+                  : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#2f7654]'
               }`}
             >
               {t}
@@ -261,26 +291,42 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                 ) : (
                   <div className="space-y-3">
                     {investments.map((investment) => {
-                      const status = investment.paymentStatus ? paymentStatusLabel[investment.paymentStatus] : 'Pendiente';
+                      const status = investment.paymentStatus
+                        ? paymentStatusLabel[investment.paymentStatus]
+                        : 'Pendiente';
                       return (
-                        <div key={investment.id} className="rounded-xl border border-neutral-100 bg-[#fafafa] p-4">
+                        <div
+                          key={investment.id}
+                          className="rounded-xl border border-neutral-100 bg-[#fafafa] p-4"
+                        >
                           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                             <div>
                               <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-bold text-neutral-900">{investment.code}</p>
-                                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-[#9f3f25]' : investment.paymentStatus === 'PAID' ? 'bg-[#eaf5ed] text-[#2f7654]' : 'bg-[#fef3c7] text-[#7a5a0a]'}`}>
+                                <p className="text-sm font-bold text-neutral-900">
+                                  {investment.code}
+                                </p>
+                                <span
+                                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-[#9f3f25]' : investment.paymentStatus === 'PAID' ? 'bg-[#eaf5ed] text-[#2f7654]' : 'bg-[#fef3c7] text-[#7a5a0a]'}`}
+                                >
                                   {status}
                                 </span>
                               </div>
                               <p className="mt-1 text-xs text-neutral-400">
-                                Inicio {investment.startDate ? fmtDate(investment.startDate) : '—'} · Plazo {investment.term ?? 'Indefinido'}
+                                Inicio {investment.startDate ? fmtDate(investment.startDate) : '—'}{' '}
+                                · Plazo {investment.term ?? 'Indefinido'}
                               </p>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                              <Link className="rounded-full border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50" href={`/inversiones/${investment.id}`}>
+                              <Link
+                                className="rounded-full border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                                href={`/inversiones/${investment.id}`}
+                              >
                                 Ver detalle
                               </Link>
-                              <Link className="rounded-full bg-[#2f7654] px-3 py-2 text-xs font-semibold text-white hover:bg-[#285c43]" href={`/inversionistas/pago?investmentId=${investment.id}`}>
+                              <Link
+                                className="rounded-full bg-[#2f7654] px-3 py-2 text-xs font-semibold text-white hover:bg-[#285c43]"
+                                href={`/inversionistas/pago?investmentId=${investment.id}`}
+                              >
                                 Registrar pago
                               </Link>
                             </div>
@@ -288,19 +334,27 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                           <div className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
                             <div>
                               <p className="text-xs text-neutral-400">Capital</p>
-                              <p className="font-semibold text-neutral-900">{fmt(investment.capital)}</p>
+                              <p className="font-semibold text-neutral-900">
+                                {fmt(investment.capital)}
+                              </p>
                             </div>
                             <div>
                               <p className="text-xs text-neutral-400">Tasa</p>
-                              <p className="font-semibold text-neutral-900">{investment.rate}% mensual</p>
+                              <p className="font-semibold text-neutral-900">
+                                {investment.rate}% mensual
+                              </p>
                             </div>
                             <div>
                               <p className="text-xs text-neutral-400">Retorno mensual</p>
-                              <p className="font-semibold text-neutral-900">{fmt(investment.monthlyPayment)}</p>
+                              <p className="font-semibold text-neutral-900">
+                                {fmt(investment.monthlyPayment)}
+                              </p>
                             </div>
                             <div>
                               <p className="text-xs text-neutral-400">Proximo vencimiento</p>
-                              <p className="font-semibold text-neutral-900">{investment.nextDueDate ? fmtDate(investment.nextDueDate) : '—'}</p>
+                              <p className="font-semibold text-neutral-900">
+                                {investment.nextDueDate ? fmtDate(investment.nextDueDate) : '—'}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -313,19 +367,28 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
 
             <div className="space-y-5">
               <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
-                <h3 className="mb-4 text-sm font-semibold text-neutral-900">Condiciones pactadas</h3>
+                <h3 className="mb-4 text-sm font-semibold text-neutral-900">
+                  Condiciones pactadas
+                </h3>
                 <div className="space-y-3">
                   {conditions.map((r) => (
-                    <div key={r.label} className="flex items-center justify-between border-b border-neutral-100 pb-2 last:border-0 gap-3">
+                    <div
+                      key={r.label}
+                      className="flex items-center justify-between border-b border-neutral-100 pb-2 last:border-0 gap-3"
+                    >
                       <span className="text-xs text-neutral-500 shrink-0">{r.label}</span>
-                      <span className="text-sm font-semibold text-neutral-900 text-right">{r.value}</span>
+                      <span className="text-sm font-semibold text-neutral-900 text-right">
+                        {r.value}
+                      </span>
                     </div>
                   ))}
                 </div>
               </div>
               {data.notes && (
                 <div className="rounded-2xl bg-[#eaf5ed] p-5 border border-[#c2dfcb]/60">
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#2f7654]">Notas</p>
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#2f7654]">
+                    Notas
+                  </p>
                   <p className="text-sm text-neutral-700">{data.notes}</p>
                 </div>
               )}
@@ -363,7 +426,10 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
               <p className="py-12 text-center text-sm text-neutral-400">Sin documentos adjuntos.</p>
             ) : (
               documents.map((d) => (
-                <div key={d.id} className="flex items-center justify-between rounded-2xl bg-white px-6 py-4 shadow-sm border border-neutral-100 hover:bg-[#eaf5ed]/30 transition">
+                <div
+                  key={d.id}
+                  className="flex items-center justify-between rounded-2xl bg-white px-6 py-4 shadow-sm border border-neutral-100 hover:bg-[#eaf5ed]/30 transition"
+                >
                   <div className="flex items-center gap-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf5ed]">
                       <File className="h-5 w-5 text-[#2f7654]" />
@@ -394,8 +460,13 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
         {tab === 3 && (
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {personalFields.map((r) => (
-              <div key={r.label} className="rounded-2xl bg-white px-6 py-4 shadow-sm border border-neutral-100">
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{r.label}</p>
+              <div
+                key={r.label}
+                className="rounded-2xl bg-white px-6 py-4 shadow-sm border border-neutral-100"
+              >
+                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                  {r.label}
+                </p>
                 <p className="mt-1 text-sm font-semibold text-neutral-900">{r.value}</p>
               </div>
             ))}

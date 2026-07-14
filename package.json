@@ -9,6 +9,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,json,prisma}\"",
     "ios:test": "cd apps/ios && swift test",
     "android:check": "cd apps/android && sh check.sh",
+    "cloudflare:smoke": "node scripts/smoke-cloudflare.mjs",
     "db:generate": "pnpm --filter @inversiones/database generate",
     "db:migrate": "pnpm --filter @inversiones/database migrate",
     "db:migrate:deploy": "pnpm --filter @inversiones/database migrate:deploy",

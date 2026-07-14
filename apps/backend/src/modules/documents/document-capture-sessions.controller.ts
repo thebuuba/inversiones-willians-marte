@@ -5,11 +5,11 @@ import {
   Get,
   Param,
   Post,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
@@ -55,21 +55,46 @@ export class DocumentCaptureSessionsController {
 
   @Post(':token/upload')
   @UseInterceptors(
-    FileInterceptor('file', {
-      limits: CAPTURE_UPLOAD_LIMITS,
-      fileFilter: (_req, file, cb) => {
-        if (ALLOWED_CAPTURE_MIME_TYPES.includes(file.mimetype)) {
-          cb(null, true);
-        } else {
-          cb(new BadRequestException(`Tipo de archivo no permitido: ${file.mimetype}`), false);
-        }
+    FileFieldsInterceptor(
+      [
+        { name: 'file', maxCount: 1 },
+        { name: 'processedFile', maxCount: 1 },
+      ],
+      {
+        limits: CAPTURE_UPLOAD_LIMITS,
+        fileFilter: (_req, file, cb) => {
+          const allowed =
+            file.fieldname === 'processedFile'
+              ? file.mimetype === 'image/webp'
+              : ALLOWED_CAPTURE_MIME_TYPES.includes(file.mimetype);
+          if (allowed) {
+            cb(null, true);
+          } else {
+            cb(new BadRequestException(`Tipo de archivo no permitido: ${file.mimetype}`), false);
+          }
+        },
       },
-    }),
+    ),
   )
-  upload(@Param('token') token: string, @UploadedFile() file: MemoryUploadedFile) {
+  upload(
+    @Param('token') token: string,
+    @UploadedFiles()
+    files: { file?: MemoryUploadedFile[]; processedFile?: MemoryUploadedFile[] },
+  ) {
+    const file = files?.file?.[0];
+    const processedFile = files?.processedFile?.[0];
     if (!file) throw new BadRequestException('File is required');
     assertAllowedUploadedFile(file);
+    if (processedFile) {
+      if (!file.mimetype.startsWith('image/')) {
+        throw new BadRequestException('Processed file requires an image original');
+      }
+      assertAllowedUploadedFile(processedFile);
+    }
     const storageKey = createDocumentStorageKey(file.originalname, 'captures/documents');
+    const processedStorageKey = processedFile
+      ? createDocumentStorageKey(processedFile.originalname, 'captures/documents')
+      : undefined;
     return this.captureSessions.upload(token, {
       name: file.originalname.replace(/\.[^/.]+$/, '') || file.originalname,
       fileUrl: storageKey,
@@ -80,6 +105,14 @@ export class DocumentCaptureSessionsController {
         originalname: file.originalname,
         mimetype: file.mimetype,
         buffer: file.buffer,
+        processedFile:
+          processedFile && processedStorageKey
+            ? {
+                filename: processedStorageKey,
+                mimetype: processedFile.mimetype,
+                buffer: processedFile.buffer,
+              }
+            : undefined,
       },
     });
   }

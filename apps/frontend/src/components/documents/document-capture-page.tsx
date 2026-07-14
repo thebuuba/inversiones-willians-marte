@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Camera, CheckCircle2, FileUp, Loader2, XCircle } from 'lucide-react';
 import type { DocumentCaptureSessionItem } from '@inversiones/shared';
 import { getDocumentCaptureSession, uploadDocumentCapture } from '@/lib/api/documents';
-import { compressImage } from '@/lib/compress-image';
+import { appendDocumentUploadFiles } from '@/lib/document-image-processing';
 
 type CaptureState = 'loading' | 'ready' | 'uploading' | 'success' | 'error' | 'expired';
 
@@ -49,9 +49,8 @@ export function DocumentCapturePage({ token }: { token: string }) {
     setMessage('Subiendo documento...');
 
     try {
-      const uploadFile = file.type.startsWith('image/') ? await compressImage(file) : file;
       const formData = new FormData();
-      formData.append('file', uploadFile);
+      await appendDocumentUploadFiles(formData, file);
       await uploadDocumentCapture(token, formData);
       if (cameraInputRef.current) cameraInputRef.current.value = '';
       if (fileInputRef.current) fileInputRef.current.value = '';

@@ -17,7 +17,7 @@ import {
 } from '@/lib/api/documents';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
-import { compressImage } from '@/lib/compress-image';
+import { appendDocumentUploadFiles } from '@/lib/document-image-processing';
 import { formatDop } from '@/lib/currency';
 import { buildMobileCaptureUrl } from '@/lib/mobile-capture-url';
 import {
@@ -749,9 +749,8 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
   async function handleUpload(file: File, name: string) {
     setUploading(true);
     try {
-      const compressed = file.type.startsWith('image/') ? await compressImage(file) : file;
       const fd = new FormData();
-      fd.append('file', compressed);
+      await appendDocumentUploadFiles(fd, file);
       fd.append('name', name);
       fd.append('clientId', String(clientId));
       await createDocument(fd);

@@ -9,6 +9,11 @@ export interface UploadedDocumentFile {
   filename: string;
   mimetype: string;
   buffer?: Buffer;
+  processedFile?: {
+    filename: string;
+    mimetype: string;
+    buffer: Buffer;
+  };
 }
 
 export interface DocumentProcessingResult {
@@ -26,8 +31,9 @@ export class DocumentProcessingService {
   async analyze(file: UploadedDocumentFile): Promise<DocumentProcessingResult> {
     const isImage = file.mimetype.startsWith('image/');
     const detection = this.detectType(file);
-    const processed =
-      isImage && file.buffer
+    const processed = file.processedFile
+      ? { filename: file.processedFile.filename, contents: file.processedFile.buffer }
+      : isImage && file.buffer
         ? await processDocumentImage({ filename: file.filename, contents: file.buffer })
         : undefined;
 

@@ -141,22 +141,33 @@ describe('App (e2e)', () => {
     clientId = client.body.data.id;
     expect(client.body.data.photo).toBe('data:image/png;base64,iVBORw0KGgo=');
 
+    const processedDocument = Buffer.from('RIFF1234WEBPbrowser-processed');
     const document = await request(app.getHttpServer())
       .post('/api/v1/documents')
       .set('Authorization', `Bearer ${token}`)
       .field('clientId', String(clientId))
-      .field('name', 'Contrato sin clasificar')
-      .attach('file', Buffer.from('%PDF-1.4\n%%EOF'), {
-        filename: 'contrato.pdf',
-        contentType: 'application/pdf',
+      .field('name', 'Cédula procesada en navegador')
+      .attach(
+        'file',
+        Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nXQAAAAASUVORK5CYII=',
+          'base64',
+        ),
+        { filename: 'cedula.png', contentType: 'image/png' },
+      )
+      .attach('processedFile', processedDocument, {
+        filename: 'cedula-processed.webp',
+        contentType: 'image/webp',
       })
       .expect(201);
     documentId = document.body.data.id;
+    expect(document.body.data.processingStatus).toBe('processed');
 
-    await request(app.getHttpServer())
+    const downloadedDocument = await request(app.getHttpServer())
       .get(`/api/v1/documents/${documentId}/file?disposition=inline&variant=processed`)
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
+    expect(downloadedDocument.body).toEqual(processedDocument);
 
     const renamedDocument = await request(app.getHttpServer())
       .patch(`/api/v1/documents/${documentId}`)

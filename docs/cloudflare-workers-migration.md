@@ -17,12 +17,14 @@ El primer hito ya dispone de:
 - almacenamiento dual: disco local para Node y binding privado `DOCUMENTS_BUCKET` para R2;
 - cargas multipart en memoria, sin archivos temporales persistentes;
 - `sharp` aislado del Worker y conservado en el arranque Node;
+- recorte y optimizacion de documentos en el navegador, conservando original y procesado en R2;
+- frontend Next.js 16 empaquetado con OpenNext y probado dentro de `workerd`;
 - configuracion de Wrangler y dry-run para staging.
 
-El Worker de esta etapa no debe recibir trafico de produccion hasta crear Hyperdrive, el bucket R2
-y copiar los documentos existentes. En Workers, las imagenes nuevas se guardan con estado
-`needs_review`; el recorte con `sharp` sigue funcionando en Node hasta mover ese procesamiento al
-navegador.
+El Worker de esta etapa no debe recibir trafico de produccion hasta crear Hyperdrive, el bucket R2,
+copiar los documentos existentes y completar la validacion de staging. Los navegadores actuales
+envian la imagen original y una version WebP procesada; clientes antiguos quedan en
+`needs_review`, y el servidor Node conserva Sharp como respaldo.
 
 ## Desarrollo local
 
@@ -75,6 +77,22 @@ cd apps/backend
 pnpm exec wrangler secret put JWT_SECRET --env staging
 ```
 
+8. Inventariar los archivos locales sin modificar R2:
+
+```bash
+pnpm --filter backend worker:r2:migrate:staging
+```
+
+9. Después de revisar el bucket y el inventario SHA-256, ejecutar la copia idempotente:
+
+```bash
+pnpm --filter backend worker:r2:migrate:staging --execute
+```
+
+El comando descarga cada objeto después de cargarlo y compara SHA-256. Si ya existe un objeto
+idéntico lo omite; si existe con contenido distinto, se detiene sin sobrescribirlo. `--overwrite`
+debe usarse solamente después de investigar el conflicto.
+
 No se debe configurar `DATABASE_URL` como secreto cuando `HYPERDRIVE` ya esta disponible. La URL
 directa queda reservada para Prisma CLI, migraciones y desarrollo local.
 
@@ -100,6 +118,13 @@ curl -i https://URL_DEL_WORKER/api/v1/auth/profile
 ```
 
 Luego se debe probar un login real de staging y `GET /api/v1/auth/profile` con el token obtenido.
+El smoke test conjunto acepta las dos URLs y, opcionalmente, credenciales de staging:
+
+```bash
+SMOKE_USERNAME=usuario SMOKE_PASSWORD='...' pnpm cloudflare:smoke -- \
+  --api-url https://API.workers.dev/api/v1 \
+  --web-url https://WEB.workers.dev
+```
 
 ## Puertas antes de ampliar el trafico
 
@@ -115,15 +140,15 @@ Luego se debe probar un login real de staging y `GET /api/v1/auth/profile` con e
 
 ## Reversion
 
-Este hito no cambia DNS ni el frontend. Para revertir staging basta con retirar la ruta o dominio
-del Worker. Render y la base de datos permanecen operativos y las migraciones existentes no se
-alteran.
+Mientras no se cambie DNS, Render y el frontend anterior siguen siendo la reversion inmediata. Si
+ya se amplio trafico, se revierte primero el dominio del frontend y despues el de API. R2 no se
+elimina: contiene copias compatibles con los nombres ya registrados en PostgreSQL. Las migraciones
+de base de datos existentes no se alteran.
 
 ## Siguientes etapas
 
 1. Crear Hyperdrive y R2 en la cuenta Cloudflare de staging.
-2. Copiar a R2 los documentos existentes y verificar checksums.
-3. Mover el recorte de imagenes al navegador para sustituir `sharp` en Workers.
-4. Ejecutar pruebas contractuales de las 83 rutas contra staging.
-5. Crear el Worker frontend de staging con el build OpenNext ya incorporado al repositorio.
-6. Ejecutar pruebas completas web, iOS y Android antes de cualquier cambio de DNS.
+2. Sustituir los dominios `example.com` por las URLs reales de staging.
+3. Copiar a R2 los documentos existentes y verificar checksums.
+4. Ejecutar smoke, flujo autenticado y pruebas manuales de documentos contra staging.
+5. Ejecutar pruebas completas web, iOS y Android antes de cualquier cambio de DNS.

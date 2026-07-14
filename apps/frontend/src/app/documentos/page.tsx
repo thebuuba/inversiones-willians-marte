@@ -2,18 +2,15 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FileText, FileSpreadsheet, Image, Plus, Search, Trash2, Upload, X } from 'lucide-react';
 import {
-  FileText,
-  FileSpreadsheet,
-  Image,
-  Plus,
-  Search,
-  Trash2,
-  Upload,
-  X,
-} from 'lucide-react';
-import { getDocuments, createDocument, deleteDocument, downloadDocument } from '@/lib/api/documents';
+  getDocuments,
+  createDocument,
+  deleteDocument,
+  downloadDocument,
+} from '@/lib/api/documents';
 import type { DocumentItem } from '@inversiones/shared';
+import { appendDocumentUploadFiles } from '@/lib/document-image-processing';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   image: Image,
@@ -32,7 +29,11 @@ function DocumentCard({ doc, onDelete }: { doc: DocumentItem; onDelete: (id: str
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold text-[#173D2C]">
           {doc.fileUrl ? (
-            <button className="truncate text-left hover:underline" onClick={() => downloadDocument(doc.id, doc.name)} type="button">
+            <button
+              className="truncate text-left hover:underline"
+              onClick={() => downloadDocument(doc.id, doc.name)}
+              type="button"
+            >
               {doc.name}
             </button>
           ) : (
@@ -57,7 +58,15 @@ function DocumentCard({ doc, onDelete }: { doc: DocumentItem; onDelete: (id: str
   );
 }
 
-function UploadModal({ open, onClose, onUploaded }: { open: boolean; onClose: () => void; onUploaded: () => void }) {
+function UploadModal({
+  open,
+  onClose,
+  onUploaded,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onUploaded: () => void;
+}) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   const [category, setCategory] = useState('general');
@@ -70,7 +79,7 @@ function UploadModal({ open, onClose, onUploaded }: { open: boolean; onClose: ()
     setUploading(true);
     try {
       const fd = new FormData();
-      fd.append('file', file);
+      await appendDocumentUploadFiles(fd, file);
       fd.append('name', name || file.name);
       fd.append('category', category);
       await createDocument(fd);
@@ -106,7 +115,11 @@ function UploadModal({ open, onClose, onUploaded }: { open: boolean; onClose: ()
           >
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-bold text-[#173D2C]">Subir documento</h2>
-              <button onClick={onClose} type="button" className="rounded-full p-1 text-[#5C6D63] hover:bg-[#F3F4F6]">
+              <button
+                onClick={onClose}
+                type="button"
+                className="rounded-full p-1 text-[#5C6D63] hover:bg-[#F3F4F6]"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -191,7 +204,9 @@ export default function DocumentosPage() {
     getDocuments().then(setDocuments);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   function handleDelete(id: string) {
     deleteDocument(id).then(load);
@@ -228,7 +243,9 @@ export default function DocumentosPage() {
 
       <div className="mt-5 space-y-3">
         {documents.length === 0 && (
-          <p className="py-12 text-center text-sm font-medium text-[#5C6D63]">No hay documentos registrados</p>
+          <p className="py-12 text-center text-sm font-medium text-[#5C6D63]">
+            No hay documentos registrados
+          </p>
         )}
         {documents.map((doc) => (
           <DocumentCard key={doc.id} doc={doc} onDelete={handleDelete} />

@@ -118,4 +118,27 @@ describe('DocumentProcessingService', () => {
       processingStatus: 'processed',
     });
   });
+
+  it('prefers a browser-processed image when the upload includes one', async () => {
+    const processed = Buffer.from('browser processed image');
+
+    await expect(
+      service.analyze({
+        filename: 'documents/cedula.jpg',
+        originalname: 'cedula.jpg',
+        mimetype: 'image/jpeg',
+        buffer: Buffer.from('original image'),
+        processedFile: {
+          filename: 'documents/cedula-processed.webp',
+          mimetype: 'image/webp',
+          buffer: processed,
+        },
+      }),
+    ).resolves.toMatchObject({
+      originalFileUrl: 'documents/cedula.jpg',
+      processedFileUrl: 'documents/cedula-processed.webp',
+      processedContents: processed,
+      processingStatus: 'processed',
+    });
+  });
 });

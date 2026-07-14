@@ -16,6 +16,7 @@
     "worker:build:staging": "pnpm build && wrangler deploy --dry-run --env staging --outdir dist-worker-staging",
     "worker:dev": "pnpm build && wrangler dev",
     "worker:deploy:staging": "pnpm build && wrangler deploy --env staging",
+    "worker:r2:migrate:staging": "node scripts/migrate-uploads-to-r2.mjs --bucket inversiones-willians-marte-documents-staging",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
