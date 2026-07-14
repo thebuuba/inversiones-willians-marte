@@ -9,15 +9,20 @@ El primer hito ya dispone de:
 
 - entrada ES Module compatible con Workers;
 - NestJS sobre la integracion HTTP de Cloudflare;
-- endpoints `health` y `auth` con el mismo prefijo `/api/v1`;
+- los 20 controladores y las 83 rutas con el mismo prefijo `/api/v1`;
 - JWT, validacion, CORS, Helmet, request IDs y formato de errores existentes;
 - Prisma 6.19 sin binario Rust y con `@prisma/adapter-pg`;
 - un cliente Prisma independiente por solicitud Worker;
 - conexion local directa y soporte para el binding `HYPERDRIVE`;
+- almacenamiento dual: disco local para Node y binding privado `DOCUMENTS_BUCKET` para R2;
+- cargas multipart en memoria, sin archivos temporales persistentes;
+- `sharp` aislado del Worker y conservado en el arranque Node;
 - configuracion de Wrangler y dry-run para staging.
 
-El Worker de esta etapa no debe recibir trafico de produccion. Los modulos de documentos siguen
-dependiendo de `uploads/` y `sharp`; se incorporaran despues de migrar el almacenamiento a R2.
+El Worker de esta etapa no debe recibir trafico de produccion hasta crear Hyperdrive, el bucket R2
+y copiar los documentos existentes. En Workers, las imagenes nuevas se guardan con estado
+`needs_review`; el recorte con `sharp` sigue funcionando en Node hasta mover ese procesamiento al
+navegador.
 
 ## Desarrollo local
 
@@ -56,7 +61,14 @@ La primera debe confirmar `database: "ok"`; la segunda debe responder `401` sin 
 ```
 
 5. Reemplazar `https://staging.example.com` por el dominio real del frontend de staging.
-6. Cargar el mismo secreto JWT del backend actual para conservar la compatibilidad de sesiones:
+6. Crear el bucket privado configurado en `wrangler.jsonc`:
+
+```bash
+cd apps/backend
+pnpm exec wrangler r2 bucket create inversiones-willians-marte-documents-staging
+```
+
+7. Cargar el mismo secreto JWT del backend actual para conservar la compatibilidad de sesiones:
 
 ```bash
 cd apps/backend
@@ -94,6 +106,8 @@ Luego se debe probar un login real de staging y `GET /api/v1/auth/profile` con e
 - build y dry-run sin errores;
 - health consulta Supabase mediante Hyperdrive;
 - login y perfil funcionan con JWT;
+- las 83 rutas se registran durante el arranque;
+- subida, descarga y eliminacion funcionan contra R2;
 - bundle por debajo del limite de Workers Paid;
 - ningun secreto aparece en Git o logs;
 - backend Node, pruebas unitarias y e2e siguen funcionando;
@@ -107,9 +121,9 @@ alteran.
 
 ## Siguientes etapas
 
-1. Crear R2 y la abstraccion de almacenamiento privado.
-2. Migrar las capturas temporales y documentos fuera de `uploads/`.
-3. Sustituir `sharp` por procesamiento compatible con Workers/navegador.
-4. Incorporar los modulos restantes al Worker por grupos y ejecutar pruebas contractuales.
+1. Crear Hyperdrive y R2 en la cuenta Cloudflare de staging.
+2. Copiar a R2 los documentos existentes y verificar checksums.
+3. Mover el recorte de imagenes al navegador para sustituir `sharp` en Workers.
+4. Ejecutar pruebas contractuales de las 83 rutas contra staging.
 5. Migrar el frontend Next.js con OpenNext.
 6. Ejecutar pruebas completas web, iOS y Android antes de cualquier cambio de DNS.

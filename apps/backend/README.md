@@ -42,10 +42,9 @@ pnpm --filter backend worker:build:staging
 pnpm --filter backend worker:dev
 ```
 
-La configuracion de staging, Hyperdrive y secretos se documenta en
-`docs/cloudflare-workers-migration.md`. El Worker actual es una primera etapa deliberadamente
-limitada a `health` y `auth`; el resto de los modulos continua en el backend Node hasta completar
-R2 y retirar las dependencias de almacenamiento local.
+La configuracion de staging, Hyperdrive, R2 y secretos se documenta en
+`docs/cloudflare-workers-migration.md`. El Worker carga todos los modulos de la API; el backend
+Node continua disponible mientras se valida staging y se copian a R2 los documentos existentes.
 
 ## Modulos principales
 

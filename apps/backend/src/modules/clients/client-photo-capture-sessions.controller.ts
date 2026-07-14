@@ -10,12 +10,13 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
-import { assertAllowedUploadedFile } from '../documents/document-upload-validation';
+import {
+  assertAllowedUploadedFile,
+  type MemoryUploadedFile,
+} from '../documents/document-upload-validation';
 import { ClientPhotoCaptureSessionsService } from './client-photo-capture-sessions.service';
 import { CreateClientPhotoCaptureSessionDto } from './dto/create-client-photo-capture-session.dto';
 
@@ -62,13 +63,6 @@ export class ClientPhotoCaptureSessionsController {
   @Post(':token/upload')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: join(__dirname, '..', '..', '..', 'uploads'),
-        filename: (_req, file, cb) => {
-          const unique = `client-photo-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          cb(null, `${unique}${extname(file.originalname)}`);
-        },
-      }),
       limits: { fileSize: MAX_CLIENT_PHOTO_UPLOAD_BYTES, files: 1 },
       fileFilter: (_req, file, cb) => {
         if (ALLOWED_PHOTO_MIME_TYPES.includes(file.mimetype)) cb(null, true);
@@ -76,11 +70,11 @@ export class ClientPhotoCaptureSessionsController {
       },
     }),
   )
-  upload(@Param('token') token: string, @UploadedFile() file: Express.Multer.File) {
+  upload(@Param('token') token: string, @UploadedFile() file: MemoryUploadedFile) {
     if (!file) throw new BadRequestException('File is required');
     assertAllowedUploadedFile(file);
     return this.captureSessions.upload(token, {
-      filename: file.filename,
+      contents: file.buffer,
       mimeType: file.mimetype,
     });
   }

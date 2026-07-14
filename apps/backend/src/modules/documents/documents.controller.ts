@@ -15,8 +15,6 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
@@ -24,8 +22,9 @@ import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
 import { DOCUMENT_UPLOAD_LIMITS } from './document-upload-options';
-import { assertAllowedUploadedFile } from './document-upload-validation';
+import { assertAllowedUploadedFile, type MemoryUploadedFile } from './document-upload-validation';
 import { normalizePagination } from '../../common/pagination';
+import { createDocumentStorageKey } from './document-storage-key';
 
 const ALLOWED_MIME_TYPES = [
   'application/pdf',
@@ -49,13 +48,6 @@ export class DocumentsController {
   @Roles('ADMIN', 'COLLECTOR')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: join(__dirname, '..', '..', '..', 'uploads'),
-        filename: (_req, file, cb) => {
-          const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          cb(null, `${unique}${extname(file.originalname)}`);
-        },
-      }),
       limits: DOCUMENT_UPLOAD_LIMITS,
       fileFilter: (_req, file, cb) => {
         if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
@@ -67,12 +59,13 @@ export class DocumentsController {
     }),
   )
   create(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: MemoryUploadedFile,
     @Body() dto: CreateDocumentDto,
     @CurrentUser('id') userId: string,
   ) {
     if (!file) throw new BadRequestException('File is required');
     assertAllowedUploadedFile(file);
+    const storageKey = createDocumentStorageKey(file.originalname);
     return this.documents.create(
       {
         name: dto.name || file.originalname,
@@ -81,13 +74,14 @@ export class DocumentsController {
         investorId: dto.investorId,
         loanId: dto.loanId,
         notes: dto.notes,
-        fileUrl: file.filename,
+        fileUrl: storageKey,
         fileSize: file.size,
         mimeType: file.mimetype,
         uploadedFile: {
-          filename: file.filename,
+          filename: storageKey,
           originalname: file.originalname,
           mimetype: file.mimetype,
+          buffer: file.buffer,
         },
       },
       userId,
@@ -121,14 +115,14 @@ export class DocumentsController {
   ) {
     const file = await this.documents.getFileForDownload(id, variant === 'processed');
     res.type(file.mimeType);
+    res.setHeader(
+      'Content-Disposition',
+      `${disposition === 'inline' ? 'inline' : 'attachment'}; filename="${encodeURIComponent(file.filename)}"`,
+    );
     if (disposition === 'inline') {
-      res.setHeader(
-        'Content-Disposition',
-        `inline; filename="${encodeURIComponent(file.filename)}"`,
-      );
-      return res.sendFile(file.path);
+      return res.send(file.contents);
     }
-    return res.download(file.path, file.filename);
+    return res.send(file.contents);
   }
 
   @Patch(':id')

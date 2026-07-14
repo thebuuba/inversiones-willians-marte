@@ -1,10 +1,16 @@
 import { DocumentProcessingService } from './document-processing.service';
+import { configureDocumentImageProcessor } from './document-image-processor';
+import { configureSharpDocumentImageProcessor } from './node-sharp-document-processor';
 
 describe('DocumentProcessingService', () => {
   let service: DocumentProcessingService;
 
   beforeEach(() => {
     service = new DocumentProcessingService();
+  });
+
+  afterEach(() => {
+    configureDocumentImageProcessor(undefined);
   });
 
   it('detects cedula documents from filename hints', async () => {
@@ -89,6 +95,27 @@ describe('DocumentProcessingService', () => {
       documentType: 'otro',
       detectionConfidence: 20,
       processingStatus: 'not_applicable',
+    });
+  });
+
+  it('uses the Node image processor when it is configured', async () => {
+    configureSharpDocumentImageProcessor();
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+      'base64',
+    );
+
+    await expect(
+      service.analyze({
+        filename: 'documents/cedula.png',
+        originalname: 'cedula.png',
+        mimetype: 'image/png',
+        buffer: png,
+      }),
+    ).resolves.toMatchObject({
+      processedFileUrl: 'cedula-processed.webp',
+      processedContents: expect.any(Buffer),
+      processingStatus: 'processed',
     });
   });
 });

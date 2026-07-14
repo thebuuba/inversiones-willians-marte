@@ -4,8 +4,7 @@ import { DocumentsService } from './documents.service';
 import { DocumentProcessingService } from './document-processing.service';
 import { AuditService } from '../audit/audit.service';
 import { prisma } from '@inversiones/database';
-import { access, mkdir, rm, writeFile } from 'fs/promises';
-import { join } from 'path';
+import { FileStorageService } from '../../common/storage/file-storage.service';
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -22,6 +21,7 @@ jest.mock('@inversiones/database', () => ({
 describe('DocumentsService', () => {
   const audit = { log: jest.fn() };
   const documentProcessing = { analyze: jest.fn() };
+  const storage = { put: jest.fn(), get: jest.fn(), delete: jest.fn() };
   let service: DocumentsService;
 
   beforeEach(async () => {
@@ -30,6 +30,7 @@ describe('DocumentsService', () => {
         DocumentsService,
         { provide: AuditService, useValue: audit },
         { provide: DocumentProcessingService, useValue: documentProcessing },
+        { provide: FileStorageService, useValue: storage },
       ],
     }).compile();
     service = module.get(DocumentsService);
@@ -82,6 +83,89 @@ describe('DocumentsService', () => {
     });
   });
 
+  it('stores the original and processed contents before creating the database record', async () => {
+    const original = Buffer.from('original');
+    const processed = Buffer.from('processed');
+    documentProcessing.analyze.mockResolvedValue({
+      originalFileUrl: 'documents/original.jpg',
+      processedFileUrl: 'documents/original-processed.webp',
+      processedContents: processed,
+      documentType: 'cedula',
+      detectionConfidence: 92,
+      processingStatus: 'processed',
+    });
+    jest.mocked(prisma.document.create).mockResolvedValue({ id: 'doc-stored' } as any);
+
+    await service.create(
+      {
+        name: 'Cédula',
+        category: 'general',
+        clientId: 7,
+        fileUrl: 'documents/original.jpg',
+        fileSize: original.length,
+        mimeType: 'image/jpeg',
+        uploadedFile: {
+          filename: 'documents/original.jpg',
+          originalname: 'cedula.jpg',
+          mimetype: 'image/jpeg',
+          buffer: original,
+        },
+      },
+      'user-1',
+    );
+
+    expect(storage.put).toHaveBeenNthCalledWith(
+      1,
+      'documents/original.jpg',
+      original,
+      'image/jpeg',
+    );
+    expect(storage.put).toHaveBeenNthCalledWith(
+      2,
+      'documents/original-processed.webp',
+      processed,
+      'image/webp',
+    );
+    expect(prisma.document.create).toHaveBeenCalled();
+  });
+
+  it('removes stored objects if the database record cannot be created', async () => {
+    const original = Buffer.from('original');
+    documentProcessing.analyze.mockResolvedValue({
+      originalFileUrl: 'documents/original.jpg',
+      processedFileUrl: 'documents/original-processed.webp',
+      processedContents: Buffer.from('processed'),
+      documentType: 'cedula',
+      detectionConfidence: 92,
+      processingStatus: 'processed',
+    });
+    jest.mocked(prisma.document.create).mockRejectedValueOnce(new Error('database unavailable'));
+
+    await expect(
+      service.create(
+        {
+          name: 'Cédula',
+          category: 'general',
+          fileUrl: 'documents/original.jpg',
+          fileSize: original.length,
+          mimeType: 'image/jpeg',
+          uploadedFile: {
+            filename: 'documents/original.jpg',
+            originalname: 'cedula.jpg',
+            mimetype: 'image/jpeg',
+            buffer: original,
+          },
+        },
+        'user-1',
+      ),
+    ).rejects.toThrow('database unavailable');
+
+    expect(storage.delete).toHaveBeenCalledWith([
+      'documents/original.jpg',
+      'documents/original-processed.webp',
+    ]);
+  });
+
   it('logs the client document name when deleting an attachment', async () => {
     jest
       .mocked(prisma.document.findUnique)
@@ -100,16 +184,9 @@ describe('DocumentsService', () => {
     });
   });
 
-  it('removes the stored original and processed files when deleting a document', async () => {
-    const uploadsDir = join(__dirname, '..', '..', '..', 'uploads');
-    const originalName = `document-delete-${Date.now()}.jpg`;
-    const processedName = `document-delete-${Date.now()}-processed.webp`;
-    const originalPath = join(uploadsDir, originalName);
-    const processedPath = join(uploadsDir, processedName);
-    await mkdir(uploadsDir, { recursive: true });
-    await writeFile(originalPath, 'original');
-    await writeFile(processedPath, 'processed');
-
+  it('removes the stored original and processed objects when deleting a document', async () => {
+    const originalName = 'documents/original.jpg';
+    const processedName = 'documents/original-processed.webp';
     jest.mocked(prisma.document.findUnique).mockResolvedValue({
       id: 'doc-files',
       clientId: null,
@@ -120,14 +197,8 @@ describe('DocumentsService', () => {
     } as any);
     jest.mocked(prisma.document.delete).mockResolvedValue({ id: 'doc-files' } as any);
 
-    try {
-      await service.remove('doc-files', 'user-1');
-      await expect(access(originalPath)).rejects.toMatchObject({ code: 'ENOENT' });
-      await expect(access(processedPath)).rejects.toMatchObject({ code: 'ENOENT' });
-    } finally {
-      await rm(originalPath, { force: true });
-      await rm(processedPath, { force: true });
-    }
+    await service.remove('doc-files', 'user-1');
+    expect(storage.delete).toHaveBeenCalledWith([originalName, processedName]);
   });
 
   it('renames a client document and records the old and new names', async () => {
@@ -180,37 +251,25 @@ describe('DocumentsService', () => {
     expect(prisma.document.update).not.toHaveBeenCalled();
   });
 
-  it('resolves a stored file path for authenticated downloads', async () => {
-    const uploadsDir = join(__dirname, '..', '..', '..', 'uploads');
-    const storedName = `receipt-${Date.now()}.pdf`;
-    const storedPath = join(uploadsDir, storedName);
-    await mkdir(uploadsDir, { recursive: true });
-    await writeFile(storedPath, 'receipt');
-
+  it('resolves stored contents for authenticated downloads', async () => {
+    const storedName = 'documents/receipt.pdf';
     jest.mocked(prisma.document.findUnique).mockResolvedValue({
       id: 'doc-1',
       fileUrl: storedName,
       name: 'Receipt',
       mimeType: 'application/pdf',
     } as any);
+    storage.get.mockResolvedValue(Buffer.from('receipt'));
 
-    try {
-      await expect(service.getFileForDownload('doc-1')).resolves.toMatchObject({
-        filename: 'Receipt',
-        mimeType: 'application/pdf',
-        path: storedPath,
-      });
-    } finally {
-      await rm(storedPath, { force: true });
-    }
+    await expect(service.getFileForDownload('doc-1')).resolves.toMatchObject({
+      filename: 'Receipt',
+      mimeType: 'application/pdf',
+      contents: Buffer.from('receipt'),
+    });
   });
 
   it('falls back to the original file when the processed variant is missing', async () => {
-    const uploadsDir = join(__dirname, '..', '..', '..', 'uploads');
-    const originalName = `document-fallback-${Date.now()}.jpg`;
-    const originalPath = join(uploadsDir, originalName);
-    await mkdir(uploadsDir, { recursive: true });
-    await writeFile(originalPath, 'original');
+    const originalName = 'documents/document-fallback.jpg';
 
     jest.mocked(prisma.document.findUnique).mockResolvedValue({
       id: 'doc-fallback',
@@ -219,15 +278,12 @@ describe('DocumentsService', () => {
       name: 'Cédula',
       mimeType: 'image/jpeg',
     } as any);
+    storage.get.mockResolvedValueOnce(null).mockResolvedValueOnce(Buffer.from('original'));
 
-    try {
-      await expect(service.getFileForDownload('doc-fallback', true)).resolves.toMatchObject({
-        path: originalPath,
-        mimeType: 'image/jpeg',
-      });
-    } finally {
-      await rm(originalPath, { force: true });
-    }
+    await expect(service.getFileForDownload('doc-fallback', true)).resolves.toMatchObject({
+      contents: Buffer.from('original'),
+      mimeType: 'image/jpeg',
+    });
   });
 
   it('throws NotFoundException when every stored file variant is missing', async () => {
@@ -238,6 +294,7 @@ describe('DocumentsService', () => {
       name: 'Cédula',
       mimeType: 'image/jpeg',
     } as any);
+    storage.get.mockResolvedValue(null);
 
     await expect(service.getFileForDownload('doc-missing-file', true)).rejects.toThrow(
       NotFoundException,

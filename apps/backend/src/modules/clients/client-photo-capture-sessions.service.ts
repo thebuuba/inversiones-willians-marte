@@ -6,21 +6,17 @@ import {
 } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { randomBytes } from 'crypto';
-import { readFile, unlink } from 'fs/promises';
-import { join } from 'path';
 
 const CAPTURE_SESSION_TTL_MS = 10 * 60 * 1000;
 const MAX_PHOTO_DATA_LENGTH = 1_500_000;
 
 interface CapturedPhotoInput {
-  filename: string;
+  contents: Buffer;
   mimeType: string;
 }
 
 @Injectable()
 export class ClientPhotoCaptureSessionsService {
-  private readonly uploadsDir = join(__dirname, '..', '..', '..', 'uploads');
-
   async create(clientId: number | undefined, createdById: string) {
     if (clientId) {
       const client = await prisma.client.findUnique({
@@ -64,35 +60,28 @@ export class ClientPhotoCaptureSessionsService {
   }
 
   async upload(token: string, input: CapturedPhotoInput) {
-    const path = join(this.uploadsDir, input.filename);
-
-    try {
-      const buffer = await readFile(path);
-      const photoData = `data:${input.mimeType};base64,${buffer.toString('base64')}`;
-      if (photoData.length > MAX_PHOTO_DATA_LENGTH) {
-        throw new PayloadTooLargeException('Captured photo is too large');
-      }
-
-      const updated = await prisma.clientPhotoCaptureSession.updateMany({
-        where: {
-          token,
-          photoData: null,
-          closedAt: null,
-          expiresAt: { gt: new Date() },
-        },
-        data: { photoData, uploadedAt: new Date() },
-      });
-
-      if (updated.count === 0) {
-        const existing = await prisma.clientPhotoCaptureSession.findUnique({ where: { token } });
-        if (!existing) throw new NotFoundException('Photo capture session not found');
-        throw new GoneException('Photo capture session expired');
-      }
-
-      return { uploaded: true };
-    } finally {
-      await unlink(path).catch(() => undefined);
+    const photoData = `data:${input.mimeType};base64,${input.contents.toString('base64')}`;
+    if (photoData.length > MAX_PHOTO_DATA_LENGTH) {
+      throw new PayloadTooLargeException('Captured photo is too large');
     }
+
+    const updated = await prisma.clientPhotoCaptureSession.updateMany({
+      where: {
+        token,
+        photoData: null,
+        closedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      data: { photoData, uploadedAt: new Date() },
+    });
+
+    if (updated.count === 0) {
+      const existing = await prisma.clientPhotoCaptureSession.findUnique({ where: { token } });
+      if (!existing) throw new NotFoundException('Photo capture session not found');
+      throw new GoneException('Photo capture session expired');
+    }
+
+    return { uploaded: true };
   }
 
   async close(token: string, userId: string) {

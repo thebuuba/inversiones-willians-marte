@@ -1,5 +1,3 @@
-import { access, mkdir, writeFile } from 'fs/promises';
-import { join } from 'path';
 import { prisma } from '@inversiones/database';
 import { ClientPhotoCaptureSessionsService } from './client-photo-capture-sessions.service';
 
@@ -40,22 +38,16 @@ describe('ClientPhotoCaptureSessionsService', () => {
     expect(prisma.client.findUnique).not.toHaveBeenCalled();
   });
 
-  it('stores the captured image as a data URL and removes the temporary file', async () => {
-    const uploadsDir = join(__dirname, '..', '..', '..', 'uploads');
-    const filename = `client-photo-capture-${Date.now()}.png`;
-    const path = join(uploadsDir, filename);
-    await mkdir(uploadsDir, { recursive: true });
-    await writeFile(path, Buffer.from('photo'));
+  it('stores the captured image as a data URL without a temporary file', async () => {
     jest.mocked(prisma.clientPhotoCaptureSession.updateMany).mockResolvedValue({ count: 1 });
 
     await expect(
-      service.upload('photo-token', { filename, mimeType: 'image/png' }),
+      service.upload('photo-token', { contents: Buffer.from('photo'), mimeType: 'image/png' }),
     ).resolves.toEqual({ uploaded: true });
     expect(prisma.clientPhotoCaptureSession.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ photoData: 'data:image/png;base64,cGhvdG8=' }),
       }),
     );
-    await expect(access(path)).rejects.toMatchObject({ code: 'ENOENT' });
   });
 });

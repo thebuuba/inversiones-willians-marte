@@ -24,10 +24,15 @@ import { CashModule } from './modules/cash/cash.module';
 import { HealthController } from './health.controller';
 import { KeepaliveService } from './common/services/keepalive.service';
 
+const isCloudflareWorker = process.env.CLOUDFLARE_WORKER === 'true';
+
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
-    ScheduleModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      ...(isCloudflareWorker ? { ignoreEnvFile: true } : { envFilePath: '.env' }),
+    }),
+    ...(isCloudflareWorker ? [] : [ScheduleModule.forRoot()]),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     AuthModule,
     UsersModule,
@@ -48,6 +53,9 @@ import { KeepaliveService } from './common/services/keepalive.service';
     CashModule,
   ],
   controllers: [HealthController],
-  providers: [KeepaliveService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    ...(isCloudflareWorker ? [] : [KeepaliveService]),
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}

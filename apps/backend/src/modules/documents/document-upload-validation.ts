@@ -1,20 +1,18 @@
 import { BadRequestException } from '@nestjs/common';
-import { existsSync, readFileSync, unlinkSync } from 'fs';
 
-type UploadedFileWithPath = {
+export interface MemoryUploadedFile {
+  originalname: string;
   mimetype: string;
-  path?: string;
-};
+  size: number;
+  buffer: Buffer;
+}
 
 const OLE_SIGNATURE = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
 
-export function assertAllowedUploadedFile(file: UploadedFileWithPath) {
-  if (!file.path || !existsSync(file.path)) return;
-
-  const bytes = readFileSync(file.path).subarray(0, 16);
+export function assertAllowedUploadedFile(file: Pick<MemoryUploadedFile, 'mimetype' | 'buffer'>) {
+  if (!file.buffer) return;
+  const bytes = file.buffer.subarray(0, 16);
   if (isAllowedFileSignature(file.mimetype, bytes)) return;
-
-  unlinkSync(file.path);
   throw new BadRequestException('El contenido del archivo no coincide con el tipo permitido');
 }
 

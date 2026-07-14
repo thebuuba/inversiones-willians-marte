@@ -1,9 +1,12 @@
+import type { R2BucketBinding } from '../common/storage/file-storage.service';
+
 export interface HyperdriveBinding {
   connectionString: string;
 }
 
 export interface CloudflareWorkerEnv {
   HYPERDRIVE?: HyperdriveBinding;
+  DOCUMENTS_BUCKET?: R2BucketBinding;
   DATABASE_URL?: string;
   JWT_SECRET: string;
   FRONTEND_URL?: string;

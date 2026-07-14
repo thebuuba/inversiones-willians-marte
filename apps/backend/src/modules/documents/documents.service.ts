@@ -1,7 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
-import { access, unlink } from 'fs/promises';
-import { join, resolve, sep } from 'path';
+import { FileStorageService } from '../../common/storage/file-storage.service';
 import { AuditService } from '../audit/audit.service';
 import {
   DocumentProcessingResult,
@@ -28,9 +27,8 @@ export class DocumentsService {
   constructor(
     private audit: AuditService,
     private documentProcessing: DocumentProcessingService,
+    private storage: FileStorageService,
   ) {}
-
-  private readonly uploadsDir = join(__dirname, '..', '..', '..', 'uploads');
 
   async create(dto: CreateDocumentInput, userId: string) {
     const processing = dto.uploadedFile
@@ -38,6 +36,16 @@ export class DocumentsService {
       : this.defaultProcessing(dto.fileUrl);
 
     try {
+      if (dto.uploadedFile?.buffer) {
+        await this.storage.put(dto.fileUrl, dto.uploadedFile.buffer, dto.mimeType);
+      }
+      if (processing.processedFileUrl && processing.processedContents) {
+        await this.storage.put(
+          processing.processedFileUrl,
+          processing.processedContents,
+          'image/webp',
+        );
+      }
       return await prisma.document.create({
         data: {
           name: dto.name,
@@ -126,22 +134,14 @@ export class DocumentsService {
             { storedFile: document.fileUrl, mimeType: document.mimeType },
           ]
         : [{ storedFile: document.fileUrl, mimeType: document.mimeType }];
-    const uploadsRoot = resolve(this.uploadsDir);
-
     for (const candidate of candidates) {
-      const path = resolve(uploadsRoot, candidate.storedFile);
-      if (!path.startsWith(`${uploadsRoot}${sep}`)) continue;
-
-      try {
-        await access(path);
+      const contents = await this.storage.get(candidate.storedFile);
+      if (contents) {
         return {
-          path,
+          contents,
           filename: document.name,
           mimeType: candidate.mimeType ?? 'application/octet-stream',
         };
-      } catch (error) {
-        const code = (error as NodeJS.ErrnoException).code;
-        if (code !== 'ENOENT' && code !== 'ENOTDIR') throw error;
       }
     }
 
@@ -171,21 +171,11 @@ export class DocumentsService {
   }
 
   private async removeStoredFiles(filenames: Array<string | null | undefined>) {
-    const uploadsRoot = resolve(this.uploadsDir);
     const uniqueFilenames = new Set(filenames.filter((value): value is string => Boolean(value)));
-
-    await Promise.all(
-      [...uniqueFilenames].map(async (filename) => {
-        const filePath = resolve(uploadsRoot, filename);
-        if (!filePath.startsWith(`${uploadsRoot}${sep}`)) return;
-        try {
-          await unlink(filePath);
-        } catch (error) {
-          if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-            this.logger.error(`No se pudo eliminar el archivo ${filename}`, error);
-          }
-        }
-      }),
-    );
+    try {
+      await this.storage.delete([...uniqueFilenames]);
+    } catch (error) {
+      this.logger.error('No se pudieron eliminar uno o mas archivos almacenados', error);
+    }
   }
 }

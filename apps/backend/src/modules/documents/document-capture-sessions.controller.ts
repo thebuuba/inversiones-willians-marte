@@ -10,15 +10,14 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { CreateDocumentCaptureSessionDto } from './dto/create-document-capture-session.dto';
 import { DocumentCaptureSessionsService } from './document-capture-sessions.service';
 import { CAPTURE_UPLOAD_LIMITS } from './document-upload-options';
-import { assertAllowedUploadedFile } from './document-upload-validation';
+import { assertAllowedUploadedFile, type MemoryUploadedFile } from './document-upload-validation';
+import { createDocumentStorageKey } from './document-storage-key';
 
 const ALLOWED_CAPTURE_MIME_TYPES = [
   'application/pdf',
@@ -57,13 +56,6 @@ export class DocumentCaptureSessionsController {
   @Post(':token/upload')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: join(__dirname, '..', '..', '..', 'uploads'),
-        filename: (_req, file, cb) => {
-          const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          cb(null, `${unique}${extname(file.originalname)}`);
-        },
-      }),
       limits: CAPTURE_UPLOAD_LIMITS,
       fileFilter: (_req, file, cb) => {
         if (ALLOWED_CAPTURE_MIME_TYPES.includes(file.mimetype)) {
@@ -74,18 +66,20 @@ export class DocumentCaptureSessionsController {
       },
     }),
   )
-  upload(@Param('token') token: string, @UploadedFile() file: Express.Multer.File) {
+  upload(@Param('token') token: string, @UploadedFile() file: MemoryUploadedFile) {
     if (!file) throw new BadRequestException('File is required');
     assertAllowedUploadedFile(file);
+    const storageKey = createDocumentStorageKey(file.originalname, 'captures/documents');
     return this.captureSessions.upload(token, {
       name: file.originalname.replace(/\.[^/.]+$/, '') || file.originalname,
-      fileUrl: file.filename,
+      fileUrl: storageKey,
       fileSize: file.size,
       mimeType: file.mimetype,
       uploadedFile: {
-        filename: file.filename,
+        filename: storageKey,
         originalname: file.originalname,
         mimetype: file.mimetype,
+        buffer: file.buffer,
       },
     });
   }

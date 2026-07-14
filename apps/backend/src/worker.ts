@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter, NestExpressApplication } from '@nestjs/platform-express';
 import { createPrismaClient, runWithPrismaClient } from '@inversiones/database';
 import { configureNestApplication } from './bootstrap';
-import { CloudflareProbeModule } from './cloudflare/cloudflare-probe.module';
+import { configureR2Bucket } from './common/storage/file-storage.service';
 import {
   applyWorkerEnvironment,
   CloudflareWorkerEnv,
@@ -18,9 +18,12 @@ export type HandleAsNodeRequest = (port: number, request: Request) => Promise<Re
 
 async function bootstrapWorker(env: CloudflareWorkerEnv) {
   applyWorkerEnvironment(env);
+  configureR2Bucket(env.DOCUMENTS_BUCKET);
+  const { AppModule } = await import('./app.module.js');
 
   const adapter = new ExpressAdapter();
-  const app = await NestFactory.create<NestExpressApplication>(CloudflareProbeModule, adapter, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, adapter, {
+    abortOnError: false,
     bodyParser: false,
   });
   configureNestApplication(app);
