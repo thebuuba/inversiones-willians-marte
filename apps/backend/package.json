@@ -12,6 +12,10 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "worker:build": "pnpm build && wrangler deploy --dry-run --outdir dist-worker",
+    "worker:build:staging": "pnpm build && wrangler deploy --dry-run --env staging --outdir dist-worker-staging",
+    "worker:dev": "pnpm build && wrangler dev",
+    "worker:deploy:staging": "pnpm build && wrangler deploy --env staging",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -43,6 +47,7 @@
     "sharp": "0.34.5"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "5.20260714.1",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
@@ -67,7 +72,8 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "wrangler": "4.110.0"
   },
   "jest": {
     "moduleFileExtensions": [

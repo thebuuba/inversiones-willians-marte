@@ -3,7 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import * as bcrypt from 'bcryptjs';
-import { prisma } from '@inversiones/database';
+import { disconnectPrismaClient, prisma } from '@inversiones/database';
 import { AppModule } from './../src/app.module';
 import { ResponseInterceptor } from './../src/common/interceptors/response.interceptor';
 import { AllExceptionsFilter } from './../src/common/filters/all-exceptions.filter';
@@ -75,6 +75,7 @@ describe('App (e2e)', () => {
         data: {
           status: 'ok',
           service: 'backend',
+          database: 'ok',
         },
       });
   });
@@ -225,5 +226,6 @@ describe('App (e2e)', () => {
     if (productId) await prisma.loanProduct.deleteMany({ where: { id: productId } });
     if (userId) await prisma.user.deleteMany({ where: { id: userId } });
     await app.close();
+    await disconnectPrismaClient();
   });
 });

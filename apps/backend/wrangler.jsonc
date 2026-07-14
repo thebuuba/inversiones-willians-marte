@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "inversiones-willians-marte-api",
+  "main": "worker-entry.mjs",
+  "compatibility_date": "2026-07-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "alias": {
+    "@nestjs/websockets/socket-module": "./src/cloudflare/nest-optional.stub.ts",
+    "@nestjs/microservices/microservices-module": "./src/cloudflare/nest-optional.stub.ts",
+    "@nestjs/microservices": "./src/cloudflare/nest-optional.stub.ts"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "FRONTEND_URL": "http://localhost:3001"
+  },
+  "env": {
+    "staging": {
+      "name": "inversiones-willians-marte-api-staging",
+      "vars": {
+        "FRONTEND_URL": "https://staging.example.com"
+      }
+    }
+  }
+}

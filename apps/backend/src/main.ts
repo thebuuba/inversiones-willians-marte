@@ -1,37 +1,12 @@
-import helmet from 'helmet';
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
-import { ResponseInterceptor } from './common/interceptors/response.interceptor';
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-import { requestIdMiddleware } from './common/middleware/request-id';
-import { parseCorsOrigins } from './config/cors-origins';
+import { configureNestApplication } from './bootstrap';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
-
-  app.setGlobalPrefix('api/v1');
-  app.useBodyParser('json', { limit: '2mb' });
-  app.useBodyParser('urlencoded', { limit: '2mb', extended: true });
-  app.use(helmet());
-  app.use(requestIdMiddleware);
-
-  app.enableCors({
-    origin: parseCorsOrigins(process.env.FRONTEND_URL),
-    credentials: true,
-  });
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
-
-  app.useGlobalInterceptors(new ResponseInterceptor());
-  app.useGlobalFilters(new AllExceptionsFilter());
+  configureNestApplication(app);
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
