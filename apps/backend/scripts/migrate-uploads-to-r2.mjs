@@ -15,12 +15,27 @@ function parseArguments(argv) {
 
   const bucket = valueAfter('--bucket');
   if (!bucket) throw new Error('Falta --bucket <nombre-del-bucket>');
+  const keyPrefix = (valueAfter('--key-prefix') ?? '').replace(/^\/+|\/+$/g, '');
+  const filenamePrefix = valueAfter('--filename-prefix') ?? '';
+  const filenameSuffix = valueAfter('--filename-suffix') ?? '';
+  const contentTypeOverride = valueAfter('--content-type');
+
+  const excludedKeys = new Set(
+    argv.flatMap((argument, index) =>
+      argument === '--exclude' && argv[index + 1] ? [argv[index + 1]] : [],
+    ),
+  );
 
   return {
     bucket,
     sourceDirectory: resolve(valueAfter('--source-dir') ?? 'uploads'),
     execute: argv.includes('--execute'),
     overwrite: argv.includes('--overwrite'),
+    excludedKeys,
+    keyPrefix,
+    filenamePrefix,
+    filenameSuffix,
+    contentTypeOverride,
   };
 }
 
@@ -54,7 +69,9 @@ function contentType(pathname) {
 }
 
 async function sha256(pathname) {
-  return createHash('sha256').update(await readFile(pathname)).digest('hex');
+  return createHash('sha256')
+    .update(await readFile(pathname))
+    .digest('hex');
 }
 
 async function runWrangler(args, allowFailure = false) {
@@ -78,7 +95,24 @@ async function download(bucket, key, destination) {
   return Boolean(result);
 }
 
-async function migrateFile({ bucket, file, key, sourceHash, overwrite, temporaryFile }) {
+async function downloadEventually(bucket, key, destination) {
+  for (const delayMs of [250, 500, 1_000, 2_000, 4_000]) {
+    await rm(destination, { force: true });
+    if (await download(bucket, key, destination)) return true;
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, delayMs));
+  }
+  return false;
+}
+
+async function migrateFile({
+  bucket,
+  file,
+  key,
+  sha256: sourceHash,
+  overwrite,
+  temporaryFile,
+  contentTypeOverride,
+}) {
   const exists = await download(bucket, key, temporaryFile);
   if (exists) {
     const remoteHash = await sha256(temporaryFile);
@@ -98,11 +132,11 @@ async function migrateFile({ bucket, file, key, sourceHash, overwrite, temporary
     '--file',
     file,
     '--content-type',
-    contentType(file),
+    contentTypeOverride ?? contentType(file),
     '--remote',
   ]);
   await rm(temporaryFile, { force: true });
-  if (!(await download(bucket, key, temporaryFile))) {
+  if (!(await downloadEventually(bucket, key, temporaryFile))) {
     throw new Error(`R2 no devolvio ${key} despues de cargarlo`);
   }
   const remoteHash = await sha256(temporaryFile);
@@ -117,13 +151,21 @@ async function main() {
     throw new Error(`La fuente no es un directorio: ${options.sourceDirectory}`);
   }
 
-  const files = await listFiles(options.sourceDirectory);
+  const files = (await listFiles(options.sourceDirectory)).filter((file) => {
+    const key = relative(options.sourceDirectory, file).split(sep).join('/');
+    return !options.excludedKeys.has(key);
+  });
   const manifest = await Promise.all(
-    files.map(async (file) => ({
-      file,
-      key: relative(options.sourceDirectory, file).split(sep).join('/'),
-      sha256: await sha256(file),
-    })),
+    files.map(async (file) => {
+      const sourceKey = relative(options.sourceDirectory, file).split(sep).join('/');
+      return {
+        file,
+        key: [options.keyPrefix, `${options.filenamePrefix}${sourceKey}${options.filenameSuffix}`]
+          .filter(Boolean)
+          .join('/'),
+        sha256: await sha256(file),
+      };
+    }),
   );
 
   console.log(

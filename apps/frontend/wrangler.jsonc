@@ -5,17 +5,17 @@
   "compatibility_date": "2026-07-14",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    "INTERNAL_API_URL": "https://api-staging.example.com/api/v1",
-    "MOBILE_BASE_URL": "https://staging.example.com"
+    "INTERNAL_API_URL": "https://inversiones-willians-marte-api-staging.natanaelpena1202.workers.dev/api/v1",
+    "MOBILE_BASE_URL": "https://inversiones-willians-marte-web-staging.natanaelpena1202.workers.dev",
   },
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
   },
   "images": {
-    "binding": "IMAGES"
+    "binding": "IMAGES",
   },
   "observability": {
-    "enabled": true
-  }
+    "enabled": true,
+  },
 }

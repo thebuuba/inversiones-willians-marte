@@ -86,7 +86,7 @@ pnpm --filter backend worker:r2:migrate:staging
 9. Después de revisar el bucket y el inventario SHA-256, ejecutar la copia idempotente:
 
 ```bash
-pnpm --filter backend worker:r2:migrate:staging --execute
+pnpm --filter backend worker:r2:migrate:staging -- --execute
 ```
 
 El comando descarga cada objeto después de cargarlo y compara SHA-256. Si ya existe un objeto

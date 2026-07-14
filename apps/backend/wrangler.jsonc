@@ -8,26 +8,32 @@
     "@nestjs/websockets/socket-module": "./src/cloudflare/nest-optional.stub.ts",
     "@nestjs/microservices/microservices-module": "./src/cloudflare/nest-optional.stub.ts",
     "@nestjs/microservices": "./src/cloudflare/nest-optional.stub.ts",
-    "class-transformer/storage": "class-transformer/cjs/storage"
+    "class-transformer/storage": "class-transformer/cjs/storage",
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "vars": {
-    "FRONTEND_URL": "http://localhost:3001"
+    "FRONTEND_URL": "http://localhost:3001",
   },
   "env": {
     "staging": {
       "name": "inversiones-willians-marte-api-staging",
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "120e0f913a724c849f0af839235fd906",
+        },
+      ],
       "r2_buckets": [
         {
           "binding": "DOCUMENTS_BUCKET",
-          "bucket_name": "inversiones-willians-marte-documents-staging"
-        }
+          "bucket_name": "inversiones-willians-marte-documents-staging",
+        },
       ],
       "vars": {
-        "FRONTEND_URL": "https://staging.example.com"
-      }
-    }
-  }
+        "FRONTEND_URL": "https://inversiones-willians-marte-web-staging.natanaelpena1202.workers.dev",
+      },
+    },
+  },
 }

@@ -31,7 +31,7 @@ pnpm android:check
 
 ```bash
 pnpm --filter backend worker:r2:migrate:staging
-pnpm --filter backend worker:r2:migrate:staging --execute
+pnpm --filter backend worker:r2:migrate:staging -- --execute
 pnpm --filter backend worker:deploy:staging
 NEXT_PUBLIC_API_URL=https://API-STAGING.workers.dev/api/v1 \
   pnpm --filter @inversiones/frontend worker:deploy:staging
@@ -39,6 +39,10 @@ NEXT_PUBLIC_API_URL=https://API-STAGING.workers.dev/api/v1 \
 
 Guardar el inventario SHA-256 del migrador como evidencia del cambio. No usar `--overwrite` ante un
 conflicto hasta comparar el archivo local, el objeto R2 y el documento que lo referencia.
+
+Para migraciones historicas, el comando acepta `--key-prefix`, `--filename-prefix`,
+`--filename-suffix`, `--content-type` y uno o mas `--exclude`. Estos parametros permiten separar
+objetos antiguos y omitir residuos no referenciados sin borrar los archivos fuente.
 
 ## 4. Validacion de staging
 
