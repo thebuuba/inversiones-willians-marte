@@ -3,6 +3,9 @@ dist/
 dist-worker*/
 .wrangler/
 .next/
+.open-next/
+.dev.vars
+cloudflare-env.d.ts
 *.tsbuildinfo
 .env
 .env.local

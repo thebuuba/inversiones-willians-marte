@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 import { networkInterfaces } from "node:os";
 import { getAllowedDevOrigins } from "./src/lib/mobile-network";
+
+initOpenNextCloudflareForDev();
 
 const allowedDevOrigins = getAllowedDevOrigins(
   process.env.NEXT_PUBLIC_MOBILE_BASE_URL,

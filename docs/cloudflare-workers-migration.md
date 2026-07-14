@@ -125,5 +125,5 @@ alteran.
 2. Copiar a R2 los documentos existentes y verificar checksums.
 3. Mover el recorte de imagenes al navegador para sustituir `sharp` en Workers.
 4. Ejecutar pruebas contractuales de las 83 rutas contra staging.
-5. Migrar el frontend Next.js con OpenNext.
+5. Crear el Worker frontend de staging con el build OpenNext ya incorporado al repositorio.
 6. Ejecutar pruebas completas web, iOS y Android antes de cualquier cambio de DNS.
