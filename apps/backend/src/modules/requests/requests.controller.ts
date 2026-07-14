@@ -32,13 +32,13 @@ export class RequestsController {
 
   @Patch(':id/approve')
   @Roles('ADMIN', 'COLLECTOR')
-  approve(@Param('id') id: string) {
-    return this.requests.approve(id);
+  approve(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.requests.approve(id, userId);
   }
 
   @Patch(':id/reject')
   @Roles('ADMIN', 'COLLECTOR')
-  reject(@Param('id') id: string) {
-    return this.requests.reject(id);
+  reject(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.requests.reject(id, userId);
   }
 }

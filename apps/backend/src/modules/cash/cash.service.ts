@@ -221,19 +221,38 @@ export class CashService {
       throw new BadRequestException('La persona o concepto es obligatorio');
     }
 
-    return prisma.cashMovement.create({
-      data: {
-        type: dto.type,
-        person,
-        amount: dto.amount,
-        movementDate: new Date(dto.movementDate),
-        category,
-        paymentMethod: dto.paymentMethod?.trim() || null,
-        description: dto.description?.trim() || null,
-        affectsBalance: dto.affectsBalance ?? true,
-        createdById: userId,
-      },
-      include: { createdBy: { select: { id: true, name: true } } },
+    return prisma.$transaction(async (tx) => {
+      const movement = await tx.cashMovement.create({
+        data: {
+          type: dto.type,
+          person,
+          amount: dto.amount,
+          movementDate: new Date(dto.movementDate),
+          category,
+          paymentMethod: dto.paymentMethod?.trim() || null,
+          description: dto.description?.trim() || null,
+          affectsBalance: dto.affectsBalance ?? true,
+          createdById: userId,
+        },
+        include: { createdBy: { select: { id: true, name: true } } },
+      });
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'CASH_MOVEMENT_CREATED',
+          entityType: 'CashMovement',
+          entityId: movement.id,
+          newValues: {
+            type: dto.type,
+            person,
+            amount: dto.amount,
+            movementDate: dto.movementDate,
+            category,
+            affectsBalance: dto.affectsBalance ?? true,
+          },
+        },
+      });
+      return movement;
     });
   }
 }

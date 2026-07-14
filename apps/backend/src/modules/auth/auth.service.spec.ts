@@ -75,9 +75,14 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException when user not found', async () => {
       jest.mocked(prisma.user.findFirst).mockResolvedValue(null);
+      jest.mocked(bcrypt.compare).mockResolvedValue(false as never);
 
       const dto: LoginDto = { username: 'nobody', password: 'password123' };
       await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        'password123',
+        expect.stringMatching(/^\$2b\$10\$/),
+      );
     });
 
     it('should throw UnauthorizedException when account is disabled', async () => {

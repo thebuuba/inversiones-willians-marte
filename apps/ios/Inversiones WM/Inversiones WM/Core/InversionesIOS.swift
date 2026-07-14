@@ -3,7 +3,9 @@ import SwiftUI
 public enum InversionesIOS {}
 
 enum AppEnvironment {
-    static let apiBaseURL = URL(string: "http://192.168.1.4:3000/api/v1")!
+    static let apiBaseURL = URL(
+        string: "https://inversiones-willians-marte-api-staging.natanaelpena1202.workers.dev/api/v1"
+    )!
 }
 
 extension Color {

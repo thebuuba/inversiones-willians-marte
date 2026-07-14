@@ -22,7 +22,7 @@ Backend exception logs include:
 - request id
 - authenticated user id when available
 
-Production responses hide unexpected exception text. Check Render logs with the request id instead of exposing raw backend errors to users.
+Production responses hide unexpected exception text. Check Cloudflare Workers observability with the request id instead of exposing raw backend errors to users.
 
 ## Common Checks
 
@@ -67,4 +67,4 @@ pnpm --filter @inversiones/database exec prisma migrate status --schema ../../pa
 
 - Check whether the PWA shows the offline/backend-unavailable banner.
 - Confirm `/api/` requests are not cached by the service worker.
-- Reload after the backend wakes up if Render Free was sleeping.
+- Check the backend Worker health endpoint and Cloudflare observability for cold-start or origin errors.

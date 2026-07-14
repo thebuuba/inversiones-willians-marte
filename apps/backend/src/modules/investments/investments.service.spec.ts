@@ -24,6 +24,7 @@ describe('InvestmentsService', () => {
 
   beforeEach(() => {
     service = new InvestmentsService();
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(prisma));
   });
 
   it('calculates monthly payment from monthly percentage rate', () => {

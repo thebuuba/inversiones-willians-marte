@@ -50,4 +50,13 @@ describe('Cloudflare worker environment', () => {
       FRONTEND_URL: 'https://staging.example.com',
     });
   });
+
+  it('fails closed when the JWT secret is missing', () => {
+    expect(() =>
+      applyWorkerEnvironment({
+        DATABASE_URL: 'postgresql://local/database',
+        JWT_SECRET: '',
+      }),
+    ).toThrow('Configure the JWT_SECRET Worker secret');
+  });
 });

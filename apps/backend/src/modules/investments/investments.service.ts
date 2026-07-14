@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { prisma, Prisma } from '@inversiones/database';
 import { AddCapitalDto } from './dto/add-capital.dto';
 import { CreateInvestmentDto } from './dto/create-investment.dto';
@@ -13,42 +18,61 @@ export class InvestmentsService {
     });
     if (!investor) throw new NotFoundException('Investor not found');
 
-    const code = await this.nextInvestmentCode(investor.id, investor.code);
     const monthlyPayment =
       dto.monthlyPayment ?? this.calculateMonthlyPayment(dto.capital, dto.rate);
 
-    const investment = await prisma.investorInvestment.create({
-      data: {
-        investorId,
-        code,
-        capital: dto.capital,
-        monthlyPayment,
-        rate: dto.rate,
-        startDate: dto.startDate ? new Date(dto.startDate) : null,
-        term: dto.term,
-        notes: dto.notes,
-        createdById: userId,
-      },
-      include: this.detailInclude(),
-    });
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        const investment = await prisma.$transaction(
+          async (tx) => {
+            const count = await tx.investorInvestment.count({ where: { investorId } });
+            const code = `${investor.code}-${String(count + 1).padStart(2, '0')}`;
+            const created = await tx.investorInvestment.create({
+              data: {
+                investorId,
+                code,
+                capital: dto.capital,
+                monthlyPayment,
+                rate: dto.rate,
+                startDate: dto.startDate ? new Date(dto.startDate) : null,
+                term: dto.term,
+                notes: dto.notes,
+                createdById: userId,
+              },
+              include: this.detailInclude(),
+            });
+            await tx.auditLog.create({
+              data: {
+                userId,
+                action: 'INVESTMENT_CREATED',
+                entityType: 'InvestorInvestment',
+                entityId: created.id,
+                newValues: {
+                  investorId,
+                  code: created.code,
+                  capital: dto.capital,
+                  monthlyPayment,
+                  rate: dto.rate,
+                },
+              },
+            });
+            return created;
+          },
+          { isolationLevel: 'Serializable' },
+        );
+        return this.toInvestmentDetail(investment);
+      } catch (error: unknown) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          if ((error.code === 'P2002' || error.code === 'P2034') && attempt < 3) continue;
+          if (error.code === 'P2002') {
+            throw new ConflictException('No se pudo reservar un código de inversión único');
+          }
+        }
+        throw error;
+      }
+    }
 
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action: 'INVESTMENT_CREATED',
-        entityType: 'InvestorInvestment',
-        entityId: investment.id,
-        newValues: {
-          investorId,
-          code: investment.code,
-          capital: dto.capital,
-          monthlyPayment,
-          rate: dto.rate,
-        },
-      },
-    });
-
-    return this.toInvestmentDetail(investment);
+    throw new ConflictException('No se pudo crear la inversión después de varios intentos');
   }
 
   async listByInvestor(investorId: string) {
@@ -156,11 +180,6 @@ export class InvestmentsService {
     today = new Date(),
   ) {
     return getInvestmentPeriodStatus(startDate, payments, today);
-  }
-
-  private async nextInvestmentCode(investorId: string, investorCode: string) {
-    const count = await prisma.investorInvestment.count({ where: { investorId } });
-    return `${investorCode}-${String(count + 1).padStart(2, '0')}`;
   }
 
   private detailInclude() {

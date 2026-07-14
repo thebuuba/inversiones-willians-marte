@@ -32,19 +32,18 @@ pnpm --filter backend test:e2e
 pnpm --filter backend test:cov
 ```
 
-### Cloudflare Workers (staging)
+### Cloudflare Workers
 
-El backend incluye un punto de entrada Worker separado para validar NestJS, JWT y Prisma sin
-reemplazar el servidor Node existente:
+El despliegue activo utiliza un punto de entrada Worker para ejecutar NestJS, JWT y Prisma:
 
 ```bash
 pnpm --filter backend worker:build:staging
 pnpm --filter backend worker:dev
 ```
 
-La configuracion de staging, Hyperdrive, R2 y secretos se documenta en
-`docs/cloudflare-workers-migration.md`. El Worker carga todos los modulos de la API; el backend
-Node continua disponible mientras se valida staging y se copian a R2 los documentos existentes.
+La configuracion de Hyperdrive, R2 y secretos se documenta en
+`docs/cloudflare-workers-migration.md`. El servidor Node se conserva para desarrollo local y
+pruebas, no como proveedor de produccion.
 
 ## Modulos principales
 

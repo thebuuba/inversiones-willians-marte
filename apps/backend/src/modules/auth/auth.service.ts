@@ -5,6 +5,8 @@ import { prisma } from '@inversiones/database';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
+const DUMMY_PASSWORD_HASH = '$2b$10$nS.iLnLwknJ.BwkYYIUrSepvR0dQ668/wJ92x.uuzyhmDqITylCf.';
+
 @Injectable()
 export class AuthService {
   constructor(private jwt: JwtService) {}
@@ -37,10 +39,8 @@ export class AuthService {
         OR: [{ username: login }, { email: login }],
       },
     });
-    if (!user) throw new UnauthorizedException('Invalid credentials');
-
-    const valid = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!valid) throw new UnauthorizedException('Invalid credentials');
+    const valid = await bcrypt.compare(dto.password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
+    if (!user || !valid) throw new UnauthorizedException('Invalid credentials');
     if (!user.active) throw new UnauthorizedException('Account is disabled');
 
     return this.createSession(user);

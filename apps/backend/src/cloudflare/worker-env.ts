@@ -10,6 +10,7 @@ export interface CloudflareWorkerEnv {
   DATABASE_URL?: string;
   JWT_SECRET: string;
   FRONTEND_URL?: string;
+  NODE_ENV?: string;
 }
 
 export function resolveWorkerDatabaseUrl(env: CloudflareWorkerEnv) {
@@ -23,6 +24,7 @@ export function resolveWorkerDatabaseUrl(env: CloudflareWorkerEnv) {
 export function applyWorkerEnvironment(env: CloudflareWorkerEnv) {
   process.env.CLOUDFLARE_WORKER = 'true';
   process.env.DATABASE_URL = resolveWorkerDatabaseUrl(env);
-  process.env.JWT_SECRET = env.JWT_SECRET;
+  if (!env.JWT_SECRET?.trim()) throw new Error('Configure the JWT_SECRET Worker secret');
+  process.env.JWT_SECRET = env.JWT_SECRET.trim();
   if (env.FRONTEND_URL) process.env.FRONTEND_URL = env.FRONTEND_URL;
 }

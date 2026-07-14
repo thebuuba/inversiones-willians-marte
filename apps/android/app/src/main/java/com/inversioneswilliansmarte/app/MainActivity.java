@@ -28,7 +28,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
-    private static final String API_BASE_URL = "http://192.168.1.4:3000/api/v1";
+    private static final String API_BASE_URL = "https://inversiones-willians-marte-api-staging.natanaelpena1202.workers.dev/api/v1";
+    private static final int CONNECTION_TIMEOUT_MS = 15_000;
+    private static final int READ_TIMEOUT_MS = 30_000;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
@@ -246,6 +248,8 @@ public class MainActivity extends Activity {
         URL url = URI.create(API_BASE_URL + path).toURL();
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod(method);
+        connection.setConnectTimeout(CONNECTION_TIMEOUT_MS);
+        connection.setReadTimeout(READ_TIMEOUT_MS);
         if (token != null) {
             connection.setRequestProperty("Authorization", "Bearer " + token);
         }

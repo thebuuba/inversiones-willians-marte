@@ -71,3 +71,8 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Build Cloudflare Worker artifacts
+        run: |
+          pnpm --filter backend worker:build:staging
+          pnpm --filter @inversiones/frontend worker:build

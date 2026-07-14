@@ -11,6 +11,16 @@ Sistema monorepo para administrar clientes, préstamos, cobros, inversionistas, 
 - `packages/database`: esquema y migraciones Prisma.
 - `packages/shared`: contratos compartidos de TypeScript.
 
+## Arquitectura desplegada
+
+- Frontend Next.js/OpenNext en Cloudflare Workers.
+- API NestJS en Cloudflare Workers.
+- PostgreSQL administrado por Supabase, conectado mediante Cloudflare Hyperdrive.
+- Documentos privados en Cloudflare R2.
+
+Render y Vercel ya no forman parte del despliegue activo. La guía `docs/free-deployment.md` se
+conserva únicamente como referencia histórica.
+
 ## Requisitos
 
 - Node.js 20 o posterior.
@@ -45,6 +55,8 @@ pnpm lint
 pnpm test
 pnpm build
 pnpm --filter backend test:e2e --runInBand
+pnpm --filter backend worker:build:staging
+pnpm --filter @inversiones/frontend worker:build
 pnpm ios:test
 pnpm android:check
 pnpm audit --prod

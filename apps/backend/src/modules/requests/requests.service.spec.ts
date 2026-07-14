@@ -2,11 +2,16 @@ import { RequestsService } from './requests.service';
 import { prisma } from '@inversiones/database';
 
 jest.mock('@inversiones/database', () => ({
+  Prisma: {
+    PrismaClientKnownRequestError: class PrismaClientKnownRequestError extends Error {},
+  },
   prisma: {
     loanRequest: {
       count: jest.fn(),
       create: jest.fn(),
     },
+    auditLog: { create: jest.fn() },
+    $transaction: jest.fn(),
   },
 }));
 
@@ -14,6 +19,10 @@ describe('RequestsService', () => {
   const service = new RequestsService();
 
   afterEach(() => jest.clearAllMocks());
+
+  beforeEach(() => {
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(prisma));
+  });
 
   it('formats request names before creating a request', async () => {
     jest.mocked(prisma.loanRequest.count).mockResolvedValue(0);
@@ -29,5 +38,12 @@ describe('RequestsService', () => {
         }),
       }),
     );
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'LOAN_REQUEST_CREATED',
+        entityId: 'request-1',
+        userId: 'user-1',
+      }),
+    });
   });
 });

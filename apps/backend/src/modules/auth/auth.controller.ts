@@ -5,12 +5,14 @@ import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './strategies/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards';
 import { CurrentUser, Roles } from '../../common/decorators';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
   constructor(private auth: AuthService) {}
 
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto);
   }

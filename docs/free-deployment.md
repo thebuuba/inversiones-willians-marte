@@ -1,5 +1,8 @@
 # Despliegue gratis: Vercel + Render + Supabase
 
+> **Documento histórico:** el despliegue activo usa Cloudflare Workers, Hyperdrive, R2 y
+> Supabase. No utilices esta guía para publicar la versión actual.
+
 Esta guía reemplaza el trial vencido de Railway con servicios gratuitos para el stack actual:
 
 - Frontend Next.js: Vercel
