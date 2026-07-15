@@ -36,12 +36,8 @@ import {
   Wallet,
 } from 'lucide-react';
 import {
-  getDashboard,
-  getPortfolio,
   getAudit,
-  getMonthlyCollections,
-  getWeeklyMovement,
-  getUpcomingPayments,
+  getDashboardOverview,
 } from '@/lib/api/dashboard';
 import { formatDop } from '@/lib/currency';
 
@@ -73,6 +69,10 @@ const cardVariants: Variants = {
     transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: getStaggerDelay(index, 0.06) },
   }),
 };
+
+async function getEmptyAudit() {
+  return [];
+}
 
 function Card({ children, className = '', index = 0 }: { children: ReactNode; className?: string; index?: number }) {
   return (
@@ -110,12 +110,21 @@ function SectionHeader({
 
 export function DashboardHome() {
   const { user } = useAuth();
-  const { data: dash } = useClientCache('dashboard', getDashboard);
-  const { data: portfolio } = useClientCache('portfolio', getPortfolio);
-  const { data: audit } = useClientCache('audit', getAudit);
-  const { data: monthlyCollections } = useClientCache('monthlyCollections', getMonthlyCollections);
-  const { data: weeklyMovement } = useClientCache('weeklyMovement', getWeeklyMovement);
-  const { data: upcomingPayments } = useClientCache('upcomingPayments', getUpcomingPayments);
+  const { data: overview } = useClientCache(
+    'dashboard-overview',
+    getDashboardOverview,
+    60_000,
+  );
+  const { data: audit } = useClientCache(
+    user?.role === 'ADMIN' ? 'audit' : 'audit-unavailable',
+    user?.role === 'ADMIN' ? getAudit : getEmptyAudit,
+    60_000,
+  );
+  const dash = overview?.dashboard;
+  const portfolio = overview?.portfolio;
+  const monthlyCollections = overview?.monthlyCollections;
+  const weeklyMovement = overview?.weeklyMovement;
+  const upcomingPayments = overview?.upcomingPayments;
 
   const activeLoans = dash?.activeLoans ?? 0;
   const totalClients = dash?.totalClients ?? 0;

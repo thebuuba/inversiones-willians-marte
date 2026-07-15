@@ -132,7 +132,7 @@ export class LoansService {
     return loan;
   }
 
-  async findAll(status?: string, search?: string, take = 50, skip = 0) {
+  async findAll(status?: string, search?: string, take = 50, skip = 0, sort?: string) {
     const { take: pageSize, skip: offset } = normalizePagination(take, skip);
     const filters: Prisma.Sql[] = [];
 
@@ -150,6 +150,14 @@ export class LoansService {
 
     const whereSql =
       filters.length > 0 ? Prisma.sql`WHERE ${Prisma.join(filters, ' AND ')}` : Prisma.empty;
+    const orderSql =
+      sort === 'oldest'
+        ? Prisma.sql`l.created_at ASC`
+        : sort === 'amount_desc'
+          ? Prisma.sql`l.principal DESC, l.created_at DESC`
+          : sort === 'amount_asc'
+            ? Prisma.sql`l.principal ASC, l.created_at DESC`
+            : Prisma.sql`l.created_at DESC`;
     const rows = await prisma.$queryRaw<LoanListRow[]>`
       SELECT
         l.id,
@@ -176,7 +184,7 @@ export class LoansService {
       JOIN clients c ON c.id = l.client_id
       JOIN loan_products p ON p.id = l.product_id
       ${whereSql}
-      ORDER BY l.created_at DESC
+      ORDER BY ${orderSql}
       LIMIT ${pageSize + 1}
       OFFSET ${offset}
     `;

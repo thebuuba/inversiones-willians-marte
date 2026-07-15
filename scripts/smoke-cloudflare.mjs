@@ -59,6 +59,13 @@ async function main() {
     if (!token) throw new Error('Login real no devolvio accessToken');
     const authenticated = { headers: { authorization: `Bearer ${token}` } };
     await fetchChecked('Perfil autenticado', `${apiUrl}/auth/profile`, 200, authenticated);
+    await fetchChecked('Panel agregado', `${apiUrl}/reports/overview`, 200, authenticated);
+    await fetchChecked(
+      'Prestamos ordenados',
+      `${apiUrl}/loans?take=1&sort=amount_desc`,
+      200,
+      authenticated,
+    );
     await fetchChecked('Clientes autenticados', `${apiUrl}/clients?take=1`, 200, authenticated);
     await fetchChecked('Documentos autenticados', `${apiUrl}/documents?take=1`, 200, authenticated);
   } else {
