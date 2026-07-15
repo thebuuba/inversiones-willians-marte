@@ -5,8 +5,8 @@ export const REFRESH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
 
 export function getBackendApiUrl() {
   return (
-    process.env.INTERNAL_API_URL ??
     process.env.NEXT_PUBLIC_API_URL ??
+    process.env.INTERNAL_API_URL ??
     'http://localhost:3000/api/v1'
   ).replace(/\/$/, '');
 }
