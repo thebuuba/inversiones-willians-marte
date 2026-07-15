@@ -13,6 +13,12 @@
   "observability": {
     "enabled": true,
   },
+  "r2_buckets": [
+    {
+      "binding": "DOCUMENTS_BUCKET",
+      "bucket_name": "inversiones-willians-marte-documents-local",
+    },
+  ],
   "vars": {
     "FRONTEND_URL": "http://localhost:3001",
     "NODE_ENV": "development",

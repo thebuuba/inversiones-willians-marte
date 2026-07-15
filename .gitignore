@@ -22,6 +22,8 @@ cloudflare-env.d.ts
 !.env.example
 !**/.env.example
 *.bak
+*.dump
+backups/
 *.tmp
 *.temp
 *.cache

@@ -68,14 +68,29 @@ curl https://<backend-host>/api/v1/health
 
 ## Backup Policy
 
-Supabase owns automated backups for the project database. R2 objects are separate and are not
-included in a database backup. Before any risky migration:
+The Supabase Free plan does not include automatic database backups or point-in-time recovery.
+Create and verify a manual backup before every deployment or risky migration:
 
-1. Confirm the latest Supabase backup is recent enough for rollback.
-2. Export a manual SQL backup from the Supabase dashboard when the migration changes money, loan, payment, investor, or user tables.
-3. Export referenced R2 objects and an object manifest when the migration affects documents.
-4. Store database and object backups outside the repository with private filesystem permissions.
-5. Record who ran the migration, when it ran, and which commit was deployed.
+```bash
+pnpm db:backup
+```
+
+The command requires `DATABASE_URL` in the environment, writes a PostgreSQL custom-format archive
+to `~/.inversiones-willians-marte/backups` by default, restricts its filesystem permissions, and
+checks that `pg_restore` can read it. Set `BACKUP_DIR` to choose a private location outside the
+repository. PostgreSQL 17 client tools are required for the current Supabase database; set
+`PG_DUMP_BIN` and `PG_RESTORE_BIN` if they are installed in a custom location. Do not pass the
+connection string as a command-line argument.
+
+R2 objects are separate and are not included in a database backup. Before any risky migration:
+
+1. Create the manual PostgreSQL backup and copy it to encrypted storage on another device or provider.
+2. Export referenced R2 objects and an object manifest when the migration affects documents.
+3. Store database and object backups outside the repository with private filesystem permissions.
+4. Record who ran the migration, when it ran, which backup was verified, and which commit was deployed.
+
+Paid Supabase plans may provide managed backups, but the manual pre-deployment backup remains the
+rollback artifact for this project's free deployment.
 
 ## Restore Drill
 
