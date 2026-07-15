@@ -3,6 +3,25 @@ import { prisma } from '@inversiones/database';
 
 @Injectable()
 export class ReportsService {
+  async overview() {
+    const [dashboard, portfolio, monthlyCollections, weeklyMovement, upcomingPayments] =
+      await Promise.all([
+        this.dashboard(),
+        this.portfolioByStatus(),
+        this.monthlyCollections(),
+        this.weeklyMovement(),
+        this.upcomingPayments(),
+      ]);
+
+    return {
+      dashboard,
+      portfolio,
+      monthlyCollections,
+      weeklyMovement,
+      upcomingPayments,
+    };
+  }
+
   async dashboard() {
     const todayStart = startOfUtcDay(new Date());
     const tomorrowStart = new Date(todayStart);

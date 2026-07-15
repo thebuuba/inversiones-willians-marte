@@ -326,14 +326,13 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
         <button className="px-1 text-lg font-bold leading-none text-[#A7B5AD] transition hover:text-[#2F7654]" type="button">
           ...
         </button>
-        <button
+        <Link
           className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#B8EBC9] bg-[#EAF6EF] px-4 text-sm font-bold text-[#2F7654] shadow-[0_5px_10px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-md"
-          onClick={() => undefined}
-          type="button"
+          href={`/prestamos/${loan.id}`}
         >
           <Eye className="h-4 w-4" />
           Ver
-        </button>
+        </Link>
       </div>
     </motion.div>
   );
@@ -397,21 +396,35 @@ function normalizeStatusFilter(status: string) {
   return status;
 }
 
+function normalizeSort(sort: string): 'recent' | 'oldest' | 'amount_desc' | 'amount_asc' {
+  if (sort === 'Más antiguos') return 'oldest';
+  if (sort === 'Mayor monto') return 'amount_desc';
+  if (sort === 'Menor monto') return 'amount_asc';
+  return 'recent';
+}
+
 export function LoansPage() {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
   const [sort, setSort] = useState('Más recientes');
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const PAGE_SIZE = 50;
+  const PAGE_SIZE = 20;
   const searchKey = `${search}|${selectedStatus}`;
   const statusParam = normalizeStatusFilter(selectedStatus);
+  const sortParam = normalizeSort(sort);
   const loansFetcher = useCallback(
-    () => getLoans(statusParam === 'Todos' ? undefined : statusParam, search || undefined, PAGE_SIZE, page * PAGE_SIZE),
-    [page, search, statusParam],
+    () => getLoans(
+      statusParam === 'Todos' ? undefined : statusParam,
+      search || undefined,
+      PAGE_SIZE,
+      page * PAGE_SIZE,
+      sortParam,
+    ),
+    [page, search, sortParam, statusParam],
   );
   const { data, loading } = useClientCache(
-    `loans:${searchKey}:${page}`,
+    `loans:${searchKey}:${sortParam}:${page}`,
     loansFetcher,
   );
   const loans = useMemo(() => data?.data ?? [], [data]);

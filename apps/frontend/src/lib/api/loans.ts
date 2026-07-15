@@ -115,12 +115,14 @@ export async function getLoans(
   search?: string,
   take = 50,
   skip = 0,
+  sort?: 'recent' | 'oldest' | 'amount_desc' | 'amount_asc',
 ): Promise<PaginatedLoans> {
   const params: Record<string, string> = {};
   if (status) params.status = status;
   if (search) params.search = search;
   if (take !== 50) params.take = String(take);
   if (skip > 0) params.skip = String(skip);
+  if (sort && sort !== 'recent') params.sort = sort;
   const { data } = await api.get<ApiResponse<PaginatedLoans>>('/loans', { params });
   return (data.data as PaginatedLoans) ?? { data: [], total: 0 };
 }

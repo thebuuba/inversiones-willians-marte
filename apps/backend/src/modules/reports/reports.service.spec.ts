@@ -16,7 +16,43 @@ describe('ReportsService', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    jest.restoreAllMocks();
     jest.clearAllMocks();
+  });
+
+  it('starts every overview section concurrently', async () => {
+    const methods = [
+      'dashboard',
+      'portfolioByStatus',
+      'monthlyCollections',
+      'weeklyMovement',
+      'upcomingPayments',
+    ] as const;
+    const resolvers = new Map<string, (value: never) => void>();
+
+    for (const method of methods) {
+      jest
+        .spyOn(service, method)
+        .mockImplementation(
+          () => new Promise((resolve) => resolvers.set(method, resolve)) as never,
+        );
+    }
+
+    const result = service.overview();
+    await Promise.resolve();
+
+    for (const method of methods) {
+      expect(service[method]).toHaveBeenCalledTimes(1);
+      resolvers.get(method)?.([] as never);
+    }
+
+    await expect(result).resolves.toEqual({
+      dashboard: [],
+      portfolio: [],
+      monthlyCollections: [],
+      weeklyMovement: [],
+      upcomingPayments: [],
+    });
   });
 
   it('binds the six-month cutoff in the monthly collections query', async () => {

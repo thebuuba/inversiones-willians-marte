@@ -47,6 +47,19 @@ export interface UpcomingPayment {
   status: string;
 }
 
+export interface DashboardOverview {
+  dashboard: DashboardData;
+  portfolio: PortfolioGroup[];
+  monthlyCollections: MonthlyCollection[];
+  weeklyMovement: WeeklyMovementItem[];
+  upcomingPayments: UpcomingPayment[];
+}
+
+export async function getDashboardOverview(): Promise<DashboardOverview> {
+  const { data } = await api.get<ApiResponse<DashboardOverview>>('/reports/overview');
+  return data.data as DashboardOverview;
+}
+
 export async function getDashboard(): Promise<DashboardData> {
   const { data } = await api.get<ApiResponse<DashboardData>>('/reports/dashboard');
   return data.data as DashboardData;

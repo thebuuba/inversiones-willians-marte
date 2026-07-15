@@ -9,6 +9,12 @@ import { RolesGuard } from '../../common/guards';
 export class ReportsController {
   constructor(private reports: ReportsService) {}
 
+  @Get('overview')
+  @Roles('ADMIN', 'COLLECTOR')
+  overview() {
+    return this.reports.overview();
+  }
+
   @Get('dashboard')
   @Roles('ADMIN', 'COLLECTOR')
   dashboard() {
