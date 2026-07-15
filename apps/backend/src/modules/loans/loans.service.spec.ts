@@ -5,12 +5,18 @@ jest.mock('@inversiones/database', () => ({
   prisma: {
     loan: {
       findUnique: jest.fn(),
+      findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
     },
+    loanReplacement: { createMany: jest.fn() },
     paymentSchedule: {
       upsert: jest.fn(),
+      updateMany: jest.fn(),
     },
+    paymentPromise: { updateMany: jest.fn() },
+    lateFee: { updateMany: jest.fn() },
     loanProduct: {
       findUnique: jest.fn(),
     },
@@ -29,6 +35,11 @@ describe('LoansService', () => {
 
   beforeEach(() => {
     service = new LoansService({} as any, {} as any);
+    jest
+      .mocked(prisma.$transaction)
+      .mockImplementation((callback: (tx: typeof prisma) => unknown) =>
+        Promise.resolve(callback(prisma)),
+      );
   });
 
   afterEach(() => {
@@ -162,6 +173,70 @@ describe('LoansService', () => {
         clientId: 1,
         newValues: expect.objectContaining({ loanNumber: 15, principal: 1000 }),
       }),
+    });
+  });
+
+  it('settles source loans and only disburses the re-engagement difference', async () => {
+    const amortization = {
+      calculate: jest.fn().mockReturnValue([
+        {
+          dueDate: new Date('2026-08-01'),
+          amount: 22000,
+          principalPart: 20000,
+          interestPart: 2000,
+          balanceAfter: 0,
+        },
+      ]),
+    };
+    const payoff = { quote: jest.fn().mockReturnValue({ totalToPay: 15000 }) };
+    service = new LoansService(amortization as any, payoff as any);
+    jest.mocked(prisma.loanProduct.findUnique).mockResolvedValue({
+      id: 'product-1',
+      active: true,
+      interestRate: 10,
+      interestType: 'FIXED',
+      paymentFrequency: 'MONTHLY',
+      maxTerm: 12,
+    } as any);
+    jest.mocked(prisma.client.findUnique).mockResolvedValue({ id: 1, active: true } as any);
+    jest
+      .mocked(prisma.loan.findMany)
+      .mockResolvedValue([{ id: 'old-loan', clientId: 1, status: 'ACTIVE' }] as any);
+    jest.mocked(prisma.loan.create).mockResolvedValue({
+      id: 'new-loan',
+      loanNumber: 21,
+      clientId: 1,
+      principal: 20000,
+      totalAmount: 22000,
+    } as any);
+
+    await service.create(
+      {
+        clientId: 1,
+        productId: 'product-1',
+        principal: 20000,
+        term: 1,
+        startDate: '2026-07-15',
+        operationType: 'REENGAGEMENT',
+        sourceLoanIds: ['old-loan'],
+      },
+      'user-1',
+    );
+
+    expect(prisma.loan.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          operationType: 'REENGAGEMENT',
+          disbursedAmount: 5000,
+        }),
+      }),
+    );
+    expect(prisma.loanReplacement.createMany).toHaveBeenCalledWith({
+      data: [{ newLoanId: 'new-loan', sourceLoanId: 'old-loan', settlementAmount: 15000 }],
+    });
+    expect(prisma.loan.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['old-loan'] } },
+      data: { status: 'RESTRUCTURED', balance: 0 },
     });
   });
 

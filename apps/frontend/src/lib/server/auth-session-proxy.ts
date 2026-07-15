@@ -17,7 +17,8 @@ type BackendService = {
 };
 
 export async function fetchBackend(path: string, init: RequestInit) {
-  const request = new Request(`${getBackendApiUrl()}${path}`, init);
+  const apiUrl = getBackendApiUrl();
+  const request = new Request(`${apiUrl}${path}`, init);
   let backend: BackendService | undefined;
 
   try {
@@ -30,7 +31,8 @@ export async function fetchBackend(path: string, init: RequestInit) {
     // `next dev` and unit tests can run without a Cloudflare runtime context.
   }
 
-  return backend ? backend.fetch(request) : fetch(request);
+  const isLocalBackend = /^https?:\/\/(localhost|127\.0\.0\.1)(?::|\/)/.test(apiUrl);
+  return backend && !isLocalBackend ? backend.fetch(request) : fetch(request);
 }
 
 export function setRefreshCookie(response: NextResponse, refreshToken: string) {

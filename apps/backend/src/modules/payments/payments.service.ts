@@ -22,7 +22,9 @@ export class PaymentsService {
           },
         });
         if (!loan) throw new NotFoundException('Loan not found');
-        if (loan.status === 'PAID') throw new BadRequestException('Loan is already paid');
+        if (!['ACTIVE', 'OVERDUE'].includes(loan.status)) {
+          throw new BadRequestException('Loan is not open for payments');
+        }
         if (loan.clientId !== dto.clientId) {
           throw new BadRequestException('Payment client does not match the loan client');
         }

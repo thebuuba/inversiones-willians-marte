@@ -69,7 +69,8 @@ function cashLedgerUnion() {
       TRIM(c.first_name || ' ' || c.last_name) AS person,
       'PRE-' || l.loan_number::text AS code,
       'Desembolso del préstamo #' || l.loan_number::text AS description,
-      (
+      COALESCE(
+        l.disbursed_amount,
         l.principal - COALESCE(
           (SELECT SUM(previous_lcm.amount) FROM loan_capital_movements previous_lcm WHERE previous_lcm.loan_id = l.id),
           0

@@ -68,7 +68,9 @@ export function ClientsPanel() {
     clientsFetcher,
     undefined,
     'No se pudieron cargar los clientes. Verifica que el backend esté corriendo.',
+    true,
   );
+  const initialLoading = loading && !data;
   const clients = data?.data ?? [];
   const displayClients = clients.slice(0, pageSize);
   const total = data?.total ?? 0;
@@ -160,7 +162,7 @@ export function ClientsPanel() {
                 <div>
                   <p className="text-[13px] text-text-secondary">{stat.label}</p>
                   <p className="mt-1 text-[22px] font-bold leading-none text-text-primary">
-                    {loading ? '...' : stat.value}
+                    {initialLoading ? '...' : stat.value}
                   </p>
                 </div>
               </PanelCard>
@@ -195,7 +197,7 @@ export function ClientsPanel() {
           </div>
 
           <div ref={bodyRef} className="relative flex-1 overflow-hidden">
-            {loading ? (
+            {initialLoading ? (
               <div className="flex h-full items-center justify-center text-sm font-medium text-text-secondary">
                 Cargando clientes...
               </div>
@@ -266,7 +268,7 @@ export function ClientsPanel() {
 
           <div className="flex items-center justify-between border-t border-border-soft bg-card px-6 py-4">
             <p className="text-[13px] text-text-secondary">
-              {!loading && (
+              {!initialLoading && (
                 <>
                   Mostrando {displayClients.length} de {total} cliente{total !== 1 ? 's' : ''}
                 </>

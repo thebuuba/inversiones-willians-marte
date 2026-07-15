@@ -10,6 +10,7 @@ import {
   calculateProratedIndefiniteInterest,
 } from './indefinite-loan';
 import { normalizePagination } from '../../common/pagination';
+import { moneyToCents } from '../../common/money';
 
 type LoanListRow = {
   id: string;
@@ -50,91 +51,175 @@ export class LoansService {
   ) {}
 
   async create(dto: CreateLoanDto, userId: string) {
-    const product = await prisma.loanProduct.findUnique({ where: { id: dto.productId } });
-    if (!product || !product.active) throw new NotFoundException('Loan product not found');
+    return prisma.$transaction(
+      async (tx) => {
+        const product = await tx.loanProduct.findUnique({ where: { id: dto.productId } });
+        if (!product || !product.active) throw new NotFoundException('Loan product not found');
 
-    const client = await prisma.client.findUnique({ where: { id: dto.clientId } });
-    if (!client || !client.active) throw new NotFoundException('Client not found');
+        const client = await tx.client.findUnique({ where: { id: dto.clientId } });
+        if (!client || !client.active) throw new NotFoundException('Client not found');
 
-    if (dto.term > (product.maxTerm ?? Infinity)) {
-      throw new BadRequestException(`Term exceeds maximum of ${product.maxTerm}`);
-    }
+        if (dto.term > (product.maxTerm ?? Infinity)) {
+          throw new BadRequestException(`Term exceeds maximum of ${product.maxTerm}`);
+        }
 
-    const interestType = dto.amortizationType ?? product.interestType;
-    const paymentFrequency = dto.paymentFrequency ?? product.paymentFrequency;
-    const interestRate = dto.interestRate ?? Number(product.interestRate);
-    const scheduleInterestRate =
-      dto.interestRate == null
-        ? Number(product.interestRate)
-        : annualizedManualRate(dto.interestRate, paymentFrequency);
+        const operationType = dto.operationType ?? 'NORMAL';
+        const sourceLoanIds = dto.sourceLoanIds ?? [];
+        if ((operationType === 'NORMAL') !== (sourceLoanIds.length === 0)) {
+          throw new BadRequestException('Replacement loans require source loans');
+        }
 
-    const schedule = this.amortization.calculate({
-      principal: dto.principal,
-      interestRate: scheduleInterestRate,
-      interestType,
-      paymentFrequency,
-      term: dto.term,
-      startDate: new Date(dto.startDate),
-      customPayment: dto.customPayment,
-    });
+        const settlementDate = new Date(
+          `${new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santo_Domingo' })}T00:00:00.000Z`,
+        );
+        const sourceLoans = sourceLoanIds.length
+          ? await tx.loan.findMany({
+              where: { id: { in: sourceLoanIds } },
+              include: {
+                schedule: { orderBy: { dueDate: 'asc' } },
+                lateFees: true,
+                payments: { include: { allocations: true } },
+                capitalMovements: { orderBy: { effectiveDate: 'asc' } },
+              },
+            })
+          : [];
 
-    const totalAmount = schedule.reduce((sum, row) => sum + row.amount, 0);
-    const lastRow = schedule[schedule.length - 1];
+        if (
+          sourceLoans.length !== sourceLoanIds.length ||
+          sourceLoans.some(
+            (loan) =>
+              loan.clientId !== dto.clientId || !['ACTIVE', 'OVERDUE'].includes(loan.status),
+          )
+        ) {
+          throw new BadRequestException('Source loans must be active loans from this client');
+        }
 
-    const balance =
-      interestType === 'INDEFINITE' ? dto.principal : Math.round(totalAmount * 100) / 100;
+        const settlements = sourceLoans.map((loan) => ({
+          loan,
+          amount: this.payoff.quote(loan, settlementDate).totalToPay,
+        }));
+        const settlementTotal = settlements.reduce((sum, item) => sum + item.amount, 0);
+        const principalCents = moneyToCents(dto.principal);
+        const settlementCents = moneyToCents(settlementTotal);
+        if (operationType === 'REFINANCE' && principalCents !== settlementCents) {
+          throw new BadRequestException('Refinancing amount must equal the settled balance');
+        }
+        if (operationType === 'REENGAGEMENT' && principalCents <= settlementCents) {
+          throw new BadRequestException('Re-engagement amount must exceed the settled balance');
+        }
 
-    const loan = await prisma.loan.create({
-      data: {
-        clientId: dto.clientId,
-        productId: dto.productId,
-        principal: dto.principal,
-        interestRate,
-        interestType,
-        totalAmount: Math.round(totalAmount * 100) / 100,
-        paymentFreq: paymentFrequency,
-        term: dto.term,
-        startDate: new Date(dto.startDate),
-        endDate: interestType === 'INDEFINITE' ? null : (lastRow?.dueDate ?? null),
-        balance,
-        notes: dto.notes,
-        portfolioId: dto.portfolioId ?? null,
-        createdById: userId,
-        schedule: {
-          create: schedule.map((row) => ({
-            dueDate: row.dueDate,
-            amount: row.amount,
-            principalPart: row.principalPart,
-            interestPart: row.interestPart,
-            balanceAfter: row.balanceAfter,
-          })),
-        },
-      },
-      include: {
-        client: true,
-        product: true,
-        schedule: { orderBy: { dueDate: 'asc' } },
-      },
-    });
-
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action: 'LOAN_CREATED',
-        entityType: 'Loan',
-        entityId: loan.id,
-        clientId: dto.clientId,
-        newValues: {
-          loanNumber: loan.loanNumber,
+        const interestType = dto.amortizationType ?? product.interestType;
+        const paymentFrequency = dto.paymentFrequency ?? product.paymentFrequency;
+        const interestRate = dto.interestRate ?? Number(product.interestRate);
+        const scheduleInterestRate =
+          dto.interestRate == null
+            ? Number(product.interestRate)
+            : annualizedManualRate(dto.interestRate, paymentFrequency);
+        const schedule = this.amortization.calculate({
           principal: dto.principal,
-          totalAmount: Number(loan.totalAmount),
-          productId: dto.productId,
-          portfolioId: dto.portfolioId ?? null,
-        },
-      },
-    });
+          interestRate: scheduleInterestRate,
+          interestType,
+          paymentFrequency,
+          term: dto.term,
+          startDate: new Date(dto.startDate),
+          customPayment: dto.customPayment,
+        });
+        const totalAmount = schedule.reduce((sum, row) => sum + row.amount, 0);
+        const lastRow = schedule[schedule.length - 1];
+        const balance =
+          interestType === 'INDEFINITE' ? dto.principal : Math.round(totalAmount * 100) / 100;
+        const disbursedAmount =
+          operationType === 'NORMAL' ? dto.principal : (principalCents - settlementCents) / 100;
 
-    return loan;
+        const loan = await tx.loan.create({
+          data: {
+            clientId: dto.clientId,
+            productId: dto.productId,
+            principal: dto.principal,
+            interestRate,
+            interestType,
+            totalAmount: Math.round(totalAmount * 100) / 100,
+            paymentFreq: paymentFrequency,
+            term: dto.term,
+            startDate: new Date(dto.startDate),
+            endDate: interestType === 'INDEFINITE' ? null : (lastRow?.dueDate ?? null),
+            balance,
+            notes: dto.notes,
+            portfolioId: dto.portfolioId ?? null,
+            createdById: userId,
+            operationType,
+            disbursedAmount,
+            schedule: {
+              create: schedule.map((row) => ({
+                dueDate: row.dueDate,
+                amount: row.amount,
+                principalPart: row.principalPart,
+                interestPart: row.interestPart,
+                balanceAfter: row.balanceAfter,
+              })),
+            },
+          },
+          include: {
+            client: true,
+            product: true,
+            schedule: { orderBy: { dueDate: 'asc' } },
+          },
+        });
+
+        if (settlements.length) {
+          await tx.loanReplacement.createMany({
+            data: settlements.map(({ loan: source, amount }) => ({
+              newLoanId: loan.id,
+              sourceLoanId: source.id,
+              settlementAmount: amount,
+            })),
+          });
+          await tx.loan.updateMany({
+            where: { id: { in: sourceLoanIds } },
+            data: { status: 'RESTRUCTURED', balance: 0 },
+          });
+          await tx.paymentSchedule.updateMany({
+            where: { loanId: { in: sourceLoanIds }, status: { not: 'PAID' } },
+            data: { status: 'CANCELLED' },
+          });
+          await tx.paymentPromise.updateMany({
+            where: {
+              loanId: { in: sourceLoanIds },
+              status: { in: ['PENDING', 'PARTIAL', 'BROKEN'] },
+            },
+            data: { status: 'CANCELLED' },
+          });
+          await tx.lateFee.updateMany({
+            where: { loanId: { in: sourceLoanIds }, paid: false },
+            data: { paid: true },
+          });
+        }
+
+        await tx.auditLog.create({
+          data: {
+            userId,
+            action: 'LOAN_CREATED',
+            entityType: 'Loan',
+            entityId: loan.id,
+            clientId: dto.clientId,
+            newValues: {
+              loanNumber: loan.loanNumber,
+              principal: dto.principal,
+              totalAmount: Number(loan.totalAmount),
+              productId: dto.productId,
+              portfolioId: dto.portfolioId ?? null,
+              operationType,
+              sourceLoanIds,
+              settlementTotal,
+              disbursedAmount,
+            },
+          },
+        });
+
+        return loan;
+      },
+      { isolationLevel: 'Serializable' },
+    );
   }
 
   async findAll(status?: string, search?: string, take = 50, skip = 0, sort?: string) {

@@ -23,6 +23,7 @@ export function useClientCache<T>(
   fetcher: () => Promise<T>,
   ttl = defaultTTL,
   errorMessage = 'Error al cargar datos',
+  keepPreviousData = false,
 ): { data: T | null; loading: boolean; error: string } {
   const [state, setState] = useState<ClientCacheState<T>>(() => {
     const cached = readClientCache<T>(key);
@@ -69,7 +70,7 @@ export function useClientCache<T>(
 
   const cached = readClientCache<T>(key);
   return {
-    data: cached?.data ?? null,
+    data: cached?.data ?? (keepPreviousData ? state.data : null),
     loading: !cached,
     error: '',
   };

@@ -80,7 +80,7 @@ export function getLoanCollectionStatus(
   }
 
   const oldestUnpaidDueDate = (loan.schedule ?? [])
-    .filter((row) => row.status !== 'PAID')
+    .filter((row) => row.status !== 'PAID' && row.status !== 'CANCELLED')
     .map((row) => getCalendarDay(row.dueDate))
     .sort((a, b) => a - b)[0];
 

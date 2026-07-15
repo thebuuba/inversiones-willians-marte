@@ -13,6 +13,10 @@ export type AmortizationType = 'SIMPLE' | 'INDEFINITE' | 'NO_INTEREST';
 export type LoanTermUnit = 'months' | 'fortnights' | 'weeks';
 export type LoanPaymentFrequency = 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY';
 
+export function countRemainingInstallments(schedule: ReadonlyArray<{ status: string }>): number {
+  return schedule.filter(({ status }) => status !== 'PAID' && status !== 'CANCELLED').length;
+}
+
 export function parseNumber(value: string): number {
   const parsed = Number(value.replace(/[^\d.]/g, ''));
   return Number.isFinite(parsed) ? parsed : 0;

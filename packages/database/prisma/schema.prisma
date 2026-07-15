@@ -21,6 +21,12 @@ enum LoanStatus {
   WRITTEN_OFF
 }
 
+enum LoanOperationType {
+  NORMAL
+  REENGAGEMENT
+  REFINANCE
+}
+
 enum InterestType {
   FLAT
   REDUCING
@@ -42,6 +48,7 @@ enum ScheduleStatus {
   PAID
   PARTIAL
   OVERDUE
+  CANCELLED
 }
 
 enum AllocationType {
@@ -166,7 +173,7 @@ model CashMovement {
   category      String
   paymentMethod String?          @map("payment_method")
   description   String?
-  affectsBalance Boolean         @default(true) @map("affects_balance")
+  affectsBalance Boolean          @default(true) @map("affects_balance")
   createdById   String           @map("created_by")
   createdAt     DateTime         @default(now()) @map("created_at")
 
@@ -287,6 +294,8 @@ model Loan {
   createdById  String           @map("created_by")
   createdAt    DateTime         @default(now()) @map("created_at")
   updatedAt    DateTime         @updatedAt @map("updated_at")
+  operationType   LoanOperationType @default(NORMAL) @map("operation_type")
+  disbursedAmount Decimal?          @map("disbursed_amount")
 
   client                 Client                  @relation(fields: [clientId], references: [id])
   product                LoanProduct             @relation(fields: [productId], references: [id])
@@ -300,6 +309,8 @@ model Loan {
   paymentPromises        PaymentPromise[]
   tasks                  Task[]
   portfolio              Portfolio?              @relation(fields: [portfolioId], references: [id])
+  replacementSources     LoanReplacement[]       @relation("ReplacementLoan")
+  replacementTargets     LoanReplacement[]       @relation("SourceLoan")
 
   @@index([clientId, createdAt])
   @@index([status, createdAt])
@@ -308,6 +319,19 @@ model Loan {
   @@index([startDate])
   @@index([status, endDate])
   @@map("loans")
+}
+
+model LoanReplacement {
+  newLoanId        String  @map("new_loan_id")
+  sourceLoanId     String  @map("source_loan_id")
+  settlementAmount Decimal @map("settlement_amount")
+
+  newLoan    Loan @relation("ReplacementLoan", fields: [newLoanId], references: [id], onDelete: Cascade)
+  sourceLoan Loan @relation("SourceLoan", fields: [sourceLoanId], references: [id])
+
+  @@id([newLoanId, sourceLoanId])
+  @@index([sourceLoanId])
+  @@map("loan_replacements")
 }
 
 // ─── Payment Schedule ──────────────────────────────────────────────────────

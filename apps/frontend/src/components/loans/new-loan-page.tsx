@@ -6,24 +6,29 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
+  Banknote,
   Calculator,
   Check,
   ChevronDown,
+  ChevronRight,
   Landmark,
   ReceiptText,
+  RefreshCw,
+  RotateCcw,
   Search,
   TrendingUp,
   UserRound,
   WalletCards,
 } from 'lucide-react';
 import { getLoanProducts, type LoanProductItem } from '@/lib/api/loan-products';
-import { createLoan } from '@/lib/api/loans';
-import { getClients, getClientBasic } from '@/lib/api/clients';
+import { createLoan, getPayoffQuote } from '@/lib/api/loans';
+import { getClient, getClients, getClientBasic } from '@/lib/api/clients';
 import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
 import { formatDop } from '@/lib/currency';
 import {
   canCalculateLoan,
   computeSchedule,
+  countRemainingInstallments,
   getInstallmentIsoDate,
   getLoanSummaryTotals,
   getPeriodicInterestRate,
@@ -38,7 +43,7 @@ import {
 import { CarterasCard } from './carteras-card';
 import { DatePickerInput } from '@/components/ui/date-picker-input';
 import { getNextMonthIsoDate } from '@/components/ui/date-picker.helpers';
-import type { Client } from '@inversiones/shared';
+import type { Client, LoanOperationType, LoanPayoffQuote, LoanSummary } from '@inversiones/shared';
 
 const LOAN_CARD_SHADOW = 'shadow-[0_4px_12px_rgba(17,24,39,0.16)]';
 
@@ -47,7 +52,7 @@ function getDefaultFirstPaymentDate(): string {
 }
 
 function formatCurrency(value: number): string {
-  return formatDop(value, { decimals: 2 });
+  return formatDop(value);
 }
 
 function formatNumberInput(value: string): string {
@@ -249,6 +254,252 @@ function ClientSearchCard({
   );
 }
 
+type ReplacementType = Exclude<LoanOperationType, 'NORMAL'>;
+
+function ReplacementOptions({
+  selectedClient,
+  selectedType,
+  selectedCount,
+  onApply,
+}: {
+  selectedClient: Client | null;
+  selectedType: ReplacementType | null;
+  selectedCount: number;
+  onApply: (type: ReplacementType, loanIds: string[], total: number) => void;
+}) {
+  const [openType, setOpenType] = useState<ReplacementType | null>(null);
+  const [loans, setLoans] = useState<LoanSummary[]>([]);
+  const [quotes, setQuotes] = useState<Record<string, LoanPayoffQuote>>({});
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!openType || !selectedClient) return;
+    let active = true;
+    const payoffDate = new Date().toLocaleDateString('en-CA', {
+      timeZone: 'America/Santo_Domingo',
+    });
+    getClient(selectedClient.id)
+      .then(async (client) => {
+        const activeLoans = client.loans.filter((loan) =>
+          ['ACTIVE', 'OVERDUE'].includes(loan.status),
+        );
+        const loanQuotes = await Promise.all(
+          activeLoans.map(
+            async (loan) => [loan.id, await getPayoffQuote(loan.id, payoffDate)] as const,
+          ),
+        );
+        if (!active) return;
+        setLoans(activeLoans);
+        setQuotes(Object.fromEntries(loanQuotes));
+      })
+      .catch(() => {
+        if (active) setError('No se pudieron cargar los préstamos activos.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [openType, selectedClient]);
+
+  function close() {
+    setOpenType(null);
+    setSelectedIds([]);
+  }
+
+  function open(type: ReplacementType) {
+    setLoans([]);
+    setQuotes({});
+    setSelectedIds([]);
+    setError('');
+    setLoading(true);
+    setOpenType(type);
+  }
+
+  const selectedTotal = selectedIds.reduce((total, id) => total + (quotes[id]?.totalToPay ?? 0), 0);
+
+  const options = [
+    {
+      type: 'REENGAGEMENT' as const,
+      label: 'Realizar reenganche',
+      icon: RotateCcw,
+      tone: 'bg-[#E7F4EC] text-[#2F7654]',
+    },
+    {
+      type: 'REFINANCE' as const,
+      label: 'Refinanciar préstamo',
+      icon: RefreshCw,
+      tone: 'bg-[#EEF3EF] text-[#5C6D63]',
+    },
+  ];
+
+  return (
+    <>
+      <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        {options.map((option) => {
+          const Icon = option.icon;
+          const active = selectedType === option.type || openType === option.type;
+          return (
+            <button
+              key={option.type}
+              className={`flex min-h-16 items-center gap-3 rounded-[14px] border bg-white px-4 text-left transition hover:-translate-y-0.5 hover:border-[#BFD8CA] ${LOAN_CARD_SHADOW} ${active ? 'border-[#8FBEA4] ring-2 ring-[#E7F4EC]' : 'border-[#DDEBE3]'}`}
+              disabled={!selectedClient}
+              onClick={() => (openType === option.type ? close() : open(option.type))}
+              type="button"
+            >
+              <span
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${option.tone}`}
+              >
+                <Icon className="h-5 w-5" />
+              </span>
+              <span className="flex-1 text-sm font-bold text-[#173D2C]">
+                {option.label}
+                {active && (
+                  <span className="mt-0.5 block text-xs font-medium text-[#5C6D63]">
+                    {selectedCount} préstamo(s)
+                  </span>
+                )}
+              </span>
+              <ChevronRight
+                className={`h-4 w-4 text-[#7A8C81] transition ${openType === option.type ? 'rotate-90' : ''}`}
+              />
+            </button>
+          );
+        })}
+      </section>
+
+      {openType && selectedClient && (
+        <section
+          aria-live="polite"
+          className={`overflow-hidden rounded-[14px] bg-white ${LOAN_CARD_SHADOW}`}
+        >
+          <header className="flex items-center gap-3 border-b border-[#DDEBE3] bg-[#F8FBF9] px-5 py-4">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E7F4EC] text-[#2F7654]">
+              {openType === 'REENGAGEMENT' ? (
+                <RotateCcw className="h-5 w-5" />
+              ) : (
+                <RefreshCw className="h-5 w-5" />
+              )}
+            </span>
+            <h2 className="flex-1 text-base font-bold text-[#173D2C]">
+              Seleccionar préstamo(s) para{' '}
+              {openType === 'REENGAGEMENT' ? 'reenganche' : 'refinanciamiento'}
+            </h2>
+            <button
+              className="text-xs font-bold text-[#5C6D63] transition hover:text-[#2F7654]"
+              onClick={close}
+              type="button"
+            >
+              Cerrar
+            </button>
+          </header>
+
+          <div className="space-y-4 p-5">
+            {loading ? (
+              <p className="py-10 text-center text-sm font-medium text-[#5C6D63]">
+                Cargando préstamos activos...
+              </p>
+            ) : error ? (
+              <p className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-700">{error}</p>
+            ) : loans.length === 0 ? (
+              <p className="rounded-xl bg-[#F5F7FA] p-5 text-center text-sm font-medium text-[#5C6D63]">
+                Este cliente no tiene préstamos activos.
+              </p>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 rounded-xl bg-[#F0F7F3] p-4 text-sm font-bold text-[#365C48]">
+                  <Banknote className="h-5 w-5 text-[#2F7654]" />
+                  Este cliente cuenta con {loans.length} préstamo(s) activo(s)
+                </div>
+                {loans.map((loan) => {
+                  const quote = quotes[loan.id];
+                  const checked = selectedIds.includes(loan.id);
+                  const remainingInstallments = loan.schedule
+                    ? countRemainingInstallments(loan.schedule)
+                    : loan.term;
+                  return (
+                    <label
+                      key={loan.id}
+                      className={`grid cursor-pointer grid-cols-[auto_repeat(5,minmax(0,1fr))] items-center gap-4 rounded-xl border p-4 transition ${checked ? 'border-[#8FBEA4] bg-[#F8FBF9] ring-2 ring-[#E7F4EC]' : 'border-[#DDEBE3] hover:bg-[#F8FBF9]'}`}
+                    >
+                      <input
+                        checked={checked}
+                        className="h-5 w-5 accent-[#2F7654]"
+                        onChange={() =>
+                          setSelectedIds((ids) =>
+                            checked ? ids.filter((id) => id !== loan.id) : [...ids, loan.id],
+                          )
+                        }
+                        type="checkbox"
+                      />
+                      <span>
+                        <small className="block font-bold uppercase text-[#7A8C81]">Préstamo</small>
+                        <strong className="text-[#173D2C]">#{loan.loanNumber}</strong>
+                      </span>
+                      <span>
+                        <small className="block font-bold uppercase text-[#7A8C81]">Inicio</small>
+                        <strong className="text-[#173D2C]">
+                          {new Date(loan.startDate).toLocaleDateString('es-DO')}
+                        </strong>
+                      </span>
+                      <span>
+                        <small className="block font-bold uppercase text-[#7A8C81]">
+                          Total a saldar
+                        </small>
+                        <strong className="text-[#173D2C]">
+                          {quote ? formatCurrency(quote.totalToPay) : '...'}
+                        </strong>
+                      </span>
+                      <span>
+                        <small className="block font-bold uppercase text-[#7A8C81]">
+                          Capital restante
+                        </small>
+                        <strong className="text-[#173D2C]">
+                          {quote ? formatCurrency(quote.capitalOutstanding) : '...'}
+                        </strong>
+                      </span>
+                      <span>
+                        <small className="block font-bold uppercase text-[#7A8C81]">
+                          {loan.interestType === 'INDEFINITE' ? 'Modalidad' : 'Cuotas restantes'}
+                        </small>
+                        <strong className="text-[#173D2C]">
+                            {loan.interestType === 'INDEFINITE'
+                              ? 'Indefinido'
+                              : `${remainingInstallments}/${loan.term}`}
+                        </strong>
+                      </span>
+                    </label>
+                  );
+                })}
+              </>
+            )}
+          </div>
+
+          <footer className="flex items-center justify-between gap-4 border-t border-[#DDEBE3] bg-[#F8FBF9] px-5 py-4">
+            <p className="text-sm font-bold text-[#173D2C]">
+              Total a saldar: {formatCurrency(selectedTotal)}
+            </p>
+            <button
+              className="h-11 rounded-full bg-[#2F7654] px-5 text-sm font-bold text-white transition hover:bg-[#285C43] disabled:opacity-40"
+              disabled={selectedIds.length === 0}
+              onClick={() => {
+                onApply(openType, selectedIds, selectedTotal);
+                close();
+              }}
+              type="button"
+            >
+              Aplicar {openType === 'REENGAGEMENT' ? 'reenganche' : 'refinanciamiento'}
+            </button>
+          </footer>
+        </section>
+      )}
+    </>
+  );
+}
+
 function LoanSummaryPanel({
   amount,
   interest,
@@ -344,6 +595,7 @@ function toApiPaymentFrequency(frequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY') 
 function MainInfoCard({
   amount,
   onAmountChange,
+  amountReadOnly,
   customInterestRate,
   onCustomInterestRateChange,
   term,
@@ -362,6 +614,7 @@ function MainInfoCard({
 }: {
   amount: string;
   onAmountChange: (v: string) => void;
+  amountReadOnly?: boolean;
   customInterestRate: string;
   onCustomInterestRateChange: (v: string) => void;
   term: string;
@@ -397,6 +650,7 @@ function MainInfoCard({
               onChange={(v) => onAmountChange(v.replace(/,/g, ''))}
               prefix="RD$"
               error={errors?.amount}
+              readOnly={amountReadOnly}
             />
             <TextInput
               label="Porcentaje de interés"
@@ -495,6 +749,10 @@ function NewLoanStepTwo({
   onSelectPortfolio,
   saving,
   onSave,
+  operationType,
+  sourceLoanIds,
+  settlementTotal,
+  onApplyReplacement,
 }: {
   amount: string;
   term: string;
@@ -518,6 +776,10 @@ function NewLoanStepTwo({
   onSelectPortfolio: (id: string | null) => void;
   saving: boolean;
   onSave: () => void;
+  operationType: ReplacementType | null;
+  sourceLoanIds: string[];
+  settlementTotal: number;
+  onApplyReplacement: (type: ReplacementType, loanIds: string[], total: number) => void;
 }) {
   const rate = customInterestRate || '0';
   const rawRate = parseStrictNumber(rate) ?? 0;
@@ -531,6 +793,9 @@ function NewLoanStepTwo({
     const newErrors: Record<string, string> = {};
     const parsedAmount = parseStrictNumber(amount);
     if (!parsedAmount || parsedAmount <= 0) newErrors.amount = 'Ingresa un monto válido';
+    if (operationType === 'REENGAGEMENT' && (parsedAmount ?? 0) <= settlementTotal) {
+      newErrors.amount = 'El monto debe superar las deudas a saldar';
+    }
 
     const parsedRate = parseStrictNumber(customInterestRate);
     const parsedCustomPayment = parseStrictNumber(customPayment);
@@ -622,23 +887,54 @@ function NewLoanStepTwo({
     [summary.principal, effectiveRate, summary.months, amortizationType, customPayment],
   );
   const summaryTotals = getLoanSummaryTotals(summary.principal, scheduleData.totalInterest);
-  const calculationReady = canCalculateLoan({
-    amount,
-    interestRate: customInterestRate,
-    term,
-    termUnit,
-    amortizationType,
-    paymentFrequency,
-    firstPaymentDate,
-    customPayment,
-  });
+  const calculationReady =
+    canCalculateLoan({
+      amount,
+      interestRate: customInterestRate,
+      term,
+      termUnit,
+      amortizationType,
+      paymentFrequency,
+      firstPaymentDate,
+      customPayment,
+    }) &&
+    (operationType !== 'REENGAGEMENT' || parseNumber(amount) > settlementTotal);
 
   return (
     <div className="mt-8 space-y-5">
       <ClientSearchCard selectedClient={selectedClient} onSelectClient={onSelectClient} />
+      <ReplacementOptions
+        onApply={onApplyReplacement}
+        selectedClient={selectedClient}
+        selectedCount={sourceLoanIds.length}
+        selectedType={operationType}
+      />
+      {operationType && (
+        <div className="grid grid-cols-1 gap-3 rounded-xl border border-[#DDEBE3] bg-white p-4 text-sm md:grid-cols-3">
+          <p>
+            <span className="block text-xs font-bold uppercase text-[#738096]">Operación</span>
+            <strong>{operationType === 'REENGAGEMENT' ? 'Reenganche' : 'Refinanciamiento'}</strong>
+          </p>
+          <p>
+            <span className="block text-xs font-bold uppercase text-[#738096]">
+              Deudas a saldar
+            </span>
+            <strong>{formatCurrency(settlementTotal)}</strong>
+          </p>
+          <p>
+            <span className="block text-xs font-bold uppercase text-[#738096]">
+              Efectivo a entregar
+            </span>
+            <strong className="text-[#2F7654]">
+              {formatCurrency(Math.max(0, parseNumber(amount) - settlementTotal))}
+            </strong>
+          </p>
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
         <MainInfoCard
           amount={amount}
+          amountReadOnly={operationType === 'REFINANCE'}
           onAmountChange={onAmountChange}
           customInterestRate={customInterestRate}
           onCustomInterestRateChange={onCustomInterestRateChange}
@@ -872,7 +1168,11 @@ export function NewLoanPage() {
   const [firstPaymentDate, setFirstPaymentDate] = useState(getDefaultFirstPaymentDate);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [operationType, setOperationType] = useState<ReplacementType | null>(null);
+  const [sourceLoanIds, setSourceLoanIds] = useState<string[]>([]);
+  const [settlementTotal, setSettlementTotal] = useState(0);
 
   useEffect(() => {
     getLoanProducts()
@@ -901,6 +1201,22 @@ export function NewLoanPage() {
     }
   }
 
+  function handleSelectClient(client: Client) {
+    setSelectedClient(client);
+    if (operationType) setAmount('');
+    setOperationType(null);
+    setSourceLoanIds([]);
+    setSettlementTotal(0);
+  }
+
+  function handleApplyReplacement(type: ReplacementType, loanIds: string[], total: number) {
+    setOperationType(type);
+    setSourceLoanIds(loanIds);
+    setSettlementTotal(total);
+    if (type === 'REFINANCE') setAmount(String(total));
+    else if (parseNumber(amount) <= total) setAmount('');
+  }
+
   const termUnit = getTermUnitForFrequency(paymentFrequency);
 
   const calculationReady = canCalculateLoan({
@@ -920,6 +1236,7 @@ export function NewLoanPage() {
     const interestRate = parseStrictNumber(customInterestRate);
     const payment = parseStrictNumber(customPayment);
     setSaving(true);
+    setSaveError('');
     try {
       const totalTerm = amortizationType === 'INDEFINITE' ? 1 : normalizeLoanTerm(term, termUnit);
       await createLoan({
@@ -939,6 +1256,8 @@ export function NewLoanPage() {
         paymentFrequency: toApiPaymentFrequency(paymentFrequency),
         customPayment: payment && payment > 0 ? payment : undefined,
         notes: purpose || undefined,
+        operationType: operationType ?? undefined,
+        sourceLoanIds: sourceLoanIds.length ? sourceLoanIds : undefined,
       });
       invalidateCachePrefix('loans:');
       invalidateCachePrefix('clients:');
@@ -947,7 +1266,9 @@ export function NewLoanPage() {
       invalidateCache('monthlyCollections');
       invalidateCache('weeklyMovement');
       invalidateCache('upcomingPayments');
-      router.push(`/clientes/${selectedClient.id}`);
+      router.push(`/clientes/${selectedClient.id}?_=${Date.now()}`);
+    } catch {
+      setSaveError('No se pudo guardar la operación. Actualiza los saldos e inténtalo de nuevo.');
     } finally {
       setSaving(false);
     }
@@ -980,11 +1301,17 @@ export function NewLoanPage() {
           </p>
         )}
 
+        {saveError && (
+          <p className="mt-6 rounded-[14px] border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            {saveError}
+          </p>
+        )}
+
         {!loadingProducts && (
           <NewLoanStepTwo
             amount={amount}
             onAmountChange={setAmount}
-            onSelectClient={setSelectedClient}
+            onSelectClient={handleSelectClient}
             onTermChange={setTerm}
             selectedClient={selectedClient}
             term={term}
@@ -1004,6 +1331,10 @@ export function NewLoanPage() {
             onSelectPortfolio={setSelectedPortfolioId}
             saving={saving}
             onSave={handleCreate}
+            operationType={operationType}
+            sourceLoanIds={sourceLoanIds}
+            settlementTotal={settlementTotal}
+            onApplyReplacement={handleApplyReplacement}
           />
         )}
       </div>
