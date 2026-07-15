@@ -1,0 +1,37 @@
+name: Cloudflare Smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 */6 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Authenticated smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SMOKE_USERNAME: ${{ secrets.SMOKE_USERNAME }}
+      SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Verify Cloudflare deployment
+        run: >-
+          node scripts/smoke-cloudflare.mjs
+          --api-url https://inversiones-willians-marte-api-staging.natanaelpena1202.workers.dev/api/v1
+          --web-url https://inversiones-willians-marte-web-staging.natanaelpena1202.workers.dev
