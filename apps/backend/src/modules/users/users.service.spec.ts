@@ -17,6 +17,9 @@ jest.mock('@inversiones/database', () => ({
     auditLog: {
       create: jest.fn(),
     },
+    authSession: {
+      updateMany: jest.fn(),
+    },
   },
 }));
 
@@ -106,6 +109,11 @@ describe('UsersService', () => {
     } as any);
 
     await service.toggleActive('user-2', 'admin-1');
+
+    expect(prisma.authSession.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'user-2', revokedAt: null },
+      data: { revokedAt: expect.any(Date) },
+    });
 
     expect(prisma.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({

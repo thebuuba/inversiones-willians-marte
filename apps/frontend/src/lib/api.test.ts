@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { AxiosError, type AxiosAdapter } from 'axios';
-import { api } from './api.ts';
+import { api, sessionApi } from './api.ts';
 import { readClientCache, writeClientCache } from './client-cache.ts';
 
 function installBrowserGlobals(storage = new Map<string, string>(), session = new Map<string, string>()) {
@@ -118,8 +118,89 @@ test('clears client cache when a saved session is rejected', async () => {
     );
   };
 
-  await assert.rejects(api.get('/reports/dashboard', { adapter }));
+  const originalSessionAdapter = sessionApi.defaults.adapter;
+  sessionApi.defaults.adapter = async (config) => {
+    throw new AxiosError(
+      'Unauthorized',
+      AxiosError.ERR_BAD_REQUEST,
+      config,
+      {},
+      {
+        config,
+        data: { message: 'Session expired' },
+        headers: {},
+        status: 401,
+        statusText: 'Unauthorized',
+      },
+    );
+  };
+
+  try {
+    await assert.rejects(api.get('/reports/dashboard', { adapter }));
+  } finally {
+    sessionApi.defaults.adapter = originalSessionAdapter;
+  }
 
   assert.equal(storage.has('auth'), false);
   assert.equal(readClientCache('dashboard'), null);
+});
+
+test('refreshes an expired access token once and retries the original request', async () => {
+  const { location, storage } = installBrowserGlobals(
+    new Map([
+      [
+        'auth',
+        JSON.stringify({
+          token: 'expired-access-token',
+          user: { id: 'user-1', name: 'Nata', email: 'nata@example.com', role: 'ADMIN' },
+        }),
+      ],
+    ]),
+  );
+  const authorizations: unknown[] = [];
+  let attempts = 0;
+  const adapter: AxiosAdapter = async (config) => {
+    attempts += 1;
+    authorizations.push(config.headers?.Authorization);
+    if (attempts === 1) {
+      throw new AxiosError(
+        'Unauthorized',
+        AxiosError.ERR_BAD_REQUEST,
+        config,
+        {},
+        {
+          config,
+          data: { message: 'Unauthorized' },
+          headers: {},
+          status: 401,
+          statusText: 'Unauthorized',
+        },
+      );
+    }
+    return { config, data: { ok: true }, headers: {}, status: 200, statusText: 'OK' };
+  };
+  const originalSessionAdapter = sessionApi.defaults.adapter;
+  sessionApi.defaults.adapter = async (config) => ({
+    config,
+    data: {
+      success: true,
+      data: {
+        accessToken: 'fresh-access-token',
+        user: { id: 'user-1', name: 'Nata', email: 'nata@example.com', role: 'ADMIN' },
+      },
+    },
+    headers: {},
+    status: 200,
+    statusText: 'OK',
+  });
+
+  try {
+    await api.get('/reports/dashboard', { adapter });
+  } finally {
+    sessionApi.defaults.adapter = originalSessionAdapter;
+  }
+
+  assert.deepEqual(authorizations, ['Bearer expired-access-token', 'Bearer fresh-access-token']);
+  assert.equal(JSON.parse(storage.get('auth') ?? '{}').token, 'fresh-access-token');
+  assert.equal(location.href, '');
 });

@@ -99,6 +99,13 @@ export class UsersService {
       select: { id: true, name: true, username: true, email: true, role: true, active: true },
     });
 
+    if (!updated.active) {
+      await prisma.authSession.updateMany({
+        where: { userId: id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    }
+
     if (actorUserId) {
       await prisma.auditLog.create({
         data: {

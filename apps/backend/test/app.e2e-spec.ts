@@ -85,7 +85,16 @@ describe('App (e2e)', () => {
       .post('/api/v1/auth/login')
       .send({ username: runId, password })
       .expect(201);
-    const token = login.body.data.accessToken as string;
+    const initialRefreshToken = login.body.data.refreshToken as string;
+    expect(initialRefreshToken).toEqual(expect.any(String));
+
+    const refreshed = await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .send({ refreshToken: initialRefreshToken })
+      .expect(200);
+    const token = refreshed.body.data.accessToken as string;
+    const rotatedRefreshToken = refreshed.body.data.refreshToken as string;
+    expect(rotatedRefreshToken).not.toBe(initialRefreshToken);
 
     const photoCaptureSession = await request(app.getHttpServer())
       .post('/api/v1/clients/photo-capture-sessions')
@@ -215,6 +224,16 @@ describe('App (e2e)', () => {
 
     expect(dashboard.body.data.totalClients).toBeGreaterThanOrEqual(1);
     expect(dashboard.body.data.collectionsToday).toBeGreaterThanOrEqual(1000);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/logout')
+      .send({ refreshToken: rotatedRefreshToken })
+      .expect(204);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .send({ refreshToken: rotatedRefreshToken })
+      .expect(401);
   });
 
   afterAll(async () => {

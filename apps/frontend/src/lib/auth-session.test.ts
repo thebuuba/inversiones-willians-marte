@@ -55,6 +55,30 @@ test('validates stored auth with the backend profile before accepting it', async
   assert.equal(auth.user?.id, 'fresh');
 });
 
+test('keeps a newly rotated access token after profile validation', async () => {
+  installStorage(
+    new Map([
+      [
+        AUTH_STORAGE_KEY,
+        JSON.stringify({
+          token: 'expired-token',
+          user: { id: 'user-1', name: 'Nata', email: 'nata@example.com', role: 'ADMIN' },
+        }),
+      ],
+    ]),
+  );
+
+  const auth = await loadStoredAuthSession(async () => {
+    saveStoredAuth({
+      token: 'rotated-token',
+      user: { id: 'user-1', name: 'Nata', email: 'nata@example.com', role: 'ADMIN' },
+    });
+    return { id: 'user-1', name: 'Nata', email: 'nata@example.com', role: 'ADMIN' };
+  });
+
+  assert.equal(auth.token, 'rotated-token');
+});
+
 test('clears stored auth and client cache when backend rejects the saved token', async () => {
   const { storage } = installStorage(new Map([['auth', JSON.stringify({ token: 'expired-token', user: null })]]));
   writeClientCache('dashboard', { activeLoans: 2 }, 30_000);
