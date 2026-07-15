@@ -8,10 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --test $(find src -name '*.test.ts' -type f)",
-    "worker:build": "NEXT_PUBLIC_API_URL=https://inversiones-willians-marte-api-staging.natanaelpena1202.workers.dev/api/v1 opennextjs-cloudflare build",
-    "worker:preview": "NEXT_PUBLIC_API_URL=https://inversiones-willians-marte-api-staging.natanaelpena1202.workers.dev/api/v1 opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "worker:deploy:staging": "NEXT_PUBLIC_API_URL=https://inversiones-willians-marte-api-staging.natanaelpena1202.workers.dev/api/v1 opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "worker:upload:staging": "NEXT_PUBLIC_API_URL=https://inversiones-willians-marte-api-staging.natanaelpena1202.workers.dev/api/v1 opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "worker:build": "pnpm --filter @inversiones/shared build && NEXT_PUBLIC_API_URL=https://inversiones-willians-marte-api-staging.natanaelpena1202.workers.dev/api/v1 opennextjs-cloudflare build",
+    "worker:preview": "pnpm worker:build && opennextjs-cloudflare preview",
+    "worker:deploy:staging": "pnpm worker:build && opennextjs-cloudflare deploy",
+    "worker:upload:staging": "pnpm worker:build && opennextjs-cloudflare upload",
     "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {

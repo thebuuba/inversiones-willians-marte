@@ -153,7 +153,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] font-sans">
-      <div className="mx-auto max-w-7xl px-6 py-8">
+      <div className="w-full px-4 py-8 sm:px-6 lg:px-8">
         <Link
           className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#2f7654] hover:text-[#2f7654]"
           href="/inversionistas"
