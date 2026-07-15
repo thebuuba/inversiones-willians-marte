@@ -8,6 +8,12 @@
     "INTERNAL_API_URL": "https://inversiones-willians-marte-api-staging.natanaelpena1202.workers.dev/api/v1",
     "MOBILE_BASE_URL": "https://inversiones-willians-marte-web-staging.natanaelpena1202.workers.dev",
   },
+  "services": [
+    {
+      "binding": "BACKEND_API",
+      "service": "inversiones-willians-marte-api-staging",
+    },
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS",

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import {
-  getBackendApiUrl,
+  fetchBackend,
   parseBackendJson,
   setRefreshCookie,
   unavailableResponse,
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   let response: Response;
   try {
-    response = await fetch(`${getBackendApiUrl()}/auth/login`, {
+    response = await fetchBackend('/auth/login', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: await request.text(),
