@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export const REFRESH_COOKIE_NAME = 'wm_refresh_token';
 export const REFRESH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
@@ -9,6 +10,27 @@ export function getBackendApiUrl() {
     process.env.INTERNAL_API_URL ??
     'http://localhost:3000/api/v1'
   ).replace(/\/$/, '');
+}
+
+type BackendService = {
+  fetch(request: Request): Promise<Response>;
+};
+
+export async function fetchBackend(path: string, init: RequestInit) {
+  const request = new Request(`${getBackendApiUrl()}${path}`, init);
+  let backend: BackendService | undefined;
+
+  try {
+    backend = (
+      getCloudflareContext().env as CloudflareEnv & {
+        BACKEND_API?: BackendService;
+      }
+    ).BACKEND_API;
+  } catch {
+    // `next dev` and unit tests can run without a Cloudflare runtime context.
+  }
+
+  return backend ? backend.fetch(request) : fetch(request);
 }
 
 export function setRefreshCookie(response: NextResponse, refreshToken: string) {

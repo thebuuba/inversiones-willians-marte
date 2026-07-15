@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   clearRefreshCookie,
-  getBackendApiUrl,
+  fetchBackend,
   REFRESH_COOKIE_NAME,
 } from '@/lib/server/auth-session-proxy';
 
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
   if (refreshToken) {
     try {
-      await fetch(`${getBackendApiUrl()}/auth/logout`, {
+      await fetchBackend('/auth/logout', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ refreshToken }),

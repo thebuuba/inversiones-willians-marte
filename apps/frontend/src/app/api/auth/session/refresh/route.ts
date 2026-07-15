@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   clearRefreshCookie,
-  getBackendApiUrl,
+  fetchBackend,
   parseBackendJson,
   REFRESH_COOKIE_NAME,
   setRefreshCookie,
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
   let response: Response;
   try {
-    response = await fetch(`${getBackendApiUrl()}/auth/refresh`, {
+    response = await fetchBackend('/auth/refresh', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
