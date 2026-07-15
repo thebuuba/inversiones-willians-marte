@@ -1,4 +1,15 @@
-import { Controller, Post, Get, Param, Query, UseGuards, Body, Delete, HttpCode, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+  Body,
+  Delete,
+  HttpCode,
+  Patch,
+} from '@nestjs/common';
 import { LoansService } from './loans.service';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { AddLoanCapitalDto } from './dto/add-loan-capital.dto';

@@ -422,7 +422,11 @@ export class LoansService {
     });
   }
 
-  async update(id: string, dto: { notes?: string; status?: string; portfolioId?: string | null; interestRate?: number }, userId?: string) {
+  async update(
+    id: string,
+    dto: { notes?: string; status?: string; portfolioId?: string | null; interestRate?: number },
+    userId?: string,
+  ) {
     const loan = await prisma.loan.findUnique({ where: { id } });
     if (!loan) throw new NotFoundException('Loan not found');
 
@@ -442,7 +446,12 @@ export class LoansService {
           entityType: 'Loan',
           entityId: id,
           clientId: loan.clientId,
-          oldValues: { notes: loan.notes, status: loan.status, portfolioId: loan.portfolioId, interestRate: Number(loan.interestRate) },
+          oldValues: {
+            notes: loan.notes,
+            status: loan.status,
+            portfolioId: loan.portfolioId,
+            interestRate: Number(loan.interestRate),
+          },
           newValues: { ...dto },
         },
       });

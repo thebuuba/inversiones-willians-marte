@@ -1,5 +1,4 @@
 {
-  "exclude": ["node_modules", "dist", "test", "**/*.spec.ts", "**/*.test.ts"],
   "compilerOptions": {
     "module": "nodenext",
     "moduleResolution": "nodenext",
