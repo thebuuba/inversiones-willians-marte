@@ -4,7 +4,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import QRCode from 'qrcode';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getClient, updateClient } from '@/lib/api/clients';
+import { useRouter } from 'next/navigation';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { getClient, updateClient, deleteClient } from '@/lib/api/clients';
 import {
   getDocuments,
   createDocument,
@@ -23,9 +25,9 @@ import { buildMobileCaptureUrl } from '@/lib/mobile-capture-url';
 import {
   getClientLoanStats,
   getLoanCollectionStatus,
-  getLoanProgress,
-  getRegularInstallment,
+  getNextInstallmentAmount,
 } from '@/components/loans/loan-detail.helpers';
+import { deleteLoan } from '@/lib/api/loans';
 import {
   countClientNotes,
   formatClientNotesPreview,
@@ -37,7 +39,7 @@ import {
   ArrowLeft,
   Banknote,
   BriefcaseBusiness,
-  CalendarDays,
+  ChevronDown,
   CreditCard,
   Download,
   FileText,
@@ -47,6 +49,7 @@ import {
   Mail,
   NotebookPen,
   Pencil,
+  ScrollText,
   StickyNote,
   TrendingUp,
   Trash2,
@@ -57,17 +60,19 @@ import {
   CircleCheck,
   CircleAlert,
   Loader2,
+  MoreHorizontal,
   QrCode,
   Eye,
 } from 'lucide-react';
 
-type ClientTab = 'Información' | 'Préstamos' | 'Documentos' | 'Historial' | 'Notas';
+type ClientTab = 'Información' | 'Préstamos' | 'Documentos' | 'Historial' | 'Estado de Cuenta' | 'Notas';
 
 const tabs: { label: ClientTab; icon: typeof UserRound }[] = [
   { label: 'Información', icon: UserRound },
   { label: 'Préstamos', icon: TrendingUp },
   { label: 'Documentos', icon: FileText },
   { label: 'Historial', icon: History },
+  { label: 'Estado de Cuenta', icon: ScrollText },
   { label: 'Notas', icon: StickyNote },
 ];
 
@@ -147,46 +152,9 @@ function LoanStatusBadge({ status }: { status: string }) {
   );
 }
 
-function ProgressBar({ value, compact = false }: { value: number; compact?: boolean }) {
-  return (
-    <div>
-      <div
-        className={`flex items-center justify-between font-semibold ${compact ? 'mb-1.5 text-xs' : 'mb-2 text-sm'}`}
-      >
-        <span className="text-neutral-500">{compact ? 'Progreso' : 'Progreso de pago'}</span>
-        <span className="text-neutral-900">{value}%</span>
-      </div>
-      <div className={`${compact ? 'h-1.5' : 'h-2.5'} overflow-hidden rounded-full bg-[#F3F4F6]`}>
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-[#2f7654] to-[#2f7654]"
-          style={{ width: `${value}%` }}
-        />
-      </div>
-    </div>
-  );
-}
+const loanTableColumns = 'grid-cols-[70px_170px_150px_150px_minmax(220px,1.4fr)_140px_170px_100px_50px]';
 
-function LoanMetric({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
-  return (
-    <div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-400">{label}</p>
-      <p className={`mt-1 text-sm font-bold ${accent ? 'text-[#9f3f25]' : 'text-neutral-900'}`}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function LoanRow({ loan }: { loan: LoanSummary }) {
-  const progress = getLoanProgress(loan.totalAmount, loan.balance);
+function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clientName: string; onDelete: (loanId: string) => void }) {
   const statusLabel = getLoanCollectionStatus(loan);
   const frequency =
     loan.paymentFreq === 'MONTHLY'
@@ -194,63 +162,139 @@ function LoanRow({ loan }: { loan: LoanSummary }) {
       : loan.paymentFreq === 'DAILY'
         ? 'Diario'
         : loan.paymentFreq;
+  const paidInstallments = loan.schedule?.filter((row) => row.status === 'PAID').length ?? 0;
+  const nextDueDate = loan.schedule?.find((row) => row.status !== 'PAID')?.dueDate;
+  const nextInstallmentAmount = getNextInstallmentAmount(
+    loan.schedule ?? [],
+    loan.totalAmount,
+    loan.term,
+  );
+  const [deletingLoan, setDeletingLoan] = useState(false);
+
+  const handleDelete = async () => {
+    if (!window.confirm(`¿Eliminar préstamo #${loan.loanNumber}? Esta acción no se puede deshacer.`)) return;
+    setDeletingLoan(true);
+    try {
+      await deleteLoan(loan.id);
+      onDelete(loan.id);
+    } catch {
+      setDeletingLoan(false);
+      alert('Error al eliminar el préstamo.');
+    }
+  };
 
   return (
-    <Link
-      className="block border-b border-neutral-100 px-4 py-4 transition last:border-b-0 hover:bg-[#f8fbf9] sm:px-5"
-      href={`/prestamos/${loan.id}`}
-    >
-      <div className="grid gap-4 lg:grid-cols-[1.55fr_.75fr_1fr_.72fr_.58fr] lg:items-center">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf5ed] text-[#2f7654]">
-            <TrendingUp className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="truncate text-sm font-bold leading-tight text-neutral-900">
-              Préstamo #{loan.loanNumber}
-            </h3>
-            {loan.portfolio?.name ? (
-              <p className="mt-1 truncate text-xs font-bold text-[#2f7654]">
-                {loan.portfolio.name}
-              </p>
-            ) : null}
-            <p className="mt-1 text-xs font-medium text-neutral-500">
-              {loan.term} cuotas · {frequency}
-            </p>
-            <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-neutral-400">
-              <CalendarDays className="h-3.5 w-3.5" />
-              Inicio: {fmtDate(loan.startDate)}
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4 lg:contents">
-          <LoanMetric label="Capital" value={fmt(loan.principal)} />
-          <div>
-            <LoanMetric accent label="Saldo pendiente" value={fmt(loan.balance)} />
-            <div className="mt-2">
-              <ProgressBar compact value={progress} />
-            </div>
-          </div>
-          <LoanMetric
-            label="Cuota"
-            value={fmt(getRegularInstallment(loan.totalAmount, loan.term))}
-          />
-          <div className="flex items-start justify-end lg:items-center">
-            <LoanStatusBadge status={statusLabel} />
-          </div>
-        </div>
-      </div>
-    </Link>
+    <div className={`grid min-w-[1220px] ${loanTableColumns} items-center border-t border-neutral-100 px-5 py-4 text-sm text-neutral-700 transition hover:bg-[#f8fbf9]`}>
+      <span className="font-semibold text-neutral-900">{loan.loanNumber}</span>
+      <span className="font-semibold tabular-nums text-neutral-900">
+        {fmt(nextInstallmentAmount)}
+      </span>
+      <span className="tabular-nums">{fmtDate(nextDueDate ?? loan.endDate ?? loan.startDate)}</span>
+      <span>
+        <LoanStatusBadge status={statusLabel} />
+      </span>
+      <span className="truncate font-medium text-neutral-900">{clientName}</span>
+      <span>{frequency}</span>
+      <span className="font-semibold tabular-nums text-neutral-900">{fmt(loan.principal)}</span>
+      <span className="font-semibold tabular-nums text-neutral-900">
+        {paidInstallments}/{loan.term}
+      </span>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <button
+            type="button"
+            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            align="end"
+            sideOffset={4}
+            className="z-50 min-w-44 overflow-hidden rounded-2xl border border-neutral-100 bg-white p-1.5 shadow-lg"
+          >
+            <DropdownMenu.Item asChild>
+              <Link
+                href={`/prestamos/${loan.id}`}
+                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-neutral-700 outline-none hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+              >
+                <Eye className="h-4 w-4" />
+                Detalle
+              </Link>
+            </DropdownMenu.Item>
+            <DropdownMenu.Item asChild>
+              <Link
+                href={`/prestamos/cobrar?loanId=${loan.id}`}
+                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-neutral-700 outline-none hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+              >
+                <CreditCard className="h-4 w-4" />
+                Cobrar
+              </Link>
+            </DropdownMenu.Item>
+            <DropdownMenu.Item asChild>
+              <Link
+                href={`/prestamos/${loan.id}/editar`}
+                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-neutral-700 outline-none hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+              >
+                <Pencil className="h-4 w-4" />
+                Editar préstamo
+              </Link>
+            </DropdownMenu.Item>
+            <DropdownMenu.Separator className="mx-2 my-1 border-t border-neutral-100" />
+            <DropdownMenu.Item
+              disabled={deletingLoan}
+              className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-red-600 outline-none hover:bg-red-50"
+              onSelect={handleDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+              {deletingLoan ? 'Eliminando...' : 'Eliminar'}
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+    </div>
   );
 }
 
-function ClientLoansTab({ loans }: { loans: LoanSummary[] }) {
+function ClientLoansTab({ loans, clientName, onDeleteLoan }: { loans: LoanSummary[]; clientName: string; onDeleteLoan: (loanId: string) => void }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
+        <div>
+          <h3 className="text-sm font-bold text-neutral-900">Préstamos del cliente</h3>
+          <p className="mt-0.5 text-xs text-neutral-400">
+            Selecciona una fila para consultar el préstamo
+          </p>
+        </div>
+        <span className="rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-bold text-[#2f7654]">
+          {loans.length} {loans.length === 1 ? 'préstamo' : 'préstamos'}
+        </span>
+      </div>
+
       {loans.length === 0 ? (
-        <p className="py-12 text-center text-sm text-neutral-400">Sin préstamos registrados.</p>
+        <div className="flex min-h-40 items-center justify-center">
+          <p className="text-sm text-neutral-400">Sin préstamos registrados.</p>
+        </div>
       ) : (
-        loans.map((loan) => <LoanRow key={loan.id} loan={loan} />)
+        <div className="overflow-x-auto">
+          <div
+            className={`grid min-w-[1220px] ${loanTableColumns} bg-[#fafafa] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-neutral-500`}
+          >
+            <span>#</span>
+            <span>Cuota</span>
+            <span>Fecha</span>
+            <span>Estado</span>
+            <span>Cliente</span>
+            <span>Frecuencia</span>
+            <span>Capital</span>
+            <span>Cuotas</span>
+            <span />
+          </div>
+          {loans.map((loan) => (
+            <LoanTableRow key={loan.id} clientName={clientName} loan={loan} onDelete={onDeleteLoan} />
+          ))}
+        </div>
       )}
     </div>
   );
@@ -1026,6 +1070,93 @@ function NewNoteCard({
   return <EditableNoteCard onCancel={onCancel} onChange={onChange} onSave={onSave} value={value} />;
 }
 
+function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
+  const totalPrincipal = loans.reduce((s, l) => s + Number(l.principal), 0);
+  const totalBalance = loans.reduce((s, l) => s + Number(l.balance), 0);
+  const activeLoans = loans.filter((l) => l.status === 'ACTIVE');
+  const paidLoans = loans.filter((l) => l.status === 'PAID');
+  const overdueLoans = activeLoans.filter(
+    (l) => l.schedule?.some((p) => p.status === 'OVERDUE'),
+  );
+
+  const summary = [
+    { label: 'Préstamos activos', value: activeLoans.length, color: 'text-blue-600' },
+    { label: 'Préstamos pagados', value: paidLoans.length, color: 'text-[#2f7654]' },
+    { label: 'Capital total prestado', value: fmt(totalPrincipal), color: 'text-neutral-900' },
+    { label: 'Balance total pendiente', value: fmt(totalBalance), color: 'text-[#9F3F25]' },
+    { label: 'Cuotas vencidas', value: overdueLoans.length, color: 'text-red-600' },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5">
+        {summary.map((s) => (
+          <div
+            key={s.label}
+            className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              {s.label}
+            </p>
+            <p className={`mt-2 text-2xl font-bold ${s.color}`}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {loans.length > 0 && (
+        <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
+          <div className="border-b border-neutral-100 px-5 py-4">
+            <h3 className="text-sm font-bold text-neutral-900">Detalle de préstamos</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <div className="grid min-w-[800px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-[#fafafa] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-neutral-500">
+              <span># Préstamo</span>
+              <span>Capital</span>
+              <span>Balance</span>
+              <span>Cuotas</span>
+              <span>Frecuencia</span>
+              <span>Estado</span>
+            </div>
+            {loans.map((loan) => (
+              <div
+                key={loan.id}
+                className="grid min-w-[800px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] gap-4 border-t border-neutral-50 px-5 py-3 text-sm"
+              >
+                <span className="font-medium text-neutral-900">{loan.loanNumber}</span>
+                <span className="text-neutral-700">{fmt(loan.principal)}</span>
+                <span className="text-neutral-700">{fmt(loan.balance)}</span>
+                <span className="text-neutral-700">{loan.term} cuotas</span>
+                <span className="text-neutral-700">
+                  {loan.paymentFreq === 'WEEKLY'
+                    ? 'Semanal'
+                    : loan.paymentFreq === 'BIWEEKLY'
+                      ? 'Quincenal'
+                      : 'Mensual'}
+                </span>
+                <span
+                  className={`font-semibold ${
+                    loan.status === 'ACTIVE'
+                      ? 'text-blue-600'
+                      : loan.status === 'PAID'
+                        ? 'text-[#2f7654]'
+                        : 'text-neutral-400'
+                  }`}
+                >
+                  {loan.status === 'ACTIVE'
+                    ? 'Activo'
+                    : loan.status === 'PAID'
+                      ? 'Pagado'
+                      : 'Inactivo'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ClientNotesTab({
   clientId,
   clientNotes,
@@ -1178,12 +1309,14 @@ function ClientInfoGrid({ clientData }: { clientData: ClientDetail }) {
 }
 
 export function ClientDetailPage({ clientId }: { clientId: number }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<ClientTab>('Préstamos');
   const [clientData, setClientData] = useState<ClientDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [auditEvents, setAuditEvents] = useState<HistoryEvent[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const loadHistory = useCallback(() => {
     let cancelled = false;
@@ -1276,6 +1409,25 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   const activeLoans = clientData.loans.filter((l) => l.status === 'ACTIVE').length;
   const { totalLoaned, totalPaid, totalBalance } = getClientLoanStats(clientData.loans);
   const notesCount = countClientNotes(clientData.notes);
+  const firstActiveLoan = clientData.loans.find((l) => l.status === 'ACTIVE');
+
+  const handleDeleteLoan = (loanId: string) => {
+    setClientData((current) =>
+      current ? { ...current, loans: current.loans.filter((l) => l.id !== loanId) } : current,
+    );
+  };
+
+  const handleDeleteClient = async () => {
+    if (!window.confirm('¿Estás seguro de eliminar este cliente? Esta acción no se puede deshacer.')) return;
+    setDeleting(true);
+    try {
+      await deleteClient(clientId);
+      router.push('/clientes');
+    } catch {
+      setDeleting(false);
+      alert('Error al eliminar el cliente. Intenta de nuevo.');
+    }
+  };
 
   const statsCards = [
     {
@@ -1357,21 +1509,64 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                   </div>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 pb-1">
-                <Link
-                  className="inline-flex h-10 items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-700 hover:bg-neutral-50"
-                  href={`/clientes/${clientId}/editar`}
-                >
-                  <Pencil className="h-4 w-4" />
-                  Editar
-                </Link>
-                <Link
-                  className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm text-white hover:bg-[#285c43]"
-                  href={`/prestamos/nuevo?cliente=${clientId}`}
-                >
-                  <Plus className="h-4 w-4" />
-                  Nuevo préstamo
-                </Link>
+              <div className="pb-1">
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm font-semibold text-white hover:bg-[#285c43]"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                      Acciones
+                    </button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      align="end"
+                      sideOffset={6}
+                      className="z-50 min-w-52 overflow-hidden rounded-2xl border border-neutral-100 bg-white p-1.5 shadow-lg"
+                    >
+                      <DropdownMenu.Item asChild>
+                        <Link
+                          href={`/clientes/${clientId}/editar`}
+                          className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-neutral-700 outline-none hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Editar cliente
+                        </Link>
+                      </DropdownMenu.Item>
+                      {firstActiveLoan && (
+                        <DropdownMenu.Item asChild>
+                          <Link
+                            href={`/prestamos/${firstActiveLoan.id}/editar`}
+                            className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-neutral-700 outline-none hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+                          >
+                            <CreditCard className="h-4 w-4" />
+                            Editar préstamo
+                          </Link>
+                        </DropdownMenu.Item>
+                      )}
+                      <DropdownMenu.Item asChild>
+                        <Link
+                          href={`/prestamos/nuevo?cliente=${clientId}`}
+                          className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-neutral-700 outline-none hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Nuevo préstamo
+                        </Link>
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Separator className="mx-2 my-1 border-t border-neutral-100" />
+                      <DropdownMenu.Item
+                        disabled={deleting}
+                        className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-red-600 outline-none hover:bg-red-50"
+                        onSelect={handleDeleteClient}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {deleting ? 'Eliminando...' : 'Eliminar cliente'}
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
               </div>
             </div>
           </div>
@@ -1434,11 +1629,13 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
         </div>
 
         {activeTab === 'Préstamos' ? (
-          <ClientLoansTab loans={clientData.loans} />
+          <ClientLoansTab clientName={fullName} loans={clientData.loans} onDeleteLoan={handleDeleteLoan} />
         ) : activeTab === 'Documentos' ? (
           <ClientDocumentsTab clientId={clientData.id} />
         ) : activeTab === 'Historial' ? (
           <ClientHistoryTab events={auditEvents} loading={historyLoading} />
+        ) : activeTab === 'Estado de Cuenta' ? (
+          <ClientAccountStatementTab loans={clientData.loans} />
         ) : activeTab === 'Notas' ? (
           <ClientNotesTab
             clientId={clientData.id}

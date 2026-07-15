@@ -330,7 +330,7 @@ model PaymentSchedule {
   lateFees      LateFee[]
   paymentAllocs PaymentAllocation[]
 
-  @@index([loanId, dueDate])
+  @@unique([loanId, dueDate])
   @@index([dueDate, status])
   @@index([status, loanId])
   @@map("payment_schedule")

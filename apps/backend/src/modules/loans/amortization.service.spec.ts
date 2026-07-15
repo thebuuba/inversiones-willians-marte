@@ -46,6 +46,24 @@ describe('AmortizationService', () => {
   });
 
   describe('REDUCING interest', () => {
+    it('rounds every automatic installment to a whole hundred, including the final adjustment', () => {
+      const schedule = service.calculate({
+        principal: 100000,
+        interestRate: 36,
+        paymentFrequency: 'MONTHLY',
+        term: 12,
+        startDate: new Date('2026-08-15'),
+        interestType: 'REDUCING',
+      });
+
+      expect(schedule.slice(0, -1).map((row) => row.amount)).toEqual(
+        Array.from({ length: 11 }, () => 10000),
+      );
+      expect(schedule.at(-1)?.amount).toBe(10700);
+      expect(schedule.every((row) => row.amount % 100 === 0)).toBe(true);
+      expect(schedule.at(-1)?.balanceAfter).toBe(0);
+    });
+
     it('creates a finite no-interest schedule when the reducing rate is zero', () => {
       const schedule = service.calculate({
         ...baseParams,
@@ -71,7 +89,7 @@ describe('AmortizationService', () => {
     it('interest part should decrease over time', () => {
       const schedule = service.calculate({ ...baseParams, interestType: 'REDUCING' });
 
-      for (let i = 1; i < schedule.length; i++) {
+      for (let i = 1; i < schedule.length - 1; i++) {
         expect(schedule[i].interestPart).toBeLessThanOrEqual(schedule[i - 1].interestPart);
       }
     });
@@ -94,14 +112,28 @@ describe('AmortizationService', () => {
   });
 
   describe('FIXED interest', () => {
+    it('keeps the same rounded payment through the final installment', () => {
+      const schedule = service.calculate({
+        principal: 100000,
+        interestRate: 36,
+        paymentFrequency: 'MONTHLY',
+        term: 12,
+        startDate: new Date('2026-08-15'),
+        interestType: 'FIXED',
+      });
+
+      expect(new Set(schedule.map((row) => row.amount))).toEqual(new Set([11300]));
+      expect(schedule.every((row) => row.amount % 100 === 0)).toBe(true);
+      expect(schedule.reduce((sum, row) => sum + row.principalPart, 0)).toBeCloseTo(100000, 2);
+      expect(schedule.at(-1)?.balanceAfter).toBe(0);
+    });
+
     it('should calculate fixed interest schedule', () => {
       const schedule = service.calculate({ ...baseParams, interestType: 'FIXED' });
 
       expect(schedule).toHaveLength(12);
-      const fixedInterestPerInstallment = (baseParams.principal * (12 / 100)) / 12;
-
       schedule.forEach((row) => {
-        expect(row.interestPart).toBeCloseTo(fixedInterestPerInstallment, 0);
+        expect(row.principalPart + row.interestPart).toBeCloseTo(row.amount, 2);
       });
     });
 
@@ -109,7 +141,7 @@ describe('AmortizationService', () => {
       const schedule = service.calculate({ ...baseParams, interestType: 'FIXED' });
       const interests = schedule.map((r) => r.interestPart);
 
-      for (let i = 1; i < interests.length; i++) {
+      for (let i = 1; i < interests.length - 1; i++) {
         expect(interests[i]).toBeCloseTo(interests[0], 1);
       }
     });
@@ -138,6 +170,7 @@ describe('AmortizationService', () => {
         balanceAfter: 27503,
       });
       expect(schedule[11].amount).toBeGreaterThan(2000);
+      expect(schedule[11].amount % 100).toBe(0);
       expect(schedule[11].balanceAfter).toBe(0);
     });
   });

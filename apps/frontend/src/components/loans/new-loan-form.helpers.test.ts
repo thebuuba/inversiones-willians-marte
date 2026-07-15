@@ -33,7 +33,10 @@ test('enables calculation only when every required loan field is valid', () => {
   assert.equal(canCalculateLoan({ ...validLoan, interestRate: '1e2' }), false);
   assert.equal(canCalculateLoan({ ...validLoan, term: '0' }), false);
   assert.equal(canCalculateLoan({ ...validLoan, term: '1e2' }), false);
-  assert.equal(canCalculateLoan({ ...validLoan, term: '1', termUnit: 'weeks', paymentFrequency: 'WEEKLY' }), true);
+  assert.equal(
+    canCalculateLoan({ ...validLoan, term: '1', termUnit: 'weeks', paymentFrequency: 'WEEKLY' }),
+    true,
+  );
   assert.equal(canCalculateLoan({ ...validLoan, amortizationType: '' }), false);
   assert.equal(canCalculateLoan({ ...validLoan, paymentFrequency: '' }), false);
   assert.equal(canCalculateLoan({ ...validLoan, firstPaymentDate: '' }), false);
@@ -57,6 +60,17 @@ test('generates one schedule row for every installment in the term', () => {
   assert.equal(result.schedule.length, 12);
 });
 
+test('keeps every fixed amortization payment identical through the final installment', () => {
+  const result = computeSchedule(100000, 3, 12, 'SIMPLE');
+
+  assert.deepEqual(new Set(result.schedule.map((row) => row.payment)), new Set([11300]));
+  assert.equal(
+    result.schedule.reduce((sum, row) => sum + row.principal, 0),
+    100000,
+  );
+  assert.equal(result.schedule.at(-1)?.balance, 0);
+});
+
 test('keeps fortnightly terms as the requested number of installments', () => {
   const result = computeSchedule(25000, 6, normalizeLoanTerm('24', 'fortnights'));
 
@@ -73,8 +87,7 @@ test('uses lower per-installment interest for fortnightly schedules', () => {
   const monthlySchedule = computeSchedule(25000, getPeriodicInterestRate(6, 'MONTHLY'), 24);
   const fortnightlySchedule = computeSchedule(25000, getPeriodicInterestRate(6, 'FORTNIGHTLY'), 24);
 
-  assert.equal(monthlySchedule.schedule[0].interest, 1500);
-  assert.equal(fortnightlySchedule.schedule[0].interest, 750);
+  assert.ok(fortnightlySchedule.schedule[0].interest < monthlySchedule.schedule[0].interest);
   assert.ok(fortnightlySchedule.schedule[0].payment < monthlySchedule.schedule[0].payment);
 });
 

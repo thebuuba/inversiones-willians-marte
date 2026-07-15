@@ -68,7 +68,10 @@ function getCalendarDay(value: string | Date) {
   return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-export function getLoanCollectionStatus(loan: LoanCollectionStatusLike, now = new Date()): LoanCollectionStatus {
+export function getLoanCollectionStatus(
+  loan: LoanCollectionStatusLike,
+  now = new Date(),
+): LoanCollectionStatus {
   const today = getCalendarDay(now);
   const isFiniteLoan = loan.interestType !== 'INDEFINITE';
 
@@ -92,7 +95,9 @@ export function getClientLoanStats(loans: ClientLoanStatsLike[]) {
     (totals, loan) => ({
       totalLoaned: totals.totalLoaned + Number(loan.principal),
       totalBalance: totals.totalBalance + Number(loan.balance),
-      totalPaid: totals.totalPaid + (loan.schedule ?? []).reduce((sum, row) => sum + Number(row.paidAmount ?? 0), 0),
+      totalPaid:
+        totals.totalPaid +
+        (loan.schedule ?? []).reduce((sum, row) => sum + Number(row.paidAmount ?? 0), 0),
     }),
     { totalLoaned: 0, totalBalance: 0, totalPaid: 0 },
   );
@@ -119,6 +124,17 @@ export function getRegularInstallment(totalAmount: number, term: number) {
   return Math.round(totalAmount / term);
 }
 
+export function getNextInstallmentAmount(
+  schedule: Array<{ status: string; amount: number | string }>,
+  totalAmount: number,
+  term: number,
+) {
+  const nextInstallment = schedule.find((row) => row.status !== 'PAID');
+  return nextInstallment
+    ? Number(nextInstallment.amount)
+    : getRegularInstallment(totalAmount, term);
+}
+
 export function getScheduleRemaining(amount: number, paidAmount = 0) {
   return Math.max(0, amount - (paidAmount ?? 0));
 }
@@ -141,18 +157,22 @@ export function getLoanOperationalSummary(loan: LoanOperationalSummaryLike, now 
     .filter((row) => row.status !== 'PAID')
     .sort((a, b) => getCalendarDay(a.dueDate) - getCalendarDay(b.dueDate));
   const nextSchedule = unpaidSchedules[0] ?? null;
-  const lastPayment = [...loan.payments].sort(
-    (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime(),
-  )[0] ?? null;
+  const lastPayment =
+    [...loan.payments].sort(
+      (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime(),
+    )[0] ?? null;
 
   return {
     pendingInstallments: unpaidSchedules.length,
-    overdueInstallments: unpaidSchedules.filter((row) => getCalendarDay(row.dueDate) <= today).length,
+    overdueInstallments: unpaidSchedules.filter((row) => getCalendarDay(row.dueDate) <= today)
+      .length,
     unpaidLateFees: (loan.lateFees ?? [])
       .filter((fee) => !fee.paid)
       .reduce((sum, fee) => sum + Number(fee.amount), 0),
     nextSchedule,
-    nextSchedulePending: nextSchedule ? getScheduleRemaining(Number(nextSchedule.amount), Number(nextSchedule.paidAmount ?? 0)) : 0,
+    nextSchedulePending: nextSchedule
+      ? getScheduleRemaining(Number(nextSchedule.amount), Number(nextSchedule.paidAmount ?? 0))
+      : 0,
     lastPayment,
   };
 }

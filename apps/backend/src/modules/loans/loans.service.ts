@@ -4,6 +4,11 @@ import { CreateLoanDto } from './dto/create-loan.dto';
 import { AmortizationService } from './amortization.service';
 import { AddLoanCapitalDto } from './dto/add-loan-capital.dto';
 import { LoanPayoffService } from './loan-payoff.service';
+import {
+  addPaymentInterval,
+  calculateIndefiniteInterest,
+  calculateProratedIndefiniteInterest,
+} from './indefinite-loan';
 import { normalizePagination } from '../../common/pagination';
 
 type LoanListRow = {
@@ -90,7 +95,7 @@ export class LoansService {
         paymentFreq: paymentFrequency,
         term: dto.term,
         startDate: new Date(dto.startDate),
-        endDate: lastRow?.dueDate ?? null,
+        endDate: interestType === 'INDEFINITE' ? null : (lastRow?.dueDate ?? null),
         balance,
         notes: dto.notes,
         portfolioId: dto.portfolioId ?? null,
@@ -266,12 +271,59 @@ export class LoansService {
       },
     });
     if (!loan) throw new NotFoundException('Loan not found');
+    if (
+      loan.status === 'ACTIVE' &&
+      loan.interestType === 'INDEFINITE' &&
+      !loan.schedule.some(
+        (schedule) =>
+          schedule.status === 'PENDING' ||
+          schedule.status === 'PARTIAL' ||
+          schedule.status === 'OVERDUE',
+      )
+    ) {
+      const lastDueDate = loan.schedule.at(-1)?.dueDate ?? loan.startDate;
+      const dueDate = addPaymentInterval(lastDueDate, loan.paymentFreq);
+      const amount = calculateIndefiniteInterest(
+        loan.principal,
+        loan.interestRate,
+        loan.paymentFreq,
+      );
+      const nextSchedule = await prisma.paymentSchedule.upsert({
+        where: { loanId_dueDate: { loanId: loan.id, dueDate } },
+        update: {},
+        create: {
+          loanId: loan.id,
+          dueDate,
+          amount,
+          principalPart: 0,
+          interestPart: amount,
+          balanceAfter: loan.principal,
+        },
+      });
+      await prisma.loan.update({
+        where: { id: loan.id },
+        data: { totalAmount: amount },
+      });
+      return {
+        ...loan,
+        totalAmount: amount,
+        schedule: [...loan.schedule, nextSchedule].sort(
+          (left, right) => left.dueDate.getTime() - right.dueDate.getTime(),
+        ),
+      };
+    }
     return loan;
   }
 
   async addCapital(id: string, dto: AddLoanCapitalDto, userId: string) {
     return prisma.$transaction(async (tx) => {
-      const loan = await tx.loan.findUnique({ where: { id } });
+      const loan = await tx.loan.findUnique({
+        where: { id },
+        include: {
+          schedule: { orderBy: { dueDate: 'asc' } },
+          capitalMovements: { orderBy: { effectiveDate: 'asc' } },
+        },
+      });
       if (!loan) throw new NotFoundException('Loan not found');
       if (loan.status !== 'ACTIVE') throw new BadRequestException('Loan is not active');
       if (loan.interestType !== 'INDEFINITE') {
@@ -297,6 +349,58 @@ export class LoansService {
       });
       const principal = Number(updatedLoan.principal);
       const balance = Number(updatedLoan.balance);
+      const effectiveDate = new Date(dto.effectiveDate);
+      const capitalMovements = [...loan.capitalMovements, { amount: dto.amount, effectiveDate }];
+      const pendingSchedule = loan.schedule.find(
+        (schedule) =>
+          schedule.status === 'PENDING' ||
+          schedule.status === 'PARTIAL' ||
+          schedule.status === 'OVERDUE',
+      );
+      const lastSchedule = loan.schedule.at(-1);
+      const dueDate =
+        pendingSchedule?.dueDate ??
+        addPaymentInterval(lastSchedule?.dueDate ?? loan.startDate, loan.paymentFreq);
+      const previousDueDate =
+        [...loan.schedule].reverse().find((schedule) => schedule.dueDate < dueDate)?.dueDate ??
+        loan.startDate;
+      const interestAmount = calculateProratedIndefiniteInterest({
+        currentPrincipal: principal,
+        annualRate: loan.interestRate,
+        frequency: loan.paymentFreq,
+        periodStart: previousDueDate,
+        periodEnd: dueDate,
+        capitalMovements,
+      });
+
+      if (pendingSchedule) {
+        await tx.paymentSchedule.update({
+          where: { id: pendingSchedule.id },
+          data: {
+            amount: interestAmount,
+            interestPart: interestAmount,
+            balanceAfter: principal,
+          },
+        });
+      } else {
+        await tx.paymentSchedule.upsert({
+          where: { loanId_dueDate: { loanId: id, dueDate } },
+          update: {},
+          create: {
+            loanId: id,
+            dueDate,
+            amount: interestAmount,
+            principalPart: 0,
+            interestPart: interestAmount,
+            balanceAfter: principal,
+          },
+        });
+      }
+      await tx.loan.update({
+        where: { id },
+        data: { totalAmount: interestAmount },
+      });
+
       await tx.auditLog.create({
         data: {
           userId,
@@ -316,6 +420,44 @@ export class LoansService {
       });
       return movement;
     });
+  }
+
+  async update(
+    id: string,
+    dto: { notes?: string; status?: string; portfolioId?: string | null; interestRate?: number },
+    userId?: string,
+  ) {
+    const loan = await prisma.loan.findUnique({ where: { id } });
+    if (!loan) throw new NotFoundException('Loan not found');
+
+    const data: Record<string, unknown> = {};
+    if (dto.notes !== undefined) data.notes = dto.notes;
+    if (dto.status !== undefined) data.status = dto.status;
+    if (dto.portfolioId !== undefined) data.portfolioId = dto.portfolioId;
+    if (dto.interestRate !== undefined) data.interestRate = dto.interestRate;
+
+    const updated = await prisma.loan.update({ where: { id }, data });
+
+    if (userId) {
+      await prisma.auditLog.create({
+        data: {
+          userId,
+          action: 'LOAN_UPDATED',
+          entityType: 'Loan',
+          entityId: id,
+          clientId: loan.clientId,
+          oldValues: {
+            notes: loan.notes,
+            status: loan.status,
+            portfolioId: loan.portfolioId,
+            interestRate: Number(loan.interestRate),
+          },
+          newValues: { ...dto },
+        },
+      });
+    }
+
+    return updated;
   }
 
   async getPayoffQuote(id: string, payoffDate: string) {
@@ -342,6 +484,30 @@ export class LoansService {
     if (Number.isNaN(normalizedDate.getTime()))
       throw new BadRequestException('Invalid payoff date');
     return this.payoff.quote(loan, normalizedDate);
+  }
+
+  async remove(id: string) {
+    const loan = await prisma.loan.findUnique({ where: { id } });
+    if (!loan) throw new NotFoundException('Loan not found');
+
+    await prisma.$transaction(async (tx) => {
+      const paymentIds = (
+        await tx.payment.findMany({ where: { loanId: id }, select: { id: true } })
+      ).map((p) => p.id);
+      if (paymentIds.length > 0) {
+        await tx.paymentAllocation.deleteMany({ where: { paymentId: { in: paymentIds } } });
+      }
+      await tx.payment.deleteMany({ where: { loanId: id } });
+      await tx.paymentPromise.deleteMany({ where: { loanId: id } });
+      await tx.task.deleteMany({ where: { loanId: id } });
+      await tx.collectionInteraction.deleteMany({ where: { loanId: id } });
+      await tx.lateFee.deleteMany({ where: { loanId: id } });
+      await tx.loanCapitalMovement.deleteMany({ where: { loanId: id } });
+      await tx.paymentSchedule.deleteMany({ where: { loanId: id } });
+      await tx.loan.delete({ where: { id } });
+    });
+
+    return { deleted: true };
   }
 
   async getSummary(id: string) {

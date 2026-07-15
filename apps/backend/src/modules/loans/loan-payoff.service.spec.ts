@@ -7,7 +7,7 @@ describe('LoanPayoffService', () => {
     const quote = service.quote(
       {
         id: 'loan-1',
-        principal: 5000,
+        principal: 8000,
         interestRate: 120,
         interestType: 'INDEFINITE',
         paymentFreq: 'MONTHLY',
@@ -20,11 +20,45 @@ describe('LoanPayoffService', () => {
 
     expect(quote).toMatchObject({
       capitalOutstanding: 8000,
-      earnedInterest: 550,
+      earnedInterest: 600,
       dailyInterest: 26.67,
       daysGenerated: 30,
-      totalToPay: 8550,
+      totalToPay: 8600,
     });
+  });
+
+  it('does not charge the current indefinite interest twice after it was paid', () => {
+    const dueDate = new Date('2026-06-25T00:00:00.000Z');
+    const quote = service.quote(
+      {
+        id: 'loan-1',
+        principal: 5000,
+        interestRate: 120,
+        interestType: 'INDEFINITE',
+        paymentFreq: 'MONTHLY',
+        startDate: new Date('2026-05-25T00:00:00.000Z'),
+        schedule: [
+          {
+            id: 's1',
+            dueDate,
+            amount: 500,
+            principalPart: 0,
+            interestPart: 500,
+            paidAmount: 500,
+          },
+        ],
+        payments: [
+          {
+            paymentDate: dueDate,
+            allocations: [{ scheduleId: 's1', amount: 500, type: 'INTEREST' }],
+          },
+        ],
+      },
+      dueDate,
+    );
+
+    expect(quote.earnedInterest).toBe(0);
+    expect(quote.totalToPay).toBe(5000);
   });
 
   it('does not charge generated interest until it rounds near RD$50', () => {

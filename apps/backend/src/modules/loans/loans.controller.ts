@@ -1,7 +1,19 @@
-import { Controller, Post, Get, Param, Query, UseGuards, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+  Body,
+  Delete,
+  HttpCode,
+  Patch,
+} from '@nestjs/common';
 import { LoansService } from './loans.service';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { AddLoanCapitalDto } from './dto/add-loan-capital.dto';
+import { UpdateLoanDto } from './dto/update-loan.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -56,6 +68,19 @@ export class LoansController {
   @Roles('ADMIN', 'COLLECTOR')
   getPayoffQuote(@Param('id') id: string, @Query('payoffDate') payoffDate: string) {
     return this.loans.getPayoffQuote(id, payoffDate);
+  }
+
+  @Patch(':id')
+  @Roles('ADMIN', 'COLLECTOR')
+  update(@Param('id') id: string, @Body() dto: UpdateLoanDto, @CurrentUser('id') userId: string) {
+    return this.loans.update(id, dto, userId);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @Roles('ADMIN', 'COLLECTOR')
+  async remove(@Param('id') id: string) {
+    await this.loans.remove(id);
   }
 
   @Get(':id/summary')
