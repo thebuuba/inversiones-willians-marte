@@ -50,6 +50,9 @@ jobs:
       - name: Generate Prisma client
         run: pnpm db:generate
 
+      - name: Validate operational scripts
+        run: node --check scripts/backup-postgres.mjs
+
       - name: Apply and verify database migrations
         run: |
           pnpm db:migrate:deploy

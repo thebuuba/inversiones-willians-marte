@@ -16,7 +16,8 @@
     "db:push:dev": "pnpm --filter @inversiones/database push:dev",
     "db:push": "pnpm --filter @inversiones/database push",
     "db:studio": "pnpm --filter @inversiones/database studio",
-    "db:seed": "pnpm --filter @inversiones/database seed"
+    "db:seed": "pnpm --filter @inversiones/database seed",
+    "db:backup": "node scripts/backup-postgres.mjs"
   },
   "devDependencies": {
     "prettier": "^3.5.0",
