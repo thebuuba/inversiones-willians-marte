@@ -181,6 +181,13 @@ export interface CreateLoanDto {
   customPayment?: number;
 }
 
+export interface UpdateLoanDto {
+  notes?: string;
+  status?: LoanStatus;
+  portfolioId?: string | null;
+  interestRate?: number;
+}
+
 export interface AddLoanCapitalDto {
   amount: number;
   effectiveDate: string;

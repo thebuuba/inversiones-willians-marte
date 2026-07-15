@@ -14,6 +14,7 @@ import {
   Download,
   Eye,
   Filter,
+  HandCoins,
   Plus,
   Search,
   WalletCards,
@@ -41,7 +42,8 @@ function loanToRow(loan: LoanListItem) {
     loan.principal > 0 ? ((loan.principal - loan.balance) / loan.principal) * loan.term : 0,
   );
   const totalSchedules = loan.term;
-  const percent = loan.principal > 0 ? Math.round(((loan.principal - loan.balance) / loan.principal) * 100) : 0;
+  const percent =
+    loan.principal > 0 ? Math.round(((loan.principal - loan.balance) / loan.principal) * 100) : 0;
   const nextPayment = '—';
 
   let statusLabel: string;
@@ -76,7 +78,15 @@ const fadeUp: Variants = {
   }),
 };
 
-function PanelCard({ children, className = '', index = 0 }: { children: ReactNode; className?: string; index?: number }) {
+function PanelCard({
+  children,
+  className = '',
+  index = 0,
+}: {
+  children: ReactNode;
+  className?: string;
+  index?: number;
+}) {
   return (
     <motion.section
       animate="visible"
@@ -102,14 +112,25 @@ function LoansHeader({ total, totalPrincipal }: { total: number; totalPrincipal:
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#5C6D63]">GESTIÓN</p>
         <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#151918]">Préstamos</h1>
         <p className="mt-1.5 text-base font-medium text-[#7A7F7D]">
-          Administra los préstamos activos — {total} registrados, {formatDop(totalPrincipal, { space: true })} colocados.
+          Administra los préstamos activos — {total} registrados,{' '}
+          {formatDop(totalPrincipal, { space: true })} colocados.
         </p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#DDEBE3] bg-white px-5 text-sm font-bold text-[#3F4542] shadow-[0_6px_14px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-md" type="button">
+        <button
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#DDEBE3] bg-white px-5 text-sm font-bold text-[#3F4542] shadow-[0_6px_14px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-md"
+          type="button"
+        >
           <Download className="h-4 w-4" />
           Exportar
         </button>
+        <Link
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#B8DCC5] bg-[#EAF6EF] px-5 text-sm font-bold text-[#2F7654] transition hover:-translate-y-0.5 hover:bg-[#DCEFE3]"
+          href="/prestamos/cobrar"
+        >
+          <HandCoins className="h-4 w-4" />
+          Registrar cobro
+        </Link>
         <Link
           className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-[#285c43]"
           href="/prestamos/nuevo"
@@ -122,17 +143,51 @@ function LoansHeader({ total, totalPrincipal }: { total: number; totalPrincipal:
   );
 }
 
-function LoanSummaryCards({ items, totalPrincipal }: { items: ReturnType<typeof loanToRow>[]; totalPrincipal: number }) {
+function LoanSummaryCards({
+  items,
+  totalPrincipal,
+}: {
+  items: ReturnType<typeof loanToRow>[];
+  totalPrincipal: number;
+}) {
   const total = items.length;
   const alDia = items.filter((i) => i.status === 'Al día').length;
   const atrasados = items.filter((i) => i.status === 'Atrasado').length;
   const pendientes = items.filter((i) => i.status === 'Pendiente').length;
   return (
     <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
-      <SummaryCard icon={<WalletCards className="h-6 w-6" />} iconBg="#EAF6EF" iconColor="#285C43" label="CARTERA TOTAL" subtext={`${total} préstamos`} value={formatDop(totalPrincipal, { space: true })} />
-      <SummaryCard icon={<CheckCircle2 className="h-6 w-6" />} iconBg="#B8DCC5" iconColor="#285C43" label="AL DÍA" subtext="préstamos saludables" value={String(alDia)} />
-      <SummaryCard icon={<AlertCircle className="h-6 w-6" />} iconBg="#FADCCB" iconColor="#E05A1A" label="ATRASADOS" subtext="requieren atención" value={String(atrasados)} />
-      <SummaryCard icon={<Clock3 className="h-6 w-6" />} iconBg="#FFF1C7" iconColor="#7A5A0A" label="PENDIENTES" subtext="por desembolsar" value={String(pendientes)} />
+      <SummaryCard
+        icon={<WalletCards className="h-6 w-6" />}
+        iconBg="#EAF6EF"
+        iconColor="#285C43"
+        label="CARTERA TOTAL"
+        subtext={`${total} préstamos`}
+        value={formatDop(totalPrincipal, { space: true })}
+      />
+      <SummaryCard
+        icon={<CheckCircle2 className="h-6 w-6" />}
+        iconBg="#B8DCC5"
+        iconColor="#285C43"
+        label="AL DÍA"
+        subtext="préstamos saludables"
+        value={String(alDia)}
+      />
+      <SummaryCard
+        icon={<AlertCircle className="h-6 w-6" />}
+        iconBg="#FADCCB"
+        iconColor="#E05A1A"
+        label="ATRASADOS"
+        subtext="requieren atención"
+        value={String(atrasados)}
+      />
+      <SummaryCard
+        icon={<Clock3 className="h-6 w-6" />}
+        iconBg="#FFF1C7"
+        iconColor="#7A5A0A"
+        label="PENDIENTES"
+        subtext="por desembolsar"
+        value={String(pendientes)}
+      />
     </div>
   );
 }
@@ -154,7 +209,10 @@ function SummaryCard({
 }) {
   return (
     <PanelCard className="flex min-h-[124px] items-center gap-5 p-5">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: iconBg, color: iconColor }}>
+      <div
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+        style={{ backgroundColor: iconBg, color: iconColor }}
+      >
         {icon}
       </div>
       <div>
@@ -194,7 +252,13 @@ function SelectControl({
   );
 }
 
-function LoanStatusPills({ activeStatus, onChange }: { activeStatus: string; onChange: (status: string) => void }) {
+function LoanStatusPills({
+  activeStatus,
+  onChange,
+}: {
+  activeStatus: string;
+  onChange: (status: string) => void;
+}) {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2.5">
       <span className="flex items-center gap-2 text-sm font-bold text-[#7A7F7D]">
@@ -246,17 +310,36 @@ function LoanFilters({
             value={search}
           />
         </label>
-        <SelectControl icon={<Clock3 className="h-5 w-5" />} onChange={onSortChange} options={sortOptions} value={sort} />
+        <SelectControl
+          icon={<Clock3 className="h-5 w-5" />}
+          onChange={onSortChange}
+          options={sortOptions}
+          value={sort}
+        />
       </div>
       <LoanStatusPills activeStatus={selectedStatus} onChange={onStatusChange} />
     </PanelCard>
   );
 }
 
-const badgeColors = ['bg-[#FFF1C7] text-[#7A5A0A]', 'bg-[#EAF6EF] text-[#285C43]', 'bg-[#DCEBFF] text-[#2F5F91]', 'bg-[#E9DDFB] text-[#6D28D9]', 'bg-[#FADCCB] text-[#9F3F25]'];
+const badgeColors = [
+  'bg-[#FFF1C7] text-[#7A5A0A]',
+  'bg-[#EAF6EF] text-[#285C43]',
+  'bg-[#DCEBFF] text-[#2F5F91]',
+  'bg-[#E9DDFB] text-[#6D28D9]',
+  'bg-[#FADCCB] text-[#9F3F25]',
+];
 function LoanTypeBadge({ type }: { type: string }) {
-  const idx = Math.abs(type.split('').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0)) % badgeColors.length;
-  return <span className={`inline-flex rounded-full px-3.5 py-1.5 text-sm font-bold ${badgeColors[idx]}`}>{type}</span>;
+  const idx =
+    Math.abs(type.split('').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0)) %
+    badgeColors.length;
+  return (
+    <span
+      className={`inline-flex rounded-full px-3.5 py-1.5 text-sm font-bold ${badgeColors[idx]}`}
+    >
+      {type}
+    </span>
+  );
 }
 
 function LoanStatusBadge({ status }: { status: string }) {
@@ -269,7 +352,9 @@ function LoanStatusBadge({ status }: { status: string }) {
   const style = styles[status];
 
   return (
-    <span className={`inline-flex min-w-[82px] items-center justify-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold ${style.className}`}>
+    <span
+      className={`inline-flex min-w-[82px] items-center justify-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold ${style.className}`}
+    >
       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
       {style.label}
     </span>
@@ -316,16 +401,23 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
       </div>
       <LoanTypeBadge type={loan.type} />
       <div>
-        <p className="text-sm font-bold text-[#151918]">{formatDop(loan.amount, { space: true })}</p>
+        <p className="text-sm font-bold text-[#151918]">
+          {formatDop(loan.amount, { space: true })}
+        </p>
         <p className="mt-1 text-sm font-medium text-[#5C6D63]">{loan.interest}</p>
       </div>
       <ProgressCell percent={loan.percent} progress={loan.progress} />
       <p className="text-sm font-medium text-[#3F4542]">{loan.nextPayment}</p>
       <div className="flex items-center justify-end gap-4">
         <LoanStatusBadge status={loan.status} />
-        <button className="px-1 text-lg font-bold leading-none text-[#A7B5AD] transition hover:text-[#2F7654]" type="button">
-          ...
-        </button>
+        <Link
+          aria-label={`Cobrar préstamo de ${loan.client}`}
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#DDEBE3] text-[#5C6D63] transition hover:border-[#B8DCC5] hover:bg-[#EAF6EF] hover:text-[#2F7654]"
+          href={`/prestamos/cobrar?loanId=${loan.id}`}
+          title="Registrar cobro"
+        >
+          <HandCoins className="h-4 w-4" />
+        </Link>
         <Link
           className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#B8EBC9] bg-[#EAF6EF] px-4 text-sm font-bold text-[#2F7654] shadow-[0_5px_10px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-md"
           href={`/prestamos/${loan.id}`}
@@ -338,10 +430,26 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
   );
 }
 
-function Pagination({ count, total, page, totalPages, onPrev, onNext }: { count: number; total: number; page: number; totalPages: number; onPrev: () => void; onNext: () => void }) {
+function Pagination({
+  count,
+  total,
+  page,
+  totalPages,
+  onPrev,
+  onNext,
+}: {
+  count: number;
+  total: number;
+  page: number;
+  totalPages: number;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
   return (
     <div className="flex min-w-[1180px] items-center justify-between border-t border-[#EDF2EF] px-6 py-4">
-      <p className="text-sm font-medium text-[#5C6D63]">Mostrando {count} de {total} préstamos</p>
+      <p className="text-sm font-medium text-[#5C6D63]">
+        Mostrando {count} de {total} préstamos
+      </p>
       {totalPages > 1 && (
         <div className="flex items-center gap-2">
           <button
@@ -352,7 +460,9 @@ function Pagination({ count, total, page, totalPages, onPrev, onNext }: { count:
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="text-sm font-bold text-[#5C6D63]">{page + 1} / {totalPages}</span>
+          <span className="text-sm font-bold text-[#5C6D63]">
+            {page + 1} / {totalPages}
+          </span>
           <button
             className="flex h-9 w-9 items-center justify-center rounded-full border border-[#EDF2EF] bg-white text-[#5C6D63] disabled:opacity-30"
             disabled={page >= totalPages - 1}
@@ -367,7 +477,21 @@ function Pagination({ count, total, page, totalPages, onPrev, onNext }: { count:
   );
 }
 
-function LoansTable({ rows, total, page, totalPages, onPrev, onNext }: { rows: LoanRowData[]; total: number; page: number; totalPages: number; onPrev: () => void; onNext: () => void }) {
+function LoansTable({
+  rows,
+  total,
+  page,
+  totalPages,
+  onPrev,
+  onNext,
+}: {
+  rows: LoanRowData[];
+  total: number;
+  page: number;
+  totalPages: number;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
   return (
     <PanelCard className="overflow-hidden" index={6}>
       <div className="overflow-x-auto">
@@ -377,12 +501,21 @@ function LoansTable({ rows, total, page, totalPages, onPrev, onNext }: { rows: L
           <span>MONTO</span>
           <span>PROGRESO</span>
           <span>PRÓX. PAGO</span>
-          <span className="flex items-center justify-end gap-1">ESTADO <ChevronDown className="h-4 w-4" /></span>
+          <span className="flex items-center justify-end gap-1">
+            ESTADO <ChevronDown className="h-4 w-4" />
+          </span>
         </div>
         {rows.map((loan, index) => (
           <LoanRow index={index} key={loan.id} loan={loan} />
         ))}
-        <Pagination count={rows.length} total={total} page={page} totalPages={totalPages} onPrev={onPrev} onNext={onNext} />
+        <Pagination
+          count={rows.length}
+          total={total}
+          page={page}
+          totalPages={totalPages}
+          onPrev={onPrev}
+          onNext={onNext}
+        />
       </div>
     </PanelCard>
   );
@@ -414,19 +547,17 @@ export function LoansPage() {
   const statusParam = normalizeStatusFilter(selectedStatus);
   const sortParam = normalizeSort(sort);
   const loansFetcher = useCallback(
-    () => getLoans(
-      statusParam === 'Todos' ? undefined : statusParam,
-      search || undefined,
-      PAGE_SIZE,
-      page * PAGE_SIZE,
-      sortParam,
-    ),
+    () =>
+      getLoans(
+        statusParam === 'Todos' ? undefined : statusParam,
+        search || undefined,
+        PAGE_SIZE,
+        page * PAGE_SIZE,
+        sortParam,
+      ),
     [page, search, sortParam, statusParam],
   );
-  const { data, loading } = useClientCache(
-    `loans:${searchKey}:${sortParam}:${page}`,
-    loansFetcher,
-  );
+  const { data, loading } = useClientCache(`loans:${searchKey}:${sortParam}:${page}`, loansFetcher);
   const loans = useMemo(() => data?.data ?? [], [data]);
   const total = data?.total ?? 0;
   const totalPrincipal = data?.totalPrincipal ?? 0;
@@ -463,9 +594,18 @@ export function LoansPage() {
           sort={sort}
         />
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-sm font-medium text-[#5C6D63]">Cargando préstamos...</div>
+          <div className="flex items-center justify-center py-20 text-sm font-medium text-[#5C6D63]">
+            Cargando préstamos...
+          </div>
         ) : (
-          <LoansTable rows={rows} total={total} page={page} totalPages={totalPages} onPrev={() => setPage((p) => p - 1)} onNext={() => setPage((p) => p + 1)} />
+          <LoansTable
+            rows={rows}
+            total={total}
+            page={page}
+            totalPages={totalPages}
+            onPrev={() => setPage((p) => p - 1)}
+            onNext={() => setPage((p) => p + 1)}
+          />
         )}
       </div>
     </main>

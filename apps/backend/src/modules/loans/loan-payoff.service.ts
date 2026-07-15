@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { AllocationType, InterestType, PaymentFrequency } from '@inversiones/shared';
+import { roundToNearestHundred } from './indefinite-loan';
 
 type Money = number | { toString(): string };
 
@@ -19,6 +20,7 @@ type AllocationLike = {
 };
 
 type PaymentLike = {
+  paymentDate?: Date;
   allocations?: AllocationLike[];
 };
 
@@ -61,18 +63,19 @@ export class LoanPayoffService {
 
   private quoteIndefinite(loan: PayoffLoanLike, payoffDate: Date): PayoffQuote {
     const periodStart = this.periodStart(loan.startDate, payoffDate, loan.paymentFreq);
-    const movements = (loan.capitalMovements ?? []).filter(
-      (movement) => movement.effectiveDate <= payoffDate,
-    );
+    const allMovements = loan.capitalMovements ?? [];
+    const originalPrincipal =
+      this.money(loan.principal) -
+      allMovements.reduce((sum, movement) => sum + this.money(movement.amount), 0);
+    const movements = allMovements.filter((movement) => movement.effectiveDate <= payoffDate);
     const capitalOutstanding = this.round(
-      this.money(loan.principal) +
-        movements.reduce((sum, movement) => sum + this.money(movement.amount), 0),
+      originalPrincipal + movements.reduce((sum, movement) => sum + this.money(movement.amount), 0),
     );
 
     const segments = [
       {
         amount:
-          this.money(loan.principal) +
+          originalPrincipal +
           movements
             .filter((movement) => movement.effectiveDate <= periodStart)
             .reduce((sum, movement) => sum + this.money(movement.amount), 0),
@@ -86,14 +89,26 @@ export class LoanPayoffService {
     const dailyRate =
       this.periodicRate(this.money(loan.interestRate), loan.paymentFreq) /
       this.periodDays(loan.paymentFreq);
-    const earnedInterest = this.roundToNearestFifty(
-      segments.reduce((sum, segment) => {
-        const days = Math.min(
-          this.periodDays(loan.paymentFreq),
-          this.daysBetween(segment.from, payoffDate),
-        );
-        return sum + segment.amount * dailyRate * days;
-      }, 0),
+    const rawEarnedInterest = segments.reduce((sum, segment) => {
+      const days = Math.min(
+        this.periodDays(loan.paymentFreq),
+        this.daysBetween(segment.from, payoffDate),
+      );
+      return sum + segment.amount * dailyRate * days;
+    }, 0);
+    const periodEnd = this.addPeriod(periodStart, loan.paymentFreq);
+    const scheduleById = new Map(loan.schedule.map((schedule) => [schedule.id, schedule]));
+    const interestPaidForPeriod = (loan.payments ?? [])
+      .filter((payment) => !payment.paymentDate || payment.paymentDate <= payoffDate)
+      .flatMap((payment) => payment.allocations ?? [])
+      .filter((allocation) => {
+        if (allocation.type !== 'INTEREST') return false;
+        const schedule = scheduleById.get(allocation.scheduleId);
+        return schedule != null && schedule.dueDate > periodStart && schedule.dueDate <= periodEnd;
+      })
+      .reduce((sum, allocation) => sum + this.money(allocation.amount), 0);
+    const earnedInterest = roundToNearestHundred(
+      Math.max(0, rawEarnedInterest - interestPaidForPeriod),
     );
     const daysGenerated = Math.min(
       this.periodDays(loan.paymentFreq),

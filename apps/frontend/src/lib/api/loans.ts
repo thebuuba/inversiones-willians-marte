@@ -4,6 +4,7 @@ import type {
   ApiResponse,
   CreateLoanDto,
   LoanPayoffQuote,
+  UpdateLoanDto,
 } from '@inversiones/shared';
 
 export interface LoanListClient {
@@ -80,6 +81,12 @@ export interface LoanDetailPayment {
   reference: string | null;
   notes: string | null;
   receivedBy?: LoanUserSummary | null;
+  allocations?: Array<{
+    id: string;
+    scheduleId: string;
+    amount: number;
+    type: string;
+  }>;
 }
 
 export interface LoanCapitalMovement {
@@ -147,4 +154,13 @@ export async function getPayoffQuote(loanId: string, payoffDate: string): Promis
 export async function addLoanCapital(loanId: string, dto: AddLoanCapitalDto) {
   const { data } = await api.post<ApiResponse>(`/loans/${loanId}/capital-additions`, dto);
   return data.data;
+}
+
+export async function updateLoan(loanId: string, dto: UpdateLoanDto) {
+  const { data } = await api.patch<ApiResponse>(`/loans/${loanId}`, dto);
+  return data.data;
+}
+
+export async function deleteLoan(loanId: string): Promise<void> {
+  await api.delete(`/loans/${loanId}`);
 }

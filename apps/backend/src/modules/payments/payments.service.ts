@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { prisma, Prisma } from '@inversiones/database';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { centsToDecimal, moneyToCents } from '../../common/money';
+import { addPaymentInterval, calculateIndefiniteInterest } from '../loans/indefinite-loan';
+import type { PaymentFrequency } from '@inversiones/shared';
 
 @Injectable()
 export class PaymentsService {
@@ -25,6 +27,22 @@ export class PaymentsService {
           throw new BadRequestException('Payment client does not match the loan client');
         }
 
+        const schedules = [...loan.schedule];
+        if (
+          loan.interestType === 'INDEFINITE' &&
+          !schedules.some((schedule) => this.isCollectible(schedule.status))
+        ) {
+          const nextSchedule = await this.createNextIndefiniteScheduleTx(tx, {
+            loanId: loan.id,
+            principal: Number(loan.principal),
+            interestRate: Number(loan.interestRate),
+            paymentFrequency: loan.paymentFreq,
+            startDate: loan.startDate,
+            schedules,
+          });
+          schedules.push({ ...nextSchedule, paymentAllocs: [] });
+        }
+
         const paymentAmountCents = moneyToCents(dto.amount);
         let allocatedCents = 0;
         const allocations: {
@@ -33,8 +51,8 @@ export class PaymentsService {
           type: 'PRINCIPAL' | 'INTEREST' | 'PENALTY';
         }[] = [];
 
-        const pendingSchedules = loan.schedule.filter(
-          (s) => s.status === 'PENDING' || s.status === 'PARTIAL' || s.status === 'OVERDUE',
+        const pendingSchedules = schedules.filter((schedule) =>
+          this.isCollectible(schedule.status),
         );
 
         for (const schedule of pendingSchedules) {
@@ -107,7 +125,7 @@ export class PaymentsService {
         }
 
         for (const [scheduleId, amountCents] of paidBySchedule) {
-          const schedule = loan.schedule.find((s) => s.id === scheduleId);
+          const schedule = schedules.find((s) => s.id === scheduleId);
           if (!schedule) continue;
           const totalPaidCents = moneyToCents(schedule.paidAmount ?? 0) + amountCents;
           const isFull = totalPaidCents >= moneyToCents(schedule.amount);
@@ -120,6 +138,25 @@ export class PaymentsService {
               paidAmount: centsToDecimal(totalPaidCents),
             },
           });
+        }
+
+        if (loan.interestType === 'INDEFINITE') {
+          const hasOutstandingSchedule = pendingSchedules.some((schedule) => {
+            const paidInThisPayment = paidBySchedule.get(schedule.id) ?? 0;
+            const projectedPaid = moneyToCents(schedule.paidAmount ?? 0) + paidInThisPayment;
+            return projectedPaid < moneyToCents(schedule.amount);
+          });
+
+          if (!hasOutstandingSchedule) {
+            await this.createNextIndefiniteScheduleTx(tx, {
+              loanId: loan.id,
+              principal: Number(loan.principal),
+              interestRate: Number(loan.interestRate),
+              paymentFrequency: loan.paymentFreq,
+              startDate: loan.startDate,
+              schedules,
+            });
+          }
         }
 
         await this.updateLoanBalanceTx(tx, loan.id, userId, dto.clientId);
@@ -157,6 +194,52 @@ export class PaymentsService {
       },
       orderBy: { paymentDate: 'desc' },
     });
+  }
+
+  private isCollectible(status: string): boolean {
+    return status === 'PENDING' || status === 'PARTIAL' || status === 'OVERDUE';
+  }
+
+  private async createNextIndefiniteScheduleTx(
+    tx: Prisma.TransactionClient,
+    params: {
+      loanId: string;
+      principal: number;
+      interestRate: number;
+      paymentFrequency: PaymentFrequency;
+      startDate: Date;
+      schedules: Array<{ dueDate: Date }>;
+    },
+  ) {
+    const lastDueDate = params.schedules.reduce<Date | null>(
+      (latest, schedule) =>
+        latest == null || schedule.dueDate > latest ? schedule.dueDate : latest,
+      null,
+    );
+    const dueDate = addPaymentInterval(lastDueDate ?? params.startDate, params.paymentFrequency);
+    const amount = calculateIndefiniteInterest(
+      params.principal,
+      params.interestRate,
+      params.paymentFrequency,
+    );
+
+    const schedule = await tx.paymentSchedule.upsert({
+      where: { loanId_dueDate: { loanId: params.loanId, dueDate } },
+      update: {},
+      create: {
+        loanId: params.loanId,
+        dueDate,
+        amount,
+        principalPart: 0,
+        interestPart: amount,
+        balanceAfter: params.principal,
+      },
+    });
+    await tx.loan.update({
+      where: { id: params.loanId },
+      data: { totalAmount: amount },
+    });
+    return schedule;
   }
 
   private async updateLoanBalanceTx(

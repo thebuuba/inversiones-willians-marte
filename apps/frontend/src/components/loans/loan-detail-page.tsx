@@ -14,8 +14,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { addLoanCapital, getLoan, getPayoffQuote, type LoanDetail } from '@/lib/api/loans';
-import { createPayment } from '@/lib/api/payments';
-import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
+import { invalidateCachePrefix } from '@/lib/use-client-cache';
 import { formatDop } from '@/lib/currency';
 import {
   getLoanDetailTotals,
@@ -23,7 +22,6 @@ import {
   getScheduleRemaining,
 } from './loan-detail.helpers';
 import { getLoanTitle } from './loan-title';
-import { RegisterPaymentModal, type RegisterPaymentValues } from './register-payment-modal';
 import { DatePickerInput } from '@/components/ui/date-picker-input';
 import type { LoanPayoffQuote } from '@inversiones/shared';
 import { CollectionManagementPanel } from './collection-management-panel';
@@ -143,9 +141,6 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
   const [loan, setLoan] = useState<LoanDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [payoffDate, setPayoffDate] = useState(today);
   const [payoffQuote, setPayoffQuote] = useState<LoanPayoffQuote | null>(null);
   const [capitalAmount, setCapitalAmount] = useState('');
@@ -228,27 +223,6 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
         : null,
     [loan],
   );
-
-  async function handlePayment(values: RegisterPaymentValues) {
-    if (!loan) return;
-    setSaving(true);
-    setPaymentError(null);
-    try {
-      await createPayment({ loanId: loan.id, clientId: loan.clientId, ...values });
-      invalidateCachePrefix('loans:');
-      invalidateCachePrefix('clients:');
-      invalidateCache('dashboard');
-      invalidateCache('portfolio');
-      invalidateCache('monthlyCollections');
-      invalidateCache('upcomingPayments');
-      setModalOpen(false);
-      await loadLoan();
-    } catch {
-      setPaymentError('No se pudo registrar el cobro. Verifica los datos e inténtalo nuevamente.');
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function handleAddCapital() {
     if (!loan) return;
@@ -351,17 +325,13 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                 <CalendarDays className="h-4 w-4" /> Inicio: {fmtDate(loan.startDate)}
               </p>
             </div>
-            <button
+            <Link
               className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-[#285c43]"
-              onClick={() => {
-                setPaymentError(null);
-                setModalOpen(true);
-              }}
-              type="button"
+              href={`/prestamos/cobrar?loanId=${loan.id}`}
             >
               <Plus className="h-4 w-4" />
               Registrar cobro
-            </button>
+            </Link>
           </div>
         </header>
 
@@ -397,19 +367,27 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
             <section className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-base font-bold text-[#173D2C]">Progreso de pago</h2>
+                  <h2 className="text-base font-bold text-[#173D2C]">
+                    {loan.interestType === 'INDEFINITE' ? 'Cobros de interés' : 'Progreso de pago'}
+                  </h2>
                   <p className="mt-1 text-sm font-medium text-[#5C6D63]">
-                    {totals.paidInstallments} de {totals.totalInstallments} cuotas pagadas
+                    {loan.interestType === 'INDEFINITE'
+                      ? `${totals.paidInstallments} cobros registrados · capital activo`
+                      : `${totals.paidInstallments} de ${totals.totalInstallments} cuotas pagadas`}
                   </p>
                 </div>
-                <span className="text-xl font-bold text-[#2f7654]">{totals.progress}%</span>
+                <span className="text-xl font-bold text-[#2f7654]">
+                  {loan.interestType === 'INDEFINITE' ? 'Indefinido' : `${totals.progress}%`}
+                </span>
               </div>
-              <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#EDF2EF]">
-                <div
-                  className="h-full rounded-full bg-[#2f7654]"
-                  style={{ width: `${totals.progress}%` }}
-                />
-              </div>
+              {loan.interestType !== 'INDEFINITE' ? (
+                <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#EDF2EF]">
+                  <div
+                    className="h-full rounded-full bg-[#2f7654]"
+                    style={{ width: `${totals.progress}%` }}
+                  />
+                </div>
+              ) : null}
             </section>
 
             <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
@@ -591,23 +569,22 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               <DataRow label="Producto" value={loan.product?.name ?? empty} />
               <DataRow label="Tipo" value={interestType} />
               <DataRow label="Tasa" value={`${Number(loan.interestRate)}%`} />
-              <DataRow label="Fecha final" value={loan.endDate ? fmtDate(loan.endDate) : empty} />
+              <DataRow
+                label="Fecha final"
+                value={
+                  loan.interestType === 'INDEFINITE'
+                    ? 'Indefinido'
+                    : loan.endDate
+                      ? fmtDate(loan.endDate)
+                      : empty
+                }
+              />
               <DataRow label="Creado por" value={loan.createdBy?.name ?? empty} />
               <DataRow label="Cartera" value={loan.portfolio?.name ?? empty} />
             </InfoPanel>
           </aside>
         </section>
       </div>
-
-      {modalOpen ? (
-        <RegisterPaymentModal
-          error={paymentError}
-          isOpen
-          onClose={() => setModalOpen(false)}
-          onSubmit={handlePayment}
-          saving={saving}
-        />
-      ) : null}
     </main>
   );
 }

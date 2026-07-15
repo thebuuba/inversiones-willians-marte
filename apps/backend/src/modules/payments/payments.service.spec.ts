@@ -167,12 +167,20 @@ describe('PaymentsService', () => {
 
   it('keeps indefinite loans active with principal balance after interest payment', async () => {
     const loanUpdate = jest.fn();
+    const paymentScheduleUpsert = jest.fn().mockResolvedValue({
+      id: 'schedule-2',
+      dueDate: new Date('2026-07-15'),
+      amount: 600,
+      paidAmount: null,
+      status: 'PENDING',
+    });
     const tx = {
       payment: {
         create: jest.fn().mockResolvedValue({ id: 'payment-1', amount: 591.06, allocations: [] }),
       },
       paymentSchedule: {
         update: jest.fn(),
+        upsert: paymentScheduleUpsert,
       },
       paymentPromise: {
         findMany: jest.fn().mockResolvedValue([]),
@@ -184,7 +192,10 @@ describe('PaymentsService', () => {
           .mockResolvedValueOnce({
             ...loan,
             principal: 39404,
+            interestRate: 18,
             interestType: 'INDEFINITE',
+            paymentFreq: 'MONTHLY',
+            startDate: new Date('2026-05-15'),
             totalAmount: 591.06,
             schedule: [{ ...schedule, amount: 591.06, interestPart: 591.06 }],
           })
@@ -221,6 +232,79 @@ describe('PaymentsService', () => {
         status: 'ACTIVE',
       },
     });
+    expect(paymentScheduleUpsert).toHaveBeenCalledWith({
+      where: {
+        loanId_dueDate: { loanId: 'loan-1', dueDate: new Date('2026-07-15') },
+      },
+      update: {},
+      create: {
+        loanId: 'loan-1',
+        dueDate: new Date('2026-07-15'),
+        amount: 600,
+        principalPart: 0,
+        interestPart: 600,
+        balanceAfter: 39404,
+      },
+    });
+  });
+
+  it('repairs an active indefinite loan that has no pending schedule before collecting', async () => {
+    const paidSchedule = {
+      ...schedule,
+      dueDate: new Date('2026-06-15'),
+      amount: 600,
+      interestPart: 600,
+      paidAmount: 600,
+      status: 'PAID',
+    };
+    const createdSchedules: any[] = [];
+    const tx = {
+      payment: { create: jest.fn().mockResolvedValue({ id: 'payment-2', allocations: [] }) },
+      paymentSchedule: {
+        update: jest.fn(),
+        upsert: jest.fn().mockImplementation(({ create }) => {
+          const created = {
+            ...create,
+            id: `schedule-${createdSchedules.length + 2}`,
+            paidAmount: null,
+            status: 'PENDING',
+          };
+          createdSchedules.push(created);
+          return created;
+        }),
+      },
+      paymentPromise: { findMany: jest.fn().mockResolvedValue([]), update: jest.fn() },
+      loan: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValueOnce({
+            ...loan,
+            principal: 40000,
+            interestRate: 18,
+            interestType: 'INDEFINITE',
+            paymentFreq: 'MONTHLY',
+            startDate: new Date('2026-05-15'),
+            schedule: [paidSchedule],
+          })
+          .mockResolvedValueOnce({
+            ...loan,
+            principal: 40000,
+            interestType: 'INDEFINITE',
+            schedule: [paidSchedule, ...createdSchedules],
+          }),
+        update: jest.fn(),
+      },
+      auditLog: { create: jest.fn() },
+    };
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
+
+    await service.create({ loanId: 'loan-1', clientId: 1, amount: 600, paymentDate }, 'user-1');
+
+    expect(tx.paymentSchedule.upsert).toHaveBeenCalledTimes(2);
+    expect(createdSchedules.map((item) => item.dueDate)).toEqual([
+      new Date('2026-07-15'),
+      new Date('2026-08-15'),
+    ]);
   });
 
   it('rejects a payment when the supplied client does not own the loan', async () => {

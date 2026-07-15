@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InterestTypeEnum } from '@inversiones/shared';
 import type { InterestType, PaymentFrequency } from '@inversiones/shared';
 import { AmortizationRow } from './dto/create-loan.dto';
+import { calculateIndefiniteInterest } from './indefinite-loan';
 
 @Injectable()
 export class AmortizationService {
@@ -15,6 +16,27 @@ export class AmortizationService {
 
   private roundAllocation(value: number, payment: number): number {
     return Number.isInteger(payment) ? Math.round(value) : this.roundMoney(value);
+  }
+
+  private createRoundedFinalRow(params: {
+    installment: number;
+    dueDate: Date;
+    principalPart: number;
+    interestPart: number;
+  }): AmortizationRow {
+    const principalPart = this.roundMoney(Math.max(0, params.principalPart));
+    const exactAmount = principalPart + params.interestPart;
+    const minimumRoundedAmount = Math.ceil(principalPart / 100) * 100;
+    const amount = Math.max(this.roundToNearestHundred(exactAmount), minimumRoundedAmount);
+
+    return {
+      installment: params.installment,
+      dueDate: new Date(params.dueDate),
+      amount,
+      principalPart,
+      interestPart: this.roundMoney(amount - principalPart),
+      balanceAfter: 0,
+    };
   }
 
   private createRow(params: {
@@ -84,14 +106,14 @@ export class AmortizationService {
 
     const lastInterestPart = balance * periodicRate;
     dueDate = this.addPaymentInterval(dueDate, paymentFrequency);
-    schedule.push({
-      installment: term,
-      dueDate: new Date(dueDate),
-      amount: this.roundMoney(balance + lastInterestPart),
-      principalPart: this.roundMoney(balance),
-      interestPart: this.roundMoney(lastInterestPart),
-      balanceAfter: 0,
-    });
+    schedule.push(
+      this.createRoundedFinalRow({
+        installment: term,
+        dueDate,
+        principalPart: this.roundMoney(balance),
+        interestPart: this.roundMoney(lastInterestPart),
+      }),
+    );
 
     return schedule;
   }
@@ -132,14 +154,14 @@ export class AmortizationService {
 
     const finalInterestPart = this.roundAllocation(balance * periodicRate, customPayment);
     dueDate = this.addPaymentInterval(dueDate, paymentFrequency);
-    schedule.push({
-      installment: term,
-      dueDate: new Date(dueDate),
-      amount: this.roundMoney(balance + finalInterestPart),
-      principalPart: this.roundMoney(balance),
-      interestPart: this.roundMoney(finalInterestPart),
-      balanceAfter: 0,
-    });
+    schedule.push(
+      this.createRoundedFinalRow({
+        installment: term,
+        dueDate,
+        principalPart: this.roundMoney(balance),
+        interestPart: this.roundMoney(finalInterestPart),
+      }),
+    );
 
     return schedule;
   }
@@ -150,23 +172,25 @@ export class AmortizationService {
     startDate: Date;
     paymentFrequency: PaymentFrequency;
   }): AmortizationRow[] {
-    const principalCents = Math.round(params.principal * 100);
-    const regularPrincipalCents = Math.floor(principalCents / params.term);
-    let remainingCents = principalCents;
+    const roundedInstallment = this.roundToNearestHundred(params.principal / params.term);
+    let remainingPrincipal = params.principal;
     let dueDate = new Date(params.startDate);
 
     return Array.from({ length: params.term }, (_, index) => {
       dueDate = this.addPaymentInterval(dueDate, params.paymentFrequency);
-      const installmentCents = index === params.term - 1 ? remainingCents : regularPrincipalCents;
-      remainingCents -= installmentCents;
+      const principalPart =
+        index === params.term - 1
+          ? remainingPrincipal
+          : Math.min(roundedInstallment, remainingPrincipal);
+      remainingPrincipal -= principalPart;
 
       return {
         installment: index + 1,
         dueDate: new Date(dueDate),
-        amount: installmentCents / 100,
-        principalPart: installmentCents / 100,
+        amount: principalPart,
+        principalPart,
         interestPart: 0,
-        balanceAfter: remainingCents / 100,
+        balanceAfter: remainingPrincipal,
       };
     });
   }
@@ -231,14 +255,14 @@ export class AmortizationService {
       const lastPrincipalPart = balance;
       const lastInterestPart = interestPerInstallment;
       dueDate = this.addPaymentInterval(dueDate, paymentFrequency);
-      schedule.push({
-        installment: term,
-        dueDate: new Date(dueDate),
-        amount: this.roundMoney(lastPrincipalPart + lastInterestPart),
-        principalPart: this.roundMoney(lastPrincipalPart),
-        interestPart: this.roundMoney(lastInterestPart),
-        balanceAfter: 0,
-      });
+      schedule.push(
+        this.createRoundedFinalRow({
+          installment: term,
+          dueDate,
+          principalPart: this.roundMoney(lastPrincipalPart),
+          interestPart: this.roundMoney(lastInterestPart),
+        }),
+      );
     } else if (interestType === InterestTypeEnum.REDUCING) {
       if (periodicRate === 0) {
         return this.calculateZeroRateSchedule({
@@ -278,39 +302,40 @@ export class AmortizationService {
       const fixedInterest = principal * periodicRate;
       const principalPartPerInstallment = principal / term;
       const rawInstallment = principalPartPerInstallment + fixedInterest;
-      const roundedInstallment = this.roundToNearestHundred(rawInstallment);
-
-      const principalPartDiff = roundedInstallment - fixedInterest;
-      const adjustedPrincipalPart =
-        principalPartDiff > 0 ? principalPartDiff : principalPartPerInstallment;
+      const minimumInstallment = Math.ceil(principalPartPerInstallment / 100) * 100;
+      const roundedInstallment = Math.max(
+        this.roundToNearestHundred(rawInstallment),
+        minimumInstallment,
+      );
+      const regularPrincipalPart = this.roundMoney(principalPartPerInstallment);
       let balance = principal;
 
       for (let i = 1; i < term; i++) {
         dueDate = this.addPaymentInterval(dueDate, paymentFrequency);
-        balance -= adjustedPrincipalPart;
+        balance -= regularPrincipalPart;
 
         schedule.push({
           installment: i,
           dueDate: new Date(dueDate),
           amount: this.roundMoney(roundedInstallment),
-          principalPart: this.roundMoney(adjustedPrincipalPart),
-          interestPart: this.roundMoney(fixedInterest),
+          principalPart: regularPrincipalPart,
+          interestPart: this.roundMoney(roundedInstallment - regularPrincipalPart),
           balanceAfter: this.roundMoney(Math.max(0, balance)),
         });
       }
 
-      const lastPrincipalPart = balance;
       dueDate = this.addPaymentInterval(dueDate, paymentFrequency);
+      const lastPrincipalPart = this.roundMoney(balance);
       schedule.push({
         installment: term,
         dueDate: new Date(dueDate),
-        amount: this.roundMoney(lastPrincipalPart + fixedInterest),
-        principalPart: this.roundMoney(lastPrincipalPart),
-        interestPart: this.roundMoney(fixedInterest),
+        amount: this.roundMoney(roundedInstallment),
+        principalPart: lastPrincipalPart,
+        interestPart: this.roundMoney(roundedInstallment - lastPrincipalPart),
         balanceAfter: 0,
       });
     } else if (interestType === InterestTypeEnum.INDEFINITE) {
-      const interestAmount = principal * periodicRate;
+      const interestAmount = calculateIndefiniteInterest(principal, interestRate, paymentFrequency);
       dueDate = this.addPaymentInterval(dueDate, paymentFrequency);
       schedule.push({
         installment: 1,

@@ -6,6 +6,10 @@ jest.mock('@inversiones/database', () => ({
     loan: {
       findUnique: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
+    },
+    paymentSchedule: {
+      upsert: jest.fn(),
     },
     loanProduct: {
       findUnique: jest.fn(),
@@ -65,6 +69,49 @@ describe('LoansService', () => {
     );
   });
 
+  it('repairs an active indefinite loan with no pending schedule when loading its detail', async () => {
+    jest.mocked(prisma.loan.findUnique).mockResolvedValue({
+      id: 'loan-1',
+      status: 'ACTIVE',
+      interestType: 'INDEFINITE',
+      principal: 40000,
+      interestRate: 18,
+      paymentFreq: 'MONTHLY',
+      startDate: new Date('2026-05-15'),
+      totalAmount: 600,
+      schedule: [
+        {
+          id: 'schedule-1',
+          dueDate: new Date('2026-06-15'),
+          status: 'PAID',
+        },
+      ],
+    } as any);
+    jest.mocked(prisma.paymentSchedule.upsert).mockResolvedValue({
+      id: 'schedule-2',
+      dueDate: new Date('2026-07-15'),
+      status: 'PENDING',
+    } as any);
+
+    const result = await service.findOne('loan-1');
+
+    expect(prisma.paymentSchedule.upsert).toHaveBeenCalledWith({
+      where: {
+        loanId_dueDate: { loanId: 'loan-1', dueDate: new Date('2026-07-15') },
+      },
+      update: {},
+      create: {
+        loanId: 'loan-1',
+        dueDate: new Date('2026-07-15'),
+        amount: 600,
+        principalPart: 0,
+        interestPart: 600,
+        balanceAfter: 40000,
+      },
+    });
+    expect(result.schedule).toHaveLength(2);
+  });
+
   it('writes an audit event when a loan is created', async () => {
     const amortization = {
       calculate: jest.fn().mockReturnValue([
@@ -116,6 +163,53 @@ describe('LoansService', () => {
         newValues: expect.objectContaining({ loanNumber: 15, principal: 1000 }),
       }),
     });
+  });
+
+  it('does not persist an end date for an indefinite loan', async () => {
+    const amortization = {
+      calculate: jest.fn().mockReturnValue([
+        {
+          dueDate: new Date('2026-07-01'),
+          amount: 100,
+          principalPart: 0,
+          interestPart: 100,
+          balanceAfter: 1000,
+        },
+      ]),
+    };
+    service = new LoansService(amortization as any, {} as any);
+    jest.mocked(prisma.loanProduct.findUnique).mockResolvedValue({
+      id: 'product-1',
+      active: true,
+      interestRate: 12,
+      interestType: 'FIXED',
+      paymentFrequency: 'MONTHLY',
+      maxTerm: 12,
+    } as any);
+    jest.mocked(prisma.client.findUnique).mockResolvedValue({ id: 1, active: true } as any);
+    jest.mocked(prisma.loan.create).mockResolvedValue({
+      id: 'loan-1',
+      loanNumber: 20,
+      clientId: 1,
+      principal: 1000,
+      totalAmount: 100,
+    } as any);
+
+    await service.create(
+      {
+        clientId: 1,
+        productId: 'product-1',
+        principal: 1000,
+        term: 1,
+        startDate: '2026-06-01',
+        amortizationType: 'INDEFINITE',
+      },
+      'user-1',
+    );
+
+    expect(prisma.loan.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ endDate: null }) }),
+    );
   });
 
   it('uses manual loan terms when creating the persisted schedule', async () => {
@@ -181,14 +275,11 @@ describe('LoansService', () => {
   });
 
   it('adds indefinite-loan capital with atomic increments', async () => {
-    jest.mocked(prisma.loan.findUnique).mockResolvedValue({
-      id: 'loan-1',
-      clientId: 1,
-      status: 'ACTIVE',
-      interestType: 'INDEFINITE',
-      principal: 1000,
-      balance: 1000,
-    } as any);
+    const pendingSchedule = {
+      id: 'schedule-1',
+      dueDate: new Date('2026-08-01T00:00:00.000Z'),
+      status: 'PENDING',
+    };
     const tx = {
       loan: {
         findUnique: jest.fn().mockResolvedValue({
@@ -196,10 +287,19 @@ describe('LoansService', () => {
           clientId: 1,
           status: 'ACTIVE',
           interestType: 'INDEFINITE',
+          interestRate: 240,
+          paymentFreq: 'MONTHLY',
+          startDate: new Date('2026-07-01T00:00:00.000Z'),
           principal: 1000,
           balance: 1000,
+          schedule: [pendingSchedule],
+          capitalMovements: [],
         }),
         update: jest.fn().mockResolvedValue({ principal: 1500, balance: 1500 }),
+      },
+      paymentSchedule: {
+        update: jest.fn(),
+        create: jest.fn(),
       },
       loanCapitalMovement: {
         create: jest.fn().mockResolvedValue({ id: 'movement-1' }),
@@ -210,7 +310,13 @@ describe('LoansService', () => {
 
     await service.addCapital('loan-1', { amount: 500, effectiveDate: '2026-07-13' }, 'user-1');
 
-    expect(tx.loan.findUnique).toHaveBeenCalledWith({ where: { id: 'loan-1' } });
+    expect(tx.loan.findUnique).toHaveBeenCalledWith({
+      where: { id: 'loan-1' },
+      include: {
+        schedule: { orderBy: { dueDate: 'asc' } },
+        capitalMovements: { orderBy: { effectiveDate: 'asc' } },
+      },
+    });
     expect(tx.loan.update).toHaveBeenCalledWith({
       where: { id: 'loan-1' },
       data: {
@@ -218,6 +324,14 @@ describe('LoansService', () => {
         balance: { increment: 500 },
       },
       select: { principal: true, balance: true },
+    });
+    expect(tx.paymentSchedule.update).toHaveBeenCalledWith({
+      where: { id: 'schedule-1' },
+      data: {
+        amount: 300,
+        interestPart: 300,
+        balanceAfter: 1500,
+      },
     });
   });
 });

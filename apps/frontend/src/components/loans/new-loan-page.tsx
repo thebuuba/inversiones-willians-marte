@@ -78,9 +78,13 @@ function TextInput({
   return (
     <label className={`block ${className}`}>
       {label && <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">{label}</span>}
-      <div className={`flex h-[42px] items-center rounded-[8px] border bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] transition focus-within:ring-2 ${
-        error ? 'border-red-300 focus-within:border-red-400 focus-within:ring-red-100' : 'border-[#DDEBE3] focus-within:border-[#285C43] focus-within:ring-[#EAF6EF]'
-      }`}>
+      <div
+        className={`flex h-[42px] items-center rounded-[8px] border bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] transition focus-within:ring-2 ${
+          error
+            ? 'border-red-300 focus-within:border-red-400 focus-within:ring-red-100'
+            : 'border-[#DDEBE3] focus-within:border-[#285C43] focus-within:ring-[#EAF6EF]'
+        }`}
+      >
         {prefix && <span className="mr-2 shrink-0 text-xs text-[#5C6D63]">{prefix}</span>}
         <input
           className="h-full min-w-0 flex-1 bg-transparent outline-none"
@@ -116,7 +120,9 @@ function SelectInput({
       <div className="relative">
         <select
           className={`h-[42px] w-full appearance-none rounded-[8px] border bg-white px-3 pr-8 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:ring-2 ${
-            error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-[#DDEBE3] focus:border-[#285C43] focus:ring-[#EAF6EF]'
+            error
+              ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+              : 'border-[#DDEBE3] focus:border-[#285C43] focus:ring-[#EAF6EF]'
           }`}
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
@@ -174,7 +180,9 @@ function ClientSearchCard({
             type="button"
           >
             <p className="truncate text-base font-bold leading-tight text-[#173D2C]">{fullName}</p>
-            <p className="mt-0.5 text-xs font-medium text-[#5C6D63]">{selectedClient.identification ?? '—'}</p>
+            <p className="mt-0.5 text-xs font-medium text-[#5C6D63]">
+              {selectedClient.identification ?? '—'}
+            </p>
           </button>
           <button
             className="shrink-0 rounded-lg border border-[#DDEBE3] px-2.5 py-1 text-xs font-bold text-[#2F7654] transition hover:bg-[#F0F7F3]"
@@ -214,8 +222,12 @@ function ClientSearchCard({
                 onClick={() => handleSelect(c)}
                 type="button"
               >
-                <p className="font-bold text-[#173D2C]">{c.firstName} {c.lastName}</p>
-                <p className="mt-0.5 text-[#5C6D63]">{c.identification ?? '—'} · {c.phone ?? '—'}</p>
+                <p className="font-bold text-[#173D2C]">
+                  {c.firstName} {c.lastName}
+                </p>
+                <p className="mt-0.5 text-[#5C6D63]">
+                  {c.identification ?? '—'} · {c.phone ?? '—'}
+                </p>
               </button>
             ))}
           </div>
@@ -258,8 +270,12 @@ function LoanSummaryPanel({
         <div className="grid grid-cols-1 divide-y divide-[#DDEBE3] md:grid-cols-3 md:divide-x md:divide-y-0">
           <div className="flex min-h-[74px] items-center justify-between gap-3 px-4 py-4">
             <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">Capital</p>
-              <p className="mt-1.5 truncate text-xl font-bold leading-none text-[#111827]">{formatCurrency(amount)}</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">
+                Capital
+              </p>
+              <p className="mt-1.5 truncate text-xl font-bold leading-none text-[#111827]">
+                {formatCurrency(amount)}
+              </p>
               <p className="mt-1 text-xs font-medium text-[#6B7280]">Monto solicitado</p>
             </div>
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F0F1F4] text-[#374151]">
@@ -268,9 +284,16 @@ function LoanSummaryPanel({
           </div>
           <div className="flex min-h-[74px] items-center justify-between gap-3 px-4 py-4">
             <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">Interés generado</p>
-              <p className="mt-1.5 truncate text-xl font-bold leading-none text-[#B73B2F]">{formatCurrency(interest)}</p>
-              <p className="mt-1 text-xs font-medium text-[#6B7280]"><span className="font-bold text-[#B73B2F]">{interestPercent.toFixed(1)}%</span> del capital</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">
+                Interés generado
+              </p>
+              <p className="mt-1.5 truncate text-xl font-bold leading-none text-[#B73B2F]">
+                {formatCurrency(interest)}
+              </p>
+              <p className="mt-1 text-xs font-medium text-[#6B7280]">
+                <span className="font-bold text-[#B73B2F]">{interestPercent.toFixed(1)}%</span> del
+                capital
+              </p>
             </div>
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#FBE5E3] text-[#C7392E]">
               <TrendingUp className="h-4 w-4" />
@@ -278,8 +301,12 @@ function LoanSummaryPanel({
           </div>
           <div className="flex min-h-[74px] items-center justify-between gap-3 px-4 py-4">
             <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">Total a pagar</p>
-              <p className="mt-1.5 truncate text-xl font-bold leading-none text-[#2F7654]">{formatCurrency(total)}</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">
+                Total a pagar
+              </p>
+              <p className="mt-1.5 truncate text-xl font-bold leading-none text-[#2F7654]">
+                {formatCurrency(total)}
+              </p>
               <p className="mt-1 text-xs font-medium text-[#6B7280]">Capital + intereses</p>
             </div>
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#E7F4EC] text-[#2F7654]">
@@ -387,15 +414,24 @@ function MainInfoCard({
             <SelectInput
               label="Amortización"
               options={amortizationOptions.map((option) => option.label)}
-              value={amortizationOptions.find((option) => option.value === amortizationType)?.label ?? 'Fija'}
-              onChange={(value) => onAmortizationTypeChange(amortizationOptions.find((option) => option.label === value)?.value ?? 'SIMPLE')}
+              value={
+                amortizationOptions.find((option) => option.value === amortizationType)?.label ??
+                'Fija'
+              }
+              onChange={(value) =>
+                onAmortizationTypeChange(
+                  amortizationOptions.find((option) => option.label === value)?.value ?? 'SIMPLE',
+                )
+              }
               error={errors?.amortizationType}
             />
             <SelectInput
               label="Frecuencia"
               options={freqOptions.map((o) => o.label)}
               value={freqOptions.find((o) => o.value === paymentFrequency)?.label ?? 'Mensual'}
-              onChange={(v) => onPaymentFrequencyChange(freqOptions.find((o) => o.label === v)?.value ?? 'MONTHLY')}
+              onChange={(v) =>
+                onPaymentFrequencyChange(freqOptions.find((o) => o.label === v)?.value ?? 'MONTHLY')
+              }
               error={errors?.paymentFrequency}
             />
             <label className="block">
@@ -406,7 +442,11 @@ function MainInfoCard({
                 invalid={!!errors?.firstPaymentDate}
                 className="h-[42px] w-full rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#EAF6EF]"
               />
-              {errors?.firstPaymentDate && <span className="mt-1 block text-xs font-medium text-red-500">{errors.firstPaymentDate}</span>}
+              {errors?.firstPaymentDate && (
+                <span className="mt-1 block text-xs font-medium text-red-500">
+                  {errors.firstPaymentDate}
+                </span>
+              )}
             </label>
             <TextInput
               label="Monto de cuota (opcional)"
@@ -416,7 +456,9 @@ function MainInfoCard({
             />
           </div>
           <label className="block">
-            <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">Descripción / propósito</span>
+            <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">
+              Descripción / propósito
+            </span>
             <textarea
               className="h-[72px] w-full resize-none rounded-[8px] border border-[#DDEBE3] bg-white px-3 py-2.5 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition placeholder:text-[#8F9691] focus:border-[#285C43] focus:ring-2 focus:ring-[#EAF6EF]"
               placeholder="Ej. Capital de trabajo para negocio familiar..."
@@ -505,7 +547,9 @@ function NewLoanStepTwo({
 
     if (!paymentFrequency) newErrors.paymentFrequency = 'Selecciona una frecuencia';
 
-    const dateValid = /^\d{4}-\d{2}-\d{2}$/.test(firstPaymentDate) && !Number.isNaN(new Date(`${firstPaymentDate}T00:00:00Z`).getTime());
+    const dateValid =
+      /^\d{4}-\d{2}-\d{2}$/.test(firstPaymentDate) &&
+      !Number.isNaN(new Date(`${firstPaymentDate}T00:00:00Z`).getTime());
     if (!dateValid) newErrors.firstPaymentDate = 'Selecciona una fecha válida';
 
     setErrors(newErrors);
@@ -525,13 +569,19 @@ function NewLoanStepTwo({
 
     if (amortizationType === 'NO_INTEREST') {
       const payment = months > 0 ? principal / months : 0;
-      return { adjustedRate: 0, summary: { principal, months, payment, total: principal, interest: 0 } };
+      return {
+        adjustedRate: 0,
+        summary: { principal, months, payment, total: principal, interest: 0 },
+      };
     }
 
     if (amortizationType === 'INDEFINITE') {
       const rate = periodicRate / 100;
       const payment = principal * rate;
-      return { adjustedRate: periodicRate, summary: { principal, months: 1, payment, total: payment, interest: payment } };
+      return {
+        adjustedRate: periodicRate,
+        summary: { principal, months: 1, payment, total: payment, interest: payment },
+      };
     }
 
     const fixedInterest = principal * (periodicRate / 100);
@@ -561,7 +611,14 @@ function NewLoanStepTwo({
   const effectiveRate = adjustedRate;
 
   const scheduleData = useMemo(
-    () => computeSchedule(summary.principal, effectiveRate, summary.months, amortizationType, customPayment),
+    () =>
+      computeSchedule(
+        summary.principal,
+        effectiveRate,
+        summary.months,
+        amortizationType,
+        customPayment,
+      ),
     [summary.principal, effectiveRate, summary.months, amortizationType, customPayment],
   );
   const summaryTotals = getLoanSummaryTotals(summary.principal, scheduleData.totalInterest);
@@ -654,12 +711,20 @@ function AmortizationRow({
   total = false,
   totalInstallments,
 }: {
-  row: { number: number | string; date?: string; payment: number | string; principal: number | string; interest: number | string; balance: number | string };
+  row: {
+    number: number | string;
+    date?: string;
+    payment: number | string;
+    principal: number | string;
+    interest: number | string;
+    balance: number | string;
+  };
   total?: boolean;
   totalInstallments: number;
 }) {
   const fmt = (v: number | string) => (typeof v === 'number' ? formatCurrency(v) : v);
-  const installmentLabel = typeof row.number === 'number' ? `${row.number}/${totalInstallments}` : row.number;
+  const installmentLabel =
+    typeof row.number === 'number' ? `${row.number}/${totalInstallments}` : row.number;
 
   return (
     <div
@@ -667,12 +732,18 @@ function AmortizationRow({
         total ? 'bg-[#F8FBF9] font-bold' : 'bg-white'
       } ${total ? 'border-[#C8D7CF]' : 'border-[#DDEBE3]'}`}
     >
-      <span className={total ? 'text-[#374151]' : 'font-medium text-[#111827]'}>{installmentLabel}</span>
-      <span className={total ? 'font-medium text-[#9CA3AF]' : 'font-medium text-[#374151]'}>{row.date ?? '—'}</span>
+      <span className={total ? 'text-[#374151]' : 'font-medium text-[#111827]'}>
+        {installmentLabel}
+      </span>
+      <span className={total ? 'font-medium text-[#9CA3AF]' : 'font-medium text-[#374151]'}>
+        {row.date ?? '—'}
+      </span>
       <span className="text-right font-medium text-[#B73B2F]">{fmt(row.interest)}</span>
       <span className="text-right font-medium text-[#2F7654]">{fmt(row.principal)}</span>
       <span className="text-right font-bold text-[#111827]">{fmt(row.payment)}</span>
-      <span className={`text-right font-medium ${total ? 'text-[#9CA3AF]' : 'text-[#374151]'}`}>{fmt(row.balance)}</span>
+      <span className={`text-right font-medium ${total ? 'text-[#9CA3AF]' : 'text-[#374151]'}`}>
+        {fmt(row.balance)}
+      </span>
     </div>
   );
 }
@@ -686,7 +757,13 @@ function AmortizationTableCard({
   firstPaymentDate,
   paymentFrequency,
 }: {
-  schedule: { number: number; payment: number; principal: number; interest: number; balance: number }[];
+  schedule: {
+    number: number;
+    payment: number;
+    principal: number;
+    interest: number;
+    balance: number;
+  }[];
   totalPayment: number;
   totalPrincipal: number;
   totalInterest: number;
@@ -707,7 +784,9 @@ function AmortizationTableCard({
         transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
       >
         <div className="flex items-center justify-end gap-4 px-5 py-4">
-          <p className="shrink-0 rounded-full bg-[#E7F4EC] px-3 py-1 text-sm font-bold text-[#2F7654]">{term} {term === 1 ? 'cuota' : 'cuotas'}</p>
+          <p className="shrink-0 rounded-full bg-[#E7F4EC] px-3 py-1 text-sm font-bold text-[#2F7654]">
+            {term} {term === 1 ? 'cuota' : 'cuotas'}
+          </p>
         </div>
 
         <div className="max-h-[360px] overflow-y-auto border-t border-[#DDEBE3]">
@@ -768,9 +847,7 @@ function Header({ clientId }: { clientId: number | null }) {
 
       <div className="mt-8">
         <div>
-          <h1 className="text-2xl font-bold leading-tight text-[#173D2C]">
-            Crear préstamo
-          </h1>
+          <h1 className="text-2xl font-bold leading-tight text-[#173D2C]">Crear préstamo</h1>
         </div>
       </div>
     </>
@@ -785,7 +862,9 @@ export function NewLoanPage() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [amount, setAmount] = useState('');
   const [term, setTerm] = useState('');
-  const [paymentFrequency, setPaymentFrequency] = useState<'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY'>('MONTHLY');
+  const [paymentFrequency, setPaymentFrequency] = useState<'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY'>(
+    'MONTHLY',
+  );
   const [purpose, setPurpose] = useState('');
   const [customInterestRate, setCustomInterestRate] = useState('');
   const [customPayment, setCustomPayment] = useState('');
@@ -847,11 +926,16 @@ export function NewLoanPage() {
         clientId: selectedClient.id,
         productId: selectedProduct.id,
         principal,
-        interestRate: interestRate ?? undefined,
+        interestRate: amortizationType === 'NO_INTEREST' ? 0 : (interestRate ?? undefined),
         term: totalTerm,
         startDate: firstPaymentDate || new Date().toISOString(),
         portfolioId: selectedPortfolioId ?? undefined,
-        amortizationType: amortizationType === 'INDEFINITE' ? 'INDEFINITE' : undefined,
+        amortizationType:
+          amortizationType === 'SIMPLE'
+            ? 'FIXED'
+            : amortizationType === 'INDEFINITE'
+              ? 'INDEFINITE'
+              : 'REDUCING',
         paymentFrequency: toApiPaymentFrequency(paymentFrequency),
         customPayment: payment && payment > 0 ? payment : undefined,
         notes: purpose || undefined,
@@ -876,10 +960,16 @@ export function NewLoanPage() {
 
         {loadingProducts && (
           <div className="mt-8 space-y-5">
-            <div className={`h-[72px] animate-pulse rounded-[14px] bg-white/70 ${LOAN_CARD_SHADOW}`} />
+            <div
+              className={`h-[72px] animate-pulse rounded-[14px] bg-white/70 ${LOAN_CARD_SHADOW}`}
+            />
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
-              <div className={`h-[380px] animate-pulse rounded-xl bg-white/70 ${LOAN_CARD_SHADOW}`} />
-              <div className={`h-[200px] animate-pulse rounded-xl bg-white/70 ${LOAN_CARD_SHADOW}`} />
+              <div
+                className={`h-[380px] animate-pulse rounded-xl bg-white/70 ${LOAN_CARD_SHADOW}`}
+              />
+              <div
+                className={`h-[200px] animate-pulse rounded-xl bg-white/70 ${LOAN_CARD_SHADOW}`}
+              />
             </div>
           </div>
         )}
@@ -890,30 +980,32 @@ export function NewLoanPage() {
           </p>
         )}
 
-        {!loadingProducts && <NewLoanStepTwo
-          amount={amount}
-          onAmountChange={setAmount}
-          onSelectClient={setSelectedClient}
-          onTermChange={setTerm}
-          selectedClient={selectedClient}
-          term={term}
-          paymentFrequency={paymentFrequency}
-          onPaymentFrequencyChange={setPaymentFrequency}
-          purpose={purpose}
-          onPurposeChange={setPurpose}
-          customInterestRate={customInterestRate}
-          onCustomInterestRateChange={setCustomInterestRate}
-          customPayment={customPayment}
-          onCustomPaymentChange={setCustomPayment}
-          amortizationType={amortizationType}
-          onAmortizationTypeChange={handleAmortizationTypeChange}
-          firstPaymentDate={firstPaymentDate}
-          onFirstPaymentDateChange={setFirstPaymentDate}
-          selectedPortfolioId={selectedPortfolioId}
-          onSelectPortfolio={setSelectedPortfolioId}
-          saving={saving}
-          onSave={handleCreate}
-        />}
+        {!loadingProducts && (
+          <NewLoanStepTwo
+            amount={amount}
+            onAmountChange={setAmount}
+            onSelectClient={setSelectedClient}
+            onTermChange={setTerm}
+            selectedClient={selectedClient}
+            term={term}
+            paymentFrequency={paymentFrequency}
+            onPaymentFrequencyChange={setPaymentFrequency}
+            purpose={purpose}
+            onPurposeChange={setPurpose}
+            customInterestRate={customInterestRate}
+            onCustomInterestRateChange={setCustomInterestRate}
+            customPayment={customPayment}
+            onCustomPaymentChange={setCustomPayment}
+            amortizationType={amortizationType}
+            onAmortizationTypeChange={handleAmortizationTypeChange}
+            firstPaymentDate={firstPaymentDate}
+            onFirstPaymentDateChange={setFirstPaymentDate}
+            selectedPortfolioId={selectedPortfolioId}
+            onSelectPortfolio={setSelectedPortfolioId}
+            saving={saving}
+            onSave={handleCreate}
+          />
+        )}
       </div>
     </main>
   );
