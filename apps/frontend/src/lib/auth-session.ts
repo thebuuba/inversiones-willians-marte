@@ -76,7 +76,8 @@ export async function loadStoredAuthSession(fetchProfile: () => Promise<User>): 
   if (!stored.token) return stored;
 
   try {
-    return { user: await fetchProfile(), token: stored.token };
+    const user = await fetchProfile();
+    return { user, token: getStoredAuth().token ?? stored.token };
   } catch (error) {
     if (isRejectedSession(error)) {
       clearStoredAuth();

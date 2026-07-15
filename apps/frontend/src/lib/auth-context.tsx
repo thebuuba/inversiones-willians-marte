@@ -9,9 +9,10 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { api } from './api.ts';
+import { api, refreshAccessToken, sessionApi } from './api.ts';
 import {
   clearStoredAuth,
+  getStoredAuth,
   loadStoredAuthSession,
   saveStoredAuth,
   type StoredAuth,
@@ -23,7 +24,7 @@ interface AuthContextType {
   token: string | null;
   login: (username: string, password: string) => Promise<void>;
   register: (name: string, username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   loading: boolean;
 }
 
@@ -45,6 +46,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function syncAuth() {
       setLoading(true);
+      if (!getStoredAuth().token) {
+        try {
+          const refreshed = await refreshAccessToken();
+          if (active) setAuth(refreshed);
+        } catch {
+          if (active) setAuth({ user: null, token: null });
+        } finally {
+          if (active) setLoading(false);
+        }
+        return;
+      }
       const nextAuth = await loadStoredAuthSession(async () => {
         const { data } = await api.get('/auth/profile');
         return data.data as User;
@@ -73,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {
-    const { data } = await api.post('/auth/login', { username, password });
+    const { data } = await sessionApi.post('/login', { username, password });
     const { user, accessToken } = data.data;
     persistAuth({ user, token: accessToken });
   }, [persistAuth]);
@@ -84,11 +96,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persistAuth({ user, token: accessToken });
   }, [persistAuth]);
 
-  const logout = useCallback(() => {
-    clearStoredAuth();
-    setAuth({ user: null, token: null });
-    setLoading(false);
-    notifyAuthChanged();
+  const logout = useCallback(async () => {
+    try {
+      await sessionApi.post('/logout');
+    } catch {
+      // Clearing the local session must still work during an outage.
+    } finally {
+      clearStoredAuth();
+      setAuth({ user: null, token: null });
+      setLoading(false);
+    }
   }, []);
 
   const value = useMemo(

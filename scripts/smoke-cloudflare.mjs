@@ -55,8 +55,10 @@ async function main() {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ username, password }),
     });
-    const token = (await login.json())?.data?.accessToken;
-    if (!token) throw new Error('Login real no devolvio accessToken');
+    const loginData = (await login.json())?.data;
+    const token = loginData?.accessToken;
+    const refreshToken = loginData?.refreshToken;
+    if (!token || !refreshToken) throw new Error('Login real no devolvio la sesion completa');
     const authenticated = { headers: { authorization: `Bearer ${token}` } };
     await fetchChecked('Perfil autenticado', `${apiUrl}/auth/profile`, 200, authenticated);
     await fetchChecked('Panel agregado', `${apiUrl}/reports/overview`, 200, authenticated);
@@ -68,6 +70,49 @@ async function main() {
     );
     await fetchChecked('Clientes autenticados', `${apiUrl}/clients?take=1`, 200, authenticated);
     await fetchChecked('Documentos autenticados', `${apiUrl}/documents?take=1`, 200, authenticated);
+
+    const webSessionLogin = await fetchChecked(
+      'Sesion web persistente',
+      `${webUrl}/api/auth/session/login`,
+      201,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      },
+    );
+    const webLoginBody = await webSessionLogin.json();
+    if (webLoginBody?.data?.refreshToken) {
+      throw new Error('La sesion web expuso el refresh token al navegador');
+    }
+    const loginCookie = webSessionLogin.headers.get('set-cookie');
+    if (
+      !loginCookie ||
+      !/HttpOnly/i.test(loginCookie) ||
+      !/Secure/i.test(loginCookie) ||
+      !/SameSite=Lax/i.test(loginCookie)
+    ) {
+      throw new Error('La cookie de sesion web no tiene todos los atributos de seguridad');
+    }
+
+    const webSessionRefresh = await fetchChecked(
+      'Renovacion web automatica',
+      `${webUrl}/api/auth/session/refresh`,
+      200,
+      { method: 'POST', headers: { cookie: loginCookie.split(';', 1)[0] } },
+    );
+    const rotatedCookie = webSessionRefresh.headers.get('set-cookie');
+    if (!rotatedCookie) throw new Error('La renovacion web no roto la cookie de sesion');
+
+    await fetchChecked('Cierre de sesion web', `${webUrl}/api/auth/session/logout`, 204, {
+      method: 'POST',
+      headers: { cookie: rotatedCookie.split(';', 1)[0] },
+    });
+    await fetchChecked('Revocacion de sesion API', `${apiUrl}/auth/logout`, 204, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
   } else {
     console.log('OMITIDO flujo autenticado: define SMOKE_USERNAME y SMOKE_PASSWORD para staging.');
   }
