@@ -21,3 +21,7 @@ CREATE INDEX "loan_replacements_source_loan_id_idx"
   ON "loan_replacements"("source_loan_id");
 
 ALTER TABLE "loan_replacements" ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON "loan_replacements" TO app_backend;
+CREATE POLICY app_backend_full_access ON "loan_replacements"
+  TO app_backend USING (true) WITH CHECK (true);
