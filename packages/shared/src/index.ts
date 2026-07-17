@@ -7,6 +7,14 @@ export const LoanStatusEnum = {
 } as const;
 export type LoanStatus = (typeof LoanStatusEnum)[keyof typeof LoanStatusEnum];
 
+export const LoanOperationTypeEnum = {
+  NORMAL: 'NORMAL',
+  REENGAGEMENT: 'REENGAGEMENT',
+  REFINANCE: 'REFINANCE',
+} as const;
+export type LoanOperationType =
+  (typeof LoanOperationTypeEnum)[keyof typeof LoanOperationTypeEnum];
+
 export const InterestTypeEnum = {
   FLAT: 'FLAT',
   REDUCING: 'REDUCING',
@@ -36,6 +44,7 @@ export const ScheduleStatusEnum = {
   PAID: 'PAID',
   PARTIAL: 'PARTIAL',
   OVERDUE: 'OVERDUE',
+  CANCELLED: 'CANCELLED',
 } as const;
 export type ScheduleStatus = (typeof ScheduleStatusEnum)[keyof typeof ScheduleStatusEnum];
 
@@ -179,6 +188,8 @@ export interface CreateLoanDto {
   amortizationType?: InterestType;
   paymentFrequency?: PaymentFrequency;
   customPayment?: number;
+  operationType?: LoanOperationType;
+  sourceLoanIds?: string[];
 }
 
 export interface UpdateLoanDto {

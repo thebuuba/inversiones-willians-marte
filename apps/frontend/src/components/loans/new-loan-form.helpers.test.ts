@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   type LoanCalculationFields,
   canCalculateLoan,
+  countRemainingInstallments,
   computeSchedule,
   getInstallmentIsoDate,
   getPeriodicInterestRate,
@@ -11,6 +12,19 @@ import {
   getLoanSummaryTotals,
   shouldShowCalculatedLoanActions,
 } from './new-loan-form.helpers.ts';
+
+test('counts only installments that remain collectible', () => {
+  assert.equal(
+    countRemainingInstallments([
+      { status: 'PAID' },
+      { status: 'CANCELLED' },
+      { status: 'PENDING' },
+      { status: 'PARTIAL' },
+      { status: 'OVERDUE' },
+    ]),
+    3,
+  );
+});
 
 const validLoan: LoanCalculationFields = {
   amount: '25000',

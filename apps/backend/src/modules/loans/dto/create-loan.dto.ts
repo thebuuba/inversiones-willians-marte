@@ -5,11 +5,13 @@ import {
   IsNumber,
   IsEnum,
   IsOptional,
+  IsArray,
+  ArrayUnique,
   Max,
   Min,
 } from 'class-validator';
-import { InterestTypeEnum, PaymentFrequencyEnum } from '@inversiones/shared';
-import type { InterestType, PaymentFrequency } from '@inversiones/shared';
+import { InterestTypeEnum, LoanOperationTypeEnum, PaymentFrequencyEnum } from '@inversiones/shared';
+import type { InterestType, LoanOperationType, PaymentFrequency } from '@inversiones/shared';
 
 export class CreateLoanDto {
   @IsInt()
@@ -55,6 +57,16 @@ export class CreateLoanDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(1)
   customPayment?: number;
+
+  @IsOptional()
+  @IsEnum(LoanOperationTypeEnum)
+  operationType?: LoanOperationType;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  sourceLoanIds?: string[];
 }
 
 export interface AmortizationRow {
