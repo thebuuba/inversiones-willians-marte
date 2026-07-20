@@ -18,13 +18,16 @@ export interface PortfolioGroup {
 
 export interface AuditEntry {
   id: string;
+  userId: string;
   action: string;
-  entity: string;
+  entityType: string;
   entityId: string;
-  performedById: string;
-  performedByName?: string;
-  details?: string;
+  oldValues?: unknown;
+  newValues?: unknown;
   createdAt: string;
+  user?: { id: string; name: string } | null;
+  loanId?: string;
+  loanNumber?: number;
 }
 
 export interface MonthlyCollection {

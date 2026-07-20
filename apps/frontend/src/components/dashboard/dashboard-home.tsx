@@ -24,14 +24,11 @@ import {
 import {
   AlertTriangle,
   BriefcaseBusiness,
-  CheckCircle2,
+  ChevronRight,
   Clock3,
   DollarSign,
-  Edit3,
-  FileText,
   Plus,
   ShieldCheck,
-  UserPlus,
   Users,
   Wallet,
 } from 'lucide-react';
@@ -40,6 +37,7 @@ import {
   getDashboardOverview,
 } from '@/lib/api/dashboard';
 import { formatDop } from '@/lib/currency';
+import { toDashboardAuditRow, type AuditTone } from './dashboard-audit';
 
 function formatCompact(n: number): string {
   if (n >= 1_000_000) return `RD$${(n / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}M`;
@@ -181,17 +179,7 @@ export function DashboardHome() {
   ].filter(Boolean) as Array<{ title: string; detail: string; action: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; bg: string; border: string; text: string }>;
 
   const auditSafe = audit ?? [];
-  const auditRows = auditSafe.map((entry) => ({
-    id: entry.id,
-    name: entry.performedByName ?? 'Sistema',
-    action: entry.action,
-    ref: entry.entity,
-    amount: entry.details ?? '',
-    time: timeAgo(entry.createdAt),
-    icon: actionIcon(entry.action),
-    bg: actionBg(entry.action),
-    color: '#2F7654',
-  }));
+  const auditRows = auditSafe.slice(0, 4).map(toDashboardAuditRow);
 
   return (
     <div className="min-h-screen bg-page p-5 font-sans text-text-primary">
@@ -344,31 +332,52 @@ export function DashboardHome() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
-        <Card className="p-6" index={8}>
-          <SectionHeader title="Auditoría reciente" subtitle="Últimas acciones registradas en el sistema" />
-          <div>
+        <Card className="p-5" index={8}>
+          <div className="mb-2">
+            <h2 className="text-base font-bold text-text-primary">Auditoría reciente</h2>
+            <p className="mt-0.5 text-xs text-text-secondary">Últimos movimientos del sistema</p>
+          </div>
+          <div className="divide-y divide-border-soft">
             {auditRows.length > 0 ? auditRows.map((row, index) => {
-              const Icon = row.icon;
               return (
-                <div key={row.id ?? `audit-${index}`} className={`flex items-center gap-3.5 py-3.5 ${index !== auditRows.length - 1 ? 'border-b border-border-soft' : ''}`}>
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: row.bg, color: row.color }}>
-                    <Icon className="h-4 w-4" />
+                <article
+                  key={row.id ?? `audit-${index}`}
+                  className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2.5 gap-y-1 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]"
+                >
+                  <span className={`h-2 w-2 rounded-full ${auditToneDots[row.tone]}`} aria-hidden="true" />
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] leading-5 text-text-secondary">
+                      <span className="font-bold text-text-primary">{row.actor}</span>{' '}
+                      {row.action}
+                    </p>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                      <span className="text-sm font-bold text-text-primary">{row.name}</span>
-                      <span className="text-sm text-text-secondary">{row.action}</span>
-                    </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className="rounded-lg border border-primary-border bg-surface-muted-ui px-2.5 py-0.5 font-mono text-xs font-bold text-primary-accent">{row.ref}</span>
-                      {row.amount && <span className="text-sm font-bold text-text-primary">{row.amount}</span>}
-                    </div>
+                  <div className="col-start-2 min-w-0 sm:col-start-2">
+                    {row.loanHref ? (
+                      <Link
+                        className="inline-flex max-w-full items-center gap-1 text-xs font-bold text-primary-accent transition hover:text-primary focus-visible:rounded-sm"
+                        href={row.loanHref}
+                      >
+                        <span className="truncate">{row.reference}</span>
+                        <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      </Link>
+                    ) : (
+                      <span className="block truncate text-xs font-medium text-text-secondary">{row.reference}</span>
+                    )}
                   </div>
-                  <span className="shrink-0 text-sm text-text-secondary">{row.time}</span>
-                </div>
+                  <time
+                    className="col-start-2 text-[11px] font-medium text-text-secondary sm:col-start-auto sm:row-start-1"
+                    dateTime={row.createdAt}
+                  >
+                    {timeAgo(row.createdAt)}
+                  </time>
+                </article>
               );
             }) : (
-              <p className="py-6 text-center text-sm text-text-secondary">No hay actividad reciente</p>
+              <div className="rounded-xl bg-surface-subtle px-4 py-5 text-center">
+                <p className="text-sm font-bold text-text-primary">
+                  {user?.role === 'ADMIN' ? 'No hay actividad reciente' : 'Auditoría restringida'}
+                </p>
+              </div>
             )}
           </div>
         </Card>
@@ -411,7 +420,9 @@ export function DashboardHome() {
 }
 
 function timeAgo(dateString: string): string {
-  const diff = Date.now() - new Date(dateString).getTime();
+  const timestamp = new Date(dateString).getTime();
+  if (!Number.isFinite(timestamp)) return 'Fecha desconocida';
+  const diff = Math.max(0, Date.now() - timestamp);
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'Ahora';
   if (mins < 60) return `Hace ${mins} min`;
@@ -420,22 +431,10 @@ function timeAgo(dateString: string): string {
   return `Hace ${Math.floor(hours / 24)} d`;
 }
 
-function actionIcon(action: string): React.ComponentType<{ className?: string }> {
-  const lower = action.toLowerCase();
-  if (lower.includes('aprob') || lower.includes('cre')) return CheckCircle2;
-  if (lower.includes('cobro') || lower.includes('pago')) return DollarSign;
-  if (lower.includes('modif') || lower.includes('edit')) return Edit3;
-  if (lower.includes('rech')) return AlertTriangle;
-  if (lower.includes('report') || lower.includes('gener')) return FileText;
-  return UserPlus;
-}
-
-function actionBg(action: string): string {
-  const lower = action.toLowerCase();
-  if (lower.includes('aprob') || lower.includes('cre')) return '#E7F4EC';
-  if (lower.includes('cobro') || lower.includes('pago')) return '#FFF2B8';
-  if (lower.includes('modif') || lower.includes('edit')) return '#DBEAFE';
-  if (lower.includes('rech')) return '#FFE8D8';
-  if (lower.includes('report') || lower.includes('gener')) return '#E9DDFB';
-  return '#E7F4EC';
-}
+const auditToneDots: Record<AuditTone, string> = {
+  success: 'bg-state-success-dot',
+  warning: 'bg-state-warning-dot',
+  danger: 'bg-state-danger-dot',
+  info: 'bg-state-info-dot',
+  neutral: 'bg-state-neutral-dot',
+};
