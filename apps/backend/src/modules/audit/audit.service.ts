@@ -70,11 +70,29 @@ export class AuditService {
     if (entityType) where.entityType = entityType;
     if (entityId) where.entityId = entityId;
 
-    return prisma.auditLog.findMany({
+    const audits = await prisma.auditLog.findMany({
       where,
       include: { user: { select: { id: true, name: true } } },
       orderBy: { createdAt: 'desc' },
       take: 6,
+    });
+    const auditLoanIds = audits.map(getAuditLoanId).filter((id): id is string => Boolean(id));
+    const loans =
+      auditLoanIds.length > 0
+        ? await prisma.loan.findMany({
+            where: { id: { in: [...new Set(auditLoanIds)] } },
+            select: { id: true, loanNumber: true },
+          })
+        : [];
+    const loanNumbers = new Map(loans.map((loan) => [loan.id, loan.loanNumber]));
+
+    return audits.map((audit) => {
+      const loanId = getAuditLoanId(audit);
+      return {
+        ...audit,
+        loanId,
+        loanNumber: loanId ? loanNumbers.get(loanId) : undefined,
+      };
     });
   }
 
@@ -196,6 +214,15 @@ export class AuditService {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function getAuditLoanId(audit: {
+  entityType: string;
+  entityId: string;
+  newValues: unknown;
+}): string | undefined {
+  if (audit.entityType === 'Loan') return audit.entityId;
+  return isRecord(audit.newValues) ? getStringValue(audit.newValues.loanId) : undefined;
 }
 
 function getStringValue(value: unknown): string | undefined {
