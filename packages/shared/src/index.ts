@@ -455,6 +455,17 @@ export interface ApiResponse<T = unknown> {
   message?: string;
 }
 
+export type GlobalSearchRole = 'CLIENT' | 'LOAN' | 'INVESTOR' | 'BORROWER';
+
+export interface GlobalSearchResult {
+  id: string;
+  kind: 'CLIENT' | 'LOAN' | 'INVESTOR';
+  title: string;
+  description: string;
+  href: string;
+  roles: GlobalSearchRole[];
+}
+
 export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   total: number;
   page: number;

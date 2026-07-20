@@ -42,6 +42,13 @@ test('keeps explicit density variants for compact default and comfortable screen
   assert.match(buttonSizes.default, /h-11/);
 });
 
+test('does not draw a rectangular outline over custom form focus styles', () => {
+  assert.match(
+    css,
+    /:where\(input, select, textarea\)\.outline-none:focus-visible\s*{\s*outline: none !important;/,
+  );
+});
+
 test('maps semantic states to tokenized classes', () => {
   assert.match(statusTones.success, /bg-state-success-bg/);
   assert.match(statusTones.warning, /bg-state-warning-bg/);

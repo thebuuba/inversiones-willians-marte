@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/sidebar';
 import { NetworkStatusBanner } from '@/components/layout/network-status-banner';
+import { GlobalSearch } from '@/components/layout/global-search';
 import { useAuth } from '@/lib/auth-context';
 
 const publicRoutes = ['/login'];
@@ -60,8 +61,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <>
       <Sidebar collapsed={sidebarCollapsed} onCollapsedChange={toggleSidebarCollapsed} />
+      <header
+        className={`fixed right-0 top-0 z-30 hidden h-16 items-center border-b border-border-soft bg-card px-6 transition-[left] duration-200 ease-out lg:flex ${
+          sidebarCollapsed ? 'left-[72px]' : 'left-[260px]'
+        }`}
+      >
+        <GlobalSearch />
+      </header>
       <main
-        className={`min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] transition-[margin] duration-200 ease-out lg:pt-0 ${
+        className={`min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] transition-[margin] duration-200 ease-out lg:pt-16 ${
           sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'
         }`}
       >
