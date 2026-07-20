@@ -12,7 +12,10 @@ import {
   Clock3,
   CreditCard,
   FileText,
+  HandCoins,
+  Handshake,
   Landmark,
+  ListChecks,
   ReceiptText,
   Search,
   UserRound,
@@ -21,11 +24,19 @@ import {
 } from 'lucide-react';
 import { DatePickerInput } from '@/components/ui/date-picker-input';
 import { createPayment, type Payment } from '@/lib/api/payments';
-import { getLoan, getLoans, type LoanDetail, type LoanListItem } from '@/lib/api/loans';
+import {
+  getLoan,
+  getLoans,
+  getPayoffQuote,
+  type LoanDetail,
+  type LoanListItem,
+} from '@/lib/api/loans';
 import { formatDop, parseCurrencyInput } from '@/lib/currency';
 import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
 import {
   buildPaymentAllocationPreview,
+  getAmountToBringCurrent,
+  getLoanPaymentSummary,
   getNextScheduledAmount,
   getOutstandingScheduledAmount,
 } from './loan-payment.helpers';
@@ -37,6 +48,20 @@ const paymentMethods = [
 ] as const;
 
 const today = () => new Date().toISOString().slice(0, 10);
+const frequencyLabels: Record<string, string> = {
+  DAILY: 'Diaria',
+  WEEKLY: 'Semanal',
+  BIWEEKLY: 'Quincenal',
+  MONTHLY: 'Mensual',
+  QUARTERLY: 'Trimestral',
+};
+const interestTypeLabels: Record<string, string> = {
+  FLAT: 'Plana',
+  REDUCING: 'Reducción',
+  COMPOUND: 'Compuesto',
+  FIXED: 'Fijo',
+  INDEFINITE: 'Plazo indefinido',
+};
 const fmt = (value: number | string) => formatDop(value, { decimals: 2, space: true });
 const fmtDate = (value: string | Date) =>
   (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)
@@ -122,6 +147,15 @@ function Metric({
   );
 }
 
+function FinancialDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-[#EDF2EF] py-2.5 last:border-b-0">
+      <dt className="text-xs font-medium text-[#7A7F7D]">{label}</dt>
+      <dd className="text-right text-xs font-bold tabular-nums text-[#1F2A24]">{value}</dd>
+    </div>
+  );
+}
+
 export function RegisterLoanPaymentPage() {
   const searchParams = useSearchParams();
   const initialLoanId = searchParams.get('loanId');
@@ -139,6 +173,9 @@ export function RegisterLoanPaymentPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdPayment, setCreatedPayment] = useState<Payment | null>(null);
+  const [payoffQuote, setPayoffQuote] = useState<Awaited<ReturnType<typeof getPayoffQuote>> | null>(
+    null,
+  );
 
   useEffect(() => {
     let active = true;
@@ -172,7 +209,7 @@ export function RegisterLoanPaymentPage() {
       .then((selected) => {
         if (!active) return;
         setLoan(selected);
-        setAmount(String(getNextScheduledAmount(selected.schedule)));
+        setAmount(String(getAmountToBringCurrent(selected.schedule, today())));
       })
       .catch(() => {
         if (active) setError('No se pudo cargar el préstamo seleccionado.');
@@ -185,6 +222,21 @@ export function RegisterLoanPaymentPage() {
     };
   }, [initialLoanId]);
 
+  useEffect(() => {
+    if (!loan || !paymentDate) return;
+    let active = true;
+    getPayoffQuote(loan.id, paymentDate)
+      .then((quote) => {
+        if (active) setPayoffQuote(quote);
+      })
+      .catch(() => {
+        if (active) setPayoffQuote(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [loan, paymentDate]);
+
   async function selectLoan(id: string) {
     setLoadingLoan(true);
     setError(null);
@@ -192,7 +244,7 @@ export function RegisterLoanPaymentPage() {
     try {
       const selected = await getLoan(id);
       setLoan(selected);
-      setAmount(String(getNextScheduledAmount(selected.schedule)));
+      setAmount(String(getAmountToBringCurrent(selected.schedule, today())));
       setSubmitted(false);
     } catch {
       setError('No se pudo cargar el préstamo seleccionado.');
@@ -203,6 +255,9 @@ export function RegisterLoanPaymentPage() {
 
   const amountNumber = parseCurrencyInput(amount);
   const nextScheduled = loan ? getNextScheduledAmount(loan.schedule) : 0;
+  const amountToBringCurrent = loan
+    ? getAmountToBringCurrent(loan.schedule, paymentDate || today())
+    : 0;
   const totalOutstanding = loan ? getOutstandingScheduledAmount(loan.schedule) : 0;
   const allocationPreview = useMemo(
     () => (loan ? buildPaymentAllocationPreview(loan.schedule, loan.payments, amountNumber) : []),
@@ -213,6 +268,22 @@ export function RegisterLoanPaymentPage() {
   const invalidAmount = submitted && amountNumber <= 0;
   const exceedsOutstanding = amountNumber > totalOutstanding && totalOutstanding > 0;
   const hasNoOutstanding = totalOutstanding <= 0;
+  const loanSummary = useMemo(
+    () =>
+      loan
+        ? getLoanPaymentSummary(
+            loan.schedule,
+            loan.payments,
+            loan.lateFees ?? [],
+            loan.principal,
+            loan.balance,
+            paymentDate || today(),
+          )
+        : null,
+    [loan, paymentDate],
+  );
+  const nextSchedule = loan?.schedule.find((row) => row.status !== 'PAID');
+  const lastPayment = loan?.payments[0];
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -240,7 +311,7 @@ export function RegisterLoanPaymentPage() {
       invalidateCache('upcomingPayments');
       const refreshed = await getLoan(loan.id);
       setLoan(refreshed);
-      setAmount(String(getNextScheduledAmount(refreshed.schedule)));
+      setAmount(String(getAmountToBringCurrent(refreshed.schedule, today())));
       setReference('');
       setNotes('');
       setSubmitted(false);
@@ -279,57 +350,59 @@ export function RegisterLoanPaymentPage() {
           </div>
         </header>
 
-        <div className="grid gap-4 xl:grid-cols-[370px_minmax(0,1fr)]">
-          <aside className="overflow-hidden rounded-2xl border border-[#E2E9E5] bg-white shadow-sm">
-            <div className="border-b border-[#EDF2EF] p-4">
-              <label className="relative block">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7A8C81]" />
-                <input
-                  className="h-11 w-full rounded-xl border border-[#DDEBE3] bg-[#FBFCFB] pl-10 pr-10 text-sm font-semibold text-[#173D2C] outline-none transition placeholder:text-[#9AA69F] focus:border-[#5FA37D] focus:bg-white"
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Cliente, cédula o # de préstamo"
-                  value={query}
-                />
-                {query ? (
-                  <button
-                    aria-label="Limpiar búsqueda"
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#7A8C81] hover:bg-[#EDF4F0]"
-                    onClick={() => setQuery('')}
-                    type="button"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                ) : null}
-              </label>
-            </div>
-            <div className="flex items-center justify-between bg-[#F8FAF9] px-4 py-2.5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#6B786F]">
-                Préstamos disponibles
-              </p>
-              <span className="text-xs font-bold tabular-nums text-[#2F7654]">
-                {results.length}
-              </span>
-            </div>
-            <div className="max-h-[calc(100vh-250px)] min-h-[280px] overflow-y-auto">
-              {searching ? (
-                <p className="px-4 py-8 text-center text-sm font-medium text-[#8B9690]">
-                  Buscando préstamos...
-                </p>
-              ) : results.length ? (
-                results.map((item) => (
-                  <LoanSearchResult
-                    key={item.id}
-                    loan={item}
-                    onSelect={() => selectLoan(item.id)}
+        <div className={`grid gap-4 ${initialLoanId ? '' : 'xl:grid-cols-[370px_minmax(0,1fr)]'}`}>
+          {!initialLoanId ? (
+            <aside className="overflow-hidden rounded-2xl border border-[#E2E9E5] bg-white shadow-sm">
+              <div className="border-b border-[#EDF2EF] p-4">
+                <label className="relative block">
+                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7A8C81]" />
+                  <input
+                    className="h-11 w-full rounded-xl border border-[#DDEBE3] bg-[#FBFCFB] pl-10 pr-10 text-sm font-semibold text-[#173D2C] outline-none transition placeholder:text-[#9AA69F] focus:border-[#5FA37D] focus:bg-white"
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Cliente, cédula o # de préstamo"
+                    value={query}
                   />
-                ))
-              ) : (
-                <p className="px-5 py-10 text-center text-sm font-medium text-[#8B9690]">
-                  No encontramos préstamos pendientes con esa búsqueda.
+                  {query ? (
+                    <button
+                      aria-label="Limpiar búsqueda"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#7A8C81] hover:bg-[#EDF4F0]"
+                      onClick={() => setQuery('')}
+                      type="button"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                </label>
+              </div>
+              <div className="flex items-center justify-between bg-[#F8FAF9] px-4 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#6B786F]">
+                  Préstamos disponibles
                 </p>
-              )}
-            </div>
-          </aside>
+                <span className="text-xs font-bold tabular-nums text-[#2F7654]">
+                  {results.length}
+                </span>
+              </div>
+              <div className="max-h-[calc(100vh-250px)] min-h-[280px] overflow-y-auto">
+                {searching ? (
+                  <p className="px-4 py-8 text-center text-sm font-medium text-[#8B9690]">
+                    Buscando préstamos...
+                  </p>
+                ) : results.length ? (
+                  results.map((item) => (
+                    <LoanSearchResult
+                      key={item.id}
+                      loan={item}
+                      onSelect={() => selectLoan(item.id)}
+                    />
+                  ))
+                ) : (
+                  <p className="px-5 py-10 text-center text-sm font-medium text-[#8B9690]">
+                    No encontramos préstamos pendientes con esa búsqueda.
+                  </p>
+                )}
+              </div>
+            </aside>
+          ) : null}
 
           <section className="min-w-0">
             {loadingLoan ? (
@@ -348,18 +421,19 @@ export function RegisterLoanPaymentPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <section className="overflow-hidden rounded-2xl border border-[#E2E9E5] bg-white shadow-sm">
-                  <div className="flex flex-col justify-between gap-4 border-b border-[#EDF2EF] px-5 py-4 lg:flex-row lg:items-center">
+                <section className="overflow-hidden rounded-[22px] border border-[#DCE7E0] bg-white shadow-[0_14px_34px_rgba(36,75,56,0.08)]">
+                  <div className="flex flex-col justify-between gap-4 bg-[#F7FAF8] px-6 py-5 lg:flex-row lg:items-center">
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EAF6EF] text-[#2F7654]">
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E1F1E7] text-[#2F7654]">
                         <UserRound className="h-5 w-5" />
                       </span>
                       <div className="min-w-0">
-                        <h2 className="truncate text-base font-bold text-[#151918]">
+                        <h2 className="truncate text-lg font-bold tracking-[-0.02em] text-[#151918]">
                           {loan.client.firstName} {loan.client.lastName}
                         </h2>
                         <p className="mt-0.5 text-xs font-semibold text-[#7A7F7D]">
-                          Préstamo #{loan.loanNumber} · {loan.product.name}
+                          Préstamo #{loan.loanNumber} · {loan.product.name} ·{' '}
+                          {frequencyLabels[loan.paymentFreq] ?? loan.paymentFreq}
                         </p>
                       </div>
                     </div>
@@ -375,17 +449,75 @@ export function RegisterLoanPaymentPage() {
                       </Link>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-y-4 px-5 py-4 sm:grid-cols-4 sm:gap-y-0">
-                    <Metric label="Capital" value={fmt(loan.principal)} />
-                    <Metric label="Saldo" tone="orange" value={fmt(loan.balance)} />
-                    <Metric label="Próxima cuota" tone="green" value={fmt(nextScheduled)} />
-                    <Metric label="Deuda programada" value={fmt(totalOutstanding)} />
+                  <div className="grid gap-5 border-t border-[#E5ECE8] px-6 py-5 sm:grid-cols-2 xl:grid-cols-[1.25fr_1fr_1fr_1fr]">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7A7F7D]">
+                        A saldar hoy
+                      </p>
+                      <p className="mt-1.5 text-2xl font-bold tracking-[-0.03em] tabular-nums text-[#173D2C]">
+                        {fmt(payoffQuote?.totalToPay ?? totalOutstanding)}
+                      </p>
+                      <p className="mt-1 text-[11px] font-medium text-[#7A8C81]">
+                        Capital, interés generado y mora
+                      </p>
+                    </div>
+                    <Metric
+                      label="Capital pendiente"
+                      value={fmt(loanSummary?.capitalOutstanding ?? loan.balance)}
+                    />
+                    <Metric
+                      label="Interés pendiente"
+                      tone="orange"
+                      value={fmt(
+                        payoffQuote?.earnedInterest ?? loanSummary?.interestOutstanding ?? 0,
+                      )}
+                    />
+                    <Metric label="Cuota actual" tone="green" value={fmt(nextScheduled)} />
                   </div>
                 </section>
 
-                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+                <nav
+                  aria-label="Acciones del préstamo"
+                  className="grid gap-3 rounded-2xl border border-[#E2E9E5] bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-5"
+                >
+                  <button
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#2F7654] px-4 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#285C43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5FA37D] disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={saving || amountNumber <= 0 || exceedsOutstanding || hasNoOutstanding}
+                    form="loan-payment-form"
+                    type="submit"
+                  >
+                    <HandCoins className="h-4 w-4" /> Procesar pago
+                  </button>
+                  <Link
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#173D2C] px-4 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#102D20] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5FA37D]"
+                    href={`/prestamos/${loan.id}?agreement=1`}
+                  >
+                    <Handshake className="h-4 w-4" /> Acuerdo de pago
+                  </Link>
+                  <Link
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#F3F6F4] px-4 text-sm font-bold text-[#173D2C] transition hover:bg-[#E7EFEA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5FA37D]"
+                    href={`/prestamos/${loan.id}#saldo-anticipado`}
+                  >
+                    <CheckCircle2 className="h-4 w-4" /> Saldar
+                  </Link>
+                  <Link
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#F3F6F4] px-4 text-sm font-bold text-[#173D2C] transition hover:bg-[#E7EFEA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5FA37D]"
+                    href={`/prestamos/${loan.id}#calendario-cuotas`}
+                  >
+                    <ListChecks className="h-4 w-4" /> Ver cuotas
+                  </Link>
+                  <a
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-[#DDEBE3] bg-white px-4 text-sm font-bold text-[#173D2C] transition hover:bg-[#F3F8F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5FA37D] sm:col-span-2 xl:col-span-1"
+                    href="#recibos-pagos-cobro"
+                  >
+                    <ReceiptText className="h-4 w-4" /> Ver recibos
+                  </a>
+                </nav>
+
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_390px]">
                   <form
                     className="overflow-hidden rounded-2xl border border-[#E2E9E5] bg-white shadow-sm"
+                    id="loan-payment-form"
                     onSubmit={handleSubmit}
                   >
                     <div className="border-b border-[#EDF2EF] px-5 py-4">
@@ -405,10 +537,10 @@ export function RegisterLoanPaymentPage() {
                           </label>
                           <button
                             className="text-xs font-bold text-[#2F7654] hover:underline"
-                            onClick={() => setAmount(String(nextScheduled))}
+                            onClick={() => setAmount(String(amountToBringCurrent))}
                             type="button"
                           >
-                            Usar cuota exacta
+                            Usar monto para ponerse al día
                           </button>
                         </div>
                         <div className="relative">
@@ -522,6 +654,62 @@ export function RegisterLoanPaymentPage() {
 
                   <aside className="space-y-4">
                     <section className="overflow-hidden rounded-2xl border border-[#E2E9E5] bg-white shadow-sm">
+                      <div className="flex items-center justify-between gap-3 border-b border-[#EDF2EF] px-4 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <WalletCards className="h-4 w-4 text-[#2F7654]" />
+                          <h2 className="text-sm font-bold text-[#173D2C]">Estado del préstamo</h2>
+                        </div>
+                        <span className="text-[11px] font-bold text-[#2F7654]">
+                          {loanSummary?.paidInstallments ?? 0}/{loan.term} cuotas pagadas
+                        </span>
+                      </div>
+                      <dl className="grid px-4 sm:grid-cols-2 sm:gap-x-5 lg:grid-cols-1 lg:gap-x-0 xl:grid-cols-2 xl:gap-x-5">
+                        <FinancialDetail label="Capital original" value={fmt(loan.principal)} />
+                        <FinancialDetail
+                          label="Capital pagado"
+                          value={fmt(loanSummary?.capitalPaid ?? 0)}
+                        />
+                        <FinancialDetail
+                          label="Interés pagado"
+                          value={fmt(loanSummary?.interestPaid ?? 0)}
+                        />
+                        <FinancialDetail
+                          label="Mora pendiente"
+                          value={fmt(loanSummary?.feesOutstanding ?? 0)}
+                        />
+                        <FinancialDetail
+                          label="Pagos vencidos"
+                          value={`${fmt(loanSummary?.overdueAmount ?? 0)} · ${loanSummary?.overdueInstallments ?? 0} cuotas`}
+                        />
+                        <FinancialDetail
+                          label="Total pagado"
+                          value={fmt(loanSummary?.totalPaid ?? 0)}
+                        />
+                        <FinancialDetail label="Fecha de inicio" value={fmtDate(loan.startDate)} />
+                        <FinancialDetail
+                          label="Próximo vencimiento"
+                          value={nextSchedule ? fmtDate(nextSchedule.dueDate) : 'Sin pendiente'}
+                        />
+                        <FinancialDetail
+                          label="Último pago"
+                          value={lastPayment ? fmt(lastPayment.amount) : 'Sin pagos'}
+                        />
+                        <FinancialDetail
+                          label="Fecha último pago"
+                          value={lastPayment ? fmtDate(lastPayment.paymentDate) : '—'}
+                        />
+                        <FinancialDetail
+                          label="Tipo de préstamo"
+                          value={interestTypeLabels[loan.interestType] ?? loan.interestType}
+                        />
+                        <FinancialDetail
+                          label="Tasa"
+                          value={`${loan.interestRate}% · ${frequencyLabels[loan.paymentFreq] ?? loan.paymentFreq}`}
+                        />
+                      </dl>
+                    </section>
+
+                    <section className="overflow-hidden rounded-2xl border border-[#E2E9E5] bg-white shadow-sm">
                       <div className="flex items-center gap-2 border-b border-[#EDF2EF] px-4 py-3.5">
                         <FileText className="h-4 w-4 text-[#2F7654]" />
                         <h2 className="text-sm font-bold text-[#173D2C]">Aplicación del pago</h2>
@@ -604,7 +792,10 @@ export function RegisterLoanPaymentPage() {
                       </section>
                     ) : null}
 
-                    <section className="overflow-hidden rounded-2xl border border-[#E2E9E5] bg-white shadow-sm">
+                    <section
+                      className="scroll-mt-5 overflow-hidden rounded-2xl border border-[#E2E9E5] bg-white shadow-sm"
+                      id="recibos-pagos-cobro"
+                    >
                       <div className="flex items-center gap-2 border-b border-[#EDF2EF] px-4 py-3.5">
                         <ReceiptText className="h-4 w-4 text-[#2F7654]" />
                         <h2 className="text-sm font-bold text-[#173D2C]">Pagos recientes</h2>

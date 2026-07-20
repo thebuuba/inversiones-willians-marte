@@ -71,16 +71,18 @@ function labelFor<T extends string>(items: Array<{ value: T; label: string }>, v
 }
 
 function InteractionModal({
+  initialResult,
   loanId,
   onClose,
   onSaved,
 }: {
+  initialResult?: CollectionResult;
   loanId: string;
   onClose: () => void;
   onSaved: (interaction: CollectionInteractionItem) => void;
 }) {
   const [channel, setChannel] = useState<CollectionChannel>('CALL');
-  const [result, setResult] = useState<CollectionResult>('CONTACTED');
+  const [result, setResult] = useState<CollectionResult>(initialResult ?? 'CONTACTED');
   const [notes, setNotes] = useState('');
   const [followUpDate, setFollowUpDate] = useState('');
   const [followUpTime, setFollowUpTime] = useState('09:00');
@@ -274,11 +276,15 @@ function InteractionModal({
 }
 
 export function CollectionManagementPanel({
+  agreementOpen = false,
   loanId,
+  onAgreementClose,
   phone,
   altPhone,
 }: {
+  agreementOpen?: boolean;
   loanId: string;
+  onAgreementClose?: () => void;
   phone?: string | null;
   altPhone?: string | null;
 }) {
@@ -286,6 +292,7 @@ export function CollectionManagementPanel({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [initialResult, setInitialResult] = useState<CollectionResult>('CONTACTED');
 
   useEffect(() => {
     let active = true;
@@ -338,7 +345,10 @@ export function CollectionManagementPanel({
           ) : null}
           <button
             className="inline-flex h-10 items-center gap-2 rounded-full bg-[#2F7654] px-4 text-sm font-bold text-white hover:bg-[#285C43]"
-            onClick={() => setModalOpen(true)}
+            onClick={() => {
+              setInitialResult('CONTACTED');
+              setModalOpen(true);
+            }}
             type="button"
           >
             <Plus className="h-4 w-4" /> Registrar gestión
@@ -423,10 +433,15 @@ export function CollectionManagementPanel({
         ))}
       </div>
 
-      {modalOpen ? (
+      {modalOpen || agreementOpen ? (
         <InteractionModal
+          initialResult={agreementOpen ? 'PAYMENT_PROMISE' : initialResult}
+          key={`${loanId}-${agreementOpen ? 'PAYMENT_PROMISE' : initialResult}`}
           loanId={loanId}
-          onClose={() => setModalOpen(false)}
+          onClose={() => {
+            setModalOpen(false);
+            onAgreementClose?.();
+          }}
           onSaved={(interaction) => setItems((current) => [interaction, ...current])}
         />
       ) : null}

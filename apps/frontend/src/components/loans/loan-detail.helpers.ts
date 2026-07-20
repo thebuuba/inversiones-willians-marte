@@ -68,6 +68,21 @@ function getCalendarDay(value: string | Date) {
   return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
+export function getScheduleDisplayStatus(
+  status: string,
+  dueDate: string,
+  now = new Date(),
+): string {
+  if (status === 'PAID') return 'Pagado';
+  if (status === 'CANCELLED') return 'Cancelado';
+  if (status === 'PARTIAL') return 'Parcial';
+
+  const daysPastDue = Math.floor((getCalendarDay(now) - getCalendarDay(dueDate)) / DAY_MS);
+  if (daysPastDue < 0) return 'A tiempo';
+  if (status === 'OVERDUE' || daysPastDue > 5) return 'Atrasado';
+  return 'Pendiente';
+}
+
 export function getLoanCollectionStatus(
   loan: LoanCollectionStatusLike,
   now = new Date(),
