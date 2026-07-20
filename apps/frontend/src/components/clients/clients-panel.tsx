@@ -239,12 +239,11 @@ export function ClientsPanel() {
                     {client.phone ?? <EmptyField />}
                   </span>
                   <span
-                    className="inline-flex h-9 min-w-[100px] items-center justify-center gap-2 justify-self-end rounded-full border border-primary-border bg-primary-soft px-3.5 text-primary shadow-[0_3px_10px_rgba(40,92,67,0.10)]"
+                    className="inline-flex h-7 w-full max-w-[96px] items-center justify-center justify-self-end rounded-md bg-[#A8DDBB] px-3 text-primary shadow-[0_2px_6px_rgba(40,92,67,0.10)]"
                   >
-                    <span className="text-sm font-bold leading-none tabular-nums">
+                    <span className="text-xs font-bold leading-none tabular-nums">
                       {client._count?.loans ?? 0}
                     </span>
-                    <span className="text-[11px] font-semibold leading-none">Préstamos</span>
                   </span>
                   <button
                     aria-label={`Acciones de ${fullName(client)}`}
