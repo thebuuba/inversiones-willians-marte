@@ -5,7 +5,7 @@ jest.mock('@inversiones/database', () => ({
   prisma: {
     $queryRaw: jest.fn(),
     client: { count: jest.fn() },
-    loan: { aggregate: jest.fn(), count: jest.fn() },
+    loan: { aggregate: jest.fn(), count: jest.fn(), findMany: jest.fn() },
     payment: { aggregate: jest.fn(), groupBy: jest.fn() },
     user: { count: jest.fn(), findMany: jest.fn() },
   },
@@ -27,6 +27,7 @@ describe('ReportsService', () => {
       'monthlyCollections',
       'weeklyMovement',
       'upcomingPayments',
+      'collectionPriorities',
     ] as const;
     const resolvers = new Map<string, (value: never) => void>();
 
@@ -52,7 +53,39 @@ describe('ReportsService', () => {
       monthlyCollections: [],
       weeklyMovement: [],
       upcomingPayments: [],
+      collectionPriorities: [],
     });
+  });
+
+  it('ranks overdue loans by explainable collection priority', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-06-18T12:00:00.000Z'));
+    jest.mocked(prisma.loan.findMany).mockResolvedValue([
+      {
+        id: 'loan-1',
+        loanNumber: 101,
+        balance: 5000,
+        client: { id: 1, firstName: 'Ana', lastName: 'Pérez', phone: '8095550101' },
+        schedule: [
+          { dueDate: new Date('2026-05-14T00:00:00.000Z'), amount: 1000, paidAmount: 250 },
+          { dueDate: new Date('2026-06-01T00:00:00.000Z'), amount: 1000, paidAmount: null },
+        ],
+        collectionInteractions: [{ createdAt: new Date('2026-06-03T00:00:00.000Z') }],
+        paymentPromises: [{ id: 'promise-1' }],
+      },
+    ] as never);
+
+    await expect(service.collectionPriorities()).resolves.toEqual([
+      expect.objectContaining({
+        loanId: 'loan-1',
+        loanNumber: 101,
+        clientName: 'Ana Pérez',
+        overdueAmount: 1750,
+        daysOverdue: 35,
+        score: 80,
+        level: 'URGENT',
+        suggestedAction: 'Contactar por promesa incumplida',
+      }),
+    ]);
   });
 
   it('binds the six-month cutoff in the monthly collections query', async () => {

@@ -1,17 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
+import { calculateCollectionPriority } from './collection-priority';
 
 @Injectable()
 export class ReportsService {
   async overview() {
-    const [dashboard, portfolio, monthlyCollections, weeklyMovement, upcomingPayments] =
-      await Promise.all([
-        this.dashboard(),
-        this.portfolioByStatus(),
-        this.monthlyCollections(),
-        this.weeklyMovement(),
-        this.upcomingPayments(),
-      ]);
+    const [
+      dashboard,
+      portfolio,
+      monthlyCollections,
+      weeklyMovement,
+      upcomingPayments,
+      collectionPriorities,
+    ] = await Promise.all([
+      this.dashboard(),
+      this.portfolioByStatus(),
+      this.monthlyCollections(),
+      this.weeklyMovement(),
+      this.upcomingPayments(),
+      this.collectionPriorities(),
+    ]);
 
     return {
       dashboard,
@@ -19,7 +27,86 @@ export class ReportsService {
       monthlyCollections,
       weeklyMovement,
       upcomingPayments,
+      collectionPriorities,
     };
+  }
+
+  async collectionPriorities() {
+    const today = startOfUtcDay(new Date());
+    const loans = await prisma.loan.findMany({
+      where: {
+        status: 'ACTIVE',
+        schedule: {
+          some: {
+            dueDate: { lt: today },
+            status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] },
+          },
+        },
+      },
+      select: {
+        id: true,
+        loanNumber: true,
+        balance: true,
+        client: { select: { id: true, firstName: true, lastName: true, phone: true } },
+        schedule: {
+          where: {
+            dueDate: { lt: today },
+            status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] },
+          },
+          select: { dueDate: true, amount: true, paidAmount: true },
+          orderBy: { dueDate: 'asc' },
+        },
+        collectionInteractions: {
+          select: { createdAt: true },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+        paymentPromises: {
+          where: {
+            OR: [
+              { status: 'BROKEN' },
+              { status: { in: ['PENDING', 'PARTIAL'] }, dueDate: { lt: today } },
+            ],
+          },
+          select: { id: true },
+        },
+      },
+      take: 100,
+    });
+
+    return loans
+      .map((loan) => {
+        const earliestDueDate = loan.schedule[0].dueDate;
+        const lastContactAt = loan.collectionInteractions[0]?.createdAt ?? null;
+        const daysOverdue = daysBetweenUtc(earliestDueDate, today);
+        const daysSinceLastContact = lastContactAt ? daysBetweenUtc(lastContactAt, today) : null;
+        const priority = calculateCollectionPriority({
+          daysOverdue,
+          overdueInstallments: loan.schedule.length,
+          brokenPromises: loan.paymentPromises.length,
+          daysSinceLastContact,
+        });
+
+        return {
+          loanId: loan.id,
+          loanNumber: loan.loanNumber,
+          clientId: loan.client.id,
+          clientName: `${loan.client.firstName} ${loan.client.lastName}`,
+          phone: loan.client.phone,
+          balance: Number(loan.balance),
+          overdueAmount: loan.schedule.reduce(
+            (total, installment) =>
+              total + Number(installment.amount) - Number(installment.paidAmount ?? 0),
+            0,
+          ),
+          daysOverdue,
+          overdueInstallments: loan.schedule.length,
+          lastContactAt,
+          ...priority,
+        };
+      })
+      .sort((a, b) => b.score - a.score || b.daysOverdue - a.daysOverdue)
+      .slice(0, 5);
   }
 
   async dashboard() {
@@ -219,4 +306,11 @@ export class ReportsService {
 
 function startOfUtcDay(date: Date) {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
+function daysBetweenUtc(from: Date, to: Date) {
+  return Math.max(
+    0,
+    Math.floor((startOfUtcDay(to).getTime() - startOfUtcDay(from).getTime()) / 86_400_000),
+  );
 }

@@ -50,12 +50,30 @@ export interface UpcomingPayment {
   status: string;
 }
 
+export interface CollectionPriority {
+  loanId: string;
+  loanNumber: number;
+  clientId: number;
+  clientName: string;
+  phone: string;
+  balance: number;
+  overdueAmount: number;
+  daysOverdue: number;
+  overdueInstallments: number;
+  lastContactAt: string | null;
+  score: number;
+  level: 'URGENT' | 'HIGH' | 'MEDIUM';
+  reasons: string[];
+  suggestedAction: string;
+}
+
 export interface DashboardOverview {
   dashboard: DashboardData;
   portfolio: PortfolioGroup[];
   monthlyCollections: MonthlyCollection[];
   weeklyMovement: WeeklyMovementItem[];
   upcomingPayments: UpcomingPayment[];
+  collectionPriorities: CollectionPriority[];
 }
 
 export async function getDashboardOverview(): Promise<DashboardOverview> {
