@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { getAllowedDevOrigins, selectLanAddress } from './mobile-network';
+
+const frontendPackage = JSON.parse(
+  readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
+) as { scripts: { dev: string } };
 
 test('prefers a non-internal Wi-Fi IPv4 address for mobile capture links', () => {
   assert.equal(
@@ -31,4 +36,8 @@ test('allows both the configured host and LAN addresses for mobile development',
     }),
     ['localhost', '192.168.1.13', '172.17.0.1'],
   );
+});
+
+test('serves development QR capture pages over the local IPv4 network', () => {
+  assert.match(frontendPackage.scripts.dev, /--hostname 0\.0\.0\.0/);
 });
