@@ -21,6 +21,12 @@ export class ReportsController {
     return this.reports.dashboard();
   }
 
+  @Get('collections/priorities')
+  @Roles('ADMIN', 'COLLECTOR')
+  collectionPriorities() {
+    return this.reports.collectionPriorities();
+  }
+
   @Get('portfolio')
   @Roles('ADMIN', 'COLLECTOR')
   portfolio() {

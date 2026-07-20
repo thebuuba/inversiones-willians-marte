@@ -22,13 +22,10 @@ import {
   XAxis,
 } from 'recharts';
 import {
-  AlertTriangle,
   BriefcaseBusiness,
   ChevronRight,
-  Clock3,
   DollarSign,
   Plus,
-  ShieldCheck,
   Users,
   Wallet,
 } from 'lucide-react';
@@ -123,12 +120,12 @@ export function DashboardHome() {
   const monthlyCollections = overview?.monthlyCollections;
   const weeklyMovement = overview?.weeklyMovement;
   const upcomingPayments = overview?.upcomingPayments;
+  const collectionPriorities = overview?.collectionPriorities ?? [];
 
   const activeLoans = dash?.activeLoans ?? 0;
   const totalClients = dash?.totalClients ?? 0;
   const collectionsToday = dash?.collectionsToday ?? 0;
   const portfolioBalance = dash?.portfolioBalance ?? 0;
-  const overdueLoans = dash?.overdueLoans ?? 0;
 
   const metricCards = [
     { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, accent: '#eaf5ed', color: '#2f7654' },
@@ -147,36 +144,6 @@ export function DashboardHome() {
     : [{ name: 'Sin datos', value: 1, color: '#E0E0E0' }];
 
   const portfolioTotal = portfolioPie.reduce((s, e) => s + e.value, 0);
-
-  const alerts = [
-    overdueLoans > 0 && {
-      title: `${overdueLoans} préstamos vencidos`,
-      detail: 'Requieren atención inmediata',
-      action: 'Ver lista →',
-      icon: AlertTriangle,
-      bg: '#FFF7EF',
-      border: '#F7D6BD',
-      text: '#9F3F25',
-    },
-    collectionsToday > 0 && {
-      title: `${formatCurrency(collectionsToday)} cobrados hoy`,
-      detail: 'Pagos registrados el día de hoy',
-      action: 'Ver cobros →',
-      icon: Clock3,
-      bg: '#FFFBEA',
-      border: '#F7E7AE',
-      text: '#7A5A0A',
-    },
-    {
-      title: 'Sistema operativo',
-      detail: 'Todo funcionando correctamente',
-      action: '',
-      icon: ShieldCheck,
-      bg: '#F3FAF6',
-      border: '#DDEBE3',
-      text: '#2F7654',
-    },
-  ].filter(Boolean) as Array<{ title: string; detail: string; action: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; bg: string; border: string; text: string }>;
 
   const auditSafe = audit ?? [];
   const auditRows = auditSafe.slice(0, 4).map(toDashboardAuditRow);
@@ -307,26 +274,33 @@ export function DashboardHome() {
 
         <Card className="p-6" index={7}>
           <SectionHeader
-            title="Alertas"
-            subtitle="Requieren tu atención"
-            right={<span className="rounded-full bg-state-danger-bg px-2.5 py-1 text-sm font-bold text-state-danger">{alerts.length}</span>}
+            title="Cobros prioritarios"
+            subtitle="Casos ordenados por urgencia"
+            right={<span className="rounded-full bg-state-danger-bg px-2.5 py-1 text-sm font-bold text-state-danger">{collectionPriorities.length}</span>}
           />
-          <div className="space-y-3">
-            {alerts.map((alert) => {
-              const Icon = alert.icon;
-              return (
-                <div key={alert.title} className="rounded-[16px] border p-3.5" style={{ backgroundColor: alert.bg, borderColor: alert.border }}>
-                  <div className="flex items-start gap-4">
-                    <Icon className="mt-0.5 h-4 w-4 shrink-0" style={{ color: alert.text }} />
-                    <div>
-                      <p className="text-sm font-bold" style={{ color: alert.text }}>{alert.title}</p>
-                      <p className="mt-1 text-xs text-text-secondary">{alert.detail}</p>
-                      {alert.action && <p className="mt-1 text-xs font-bold" style={{ color: alert.text }}>{alert.action}</p>}
-                    </div>
+          <div className="divide-y divide-border-soft">
+            {collectionPriorities.length === 0 ? (
+              <p className="py-8 text-center text-sm text-text-secondary">No hay préstamos vencidos</p>
+            ) : collectionPriorities.slice(0, 4).map((item) => (
+              <Link
+                key={item.loanId}
+                className="group flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+                href={`/prestamos/${item.loanId}`}
+              >
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${priorityDots[item.level]}`} aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="truncate text-sm font-bold text-text-primary">{item.clientName}</p>
+                    <span className="shrink-0 text-xs font-bold text-state-danger">{formatCurrency(item.overdueAmount)}</span>
                   </div>
+                  <p className="mt-0.5 truncate text-xs text-text-secondary">
+                    Préstamo #{item.loanNumber} · {item.reasons[0]}
+                  </p>
+                  <p className="mt-1 truncate text-xs font-semibold text-primary-accent">{item.suggestedAction}</p>
                 </div>
-              );
-            })}
+                <ChevronRight className="h-4 w-4 shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+              </Link>
+            ))}
           </div>
         </Card>
       </div>
@@ -438,3 +412,9 @@ const auditToneDots: Record<AuditTone, string> = {
   info: 'bg-state-info-dot',
   neutral: 'bg-state-neutral-dot',
 };
+
+const priorityDots = {
+  URGENT: 'bg-state-danger-dot',
+  HIGH: 'bg-state-warning-dot',
+  MEDIUM: 'bg-state-info-dot',
+} as const;
