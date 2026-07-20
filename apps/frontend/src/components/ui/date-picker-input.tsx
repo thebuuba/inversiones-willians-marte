@@ -83,7 +83,7 @@ export function DatePickerInput({
         className={`${className} flex items-center justify-between text-left ${invalid ? 'border-[#e4a58b]' : ''}`}
       >
         <span className={value ? '' : 'text-[#8f9691]'}>{value || placeholder}</span>
-        <CalendarDays className="h-4 w-4 shrink-0 text-[#5c6d63]" />
+        <CalendarDays className="h-4 w-4 shrink-0 text-text-secondary" />
       </button>
 
       {open && (

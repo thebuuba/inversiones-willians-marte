@@ -60,7 +60,7 @@ export function CarterasCard({
 
   return (
     <div className="relative">
-      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-[#E7F4EC] px-3 py-1.5 text-sm font-bold text-[#2F7654] shadow-sm">
+      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-primary-soft px-3 py-1.5 text-sm font-bold text-primary-accent shadow-sm">
         <FolderOpen className="h-4 w-4" />
         Carteras
       </span>
@@ -73,7 +73,7 @@ export function CarterasCard({
         <label className="mb-3 flex cursor-pointer items-center gap-2">
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-[#DDEBE3] text-[#2F7654] accent-[#2F7654]"
+            className="h-4 w-4 rounded border-primary-border text-primary-accent accent-primary-accent"
             checked={active}
             onChange={() => {
               if (active) {
@@ -92,26 +92,26 @@ export function CarterasCard({
               }
             }}
           />
-          <span className="text-xs font-bold text-[#5C6D63]">Asignar a cartera</span>
+          <span className="text-xs font-bold text-text-secondary">Asignar a cartera</span>
         </label>
 
         {active && (
           <>
             {error && (
-              <p className="mb-3 rounded-lg border border-[#F1C9B7] bg-[#FFF4EE] px-3 py-2 text-xs font-medium text-[#9F3F25]">
+              <p className="mb-3 rounded-lg border border-[#F1C9B7] bg-[#FFF4EE] px-3 py-2 text-xs font-medium text-state-danger">
                 {error}
             </p>
             )}
 
             {loading ? (
-              <p className="text-xs text-[#5C6D63]">Cargando carteras...</p>
+              <p className="text-xs text-text-secondary">Cargando carteras...</p>
             ) : creating ? (
               <div className="space-y-3">
                 <label className="block">
-                  <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">Nombre</span>
+                  <span className="mb-1.5 block text-xs font-bold text-text-secondary">Nombre</span>
                   <input
                     ref={inputRef}
-                    className="h-[38px] w-full rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#EAF6EF]"
+                    className="h-[38px] w-full rounded-[8px] border border-primary-border bg-white px-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                     placeholder="Ej. Cartera Personal"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
@@ -119,17 +119,17 @@ export function CarterasCard({
                   />
                 </label>
                 <div>
-                  <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">Color</span>
+                  <span className="mb-1.5 block text-xs font-bold text-text-secondary">Color</span>
                   <div className="flex items-center gap-2">
                     <button
-                      className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-[#DDEBE3] bg-white"
+                      className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-primary-border bg-white"
                       onClick={() => setShowColorPicker(!showColorPicker)}
                       type="button"
                     >
-                      <Palette className="h-4 w-4 text-[#5C6D63]" />
+                      <Palette className="h-4 w-4 text-text-secondary" />
                     </button>
-                    <span className="h-[28px] w-[28px] rounded-md border border-[#DDEBE3]" style={{ backgroundColor: newColor }} />
-                    <span className="text-xs text-[#5C6D63]">{newColor}</span>
+                    <span className="h-[28px] w-[28px] rounded-md border border-primary-border" style={{ backgroundColor: newColor }} />
+                    <span className="text-xs text-text-secondary">{newColor}</span>
                   </div>
                   {showColorPicker && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
@@ -137,7 +137,7 @@ export function CarterasCard({
                         <button
                           key={color}
                           className={`h-[28px] w-[28px] rounded-full border-2 transition ${
-                            newColor === color ? 'border-[#173D2C] scale-110' : 'border-transparent'
+                            newColor === color ? 'border-text-primary scale-110' : 'border-transparent'
                           }`}
                           style={{ backgroundColor: color }}
                           onClick={() => { setNewColor(color); setShowColorPicker(false); }}
@@ -149,7 +149,7 @@ export function CarterasCard({
                 </div>
                 <div className="flex gap-2">
                   <button
-                    className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#2F7654] text-xs font-bold text-white transition hover:bg-[#285C43] disabled:opacity-50"
+                    className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary-accent text-xs font-bold text-white transition hover:bg-primary disabled:opacity-50"
                     disabled={newName.trim().length < 2 || saving}
                     onClick={handleCreate}
                     type="button"
@@ -158,7 +158,7 @@ export function CarterasCard({
                     {saving ? 'Creando...' : 'Crear'}
                   </button>
                   <button
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#DDEBE3] text-[#5C6D63] transition hover:bg-[#F3FAF6]"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-primary-border text-text-secondary transition hover:bg-surface-muted-ui"
                     onClick={() => setCreating(false)}
                     type="button"
                   >
@@ -169,35 +169,35 @@ export function CarterasCard({
             ) : (
               <div className="space-y-2">
                 {portfolios.length === 0 ? (
-                  <p className="text-xs text-[#5C6D63]">No hay carteras creadas</p>
+                  <p className="text-xs text-text-secondary">No hay carteras creadas</p>
                 ) : (
                   portfolios.map((p) => (
                     <button
                       key={p.id}
                       className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition ${
                         selectedPortfolioId === p.id
-                          ? 'border-[#2F7654] bg-[#EAF6EF]'
-                          : 'border-[#EDF2EF] hover:bg-[#F8FBF9]'
+                          ? 'border-primary-accent bg-primary-soft'
+                          : 'border-border-soft hover:bg-surface-subtle'
                       }`}
                       onClick={() => onSelectPortfolio(selectedPortfolioId === p.id ? null : p.id)}
                       type="button"
                     >
                       <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: p.color }} />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold text-[#173D2C]">{p.name}</p>
+                        <p className="truncate text-sm font-bold text-text-primary">{p.name}</p>
                         {p.description && (
-                          <p className="mt-0.5 truncate text-xs text-[#5C6D63]">{p.description}</p>
+                          <p className="mt-0.5 truncate text-xs text-text-secondary">{p.description}</p>
                         )}
                       </div>
-                      <span className="shrink-0 text-xs font-medium text-[#5C6D63]">{p._count.loans}</span>
+                      <span className="shrink-0 text-xs font-medium text-text-secondary">{p._count.loans}</span>
                       {selectedPortfolioId === p.id && (
-                        <Check className="h-4 w-4 shrink-0 text-[#2F7654]" />
+                        <Check className="h-4 w-4 shrink-0 text-primary-accent" />
                       )}
                     </button>
                   ))
                 )}
                 <button
-                  className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#DDEBE3] text-xs font-bold text-[#2F7654] transition hover:bg-[#F3FAF6]"
+                  className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary-border text-xs font-bold text-primary-accent transition hover:bg-surface-muted-ui"
                   onClick={() => { setCreating(true); setError(''); }}
                   type="button"
                 >

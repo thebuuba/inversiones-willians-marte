@@ -42,16 +42,16 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F3F4F6] font-sans">
-        <p className="text-sm text-neutral-400">Cargando inversion...</p>
+      <div className="flex min-h-screen items-center justify-center bg-page font-sans">
+        <p className="text-sm text-text-subtle">Cargando inversion...</p>
       </div>
     );
   }
 
   if (!investment) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F3F4F6] font-sans">
-        <p className="text-sm text-neutral-400">Inversion no encontrada.</p>
+      <div className="flex min-h-screen items-center justify-center bg-page font-sans">
+        <p className="text-sm text-text-subtle">Inversion no encontrada.</p>
       </div>
     );
   }
@@ -90,27 +90,27 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
 
   return (
     <>
-    <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-neutral-900">
+    <div className="min-h-screen bg-page p-5 font-sans text-text-primary">
       <div className="mx-auto max-w-7xl">
-        <Link className="mb-6 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#2f7654]" href={investorHref}>
+        <Link className="mb-6 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary-accent" href={investorHref}>
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver al inversionista
         </Link>
 
-        <div className="mb-6 rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
+        <div className="mb-6 rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-sm font-semibold text-[#2f7654]">{investment.investor?.name}</p>
+              <p className="text-sm font-semibold text-primary-accent">{investment.investor?.name}</p>
               <h1 className="mt-1 text-3xl font-bold">{investment.code}</h1>
-              <p className="mt-2 text-sm text-neutral-500">
+              <p className="mt-2 text-sm text-text-muted">
                 Inicio {investment.startDate ? fmtDate(investment.startDate) : '—'} · Plazo {investment.term ?? 'Indefinido'}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className={`rounded-full px-3 py-2 text-sm font-bold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-[#9f3f25]' : investment.paymentStatus === 'PAID' ? 'bg-[#eaf5ed] text-[#2f7654]' : 'bg-[#fef3c7] text-[#7a5a0a]'}`}>
+              <span className={`rounded-full px-3 py-2 text-sm font-bold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-state-danger' : investment.paymentStatus === 'PAID' ? 'bg-primary-soft text-primary-accent' : 'bg-[#fef3c7] text-state-warning'}`}>
                 {status}
               </span>
-              <Link className="rounded-full bg-[#2f7654] px-5 py-2 text-sm font-bold text-white" href={`/inversionistas/pago?investmentId=${investment.id}`}>
+              <Link className="rounded-full bg-primary-accent px-5 py-2 text-sm font-bold text-white" href={`/inversionistas/pago?investmentId=${investment.id}`}>
                 Registrar pago
               </Link>
             </div>
@@ -124,31 +124,31 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           </div>
         </div>
 
-        <section className="mb-6 rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
+        <section className="mb-6 rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf5ed]">
-              <Banknote className="h-5 w-5 text-[#2f7654]" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft">
+              <Banknote className="h-5 w-5 text-primary-accent" />
             </div>
             <div>
               <h2 className="text-lg font-bold">Sumar capital</h2>
-              <p className="text-sm text-neutral-400">Aumenta esta inversion.</p>
+              <p className="text-sm text-text-subtle">Aumenta esta inversion.</p>
             </div>
           </div>
           <form onSubmit={handleAddCapital} className="space-y-4">
             <label className="block">
-              <span className="mb-2 block text-sm font-bold text-neutral-600">Monto</span>
-              <input className="h-11 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none focus:border-[#2f7654]" inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="100,000" />
+              <span className="mb-2 block text-sm font-bold text-text-secondary">Monto</span>
+              <input className="h-11 w-full rounded-xl border border-primary-border px-4 text-sm outline-none focus:border-primary-accent" inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="100,000" />
             </label>
             <label className="block">
-              <span className="mb-2 block text-sm font-bold text-neutral-600">Fecha</span>
-              <input className="h-11 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none focus:border-[#2f7654]" type="date" value={movementDate} onChange={(event) => setMovementDate(event.target.value)} />
+              <span className="mb-2 block text-sm font-bold text-text-secondary">Fecha</span>
+              <input className="h-11 w-full rounded-xl border border-primary-border px-4 text-sm outline-none focus:border-primary-accent" type="date" value={movementDate} onChange={(event) => setMovementDate(event.target.value)} />
             </label>
             <label className="block">
-              <span className="mb-2 block text-sm font-bold text-neutral-600">Nota</span>
-              <textarea className="h-24 w-full resize-none rounded-xl border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-[#2f7654]" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" />
+              <span className="mb-2 block text-sm font-bold text-text-secondary">Nota</span>
+              <textarea className="h-24 w-full resize-none rounded-xl border border-primary-border px-4 py-3 text-sm outline-none focus:border-primary-accent" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" />
             </label>
-            {error && <p className="text-sm font-semibold text-[#9f3f25]">{error}</p>}
-            <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white disabled:opacity-60" disabled={saving} type="submit">
+            {error && <p className="text-sm font-semibold text-state-danger">{error}</p>}
+            <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white disabled:opacity-60" disabled={saving} type="submit">
               <Plus className="h-4 w-4" />
               {saving ? 'Guardando...' : 'Sumar capital'}
             </button>
@@ -156,13 +156,13 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
         </section>
 
         <div>
-          <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-white p-1.5 shadow-sm border border-neutral-100">
+          <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-white p-1.5 shadow-sm border border-border-soft">
             {TABS.map((t, i) => (
               <button
                 key={t}
                 onClick={() => setTab(i)}
                 className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${
-                  tab === i ? 'bg-[#2f7654] text-white shadow-sm' : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#2f7654]'
+                  tab === i ? 'bg-primary-accent text-white shadow-sm' : 'text-text-muted hover:bg-primary-soft hover:text-primary-accent'
                 }`}
               >
                 {t}
@@ -171,19 +171,19 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           </div>
 
           {tab === 0 && (
-            <section className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-bold">Historial de pagos</h2>
               {(investment.payments ?? []).length === 0 ? (
-                <p className="text-sm text-neutral-400">No hay pagos registrados.</p>
+                <p className="text-sm text-text-subtle">No hay pagos registrados.</p>
               ) : (
                 <div className="space-y-3">
                   {(investment.payments ?? []).map((payment) => (
-                    <div key={payment.id} className="flex items-center justify-between border-b border-neutral-100 pb-3 last:border-0">
+                    <div key={payment.id} className="flex items-center justify-between border-b border-border-soft pb-3 last:border-0">
                       <div>
                         <p className="text-sm font-bold">Periodo {payment.periodMonth}/{payment.periodYear}</p>
-                        <p className="text-xs text-neutral-400">{fmtDate(payment.paymentDate)}</p>
+                        <p className="text-xs text-text-subtle">{fmtDate(payment.paymentDate)}</p>
                       </div>
-                      <span className="text-sm font-bold text-[#2f7654]">{fmt(payment.amount)}</span>
+                      <span className="text-sm font-bold text-primary-accent">{fmt(payment.amount)}</span>
                     </div>
                   ))}
                 </div>
@@ -192,20 +192,20 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           )}
 
           {tab === 1 && (
-            <section className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-bold">Movimientos de capital</h2>
               {(investment.movements ?? []).length === 0 ? (
-                <p className="text-sm text-neutral-400">No hay movimientos registrados.</p>
+                <p className="text-sm text-text-subtle">No hay movimientos registrados.</p>
               ) : (
                 <div className="space-y-3">
                   {(investment.movements ?? []).map((movement) => (
-                    <div key={movement.id} className="flex items-center justify-between border-b border-neutral-100 pb-3 last:border-0">
+                    <div key={movement.id} className="flex items-center justify-between border-b border-border-soft pb-3 last:border-0">
                       <div>
                         <p className="text-sm font-bold">Aporte de capital</p>
-                        <p className="text-xs text-neutral-400">{fmtDate(movement.movementDate)}</p>
-                        {movement.notes && <p className="mt-1 text-xs text-neutral-500">{movement.notes}</p>}
+                        <p className="text-xs text-text-subtle">{fmtDate(movement.movementDate)}</p>
+                        {movement.notes && <p className="mt-1 text-xs text-text-muted">{movement.notes}</p>}
                       </div>
-                      <span className="text-sm font-bold text-[#2f7654]">{fmt(movement.amount)}</span>
+                      <span className="text-sm font-bold text-primary-accent">{fmt(movement.amount)}</span>
                     </div>
                   ))}
                 </div>
@@ -233,8 +233,8 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
 function Summary({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-[#fafafa] p-4">
-      <p className="text-xs text-neutral-400">{label}</p>
-      <p className="mt-1 text-base font-bold text-neutral-900">{value}</p>
+      <p className="text-xs text-text-subtle">{label}</p>
+      <p className="mt-1 text-base font-bold text-text-primary">{value}</p>
     </div>
   );
 }

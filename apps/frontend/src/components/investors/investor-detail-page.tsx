@@ -71,17 +71,17 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F3F4F6] font-sans">
-        <p className="text-sm font-medium text-neutral-400">Cargando...</p>
+      <div className="flex min-h-screen items-center justify-center bg-page font-sans">
+        <p className="text-sm font-medium text-text-subtle">Cargando...</p>
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#F3F4F6] font-sans">
-        <p className="text-sm font-medium text-neutral-400">Inversionista no encontrado.</p>
-        <Link className="mt-4 text-sm font-bold text-[#2f7654] underline" href="/inversionistas">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-page font-sans">
+        <p className="text-sm font-medium text-text-subtle">Inversionista no encontrado.</p>
+        <Link className="mt-4 text-sm font-bold text-primary-accent underline" href="/inversionistas">
           Volver a inversionistas
         </Link>
       </div>
@@ -152,17 +152,17 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] font-sans">
+    <div className="min-h-screen bg-page font-sans">
       <div className="w-full px-4 py-8 sm:px-6 lg:px-8">
         <Link
-          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#2f7654] hover:text-[#2f7654]"
+          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-primary-accent hover:text-primary-accent"
           href="/inversionistas"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver a inversionistas
         </Link>
 
-        <div className="mb-6 overflow-hidden rounded-3xl bg-white shadow-sm border border-neutral-100">
+        <div className="mb-6 overflow-hidden rounded-3xl bg-white shadow-sm border border-border-soft">
           <div className="px-8 pt-6 pb-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div className="flex items-end gap-5">
@@ -174,14 +174,14 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                     style={{ backgroundImage: `url(${data.photo})` }}
                   />
                 ) : (
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-[#eaf5ed] shadow-md">
-                    <TrendingUp className="h-8 w-8 text-[#2f7654]" />
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-primary-soft shadow-md">
+                    <TrendingUp className="h-8 w-8 text-primary-accent" />
                   </div>
                 )}
                 <div className="pb-1">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-bold text-neutral-900">{data.name}</h1>
-                    <span className="rounded-full bg-[#eaf5ed] px-3 py-0.5 text-xs font-semibold text-[#2f7654]">
+                    <h1 className="text-2xl font-bold text-text-primary">{data.name}</h1>
+                    <span className="rounded-full bg-primary-soft px-3 py-0.5 text-xs font-semibold text-primary-accent">
                       ✦{' '}
                       {data.status === 'ACTIVE'
                         ? 'Activo'
@@ -190,10 +190,10 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                           : 'Retirado'}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-sm text-neutral-500">
+                  <p className="mt-0.5 text-sm text-text-muted">
                     {data.code} · {data.cedula ?? '—'} · {data.type}
                   </p>
-                  <div className="mt-2 flex flex-wrap gap-3 text-xs text-neutral-500">
+                  <div className="mt-2 flex flex-wrap gap-3 text-xs text-text-muted">
                     {data.phone && (
                       <span className="flex items-center gap-1">
                         <Phone className="h-3.5 w-3.5" /> {data.phone}
@@ -208,12 +208,12 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 pb-1">
-                <button className="inline-flex h-10 items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-700 hover:bg-neutral-50">
+                <button className="inline-flex h-10 items-center gap-1.5 rounded-full border border-primary-border bg-white px-5 text-sm text-text-secondary hover:bg-surface-subtle">
                   <Download className="h-4 w-4" />
                   Exportar
                 </button>
                 <Link
-                  className="inline-flex h-10 items-center gap-1.5 rounded-full border border-[#2f7654] bg-white px-5 text-sm text-[#2f7654] hover:bg-[#eaf5ed]"
+                  className="inline-flex h-10 items-center gap-1.5 rounded-full border border-primary-accent bg-white px-5 text-sm text-primary-accent hover:bg-primary-soft"
                   href={`/inversionistas/nuevo?sourceInvestorId=${investorId}`}
                 >
                   <Plus className="h-4 w-4" />
@@ -221,7 +221,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                 </Link>
                 {investments.length === 1 && (
                   <Link
-                    className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm text-white hover:bg-[#285c43]"
+                    className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm text-white hover:bg-primary"
                     href={`/inversionistas/pago?investmentId=${investments[0].id}`}
                   >
                     <Plus className="h-4 w-4" />
@@ -239,7 +239,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
             return (
               <div
                 key={k.label}
-                className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100"
+                className="rounded-2xl bg-white p-5 shadow-sm border border-border-soft"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -249,8 +249,8 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-neutral-500">{k.label}</p>
-                    <p className="mt-0.5 text-base font-bold text-neutral-900">{k.value}</p>
+                    <p className="text-xs font-medium text-text-muted">{k.label}</p>
+                    <p className="mt-0.5 text-base font-bold text-text-primary">{k.value}</p>
                   </div>
                 </div>
               </div>
@@ -258,15 +258,15 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
           })}
         </div>
 
-        <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-white p-1.5 shadow-sm border border-neutral-100">
+        <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-white p-1.5 shadow-sm border border-border-soft">
           {TABS.map((t, i) => (
             <button
               key={t}
               onClick={() => setTab(i)}
               className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${
                 tab === i
-                  ? 'bg-[#2f7654] text-white shadow-sm'
-                  : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#2f7654]'
+                  ? 'bg-primary-accent text-white shadow-sm'
+                  : 'text-text-muted hover:bg-primary-soft hover:text-primary-accent'
               }`}
             >
               {t}
@@ -277,15 +277,15 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
         {tab === 0 && (
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
             <div className="space-y-5">
-              <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
+              <div className="rounded-2xl bg-white p-6 shadow-sm border border-border-soft">
                 <div className="mb-4 flex items-center justify-between gap-3">
-                  <h3 className="text-base font-semibold text-neutral-900">Inversiones</h3>
-                  <span className="rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-semibold text-[#2f7654]">
+                  <h3 className="text-base font-semibold text-text-primary">Inversiones</h3>
+                  <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-accent">
                     {investments.length} activas/historicas
                   </span>
                 </div>
                 {investments.length === 0 ? (
-                  <p className="rounded-xl border border-neutral-100 bg-[#fafafa] p-5 text-sm text-neutral-400">
+                  <p className="rounded-xl border border-border-soft bg-[#fafafa] p-5 text-sm text-text-subtle">
                     Este inversionista aun no tiene inversiones registradas.
                   </p>
                 ) : (
@@ -297,34 +297,34 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                       return (
                         <div
                           key={investment.id}
-                          className="rounded-xl border border-neutral-100 bg-[#fafafa] p-4"
+                          className="rounded-xl border border-border-soft bg-[#fafafa] p-4"
                         >
                           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                             <div>
                               <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-bold text-neutral-900">
+                                <p className="text-sm font-bold text-text-primary">
                                   {investment.code}
                                 </p>
                                 <span
-                                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-[#9f3f25]' : investment.paymentStatus === 'PAID' ? 'bg-[#eaf5ed] text-[#2f7654]' : 'bg-[#fef3c7] text-[#7a5a0a]'}`}
+                                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-state-danger' : investment.paymentStatus === 'PAID' ? 'bg-primary-soft text-primary-accent' : 'bg-[#fef3c7] text-state-warning'}`}
                                 >
                                   {status}
                                 </span>
                               </div>
-                              <p className="mt-1 text-xs text-neutral-400">
+                              <p className="mt-1 text-xs text-text-subtle">
                                 Inicio {investment.startDate ? fmtDate(investment.startDate) : '—'}{' '}
                                 · Plazo {investment.term ?? 'Indefinido'}
                               </p>
                             </div>
                             <div className="flex flex-wrap gap-2">
                               <Link
-                                className="rounded-full border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                                className="rounded-full border border-primary-border bg-white px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-subtle"
                                 href={`/inversiones/${investment.id}`}
                               >
                                 Ver detalle
                               </Link>
                               <Link
-                                className="rounded-full bg-[#2f7654] px-3 py-2 text-xs font-semibold text-white hover:bg-[#285c43]"
+                                className="rounded-full bg-primary-accent px-3 py-2 text-xs font-semibold text-white hover:bg-primary"
                                 href={`/inversionistas/pago?investmentId=${investment.id}`}
                               >
                                 Registrar pago
@@ -333,26 +333,26 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                           </div>
                           <div className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
                             <div>
-                              <p className="text-xs text-neutral-400">Capital</p>
-                              <p className="font-semibold text-neutral-900">
+                              <p className="text-xs text-text-subtle">Capital</p>
+                              <p className="font-semibold text-text-primary">
                                 {fmt(investment.capital)}
                               </p>
                             </div>
                             <div>
-                              <p className="text-xs text-neutral-400">Tasa</p>
-                              <p className="font-semibold text-neutral-900">
+                              <p className="text-xs text-text-subtle">Tasa</p>
+                              <p className="font-semibold text-text-primary">
                                 {investment.rate}% mensual
                               </p>
                             </div>
                             <div>
-                              <p className="text-xs text-neutral-400">Retorno mensual</p>
-                              <p className="font-semibold text-neutral-900">
+                              <p className="text-xs text-text-subtle">Retorno mensual</p>
+                              <p className="font-semibold text-text-primary">
                                 {fmt(investment.monthlyPayment)}
                               </p>
                             </div>
                             <div>
-                              <p className="text-xs text-neutral-400">Proximo vencimiento</p>
-                              <p className="font-semibold text-neutral-900">
+                              <p className="text-xs text-text-subtle">Proximo vencimiento</p>
+                              <p className="font-semibold text-text-primary">
                                 {investment.nextDueDate ? fmtDate(investment.nextDueDate) : '—'}
                               </p>
                             </div>
@@ -366,18 +366,18 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
             </div>
 
             <div className="space-y-5">
-              <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
-                <h3 className="mb-4 text-sm font-semibold text-neutral-900">
+              <div className="rounded-2xl bg-white p-6 shadow-sm border border-border-soft">
+                <h3 className="mb-4 text-sm font-semibold text-text-primary">
                   Condiciones pactadas
                 </h3>
                 <div className="space-y-3">
                   {conditions.map((r) => (
                     <div
                       key={r.label}
-                      className="flex items-center justify-between border-b border-neutral-100 pb-2 last:border-0 gap-3"
+                      className="flex items-center justify-between border-b border-border-soft pb-2 last:border-0 gap-3"
                     >
-                      <span className="text-xs text-neutral-500 shrink-0">{r.label}</span>
-                      <span className="text-sm font-semibold text-neutral-900 text-right">
+                      <span className="text-xs text-text-muted shrink-0">{r.label}</span>
+                      <span className="text-sm font-semibold text-text-primary text-right">
                         {r.value}
                       </span>
                     </div>
@@ -385,11 +385,11 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                 </div>
               </div>
               {data.notes && (
-                <div className="rounded-2xl bg-[#eaf5ed] p-5 border border-[#c2dfcb]/60">
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#2f7654]">
+                <div className="rounded-2xl bg-primary-soft p-5 border border-[#c2dfcb]/60">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary-accent">
                     Notas
                   </p>
-                  <p className="text-sm text-neutral-700">{data.notes}</p>
+                  <p className="text-sm text-text-secondary">{data.notes}</p>
                 </div>
               )}
             </div>
@@ -397,8 +397,8 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
         )}
 
         {tab === 1 && (
-          <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-neutral-100">
-            <div className="grid grid-cols-12 gap-4 border-b border-neutral-100 bg-[#fafafa] px-6 py-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+          <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-border-soft">
+            <div className="grid grid-cols-12 gap-4 border-b border-border-soft bg-[#fafafa] px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
               <div className="col-span-1">#</div>
               <div className="col-span-2">Período</div>
               <div className="col-span-2">Vencimiento</div>
@@ -407,7 +407,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
               <div className="col-span-1">Método</div>
               <div className="col-span-2 text-right">Estado / Acción</div>
             </div>
-            <div className="py-12 text-center text-sm text-neutral-400">
+            <div className="py-12 text-center text-sm text-text-subtle">
               No hay pagos registrados aún.
             </div>
           </div>
@@ -416,34 +416,34 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
         {tab === 2 && (
           <div className="space-y-3">
             <div className="flex justify-end">
-              <label className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm text-white hover:bg-[#285c43]">
+              <label className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm text-white hover:bg-primary">
                 <Upload className="h-4 w-4" />
                 Subir documento
                 <input type="file" className="hidden" onChange={handleUpload} />
               </label>
             </div>
             {documents.length === 0 ? (
-              <p className="py-12 text-center text-sm text-neutral-400">Sin documentos adjuntos.</p>
+              <p className="py-12 text-center text-sm text-text-subtle">Sin documentos adjuntos.</p>
             ) : (
               documents.map((d) => (
                 <div
                   key={d.id}
-                  className="flex items-center justify-between rounded-2xl bg-white px-6 py-4 shadow-sm border border-neutral-100 hover:bg-[#eaf5ed]/30 transition"
+                  className="flex items-center justify-between rounded-2xl bg-white px-6 py-4 shadow-sm border border-border-soft hover:bg-primary-soft/30 transition"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf5ed]">
-                      <File className="h-5 w-5 text-[#2f7654]" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft">
+                      <File className="h-5 w-5 text-primary-accent" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-neutral-900">{d.name}</p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-sm font-semibold text-text-primary">{d.name}</p>
+                      <p className="text-xs text-text-muted">
                         {d.category} · Subido {fmtDate(d.createdAt)}
                       </p>
                     </div>
                   </div>
                   {d.fileUrl && (
                     <button
-                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm text-text-muted hover:bg-primary-soft hover:text-primary-accent"
                       onClick={() => downloadDocument(d.id, d.name)}
                       type="button"
                     >
@@ -462,12 +462,12 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
             {personalFields.map((r) => (
               <div
                 key={r.label}
-                className="rounded-2xl bg-white px-6 py-4 shadow-sm border border-neutral-100"
+                className="rounded-2xl bg-white px-6 py-4 shadow-sm border border-border-soft"
               >
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
                   {r.label}
                 </p>
-                <p className="mt-1 text-sm font-semibold text-neutral-900">{r.value}</p>
+                <p className="mt-1 text-sm font-semibold text-text-primary">{r.value}</p>
               </div>
             ))}
           </div>

@@ -48,7 +48,7 @@ const promiseTones = {
   PARTIAL: 'bg-blue-50 text-blue-700',
   FULFILLED: 'bg-emerald-50 text-emerald-700',
   BROKEN: 'bg-red-50 text-red-700',
-  CANCELLED: 'bg-neutral-100 text-neutral-600',
+  CANCELLED: 'bg-state-neutral-bg text-text-secondary',
 } as const;
 
 const today = () => {
@@ -134,16 +134,16 @@ function InteractionModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 backdrop-blur-sm"
       onClick={(event) => event.target === event.currentTarget && onClose()}
     >
-      <section className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-neutral-100 bg-white shadow-2xl">
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-[#EDF2EF] bg-white px-6 py-5">
+      <section className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-border-soft bg-white shadow-2xl">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border-soft bg-white px-6 py-5">
           <div>
-            <h2 className="text-lg font-bold text-[#173D2C]">Registrar gestión de cobro</h2>
-            <p className="mt-1 text-sm text-[#5C6D63]">
+            <h2 className="text-lg font-bold text-text-primary">Registrar gestión de cobro</h2>
+            <p className="mt-1 text-sm text-text-secondary">
               La gestión quedará en el historial del préstamo.
             </p>
           </div>
           <button
-            className="rounded-full p-2 text-neutral-400 hover:bg-neutral-100"
+            className="rounded-full p-2 text-text-subtle hover:bg-state-neutral-bg"
             onClick={onClose}
             type="button"
           >
@@ -154,11 +154,11 @@ function InteractionModal({
         <div className="space-y-4 p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-[#5C6D63]">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-text-secondary">
                 Canal
               </span>
               <select
-                className="h-11 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-semibold text-[#173D2C]"
+                className="h-11 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-semibold text-text-primary"
                 onChange={(event) => setChannel(event.target.value as CollectionChannel)}
                 value={channel}
               >
@@ -170,11 +170,11 @@ function InteractionModal({
               </select>
             </label>
             <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-[#5C6D63]">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-text-secondary">
                 Resultado
               </span>
               <select
-                className="h-11 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-semibold text-[#173D2C]"
+                className="h-11 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-semibold text-text-primary"
                 onChange={(event) => setResult(event.target.value as CollectionResult)}
                 value={result}
               >
@@ -188,12 +188,12 @@ function InteractionModal({
           </div>
 
           <label className="block">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-[#5C6D63]">
+            <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-text-secondary">
               Información proporcionada
             </span>
             <textarea
               autoFocus
-              className="min-h-28 w-full resize-y rounded-xl border border-[#DDEBE3] px-4 py-3 text-sm text-[#173D2C] outline-none focus:border-[#5FA37D]"
+              className="min-h-28 w-full resize-y rounded-xl border border-primary-border px-4 py-3 text-sm text-text-primary outline-none focus:border-primary-accent"
               maxLength={2000}
               onChange={(event) => {
                 setNotes(event.target.value);
@@ -211,7 +211,7 @@ function InteractionModal({
                   Monto prometido
                 </span>
                 <input
-                  className="h-11 w-full rounded-xl border border-amber-200 bg-white px-3 text-sm font-bold text-[#173D2C]"
+                  className="h-11 w-full rounded-xl border border-amber-200 bg-white px-3 text-sm font-bold text-text-primary"
                   inputMode="decimal"
                   onChange={(event) => setPromiseAmount(event.target.value)}
                   placeholder="0.00"
@@ -223,7 +223,7 @@ function InteractionModal({
                   Fecha prometida
                 </span>
                 <DatePickerInput
-                  className="h-11 w-full rounded-xl border border-amber-200 bg-white px-3 text-sm font-bold text-[#173D2C]"
+                  className="h-11 w-full rounded-xl border border-amber-200 bg-white px-3 text-sm font-bold text-text-primary"
                   onChange={setPromiseDate}
                   value={promiseDate}
                 />
@@ -233,21 +233,21 @@ function InteractionModal({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-[#5C6D63]">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-text-secondary">
                 Próximo seguimiento
               </span>
               <DatePickerInput
-                className="h-11 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-semibold text-[#173D2C]"
+                className="h-11 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-semibold text-text-primary"
                 onChange={setFollowUpDate}
                 value={followUpDate}
               />
             </label>
             <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-[#5C6D63]">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-text-secondary">
                 Hora
               </span>
               <input
-                className="h-11 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-semibold text-[#173D2C] disabled:bg-neutral-50"
+                className="h-11 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-semibold text-text-primary disabled:bg-surface-subtle"
                 disabled={!followUpDate}
                 onChange={(event) => setFollowUpTime(event.target.value)}
                 type="time"
@@ -262,7 +262,7 @@ function InteractionModal({
             </p>
           ) : null}
           <button
-            className="h-11 w-full rounded-full bg-[#2F7654] text-sm font-bold text-white transition hover:bg-[#285C43] disabled:opacity-60"
+            className="h-11 w-full rounded-full bg-primary-accent text-sm font-bold text-white transition hover:bg-primary disabled:opacity-60"
             disabled={saving}
             onClick={handleSubmit}
             type="button"
@@ -314,20 +314,20 @@ export function CollectionManagementPanel({
   }, [loanId]);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
-      <header className="flex flex-col justify-between gap-4 border-b border-[#EDF2EF] px-5 py-4 sm:flex-row sm:items-center">
+    <section className="overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm">
+      <header className="flex flex-col justify-between gap-4 border-b border-border-soft px-5 py-4 sm:flex-row sm:items-center">
         <div>
-          <h2 className="flex items-center gap-2 text-base font-bold text-[#173D2C]">
-            <PhoneCall className="h-5 w-5 text-[#2F7654]" /> Gestiones de cobro
+          <h2 className="flex items-center gap-2 text-base font-bold text-text-primary">
+            <PhoneCall className="h-5 w-5 text-primary-accent" /> Gestiones de cobro
           </h2>
-          <p className="mt-1 text-sm font-medium text-[#5C6D63]">
+          <p className="mt-1 text-sm font-medium text-text-secondary">
             Llamadas, acuerdos y próximos seguimientos.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           {phone ? (
             <a
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-[#DDEBE3] px-4 text-sm font-bold text-[#2F7654] hover:bg-[#F3F8F5]"
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-primary-border px-4 text-sm font-bold text-primary-accent hover:bg-[#F3F8F5]"
               href={`tel:${phone}`}
             >
               <PhoneCall className="h-4 w-4" /> {phone}
@@ -335,7 +335,7 @@ export function CollectionManagementPanel({
           ) : null}
           {phone ? (
             <a
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-[#DDEBE3] px-4 text-sm font-bold text-[#2F7654] hover:bg-[#F3F8F5]"
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-primary-border px-4 text-sm font-bold text-primary-accent hover:bg-[#F3F8F5]"
               href={`https://wa.me/${phone.replace(/\D/g, '')}`}
               rel="noreferrer"
               target="_blank"
@@ -344,7 +344,7 @@ export function CollectionManagementPanel({
             </a>
           ) : null}
           <button
-            className="inline-flex h-10 items-center gap-2 rounded-full bg-[#2F7654] px-4 text-sm font-bold text-white hover:bg-[#285C43]"
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-primary-accent px-4 text-sm font-bold text-white hover:bg-primary"
             onClick={() => {
               setInitialResult('CONTACTED');
               setModalOpen(true);
@@ -357,9 +357,9 @@ export function CollectionManagementPanel({
       </header>
 
       {altPhone ? (
-        <p className="border-b border-[#EDF2EF] px-5 py-2 text-xs font-semibold text-[#5C6D63]">
+        <p className="border-b border-border-soft px-5 py-2 text-xs font-semibold text-text-secondary">
           Teléfono alternativo:{' '}
-          <a className="text-[#2F7654]" href={`tel:${altPhone}`}>
+          <a className="text-primary-accent" href={`tel:${altPhone}`}>
             {altPhone}
           </a>
         </p>
@@ -370,24 +370,24 @@ export function CollectionManagementPanel({
         </p>
       ) : null}
       {loading ? (
-        <p className="px-5 py-8 text-center text-sm text-[#5C6D63]">Cargando historial...</p>
+        <p className="px-5 py-8 text-center text-sm text-text-secondary">Cargando historial...</p>
       ) : null}
       {!loading && items.length === 0 ? (
-        <p className="px-5 py-8 text-center text-sm text-[#5C6D63]">
+        <p className="px-5 py-8 text-center text-sm text-text-secondary">
           Todavía no se han registrado gestiones para este préstamo.
         </p>
       ) : null}
 
-      <div className="divide-y divide-[#EDF2EF]">
+      <div className="divide-y divide-border-soft">
         {items.map((item) => (
           <article className="px-5 py-4" key={item.id}>
             <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-[#EAF5ED] px-3 py-1 text-xs font-bold text-[#2F7654]">
+                  <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-accent">
                     {labelFor(channels, item.channel)}
                   </span>
-                  <span className="text-sm font-bold text-[#173D2C]">
+                  <span className="text-sm font-bold text-text-primary">
                     {labelFor(results, item.result)}
                   </span>
                 </div>
@@ -395,21 +395,21 @@ export function CollectionManagementPanel({
                   {item.notes}
                 </p>
               </div>
-              <p className="shrink-0 text-xs font-semibold text-[#7A8780]">
+              <p className="shrink-0 text-xs font-semibold text-text-muted">
                 {item.createdBy.name} · {fmtDate(item.createdAt)}
               </p>
             </div>
 
             {item.promise ? (
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-amber-100 bg-amber-50/50 px-4 py-3 text-sm">
-                <span className="font-bold text-[#173D2C]">
+                <span className="font-bold text-text-primary">
                   Promesa: {formatDop(item.promise.amount, { decimals: 2, space: true })}
                 </span>
-                <span className="font-semibold text-[#5C6D63]">
+                <span className="font-semibold text-text-secondary">
                   Para {fmtCalendarDate(item.promise.dueDate)}
                 </span>
                 {Number(item.promise.fulfilledAmount) > 0 ? (
-                  <span className="font-semibold text-[#5C6D63]">
+                  <span className="font-semibold text-text-secondary">
                     Aplicado:{' '}
                     {formatDop(item.promise.fulfilledAmount, { decimals: 2, space: true })}
                   </span>
@@ -423,7 +423,7 @@ export function CollectionManagementPanel({
             ) : null}
 
             {item.nextFollowUpDate ? (
-              <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#2F7654]">
+              <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-primary-accent">
                 <CalendarClock className="h-4 w-4" /> Seguimiento:{' '}
                 {fmtCalendarDate(item.nextFollowUpDate)}{' '}
                 {item.nextFollowUpTime ? `a las ${item.nextFollowUpTime}` : ''}

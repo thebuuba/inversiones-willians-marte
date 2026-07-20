@@ -22,7 +22,7 @@ const MONTHS = [
 const METHODS = ['Efectivo', 'Transferencia', 'Tarjeta'];
 
 const inputClass =
-  'h-11 w-full rounded-xl border border-[#ddebe3] bg-white px-4 text-sm font-medium text-[#173d2c] outline-none transition focus:border-[#5fa37d]';
+  'h-11 w-full rounded-xl border border-primary-border bg-white px-4 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent';
 
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1;
@@ -111,17 +111,17 @@ export function RegisterInvestorPaymentPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F3F4F6] font-sans">
-        <p className="text-sm font-medium text-neutral-400">Cargando...</p>
+      <div className="flex min-h-screen items-center justify-center bg-page font-sans">
+        <p className="text-sm font-medium text-text-subtle">Cargando...</p>
       </div>
     );
   }
 
   if (!investor || !investment) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#F3F4F6] font-sans">
-        <p className="text-sm font-medium text-neutral-400">Inversionista no encontrado.</p>
-        <Link className="mt-4 text-sm font-bold text-[#2f7654] underline" href="/inversionistas">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-page font-sans">
+        <p className="text-sm font-medium text-text-subtle">Inversionista no encontrado.</p>
+        <Link className="mt-4 text-sm font-bold text-primary-accent underline" href="/inversionistas">
           Volver a inversionistas
         </Link>
       </div>
@@ -166,10 +166,10 @@ export function RegisterInvestorPaymentPage() {
 
   return (
     <>
-    <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans">
+    <div className="min-h-screen bg-page p-5 font-sans">
       <div className="mx-auto max-w-7xl">
         <Link
-          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#2f7654] hover:text-[#2f7654]"
+          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-primary-accent hover:text-primary-accent"
           href={`/inversionistas/${investor.id}`}
         >
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -179,50 +179,50 @@ export function RegisterInvestorPaymentPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[400px_1fr]">
           {/* Left column: Investor info */}
           <div className="space-y-5">
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
+            <div className="rounded-2xl bg-white p-6 shadow-sm border border-border-soft">
               <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#eaf5ed]">
-                  <TrendingUp className="h-7 w-7 text-[#2f7654]" />
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary-soft">
+                  <TrendingUp className="h-7 w-7 text-primary-accent" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-neutral-900">{investor.name}</h2>
-                  <p className="text-sm text-neutral-500">{investment.code}</p>
-                  <span className="mt-1 inline-block rounded-full bg-[#eaf5ed] px-3 py-0.5 text-xs font-semibold text-[#2f7654]">
+                  <h2 className="text-lg font-bold text-text-primary">{investor.name}</h2>
+                  <p className="text-sm text-text-muted">{investment.code}</p>
+                  <span className="mt-1 inline-block rounded-full bg-primary-soft px-3 py-0.5 text-xs font-semibold text-primary-accent">
                     {investor.status === 'ACTIVE' ? 'Activo' : investor.status === 'PAUSED' ? 'Pausado' : 'Retirado'}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
-              <h3 className="mb-4 text-sm font-semibold text-neutral-900">Información financiera</h3>
+            <div className="rounded-2xl bg-white p-6 shadow-sm border border-border-soft">
+              <h3 className="mb-4 text-sm font-semibold text-text-primary">Información financiera</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
-                  <span className="text-xs text-neutral-500">Capital invertido</span>
-                  <span className="text-sm font-bold text-neutral-900">{fmt(Number(investment.capital))}</span>
+                <div className="flex items-center justify-between border-b border-border-soft pb-2">
+                  <span className="text-xs text-text-muted">Capital invertido</span>
+                  <span className="text-sm font-bold text-text-primary">{fmt(Number(investment.capital))}</span>
                 </div>
-                <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
-                  <span className="text-xs text-neutral-500">Tasa mensual</span>
-                  <span className="text-sm font-bold text-neutral-900">{Number(investment.rate)}%</span>
+                <div className="flex items-center justify-between border-b border-border-soft pb-2">
+                  <span className="text-xs text-text-muted">Tasa mensual</span>
+                  <span className="text-sm font-bold text-text-primary">{Number(investment.rate)}%</span>
                 </div>
-                <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
-                  <span className="text-xs text-neutral-500">Retorno mensual (cuota)</span>
-                  <span className="text-sm font-bold text-[#2f7654]">{fmt(cuota)}</span>
+                <div className="flex items-center justify-between border-b border-border-soft pb-2">
+                  <span className="text-xs text-text-muted">Retorno mensual (cuota)</span>
+                  <span className="text-sm font-bold text-primary-accent">{fmt(cuota)}</span>
                 </div>
-                <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
-                  <span className="text-xs text-neutral-500">Período</span>
-                  <span className="text-sm font-bold text-neutral-900">{MONTHS[periodMonth - 1]} {periodYear}</span>
+                <div className="flex items-center justify-between border-b border-border-soft pb-2">
+                  <span className="text-xs text-text-muted">Período</span>
+                  <span className="text-sm font-bold text-text-primary">{MONTHS[periodMonth - 1]} {periodYear}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-neutral-500">Estado del período</span>
+                  <span className="text-xs text-text-muted">Estado del período</span>
                   {checkingPeriod ? (
-                    <span className="text-sm font-medium text-neutral-400">Verificando...</span>
+                    <span className="text-sm font-medium text-text-subtle">Verificando...</span>
                   ) : periodPaid ? (
-                    <span className="inline-flex items-center gap-1 text-sm font-bold text-[#2f7654]">
+                    <span className="inline-flex items-center gap-1 text-sm font-bold text-primary-accent">
                       <CheckCircle2 className="h-4 w-4" /> Pagado
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-sm font-bold text-[#7a5a0a]">
+                    <span className="inline-flex items-center gap-1 text-sm font-bold text-state-warning">
                       <Clock className="h-4 w-4" /> Pendiente
                     </span>
                   )}
@@ -230,21 +230,21 @@ export function RegisterInvestorPaymentPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
-              <h3 className="mb-4 text-sm font-semibold text-neutral-900">Últimos pagos</h3>
+            <div className="rounded-2xl bg-white p-6 shadow-sm border border-border-soft">
+              <h3 className="mb-4 text-sm font-semibold text-text-primary">Últimos pagos</h3>
               {payments.length === 0 ? (
-                <p className="text-sm text-neutral-400">No hay pagos registrados aún.</p>
+                <p className="text-sm text-text-subtle">No hay pagos registrados aún.</p>
               ) : (
                 <div className="space-y-3">
                   {payments.slice(0, 5).map((p) => (
-                    <div key={p.id} className="flex items-center justify-between border-b border-neutral-100 pb-2 last:border-0">
+                    <div key={p.id} className="flex items-center justify-between border-b border-border-soft pb-2 last:border-0">
                       <div>
-                        <p className="text-sm font-medium text-neutral-900">
+                        <p className="text-sm font-medium text-text-primary">
                           {MONTHS[p.periodMonth - 1]} {p.periodYear}
                         </p>
-                        <p className="text-xs text-neutral-400">{fmtDate(p.paymentDate)}</p>
+                        <p className="text-xs text-text-subtle">{fmtDate(p.paymentDate)}</p>
                       </div>
-                      <span className="text-sm font-bold text-[#2f7654]">{fmt(Number(p.amount))}</span>
+                      <span className="text-sm font-bold text-primary-accent">{fmt(Number(p.amount))}</span>
                     </div>
                   ))}
                 </div>
@@ -253,25 +253,25 @@ export function RegisterInvestorPaymentPage() {
           </div>
 
           {/* Right column: Payment form */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-neutral-100">
-            <h2 className="mb-1 text-xl font-bold text-neutral-900">Registrar pago de interés</h2>
-            <p className="mb-6 text-sm text-neutral-500">
+          <div className="rounded-2xl bg-white p-6 shadow-sm border border-border-soft">
+            <h2 className="mb-1 text-xl font-bold text-text-primary">Registrar pago de interés</h2>
+            <p className="mb-6 text-sm text-text-muted">
               Registra el pago mensual correspondiente al período seleccionado.
             </p>
 
             {periodPaid && (
-              <div className="rounded-xl bg-[#eaf5ed] p-5 border border-[#c2dfcb]/60">
+              <div className="rounded-xl bg-primary-soft p-5 border border-[#c2dfcb]/60">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-[#2f7654]" />
-                  <p className="font-semibold text-[#2f7654]">Este período ya tiene pagos</p>
+                  <CheckCircle2 className="h-5 w-5 text-primary-accent" />
+                  <p className="font-semibold text-primary-accent">Este período ya tiene pagos</p>
                 </div>
-                <p className="mt-2 text-sm text-neutral-600">
+                <p className="mt-2 text-sm text-text-secondary">
                   Ya existe un pago de <strong>{fmt(Number(periodPaid.amount))}</strong> para{' '}
                   {MONTHS[periodMonth - 1]} {periodYear}, registrado el {fmtDate(periodPaid.paymentDate)}.
                   Puedes registrar otro pago o complemento para este mismo período.
                 </p>
                 {periodPaid.paymentMethod && (
-                  <p className="mt-1 text-sm text-neutral-500">Método: {periodPaid.paymentMethod}</p>
+                  <p className="mt-1 text-sm text-text-muted">Método: {periodPaid.paymentMethod}</p>
                 )}
               </div>
             )}
@@ -279,7 +279,7 @@ export function RegisterInvestorPaymentPage() {
             <form className={periodPaid ? 'mt-5' : undefined} onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <label className="block">
-                    <span className="mb-2 block text-sm font-bold text-[#5c6d63]">Período</span>
+                    <span className="mb-2 block text-sm font-bold text-text-secondary">Período</span>
                     <div className="grid grid-cols-2 gap-2">
                       <select
                         className={inputClass}
@@ -307,9 +307,9 @@ export function RegisterInvestorPaymentPage() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-2 block text-sm font-bold text-[#5c6d63]">Monto</span>
+                    <span className="mb-2 block text-sm font-bold text-text-secondary">Monto</span>
                     <div className="relative">
-                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[#5c6d63]">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-text-secondary">
                         RD$
                       </span>
                       <input
@@ -324,7 +324,7 @@ export function RegisterInvestorPaymentPage() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-2 block text-sm font-bold text-[#5c6d63]">Fecha del pago</span>
+                    <span className="mb-2 block text-sm font-bold text-text-secondary">Fecha del pago</span>
                     <input
                       className={`${inputClass} ${invalidDate ? 'border-[#e4a58b]' : ''}`}
                       type="date"
@@ -334,7 +334,7 @@ export function RegisterInvestorPaymentPage() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-2 block text-sm font-bold text-[#5c6d63]">Método de pago</span>
+                    <span className="mb-2 block text-sm font-bold text-text-secondary">Método de pago</span>
                     <select
                       className={inputClass}
                       value={paymentMethod}
@@ -347,7 +347,7 @@ export function RegisterInvestorPaymentPage() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-2 block text-sm font-bold text-[#5c6d63]">Referencia</span>
+                    <span className="mb-2 block text-sm font-bold text-text-secondary">Referencia</span>
                     <input
                       className={inputClass}
                       type="text"
@@ -358,27 +358,27 @@ export function RegisterInvestorPaymentPage() {
                   </label>
 
                   <label className="block sm:col-span-2">
-                    <span className="mb-2 block text-sm font-bold text-[#5c6d63]">Notas</span>
+                    <span className="mb-2 block text-sm font-bold text-text-secondary">Notas</span>
                     <textarea
-                      className="h-24 w-full resize-none rounded-xl border border-[#ddebe3] bg-white px-4 py-3 text-sm font-medium text-[#173d2c] outline-none transition focus:border-[#5fa37d]"
+                      className="h-24 w-full resize-none rounded-xl border border-primary-border bg-white px-4 py-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Opcional"
                     />
                   </label>
 
-                  {error && <p className="text-sm font-medium text-[#9f3f25] sm:col-span-2">{error}</p>}
+                  {error && <p className="text-sm font-medium text-state-danger sm:col-span-2">{error}</p>}
                 </div>
 
-                <div className="mt-6 flex justify-end gap-3 border-t border-[#edf2ef] pt-4">
+                <div className="mt-6 flex justify-end gap-3 border-t border-border-soft pt-4">
                   <Link
-                    className="inline-flex h-11 items-center rounded-full border border-[#ddebe3] bg-white px-6 text-sm font-bold text-[#173d2c]"
+                    className="inline-flex h-11 items-center rounded-full border border-primary-border bg-white px-6 text-sm font-bold text-text-primary"
                     href={`/inversionistas/${investor.id}`}
                   >
                     Cancelar
                   </Link>
                   <button
-                    className="inline-flex h-11 items-center rounded-full bg-[#285c43] px-6 text-sm font-bold text-white disabled:opacity-60"
+                    className="inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-bold text-white disabled:opacity-60"
                     disabled={saving}
                     type="submit"
                   >

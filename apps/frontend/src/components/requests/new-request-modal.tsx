@@ -12,7 +12,7 @@ interface NewRequestModalProps {
 }
 
 const fieldClass =
-  'h-11 w-full rounded-[12px] border border-[#DDEBE3] bg-white px-4 text-sm font-medium text-[#173D2C] shadow-[0_3px_10px_rgba(40,92,67,0.04)] outline-none transition placeholder:text-[#8E929B] focus:border-[#285C43] focus:shadow-[0_0_0_3px_rgba(95,163,125,0.12)]';
+  'h-11 w-full rounded-[12px] border border-primary-border bg-white px-4 text-sm font-medium text-text-primary shadow-[0_3px_10px_rgba(40,92,67,0.04)] outline-none transition placeholder:text-[#8E929B] focus:border-primary focus:shadow-[0_0_0_3px_rgba(95,163,125,0.12)]';
 
 type FormField = 'firstName' | 'lastName' | 'identification' | 'phone' | 'amount' | 'reference' | 'description';
 
@@ -31,7 +31,7 @@ const Field = memo(function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-bold text-[#5C6D63]">{label}</span>
+      <span className="mb-2 block text-sm font-bold text-text-secondary">{label}</span>
       <input className={fieldClass} maxLength={maxLength} value={value} onChange={(event) => onChange(name, event.target.value)} />
     </label>
   );
@@ -108,7 +108,7 @@ export function NewRequestModal({ open, onClose, onSubmit }: NewRequestModalProp
         >
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="flex max-h-[84vh] w-full max-w-[700px] flex-col overflow-hidden rounded-[22px] border border-[#DDEBE3] bg-white shadow-[0_18px_42px_rgba(0,0,0,0.18)]"
+            className="flex max-h-[84vh] w-full max-w-[700px] flex-col overflow-hidden rounded-[22px] border border-primary-border bg-white shadow-[0_18px_42px_rgba(0,0,0,0.18)]"
             exit={{ opacity: 0, y: 10 }}
             initial={{ opacity: 0, y: 14 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
@@ -119,13 +119,13 @@ export function NewRequestModal({ open, onClose, onSubmit }: NewRequestModalProp
                   <UserPlus className="h-6 w-6" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold leading-tight text-[#173D2C]">Nueva solicitud</h2>
-                  <p className="mt-1 text-sm text-[#5C6D63]">Captura los datos del solicitante.</p>
+                  <h2 className="text-lg font-bold leading-tight text-text-primary">Nueva solicitud</h2>
+                  <p className="mt-1 text-sm text-text-secondary">Captura los datos del solicitante.</p>
                 </div>
               </div>
               <button
                 aria-label="Cerrar"
-                className="rounded-full p-2 text-[#4B5750] transition hover:bg-white hover:text-[#173D2C]"
+                className="rounded-full p-2 text-[#4B5750] transition hover:bg-white hover:text-text-primary"
                 onClick={onClose}
                 type="button"
               >
@@ -140,11 +140,11 @@ export function NewRequestModal({ open, onClose, onSubmit }: NewRequestModalProp
                 <Field label="Cédula" maxLength={13} name="identification" value={form.identification} onChange={updateField} />
                 <Field label="Número de teléfono" maxLength={14} name="phone" value={form.phone} onChange={updateField} />
                 <label className="block">
-                  <span className="mb-2 block text-sm font-bold text-[#5C6D63]">Monto solicitado</span>
-                  <div className="flex h-11 items-center rounded-[12px] border border-[#DDEBE3] bg-white shadow-[0_3px_10px_rgba(40,92,67,0.04)] transition has-[input:focus]:border-[#285C43] has-[input:focus]:shadow-[0_0_0_3px_rgba(95,163,125,0.12)]">
-                    <span className="pl-4 text-sm font-bold text-[#2F7654]">RD$</span>
+                  <span className="mb-2 block text-sm font-bold text-text-secondary">Monto solicitado</span>
+                  <div className="flex h-11 items-center rounded-[12px] border border-primary-border bg-white shadow-[0_3px_10px_rgba(40,92,67,0.04)] transition has-[input:focus]:border-primary has-[input:focus]:shadow-[0_0_0_3px_rgba(95,163,125,0.12)]">
+                    <span className="pl-4 text-sm font-bold text-primary-accent">RD$</span>
                     <input
-                      className="h-full flex-1 bg-transparent px-2 text-sm font-medium text-[#173D2C] outline-none placeholder:text-[#8E929B]"
+                      className="h-full flex-1 bg-transparent px-2 text-sm font-medium text-text-primary outline-none placeholder:text-[#8E929B]"
                       placeholder="0"
                       value={form.amount}
                       onChange={(event) => updateField('amount', formatCurrency(event.target.value))}
@@ -158,9 +158,9 @@ export function NewRequestModal({ open, onClose, onSubmit }: NewRequestModalProp
               </div>
 
               <label className="mt-6 block">
-                <span className="mb-2 block text-sm font-bold text-[#5C6D63]">Descripción del préstamo</span>
+                <span className="mb-2 block text-sm font-bold text-text-secondary">Descripción del préstamo</span>
                 <textarea
-                  className="h-[104px] w-full resize-none rounded-[12px] border border-[#DDEBE3] bg-white px-4 py-3 text-sm font-medium text-[#173D2C] shadow-[0_3px_10px_rgba(40,92,67,0.04)] outline-none transition placeholder:text-[#8E929B] focus:border-[#285C43] focus:shadow-[0_0_0_3px_rgba(95,163,125,0.12)]"
+                  className="h-[104px] w-full resize-none rounded-[12px] border border-primary-border bg-white px-4 py-3 text-sm font-medium text-text-primary shadow-[0_3px_10px_rgba(40,92,67,0.04)] outline-none transition placeholder:text-[#8E929B] focus:border-primary focus:shadow-[0_0_0_3px_rgba(95,163,125,0.12)]"
                   onChange={(event) => updateField('description', event.target.value)}
                   placeholder="Describe el motivo del préstamo, ingresos, garantías..."
                   value={form.description}
@@ -168,9 +168,9 @@ export function NewRequestModal({ open, onClose, onSubmit }: NewRequestModalProp
               </label>
 
               <div className="mt-6">
-                <p className="mb-3 text-sm font-bold text-[#5C6D63]">Fotografías</p>
+                <p className="mb-3 text-sm font-bold text-text-secondary">Fotografías</p>
                 <button
-                  className="flex h-[128px] w-[142px] flex-col items-center justify-center gap-2.5 rounded-[16px] border border-dashed border-[#5C6D63] bg-[#EEF8F1] text-[#2F7654] transition hover:-translate-y-0.5 hover:bg-[#E7F4EC]"
+                  className="flex h-[128px] w-[142px] flex-col items-center justify-center gap-2.5 rounded-[16px] border border-dashed border-text-secondary bg-[#EEF8F1] text-primary-accent transition hover:-translate-y-0.5 hover:bg-primary-soft"
                   type="button"
                 >
                   <ImagePlus className="h-6 w-6" />
@@ -184,14 +184,14 @@ export function NewRequestModal({ open, onClose, onSubmit }: NewRequestModalProp
 
             <div className="flex justify-end gap-3 border-t border-[var(--border-soft)] bg-white px-6 py-4 shadow-[0_-10px_24px_rgba(40,92,67,0.04)]">
               <button
-                className="h-11 rounded-full border border-[#DDEBE3] bg-white px-6 text-sm font-bold text-[#173D2C] transition hover:bg-[#F3FAF6]"
+                className="h-11 rounded-full border border-primary-border bg-white px-6 text-sm font-bold text-text-primary transition hover:bg-surface-muted-ui"
                 onClick={onClose}
                 type="button"
               >
                 Cancelar
               </button>
               <button
-                className="h-11 rounded-full bg-[#285C43] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.22)] transition hover:bg-[#1F4734]"
+                className="h-11 rounded-full bg-primary px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.22)] transition hover:bg-[#1F4734]"
                 onClick={handleSubmit}
                 type="button"
               >

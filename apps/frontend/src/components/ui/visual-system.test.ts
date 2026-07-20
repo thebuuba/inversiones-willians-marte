@@ -62,12 +62,17 @@ test('normalizes Spanish status labels to semantic tones', () => {
   assert.equal(getStatusTone('Al día'), 'success');
   assert.equal(getStatusTone(' Activo '), 'success');
   assert.equal(getStatusTone('Aprobado'), 'success');
+  assert.equal(getStatusTone('Aprobada'), 'success');
   assert.equal(getStatusTone('Atrasado'), 'danger');
   assert.equal(getStatusTone('Vencido'), 'danger');
   assert.equal(getStatusTone('Rechazado'), 'danger');
+  assert.equal(getStatusTone('Rechazada'), 'danger');
   assert.equal(getStatusTone('Pendiente'), 'warning');
+  assert.equal(getStatusTone('Pausado'), 'warning');
+  assert.equal(getStatusTone('En revisión'), 'info');
   assert.equal(getStatusTone('Pagado'), 'neutral');
   assert.equal(getStatusTone('Inactivo'), 'neutral');
+  assert.equal(getStatusTone('Retirado'), 'neutral');
 });
 
 test('keeps sidebar order', () => {

@@ -16,7 +16,7 @@ public struct LoanDetailView: View {
                 ProgressView()
             } else if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Color.appRust)
             } else if let detail = viewModel.detail {
                 Section("Resumen") {
                     LabeledContent("Cliente", value: detail.client.fullName)
@@ -33,7 +33,7 @@ public struct LoanDetailView: View {
                 Section("Cuotas") {
                     if detail.schedule.isEmpty {
                         Text("Sin cuotas registradas")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.appMuted)
                     } else {
                         ForEach(detail.schedule) { row in
                             VStack(alignment: .leading, spacing: 4) {
@@ -46,7 +46,7 @@ public struct LoanDetailView: View {
                                 }
                                 Text("Capital \(row.principalPart, format: .currency(code: "DOP")) · Interés \(row.interestPart, format: .currency(code: "DOP"))")
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.appMuted)
                             }
                             .padding(.vertical, 4)
                         }
@@ -56,14 +56,14 @@ public struct LoanDetailView: View {
                 Section("Pagos") {
                     if detail.payments.isEmpty {
                         Text("Sin pagos registrados")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.appMuted)
                     } else {
                         ForEach(detail.payments) { payment in
                             HStack {
                                 Text(payment.amount, format: .currency(code: "DOP"))
                                 Spacer()
                                 Text(payment.paymentMethod ?? "-")
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.appMuted)
                             }
                         }
                     }

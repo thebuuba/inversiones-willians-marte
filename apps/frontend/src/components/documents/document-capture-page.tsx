@@ -81,9 +81,9 @@ export function DocumentCapturePage({ token }: { token: string }) {
   const isReady = state === 'ready' || state === 'error';
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f5f7f6] px-5 py-8">
+    <main className="flex min-h-screen items-center justify-center bg-page px-5 py-8">
       <section className="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eaf5ed] text-[#2f7654]">
+        <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary-accent">
           {state === 'success' ? (
             <CheckCircle2 className="h-6 w-6" />
           ) : state === 'loading' || state === 'uploading' ? (
@@ -95,12 +95,12 @@ export function DocumentCapturePage({ token }: { token: string }) {
           )}
         </div>
 
-        <h1 className="text-2xl font-bold text-neutral-900">Capturar documento</h1>
-        <p className="mt-2 text-sm text-neutral-500">
+        <h1 className="text-2xl font-bold text-text-primary">Capturar documento</h1>
+        <p className="mt-2 text-sm text-text-muted">
           {session ? `Cliente: ${session.clientName}` : 'Enlace temporal de captura'}
         </p>
 
-        <div className="mt-6 rounded-xl border border-neutral-100 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+        <div className="mt-6 rounded-xl border border-border-soft bg-surface-subtle px-4 py-3 text-sm text-text-secondary">
           {message}
         </div>
 
@@ -122,7 +122,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-semibold text-white transition hover:bg-[#285c43] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white transition hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!isReady}
             onClick={() => cameraInputRef.current?.click()}
             type="button"
@@ -131,7 +131,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
             Tomar foto
           </button>
           <button
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#2f7654] bg-white px-5 text-sm font-semibold text-[#2f7654] transition hover:bg-[#eaf5ed] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-primary-accent bg-white px-5 text-sm font-semibold text-primary-accent transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!isReady}
             onClick={() => fileInputRef.current?.click()}
             type="button"
@@ -143,7 +143,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
 
         {state === 'success' ? (
           <button
-            className="mt-3 h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm font-semibold text-neutral-600"
+            className="mt-3 h-11 w-full rounded-full border border-primary-border bg-white px-5 text-sm font-semibold text-text-secondary"
             onClick={() => {
               if (cameraInputRef.current) cameraInputRef.current.value = '';
               if (fileInputRef.current) fileInputRef.current.value = '';

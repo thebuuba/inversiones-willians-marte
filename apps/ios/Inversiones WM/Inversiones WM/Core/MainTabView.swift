@@ -404,7 +404,7 @@ private struct RequestDetailView: View {
                     if let errorMessage {
                         Text(errorMessage)
                             .font(.footnote)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Color.appRust)
                     }
 
                     if request.status == "PENDING" {
@@ -646,7 +646,7 @@ private struct CreateRequestView: View {
 
                 if let errorMessage {
                     Text(errorMessage)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.appRust)
                 }
             }
             .navigationTitle("Nueva solicitud")

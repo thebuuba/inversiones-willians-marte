@@ -29,7 +29,7 @@ public struct CreatePaymentView: View {
 
                 if let errorMessage {
                     Text(errorMessage)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.appRust)
                 }
             }
             .navigationTitle("Registrar pago")

@@ -48,12 +48,12 @@ function StatusBadge({ status }: { status: string }) {
 function InfoCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="flex items-center gap-3 rounded-[14px] bg-white p-3.5 transition hover:-translate-y-0.5">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-neutral-100 text-neutral-500">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-state-neutral-bg text-text-muted">
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-neutral-400">{label}</p>
-        <p className="mt-1 truncate text-sm font-bold text-neutral-900">{value}</p>
+        <p className="text-[11px] font-bold uppercase tracking-wide text-text-subtle">{label}</p>
+        <p className="mt-1 truncate text-sm font-bold text-text-primary">{value}</p>
       </div>
     </div>
   );
@@ -409,20 +409,20 @@ export function RequestDetailDrawer({
         >
           <motion.aside
             animate={{ x: 0 }}
-            className="drawer-scroll ml-auto flex h-screen w-full max-w-[540px] flex-col overflow-y-auto border-l border-neutral-200 bg-[#F3F4F6] shadow-[-24px_0_60px_rgba(0,0,0,0.22)]"
+            className="drawer-scroll ml-auto flex h-screen w-full max-w-[540px] flex-col overflow-y-auto border-l border-primary-border bg-page shadow-[-24px_0_60px_rgba(0,0,0,0.22)]"
             exit={{ x: '100%' }}
             initial={{ x: '100%' }}
             onClick={(e) => e.stopPropagation()}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="sticky top-0 z-10 flex items-start justify-between border-b border-neutral-200 bg-white px-6 py-5">
+            <div className="sticky top-0 z-10 flex items-start justify-between border-b border-primary-border bg-white px-6 py-5">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-sm font-bold text-neutral-600">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-state-neutral-bg text-sm font-bold text-text-secondary">
                   {data.firstName[0]}{data.lastName[0]}
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-neutral-500">{data.code}</p>
-                  <h2 className="mt-1 text-lg font-bold leading-tight text-neutral-900">{data.firstName} {data.lastName}</h2>
+                  <p className="text-xs font-bold text-text-muted">{data.code}</p>
+                  <h2 className="mt-1 text-lg font-bold leading-tight text-text-primary">{data.firstName} {data.lastName}</h2>
                   <div className="mt-2">
                     <StatusBadge status={data.status} />
                   </div>
@@ -430,7 +430,7 @@ export function RequestDetailDrawer({
               </div>
               <button
                 aria-label="Cerrar detalle"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-700"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-primary-border bg-white text-text-muted transition hover:bg-state-neutral-bg hover:text-text-secondary"
                 onClick={onClose}
                 type="button"
               >
@@ -441,19 +441,19 @@ export function RequestDetailDrawer({
             <div className="flex-1 px-6 py-5 pb-32">
               <motion.div
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-[20px] border border-neutral-200 bg-white p-5"
+                className="rounded-[20px] border border-primary-border bg-white p-5"
                 initial={{ opacity: 0, y: 10 }}
                 transition={{ delay: 0.08 }}
               >
-                <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">MONTO SOLICITADO</p>
-                <p className="mt-3 text-[30px] font-bold leading-none text-neutral-900">
+                <p className="text-xs font-bold uppercase tracking-wide text-text-muted">MONTO SOLICITADO</p>
+                <p className="mt-3 text-[30px] font-bold leading-none text-text-primary">
                   {formatDop(data.amount)}
                 </p>
-                <p className="mt-3 text-sm text-neutral-500">
+                <p className="mt-3 text-sm text-text-muted">
                   Recibido el {new Date(data.createdAt).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
                 {data.status !== 'PENDING' && (
-                  <p className="mt-1.5 text-xs font-bold text-neutral-500">
+                  <p className="mt-1.5 text-xs font-bold text-text-muted">
                     {data.status === 'APPROVED' ? 'Aprobada' : 'Rechazada'} el{' '}
                     {new Date(data.updatedAt).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </p>
@@ -461,7 +461,7 @@ export function RequestDetailDrawer({
               </motion.div>
 
               <section className="mt-6">
-                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-neutral-500">DATOS DEL SOLICITANTE</h3>
+                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-muted">DATOS DEL SOLICITANTE</h3>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <InfoCard icon={CreditCard} label="CÉDULA" value={data.identification ?? '—'} />
                   <InfoCard icon={Phone} label="TELÉFONO" value={data.phone ?? '—'} />
@@ -472,32 +472,32 @@ export function RequestDetailDrawer({
 
               {data.description && (
                 <section className="mt-6">
-                  <h3 className="mb-3 flex items-center gap-2.5 text-xs font-bold uppercase tracking-wide text-neutral-500">
+                  <h3 className="mb-3 flex items-center gap-2.5 text-xs font-bold uppercase tracking-wide text-text-muted">
                     <FileText className="h-4 w-4" />
                     DESCRIPCIÓN
                   </h3>
-                  <div className="rounded-[16px] bg-white p-4 text-sm leading-relaxed text-neutral-800">
+                  <div className="rounded-[16px] bg-white p-4 text-sm leading-relaxed text-text-primary">
                     {data.description}
                   </div>
                 </section>
               )}
 
               <section className="mt-6">
-                <h3 className="mb-3 flex items-center gap-2.5 text-xs font-bold uppercase tracking-wide text-neutral-500">
+                <h3 className="mb-3 flex items-center gap-2.5 text-xs font-bold uppercase tracking-wide text-text-muted">
                   <ImageIcon className="h-4 w-4" />
                   FOTOGRAFÍAS
                 </h3>
-                <div className="flex h-[118px] w-[155px] items-center justify-center rounded-[14px] bg-neutral-100 text-xs text-neutral-400">
+                <div className="flex h-[118px] w-[155px] items-center justify-center rounded-[14px] bg-state-neutral-bg text-xs text-text-subtle">
                   Sin fotos
                 </div>
               </section>
             </div>
 
             {data.status === 'PENDING' && (
-              <div className="fixed bottom-0 right-0 w-full max-w-[540px] border-t border-neutral-200 bg-white px-6 py-4">
+              <div className="fixed bottom-0 right-0 w-full max-w-[540px] border-t border-primary-border bg-white px-6 py-4">
                 <div className="mb-3 grid grid-cols-2 gap-3">
                   <button
-                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-neutral-200 bg-white text-sm font-bold text-neutral-800 transition hover:bg-neutral-50"
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-primary-border bg-white text-sm font-bold text-text-primary transition hover:bg-surface-subtle"
                     onClick={handlePrint}
                     type="button"
                   >
@@ -505,7 +505,7 @@ export function RequestDetailDrawer({
                     Imprimir
                   </button>
                   <button
-                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#DDEBE3] bg-white text-sm font-bold text-[#0F7A3A] transition hover:bg-[#F3FAF6]"
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-primary-border bg-white text-sm font-bold text-[#0F7A3A] transition hover:bg-surface-muted-ui"
                     onClick={handleWhatsApp}
                     type="button"
                   >
@@ -515,7 +515,7 @@ export function RequestDetailDrawer({
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#F7D6BD] bg-white text-sm font-bold text-[#9F3F25] transition hover:bg-[#FFF7EF]"
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#F7D6BD] bg-white text-sm font-bold text-state-danger transition hover:bg-[#FFF7EF]"
                     onClick={onReject}
                     type="button"
                   >
@@ -523,7 +523,7 @@ export function RequestDetailDrawer({
                     Rechazar
                   </button>
                   <button
-                    className="flex h-10 items-center justify-center gap-2.5 rounded-full bg-[#285C43] text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.22)] transition hover:bg-[#1F4734]"
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full bg-primary text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.22)] transition hover:bg-[#1F4734]"
                     onClick={onApprove}
                     type="button"
                   >

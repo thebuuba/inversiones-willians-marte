@@ -20,7 +20,7 @@ public struct ClientDetailView: View {
                 ProgressView()
             } else if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Color.appRust)
             } else if let detail = viewModel.detail {
                 Section("Información") {
                     LabeledContent("Nombre", value: detail.fullName)
@@ -32,7 +32,7 @@ public struct ClientDetailView: View {
                 Section("Préstamos") {
                     if detail.loans.isEmpty {
                         Text("Sin préstamos registrados")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.appMuted)
                     } else {
                         ForEach(detail.loans) { loan in
                             NavigationLink {
@@ -51,7 +51,7 @@ public struct ClientDetailView: View {
                                         Text(loan.status)
                                     }
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.appMuted)
                                 }
                                 .padding(.vertical, 4)
                             }

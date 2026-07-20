@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
@@ -21,15 +21,8 @@ import {
 } from '@/lib/page-entry-animation';
 import { useClientCache } from '@/lib/use-client-cache';
 import type { Client } from '@inversiones/shared';
+import { Card as PanelCard } from '@/components/ui/card';
 import { calculateClientPageSize } from './clients-pagination';
-
-function PanelCard({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return (
-    <section className={`rounded-2xl border border-border-soft bg-card shadow-card ${className}`}>
-      {children}
-    </section>
-  );
-}
 
 function EmptyField() {
   return <span className="text-[13px] text-text-secondary/40">Sin registrar</span>;
@@ -97,15 +90,15 @@ export function ClientsPanel() {
       label: 'Sin préstamos',
       value: String(globalStats?.withoutLoans ?? 0),
       icon: UserRound,
-      bg: 'bg-[#fff4c8]',
-      color: 'text-[#7a5a0a]',
+      bg: 'bg-state-warning-bg',
+      color: 'text-state-warning',
     },
     {
       label: 'Nuevos (30d)',
       value: String(globalStats?.recent ?? 0),
       icon: UserRound,
-      bg: 'bg-[#e4f0ff]',
-      color: 'text-[#2f5f91]',
+      bg: 'bg-state-info-bg',
+      color: 'text-state-info',
     },
   ];
 
@@ -120,7 +113,7 @@ export function ClientsPanel() {
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-[#F3F4F6] p-5 font-sans text-text-primary">
+    <div className="flex h-screen flex-col overflow-hidden bg-page p-5 font-sans text-text-primary">
       <div className="flex w-full flex-1 flex-col gap-5">
         <header
           className={`${pageEntryHeaderClassName} flex flex-col justify-between gap-4 xl:flex-row xl:items-end`}
@@ -132,7 +125,7 @@ export function ClientsPanel() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-white px-5 text-sm font-bold text-text-secondary transition-colors duration-150 hover:bg-[#f9fbfa] hover:text-text-primary">
+            <button className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-white px-5 text-sm font-bold text-text-secondary transition-colors duration-150 hover:bg-surface-subtle hover:text-text-primary">
               <Download className="h-4 w-4" />
               Exportar
             </button>
@@ -177,10 +170,10 @@ export function ClientsPanel() {
         )}
 
         <PanelCard
-          className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-hidden`}
+          className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-x-auto`}
         >
-          <div className="border-b border-border-soft p-4">
-            <div className="flex h-11 items-center gap-3 rounded-xl border border-transparent bg-[#f3f4f6] px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-soft">
+          <div className="min-w-[760px] border-b border-border-soft p-4">
+            <div className="flex h-11 items-center gap-3 rounded-xl border border-transparent bg-page px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-soft">
               <Search className="h-4 w-4 shrink-0 text-text-secondary" />
               <input
                 className="flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/60"
@@ -189,14 +182,14 @@ export function ClientsPanel() {
               />
             </div>
           </div>
-          <div className="sticky top-0 z-10 grid grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center bg-[#f9fbfa] px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
+          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center bg-surface-subtle px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
             <span>CLIENTE</span>
             <span>CÉDULA</span>
             <span>TELÉFONO</span>
             <span className="justify-self-end text-center">PRÉSTAMOS</span>
           </div>
 
-          <div ref={bodyRef} className="relative flex-1 overflow-hidden">
+          <div ref={bodyRef} className="relative min-w-[760px] flex-1 overflow-hidden">
             {initialLoading ? (
               <div className="flex h-full items-center justify-center text-sm font-medium text-text-secondary">
                 Cargando clientes...
@@ -211,7 +204,7 @@ export function ClientsPanel() {
               displayClients.map((client) => (
                 <div
                   key={client.id}
-                  className="group grid min-h-[64px] cursor-pointer grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center border-b border-border-soft bg-card px-6 transition-colors duration-150 last:border-b-0 hover:bg-[#f9fbfa]"
+                  className="group grid min-h-[64px] cursor-pointer grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center border-b border-border-soft bg-card px-6 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle"
                   onClick={() => router.push(`/clientes/${client.id}`)}
                 >
                   <div className="flex items-center gap-3">
@@ -248,14 +241,14 @@ export function ClientsPanel() {
                     className={`inline-flex h-8 min-w-8 items-center justify-center justify-self-end rounded-full px-3 text-sm font-bold leading-none ${
                       (client._count?.loans ?? 0) > 0
                         ? 'bg-primary-soft text-primary-accent'
-                        : 'bg-[#eef3ef] text-text-secondary'
+                        : 'bg-state-neutral-bg text-text-secondary'
                     }`}
                   >
                     {client._count?.loans ?? 0}
                   </span>
                   <button
                     aria-label={`Acciones de ${fullName(client)}`}
-                    className="flex h-8 w-8 items-center justify-center justify-self-end rounded-lg text-text-secondary opacity-0 transition-colors duration-150 hover:bg-[#eef3ef] hover:text-text-primary group-hover:opacity-100"
+                    className="flex h-8 w-8 items-center justify-center justify-self-end rounded-lg text-text-secondary opacity-0 transition-colors duration-150 hover:bg-state-neutral-bg hover:text-text-primary group-hover:opacity-100"
                     onClick={(event) => event.stopPropagation()}
                     type="button"
                   >
@@ -266,7 +259,7 @@ export function ClientsPanel() {
             )}
           </div>
 
-          <div className="flex items-center justify-between border-t border-border-soft bg-card px-6 py-4">
+          <div className="flex min-w-[760px] items-center justify-between border-t border-border-soft bg-card px-6 py-4">
             <p className="text-[13px] text-text-secondary">
               {!initialLoading && (
                 <>
@@ -277,7 +270,7 @@ export function ClientsPanel() {
             {totalPages > 1 && (
               <div className="flex items-center gap-2">
                 <button
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-white text-text-secondary transition-colors duration-150 hover:bg-[#f9fbfa] disabled:opacity-30"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-white text-text-secondary transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-30"
                   disabled={page === 0}
                   onClick={() => setPage((p) => p - 1)}
                   type="button"
@@ -288,7 +281,7 @@ export function ClientsPanel() {
                   {page + 1} / {totalPages}
                 </span>
                 <button
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-white text-text-secondary transition-colors duration-150 hover:bg-[#f9fbfa] disabled:opacity-30"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-white text-text-secondary transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-30"
                   disabled={page >= totalPages - 1}
                   onClick={() => setPage((p) => p + 1)}
                   type="button"

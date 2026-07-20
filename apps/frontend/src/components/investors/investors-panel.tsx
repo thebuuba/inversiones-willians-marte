@@ -21,14 +21,9 @@ import { getStaggerDelay } from '@/lib/animation';
 import { invalidateCache, useClientCache } from '@/lib/use-client-cache';
 import { formatInvestorCurrency } from './investors-panel.helpers';
 import type { InvestorItem } from '@inversiones/shared';
+import { Badge } from '@/components/ui/badge';
 
 const filters = ['Todos', 'Activos', 'Pausados', 'Retirados'];
-
-const statusStyles: Record<string, { bg: string; text: string; dot: string }> = {
-  ACTIVE: { bg: '#E7F4EC', text: '#2F7654', dot: '#7CC99B' },
-  PAUSED: { bg: '#FFF4C8', text: '#7A5A0A', dot: '#E2C64F' },
-  WITHDRAWN: { bg: '#EEF3EF', text: '#5C6D63', dot: '#5C6D63' },
-};
 
 const statusLabels: Record<string, string> = {
   ACTIVE: 'Activo',
@@ -52,7 +47,7 @@ function PanelCard({ children, className = '', index = 0 }: { children: ReactNod
       initial="hidden"
       animate="visible"
       custom={index}
-      className={`rounded-2xl border border-neutral-100 bg-white shadow-sm ${className}`}
+      className={`rounded-2xl border border-border-soft bg-white shadow-sm ${className}`}
     >
       {children}
     </motion.section>
@@ -60,17 +55,12 @@ function PanelCard({ children, className = '', index = 0 }: { children: ReactNod
 }
 
 function StatusPill({ status }: { status: string }) {
-  const style = statusStyles[status] ?? statusStyles.WITHDRAWN;
   const label = statusLabels[status] ?? status;
 
   return (
-    <span
-      className="inline-flex min-w-[82px] items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
-      style={{ backgroundColor: style.bg, color: style.text }}
-    >
-      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
+    <Badge className="min-w-[82px] justify-center py-1.5" dot status={label}>
       {label}
-    </span>
+    </Badge>
   );
 }
 
@@ -130,7 +120,7 @@ export function InvestorsPanel() {
   }, [investors, filter, search]);
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
+    <div className="min-h-screen bg-page p-5 font-sans text-text-primary">
       <motion.header
         variants={fadeUp}
         initial="hidden"
@@ -138,19 +128,19 @@ export function InvestorsPanel() {
         className="mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end"
       >
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#5C6D63]">CAPITAL</p>
-          <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#173D2C]">Inversionistas</h1>
-          <p className="mt-1.5 text-base text-[#5C6D63]">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-secondary">CAPITAL</p>
+          <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-text-primary">Inversionistas</h1>
+          <p className="mt-1.5 text-base text-text-secondary">
             Administra tu cartera de capital — {investors.length} inversionistas registrados.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex h-11 items-center gap-2 rounded-full border border-[#DDEBE3] bg-white px-5 text-sm font-bold text-[#2F7654] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+          <button className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-white px-5 text-sm font-bold text-primary-accent shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <Download className="h-4 w-4" />
             Exportar
           </button>
           <Link
-            className="flex h-11 items-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
+            className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
             href="/inversionistas/nuevo"
           >
             <Plus className="h-4 w-4" />
@@ -171,8 +161,8 @@ export function InvestorsPanel() {
                 <Icon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-[#5C6D63]">{stat.label}</p>
-                <p className="mt-1 text-[24px] font-bold leading-none text-[#173D2C]">
+                <p className="text-sm font-semibold text-text-secondary">{stat.label}</p>
+                <p className="mt-1 text-[24px] font-bold leading-none text-text-primary">
                   {loading ? '...' : stat.value}
                 </p>
               </div>
@@ -183,25 +173,25 @@ export function InvestorsPanel() {
 
       <PanelCard className="mb-5 p-5" index={5}>
         <div className="flex flex-col gap-3 xl:flex-row">
-          <div className="flex h-12 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F4F5F6] px-5 shadow-[0_4px_10px_rgba(40,92,67,0.06)]">
-            <Search className="h-5 w-5 shrink-0 text-[#A7B5AD]" />
+          <div className="flex h-12 flex-1 items-center gap-3 rounded-full border border-primary-border bg-page px-5 shadow-[0_4px_10px_rgba(40,92,67,0.06)]">
+            <Search className="h-5 w-5 shrink-0 text-text-subtle" />
             <input
-              className="flex-1 bg-transparent text-sm font-medium text-[#173D2C] outline-none placeholder:text-[#747882]"
+              className="flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-[#747882]"
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por nombre, código o cédula..."
             />
           </div>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2.5">
-          <Filter className="h-4 w-4 text-[#5C6D63]" />
-          <span className="text-sm font-bold text-[#5C6D63]">Estado:</span>
+          <Filter className="h-4 w-4 text-text-secondary" />
+          <span className="text-sm font-bold text-text-secondary">Estado:</span>
           {filters.map((f) => (
             <button
               key={f}
               className={`h-9 rounded-full px-4 text-sm font-bold transition hover:-translate-y-0.5 ${
                 filter === f
-                  ? 'bg-[#285C43] text-white shadow-[0_10px_18px_rgba(40,92,67,0.18)]'
-                  : 'border border-[#DDEBE3] bg-[#F3FAF6] text-[#2F7654]'
+                  ? 'bg-primary text-white shadow-[0_10px_18px_rgba(40,92,67,0.18)]'
+                  : 'border border-primary-border bg-surface-muted-ui text-primary-accent'
               }`}
               onClick={() => setFilter(f)}
             >
@@ -212,13 +202,13 @@ export function InvestorsPanel() {
       </PanelCard>
 
       {deleteError && (
-        <div className="mb-4 rounded-xl border border-[#F7C9C0] bg-[#FFF3F1] px-4 py-3 text-sm font-semibold text-[#B42318]">
+        <div className="mb-4 rounded-xl border border-[#F7C9C0] bg-[#FFF3F1] px-4 py-3 text-sm font-semibold text-danger">
           {deleteError}
         </div>
       )}
 
-      <PanelCard className="overflow-visible" index={6}>
-        <div className="grid grid-cols-[2fr_1.2fr_1.2fr_1fr_1fr_0.7fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63]">
+      <PanelCard className="overflow-x-auto" index={6}>
+        <div className="grid min-w-[980px] grid-cols-[2fr_1.2fr_1.2fr_1fr_1fr_0.7fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
           <span>INVERSIONISTA</span>
           <span>CÓDIGO</span>
           <span>CAPITAL</span>
@@ -227,13 +217,13 @@ export function InvestorsPanel() {
           <span className="text-right">ACCIONES</span>
         </div>
 
-        <div>
+        <div className="min-w-[980px]">
           {loading ? (
-            <div className="flex items-center justify-center py-20 text-sm font-medium text-[#5C6D63]">
+            <div className="flex items-center justify-center py-20 text-sm font-medium text-text-secondary">
               Cargando inversionistas...
             </div>
           ) : filteredInvestors.length === 0 ? (
-            <div className="flex items-center justify-center py-20 text-sm font-medium text-[#A7B5AD]">
+            <div className="flex items-center justify-center py-20 text-sm font-medium text-text-subtle">
               No se encontraron inversionistas.
             </div>
           ) : (
@@ -244,7 +234,7 @@ export function InvestorsPanel() {
                 initial="hidden"
                 animate="visible"
                 custom={index + 7}
-                className="grid min-h-[74px] cursor-pointer grid-cols-[2fr_1.2fr_1.2fr_1fr_1fr_0.7fr] items-center border-t border-[#EDF2EF] px-6 text-[#2F7654] transition hover:bg-[#F4FAF6] bg-white"
+                className="grid min-h-[74px] cursor-pointer grid-cols-[2fr_1.2fr_1.2fr_1fr_1fr_0.7fr] items-center border-t border-border-soft px-6 text-primary-accent transition hover:bg-[#F4FAF6] bg-white"
                 onClick={() => router.push(`/inversionistas/${investor.id}`)}
               >
                 <div className="flex items-center gap-4">
@@ -257,31 +247,31 @@ export function InvestorsPanel() {
                         style={{ backgroundImage: `url(${investor.photo})` }}
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center rounded-full border-[3px] border-white bg-[#EAF6EF] shadow-[0_6px_14px_rgba(40,92,67,0.12)]">
-                        <TrendingUp className="h-5 w-5 text-[#2F7654]" />
+                      <div className="flex h-full w-full items-center justify-center rounded-full border-[3px] border-white bg-primary-soft shadow-[0_6px_14px_rgba(40,92,67,0.12)]">
+                        <TrendingUp className="h-5 w-5 text-primary-accent" />
                       </div>
                     )}
                     <span
                       className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white ${
-                        investor.status === 'ACTIVE' ? 'bg-[#7CC99B]' : investor.status === 'PAUSED' ? 'bg-[#E2C64F]' : 'bg-[#5C6D63]'
+                        investor.status === 'ACTIVE' ? 'bg-[#7CC99B]' : investor.status === 'PAUSED' ? 'bg-[#E2C64F]' : 'bg-text-secondary'
                       }`}
                     />
                   </div>
                   <div>
-                    <p className="text-sm font-bold leading-tight text-[#173D2C]">{investor.name}</p>
-                    <p className="mt-0.5 text-xs font-medium text-[#5C6D63]">
+                    <p className="text-sm font-bold leading-tight text-text-primary">{investor.name}</p>
+                    <p className="mt-0.5 text-xs font-medium text-text-secondary">
                       {investor.cedula ? `Cédula: ${investor.cedula}` : '—'}
                     </p>
                   </div>
                 </div>
-                <span className="font-mono text-sm text-[#5C6D63]">{investor.code}</span>
-                <span className="text-sm font-bold text-[#173D2C]">{formatInvestorCurrency(investor.capital)}</span>
-                <span className="text-sm text-[#5C6D63]">{investor.rate}%</span>
+                <span className="font-mono text-sm text-text-secondary">{investor.code}</span>
+                <span className="text-sm font-bold text-text-primary">{formatInvestorCurrency(investor.capital)}</span>
+                <span className="text-sm text-text-secondary">{investor.rate}%</span>
                 <StatusPill status={investor.status} />
                 <div className="flex items-center justify-end gap-3">
                   <div className="relative">
                     <button
-                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#E7F4EC] px-4 text-sm font-bold text-[#2F7654] transition hover:bg-[#DDEFE5]"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary-soft px-4 text-sm font-bold text-primary-accent transition hover:bg-[#DDEFE5]"
                       onClick={(event) => {
                         event.stopPropagation();
                         setOpenActionsId((current) => (current === investor.id ? null : investor.id));
@@ -293,22 +283,22 @@ export function InvestorsPanel() {
                     </button>
                     {openActionsId === investor.id && (
                       <div
-                        className="absolute right-0 top-11 z-30 w-52 rounded-xl border border-[#DDEBE3] bg-white p-2 text-left shadow-[0_18px_40px_rgba(40,92,67,0.16)]"
+                        className="absolute right-0 top-11 z-30 w-52 rounded-xl border border-primary-border bg-white p-2 text-left shadow-[0_18px_40px_rgba(40,92,67,0.16)]"
                         onClick={(event) => event.stopPropagation()}
                       >
                         <button
-                          className="flex h-10 w-full items-center gap-2.5 rounded-lg px-3 text-sm font-semibold text-[#285C43] transition hover:bg-[#F3FAF6]"
+                          className="flex h-10 w-full items-center gap-2.5 rounded-lg px-3 text-sm font-semibold text-primary transition hover:bg-surface-muted-ui"
                           onClick={() => {
                             setOpenActionsId(null);
                             router.push(`/inversionistas/nuevo?investorId=${investor.id}`);
                           }}
                           type="button"
                         >
-                          <Pencil className="h-4 w-4 text-[#2F7654]" aria-hidden="true" />
+                          <Pencil className="h-4 w-4 text-primary-accent" aria-hidden="true" />
                           Editar inversionista
                         </button>
                         <button
-                          className="flex h-10 w-full items-center gap-2.5 rounded-lg px-3 text-sm font-semibold text-[#B42318] transition hover:bg-[#FFF3F1] disabled:cursor-not-allowed disabled:opacity-60"
+                          className="flex h-10 w-full items-center gap-2.5 rounded-lg px-3 text-sm font-semibold text-danger transition hover:bg-[#FFF3F1] disabled:cursor-not-allowed disabled:opacity-60"
                           disabled={deletingId === investor.id}
                           onClick={() => void handleDeleteInvestor(investor)}
                           type="button"
@@ -325,12 +315,12 @@ export function InvestorsPanel() {
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-[#DDEBE3] bg-[#F7F7F7] px-6 py-4">
-          <p className="text-sm font-semibold text-[#5C6D63]">
+        <div className="flex min-w-[980px] items-center justify-between border-t border-primary-border bg-[#F7F7F7] px-6 py-4">
+          <p className="text-sm font-semibold text-text-secondary">
             {!loading && (
               <>
-                Mostrando <span className="font-bold text-[#173D2C]">{filteredInvestors.length}</span> de{' '}
-                <span className="font-bold text-[#173D2C]">{investors.length}</span> inversionistas
+                Mostrando <span className="font-bold text-text-primary">{filteredInvestors.length}</span> de{' '}
+                <span className="font-bold text-text-primary">{investors.length}</span> inversionistas
               </>
             )}
           </p>

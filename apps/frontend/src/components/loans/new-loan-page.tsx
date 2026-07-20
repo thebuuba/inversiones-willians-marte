@@ -82,22 +82,22 @@ function TextInput({
 }) {
   return (
     <label className={`block ${className}`}>
-      {label && <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">{label}</span>}
+      {label && <span className="mb-1.5 block text-xs font-bold text-text-secondary">{label}</span>}
       <div
-        className={`flex h-[42px] items-center rounded-[8px] border bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] transition focus-within:ring-2 ${
+        className={`flex h-[42px] items-center rounded-[8px] border bg-white px-3 text-sm font-medium text-text-primary shadow-[0_2px_6px_rgba(40,92,67,0.05)] transition focus-within:ring-2 ${
           error
             ? 'border-red-300 focus-within:border-red-400 focus-within:ring-red-100'
-            : 'border-[#DDEBE3] focus-within:border-[#285C43] focus-within:ring-[#EAF6EF]'
+            : 'border-primary-border focus-within:border-primary focus-within:ring-primary-soft'
         }`}
       >
-        {prefix && <span className="mr-2 shrink-0 text-xs text-[#5C6D63]">{prefix}</span>}
+        {prefix && <span className="mr-2 shrink-0 text-xs text-text-secondary">{prefix}</span>}
         <input
           className="h-full min-w-0 flex-1 bg-transparent outline-none"
           onChange={onChange ? (event) => onChange(event.target.value) : undefined}
           value={value}
           readOnly={readOnly}
         />
-        {suffix && <span className="ml-2 shrink-0 text-xs text-[#5C6D63]">{suffix}</span>}
+        {suffix && <span className="ml-2 shrink-0 text-xs text-text-secondary">{suffix}</span>}
       </div>
       {error && <span className="mt-1 block text-xs font-medium text-red-500">{error}</span>}
     </label>
@@ -121,13 +121,13 @@ function SelectInput({
 }) {
   return (
     <label className={`block ${className}`}>
-      {label && <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">{label}</span>}
+      {label && <span className="mb-1.5 block text-xs font-bold text-text-secondary">{label}</span>}
       <div className="relative">
         <select
-          className={`h-[42px] w-full appearance-none rounded-[8px] border bg-white px-3 pr-8 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:ring-2 ${
+          className={`h-[42px] w-full appearance-none rounded-[8px] border bg-white px-3 pr-8 text-sm font-medium text-text-primary shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:ring-2 ${
             error
               ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
-              : 'border-[#DDEBE3] focus:border-[#285C43] focus:ring-[#EAF6EF]'
+              : 'border-primary-border focus:border-primary focus:ring-primary-soft'
           }`}
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
@@ -136,7 +136,7 @@ function SelectInput({
             <option key={option}>{option}</option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#A7B5AD]" />
+        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-subtle" />
       </div>
       {error && <span className="mt-1 block text-xs font-medium text-red-500">{error}</span>}
     </label>
@@ -176,21 +176,21 @@ function ClientSearchCard({
     return (
       <div className={`rounded-[14px] bg-white ${LOAN_CARD_SHADOW}`}>
         <div className="flex min-h-[72px] items-center gap-3 px-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[2px] border-white bg-[#EAF6EF] shadow-[0_4px_12px_rgba(40,92,67,0.1)]">
-            <UserRound className="h-5 w-5 text-[#2F7654]" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[2px] border-white bg-primary-soft shadow-[0_4px_12px_rgba(40,92,67,0.1)]">
+            <UserRound className="h-5 w-5 text-primary-accent" />
           </div>
           <button
             className="min-w-0 flex-1 text-left"
             onClick={() => setChangingClient(true)}
             type="button"
           >
-            <p className="truncate text-base font-bold leading-tight text-[#173D2C]">{fullName}</p>
-            <p className="mt-0.5 text-xs font-medium text-[#5C6D63]">
+            <p className="truncate text-base font-bold leading-tight text-text-primary">{fullName}</p>
+            <p className="mt-0.5 text-xs font-medium text-text-secondary">
               {selectedClient.identification ?? '—'}
             </p>
           </button>
           <button
-            className="shrink-0 rounded-lg border border-[#DDEBE3] px-2.5 py-1 text-xs font-bold text-[#2F7654] transition hover:bg-[#F0F7F3]"
+            className="shrink-0 rounded-lg border border-primary-border px-2.5 py-1 text-xs font-bold text-primary-accent transition hover:bg-[#F0F7F3]"
             onClick={() => setChangingClient(true)}
             type="button"
           >
@@ -205,10 +205,10 @@ function ClientSearchCard({
     <div className={`rounded-[14px] bg-white ${LOAN_CARD_SHADOW}`}>
       <div className="px-4 py-3">
         <div className="relative mb-2">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#5C6D63]" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-secondary" />
           <input
             autoFocus
-            className="h-[42px] w-full rounded-[10px] border border-[#DDEBE3] bg-[#F8FBF9] pl-9 pr-3 text-sm font-medium text-[#173D2C] outline-none transition placeholder:text-[#5C6D63] focus:border-[#285C43] focus:bg-white"
+            className="h-[42px] w-full rounded-[10px] border border-primary-border bg-surface-subtle pl-9 pr-3 text-sm font-medium text-text-primary outline-none transition placeholder:text-text-secondary focus:border-primary focus:bg-white"
             placeholder="Buscar cliente por nombre, cédula o teléfono…"
             type="text"
             value={query}
@@ -223,14 +223,14 @@ function ClientSearchCard({
             {results.map((c) => (
               <button
                 key={c.id}
-                className="w-full rounded-[8px] border border-[#EDF2EF] p-2.5 text-left text-xs transition hover:bg-[#F6FAF7]"
+                className="w-full rounded-[8px] border border-border-soft p-2.5 text-left text-xs transition hover:bg-[#F6FAF7]"
                 onClick={() => handleSelect(c)}
                 type="button"
               >
-                <p className="font-bold text-[#173D2C]">
+                <p className="font-bold text-text-primary">
                   {c.firstName} {c.lastName}
                 </p>
-                <p className="mt-0.5 text-[#5C6D63]">
+                <p className="mt-0.5 text-text-secondary">
                   {c.identification ?? '—'} · {c.phone ?? '—'}
                 </p>
               </button>
@@ -238,11 +238,11 @@ function ClientSearchCard({
           </div>
         )}
         {query.length >= 2 && results.length === 0 && (
-          <p className="text-xs text-[#5C6D63]">Sin resultados</p>
+          <p className="text-xs text-text-secondary">Sin resultados</p>
         )}
         {selectedClient && (
           <button
-            className="mt-2 text-xs font-bold text-[#2F7654] transition hover:text-[#285C43]"
+            className="mt-2 text-xs font-bold text-primary-accent transition hover:text-primary"
             onClick={() => setChangingClient(false)}
             type="button"
           >
@@ -326,13 +326,13 @@ function ReplacementOptions({
       type: 'REENGAGEMENT' as const,
       label: 'Realizar reenganche',
       icon: RotateCcw,
-      tone: 'bg-[#E7F4EC] text-[#2F7654]',
+      tone: 'bg-primary-soft text-primary-accent',
     },
     {
       type: 'REFINANCE' as const,
       label: 'Refinanciar préstamo',
       icon: RefreshCw,
-      tone: 'bg-[#EEF3EF] text-[#5C6D63]',
+      tone: 'bg-state-neutral-bg text-text-secondary',
     },
   ];
 
@@ -345,7 +345,7 @@ function ReplacementOptions({
           return (
             <button
               key={option.type}
-              className={`flex min-h-16 items-center gap-3 rounded-[14px] border bg-white px-4 text-left transition hover:-translate-y-0.5 hover:border-[#BFD8CA] ${LOAN_CARD_SHADOW} ${active ? 'border-[#8FBEA4] ring-2 ring-[#E7F4EC]' : 'border-[#DDEBE3]'}`}
+              className={`flex min-h-16 items-center gap-3 rounded-[14px] border bg-white px-4 text-left transition hover:-translate-y-0.5 hover:border-[#BFD8CA] ${LOAN_CARD_SHADOW} ${active ? 'border-[#8FBEA4] ring-2 ring-primary-soft' : 'border-primary-border'}`}
               disabled={!selectedClient}
               onClick={() => (openType === option.type ? close() : open(option.type))}
               type="button"
@@ -355,10 +355,10 @@ function ReplacementOptions({
               >
                 <Icon className="h-5 w-5" />
               </span>
-              <span className="flex-1 text-sm font-bold text-[#173D2C]">
+              <span className="flex-1 text-sm font-bold text-text-primary">
                 {option.label}
                 {active && (
-                  <span className="mt-0.5 block text-xs font-medium text-[#5C6D63]">
+                  <span className="mt-0.5 block text-xs font-medium text-text-secondary">
                     {selectedCount} préstamo(s)
                   </span>
                 )}
@@ -376,20 +376,20 @@ function ReplacementOptions({
           aria-live="polite"
           className={`overflow-hidden rounded-[14px] bg-white ${LOAN_CARD_SHADOW}`}
         >
-          <header className="flex items-center gap-3 border-b border-[#DDEBE3] bg-[#F8FBF9] px-5 py-4">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E7F4EC] text-[#2F7654]">
+          <header className="flex items-center gap-3 border-b border-primary-border bg-surface-subtle px-5 py-4">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft text-primary-accent">
               {openType === 'REENGAGEMENT' ? (
                 <RotateCcw className="h-5 w-5" />
               ) : (
                 <RefreshCw className="h-5 w-5" />
               )}
             </span>
-            <h2 className="flex-1 text-base font-bold text-[#173D2C]">
+            <h2 className="flex-1 text-base font-bold text-text-primary">
               Seleccionar préstamo(s) para{' '}
               {openType === 'REENGAGEMENT' ? 'reenganche' : 'refinanciamiento'}
             </h2>
             <button
-              className="text-xs font-bold text-[#5C6D63] transition hover:text-[#2F7654]"
+              className="text-xs font-bold text-text-secondary transition hover:text-primary-accent"
               onClick={close}
               type="button"
             >
@@ -399,19 +399,19 @@ function ReplacementOptions({
 
           <div className="space-y-4 p-5">
             {loading ? (
-              <p className="py-10 text-center text-sm font-medium text-[#5C6D63]">
+              <p className="py-10 text-center text-sm font-medium text-text-secondary">
                 Cargando préstamos activos...
               </p>
             ) : error ? (
               <p className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-700">{error}</p>
             ) : loans.length === 0 ? (
-              <p className="rounded-xl bg-[#F5F7FA] p-5 text-center text-sm font-medium text-[#5C6D63]">
+              <p className="rounded-xl bg-[#F5F7FA] p-5 text-center text-sm font-medium text-text-secondary">
                 Este cliente no tiene préstamos activos.
               </p>
             ) : (
               <>
                 <div className="flex items-center gap-3 rounded-xl bg-[#F0F7F3] p-4 text-sm font-bold text-[#365C48]">
-                  <Banknote className="h-5 w-5 text-[#2F7654]" />
+                  <Banknote className="h-5 w-5 text-primary-accent" />
                   Este cliente cuenta con {loans.length} préstamo(s) activo(s)
                 </div>
                 {loans.map((loan) => {
@@ -423,11 +423,11 @@ function ReplacementOptions({
                   return (
                     <label
                       key={loan.id}
-                      className={`grid cursor-pointer grid-cols-[auto_repeat(5,minmax(0,1fr))] items-center gap-4 rounded-xl border p-4 transition ${checked ? 'border-[#8FBEA4] bg-[#F8FBF9] ring-2 ring-[#E7F4EC]' : 'border-[#DDEBE3] hover:bg-[#F8FBF9]'}`}
+                      className={`grid cursor-pointer grid-cols-[auto_repeat(5,minmax(0,1fr))] items-center gap-4 rounded-xl border p-4 transition ${checked ? 'border-[#8FBEA4] bg-surface-subtle ring-2 ring-primary-soft' : 'border-primary-border hover:bg-surface-subtle'}`}
                     >
                       <input
                         checked={checked}
-                        className="h-5 w-5 accent-[#2F7654]"
+                        className="h-5 w-5 accent-primary-accent"
                         onChange={() =>
                           setSelectedIds((ids) =>
                             checked ? ids.filter((id) => id !== loan.id) : [...ids, loan.id],
@@ -437,11 +437,11 @@ function ReplacementOptions({
                       />
                       <span>
                         <small className="block font-bold uppercase text-[#7A8C81]">Préstamo</small>
-                        <strong className="text-[#173D2C]">#{loan.loanNumber}</strong>
+                        <strong className="text-text-primary">#{loan.loanNumber}</strong>
                       </span>
                       <span>
                         <small className="block font-bold uppercase text-[#7A8C81]">Inicio</small>
-                        <strong className="text-[#173D2C]">
+                        <strong className="text-text-primary">
                           {new Date(loan.startDate).toLocaleDateString('es-DO')}
                         </strong>
                       </span>
@@ -449,7 +449,7 @@ function ReplacementOptions({
                         <small className="block font-bold uppercase text-[#7A8C81]">
                           Total a saldar
                         </small>
-                        <strong className="text-[#173D2C]">
+                        <strong className="text-text-primary">
                           {quote ? formatCurrency(quote.totalToPay) : '...'}
                         </strong>
                       </span>
@@ -457,7 +457,7 @@ function ReplacementOptions({
                         <small className="block font-bold uppercase text-[#7A8C81]">
                           Capital restante
                         </small>
-                        <strong className="text-[#173D2C]">
+                        <strong className="text-text-primary">
                           {quote ? formatCurrency(quote.capitalOutstanding) : '...'}
                         </strong>
                       </span>
@@ -465,7 +465,7 @@ function ReplacementOptions({
                         <small className="block font-bold uppercase text-[#7A8C81]">
                           {loan.interestType === 'INDEFINITE' ? 'Modalidad' : 'Cuotas restantes'}
                         </small>
-                        <strong className="text-[#173D2C]">
+                        <strong className="text-text-primary">
                             {loan.interestType === 'INDEFINITE'
                               ? 'Indefinido'
                               : `${remainingInstallments}/${loan.term}`}
@@ -478,12 +478,12 @@ function ReplacementOptions({
             )}
           </div>
 
-          <footer className="flex items-center justify-between gap-4 border-t border-[#DDEBE3] bg-[#F8FBF9] px-5 py-4">
-            <p className="text-sm font-bold text-[#173D2C]">
+          <footer className="flex items-center justify-between gap-4 border-t border-primary-border bg-surface-subtle px-5 py-4">
+            <p className="text-sm font-bold text-text-primary">
               Total a saldar: {formatCurrency(selectedTotal)}
             </p>
             <button
-              className="h-11 rounded-full bg-[#2F7654] px-5 text-sm font-bold text-white transition hover:bg-[#285C43] disabled:opacity-40"
+              className="h-11 rounded-full bg-primary-accent px-5 text-sm font-bold text-white transition hover:bg-primary disabled:opacity-40"
               disabled={selectedIds.length === 0}
               onClick={() => {
                 onApply(openType, selectedIds, selectedTotal);
@@ -513,12 +513,12 @@ function LoanSummaryPanel({
 
   return (
     <div className="relative">
-      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#2F7654] shadow-sm">
+      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-primary-soft px-3 py-1 text-xs font-bold text-primary-accent shadow-sm">
         <ReceiptText className="h-3 w-3" />
         Resumen del préstamo
       </span>
       <section className={`overflow-hidden rounded-xl bg-white ${LOAN_CARD_SHADOW}`}>
-        <div className="grid grid-cols-1 divide-y divide-[#DDEBE3] md:grid-cols-3 md:divide-x md:divide-y-0">
+        <div className="grid grid-cols-1 divide-y divide-primary-border md:grid-cols-3 md:divide-x md:divide-y-0">
           <div className="flex min-h-[74px] items-center justify-between gap-3 px-4 py-4">
             <div className="min-w-0">
               <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">
@@ -555,12 +555,12 @@ function LoanSummaryPanel({
               <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">
                 Total a pagar
               </p>
-              <p className="mt-1.5 truncate text-xl font-bold leading-none text-[#2F7654]">
+              <p className="mt-1.5 truncate text-xl font-bold leading-none text-primary-accent">
                 {formatCurrency(total)}
               </p>
               <p className="mt-1 text-xs font-medium text-[#6B7280]">Capital + intereses</p>
             </div>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#E7F4EC] text-[#2F7654]">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary-soft text-primary-accent">
               <WalletCards className="h-4 w-4" />
             </span>
           </div>
@@ -633,7 +633,7 @@ function MainInfoCard({
 }) {
   return (
     <div className="relative">
-      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-[#E7F4EC] px-3 py-1.5 text-sm font-bold text-[#2F7654] shadow-sm">
+      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-primary-soft px-3 py-1.5 text-sm font-bold text-primary-accent shadow-sm">
         Información Principal
       </span>
       <motion.section
@@ -661,7 +661,7 @@ function MainInfoCard({
             />
             {amortizationType !== 'INDEFINITE' && (
               <div>
-                <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">Plazo</span>
+                <span className="mb-1.5 block text-xs font-bold text-text-secondary">Plazo</span>
                 <TextInput label="" onChange={onTermChange} value={term} error={errors?.term} />
               </div>
             )}
@@ -689,12 +689,12 @@ function MainInfoCard({
               error={errors?.paymentFrequency}
             />
             <label className="block">
-              <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">Primera cuota</span>
+              <span className="mb-1.5 block text-xs font-bold text-text-secondary">Primera cuota</span>
               <DatePickerInput
                 value={firstPaymentDate}
                 onChange={onFirstPaymentDateChange}
                 invalid={!!errors?.firstPaymentDate}
-                className="h-[42px] w-full rounded-[8px] border border-[#DDEBE3] bg-white px-3 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#EAF6EF]"
+                className="h-[42px] w-full rounded-[8px] border border-primary-border bg-white px-3 text-sm font-medium text-text-primary shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
               />
               {errors?.firstPaymentDate && (
                 <span className="mt-1 block text-xs font-medium text-red-500">
@@ -710,11 +710,11 @@ function MainInfoCard({
             />
           </div>
           <label className="block">
-            <span className="mb-1.5 block text-xs font-bold text-[#5C6D63]">
+            <span className="mb-1.5 block text-xs font-bold text-text-secondary">
               Descripción / propósito
             </span>
             <textarea
-              className="h-[72px] w-full resize-none rounded-[8px] border border-[#DDEBE3] bg-white px-3 py-2.5 text-sm font-medium text-[#173D2C] shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition placeholder:text-[#8F9691] focus:border-[#285C43] focus:ring-2 focus:ring-[#EAF6EF]"
+              className="h-[72px] w-full resize-none rounded-[8px] border border-primary-border bg-white px-3 py-2.5 text-sm font-medium text-text-primary shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary-soft"
               placeholder="Ej. Capital de trabajo para negocio familiar..."
               value={purpose}
               onChange={(e) => onPurposeChange(e.target.value)}
@@ -910,7 +910,7 @@ function NewLoanStepTwo({
         selectedType={operationType}
       />
       {operationType && (
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-[#DDEBE3] bg-white p-4 text-sm md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 rounded-xl border border-primary-border bg-white p-4 text-sm md:grid-cols-3">
           <p>
             <span className="block text-xs font-bold uppercase text-[#738096]">Operación</span>
             <strong>{operationType === 'REENGAGEMENT' ? 'Reenganche' : 'Refinanciamiento'}</strong>
@@ -925,7 +925,7 @@ function NewLoanStepTwo({
             <span className="block text-xs font-bold uppercase text-[#738096]">
               Efectivo a entregar
             </span>
-            <strong className="text-[#2F7654]">
+            <strong className="text-primary-accent">
               {formatCurrency(Math.max(0, parseNumber(amount) - settlementTotal))}
             </strong>
           </p>
@@ -959,7 +959,7 @@ function NewLoanStepTwo({
       </div>
 
       <button
-        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#2F7654] text-sm font-bold text-white shadow-[0_6px_16px_rgba(47,118,84,0.15)] transition hover:-translate-y-0.5 hover:bg-[#285C43]"
+        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-primary-accent text-sm font-bold text-white shadow-[0_6px_16px_rgba(47,118,84,0.15)] transition hover:-translate-y-0.5 hover:bg-primary"
         onClick={handleCalculate}
         type="button"
       >
@@ -989,7 +989,7 @@ function NewLoanStepTwo({
 
       {shouldShowCalculatedLoanActions(showSchedule) && (
         <button
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#2F7654] text-sm font-bold text-white shadow-[0_8px_20px_rgba(47,118,84,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285C43] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary-accent text-sm font-bold text-white shadow-[0_8px_20px_rgba(47,118,84,0.2)] transition hover:-translate-y-0.5 hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
           disabled={!calculationReady || !selectedClient || saving}
           onClick={onSave}
           type="button"
@@ -1025,8 +1025,8 @@ function AmortizationRow({
   return (
     <div
       className={`grid min-w-[980px] grid-cols-[90px_1.1fr_1.2fr_1.2fr_1.2fr_1.3fr] items-center border-t px-5 py-2.5 text-sm ${
-        total ? 'bg-[#F8FBF9] font-bold' : 'bg-white'
-      } ${total ? 'border-[#C8D7CF]' : 'border-[#DDEBE3]'}`}
+        total ? 'bg-surface-subtle font-bold' : 'bg-white'
+      } ${total ? 'border-[#C8D7CF]' : 'border-primary-border'}`}
     >
       <span className={total ? 'text-[#374151]' : 'font-medium text-[#111827]'}>
         {installmentLabel}
@@ -1035,7 +1035,7 @@ function AmortizationRow({
         {row.date ?? '—'}
       </span>
       <span className="text-right font-medium text-[#B73B2F]">{fmt(row.interest)}</span>
-      <span className="text-right font-medium text-[#2F7654]">{fmt(row.principal)}</span>
+      <span className="text-right font-medium text-primary-accent">{fmt(row.principal)}</span>
       <span className="text-right font-bold text-[#111827]">{fmt(row.payment)}</span>
       <span className={`text-right font-medium ${total ? 'text-[#9CA3AF]' : 'text-[#374151]'}`}>
         {fmt(row.balance)}
@@ -1069,7 +1069,7 @@ function AmortizationTableCard({
 }) {
   return (
     <div className="relative">
-      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#2F7654] shadow-sm">
+      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-primary-soft px-3 py-1 text-xs font-bold text-primary-accent shadow-sm">
         <ReceiptText className="h-3 w-3" />
         Tabla de amortización
       </span>
@@ -1080,15 +1080,15 @@ function AmortizationTableCard({
         transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
       >
         <div className="flex items-center justify-end gap-4 px-5 py-4">
-          <p className="shrink-0 rounded-full bg-[#E7F4EC] px-3 py-1 text-sm font-bold text-[#2F7654]">
+          <p className="shrink-0 rounded-full bg-primary-soft px-3 py-1 text-sm font-bold text-primary-accent">
             {term} {term === 1 ? 'cuota' : 'cuotas'}
           </p>
         </div>
 
-        <div className="max-h-[360px] overflow-y-auto border-t border-[#DDEBE3]">
+        <div className="max-h-[360px] overflow-y-auto border-t border-primary-border">
           <div className="overflow-x-auto">
             <div className="min-w-[980px]">
-              <div className="grid grid-cols-[90px_1.1fr_1.2fr_1.2fr_1.2fr_1.3fr] bg-[#F3FAF6] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.11em] text-[#4F856A]">
+              <div className="grid grid-cols-[90px_1.1fr_1.2fr_1.2fr_1.2fr_1.3fr] bg-surface-muted-ui px-5 py-3 text-[11px] font-bold uppercase tracking-[0.11em] text-[#4F856A]">
                 <span>CUOTA</span>
                 <span>FECHA</span>
                 <span className="text-right">INTERÉS</span>
@@ -1134,7 +1134,7 @@ function Header({ clientId }: { clientId: number | null }) {
   return (
     <>
       <Link
-        className="inline-flex items-center gap-3 text-sm font-bold text-[#5C6D63] transition hover:text-[#173D2C]"
+        className="inline-flex items-center gap-3 text-sm font-bold text-text-secondary transition hover:text-text-primary"
         href={backHref}
       >
         <ArrowLeft className="h-5 w-5" />
@@ -1143,7 +1143,7 @@ function Header({ clientId }: { clientId: number | null }) {
 
       <div className="mt-8">
         <div>
-          <h1 className="text-2xl font-bold leading-tight text-[#173D2C]">Crear préstamo</h1>
+          <h1 className="text-2xl font-bold leading-tight text-text-primary">Crear préstamo</h1>
         </div>
       </div>
     </>
@@ -1275,7 +1275,7 @@ export function NewLoanPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F3F4F6] px-5 py-7 font-sans text-[#173D2C] lg:px-9 lg:py-8">
+    <main className="min-h-screen bg-page px-5 py-7 font-sans text-text-primary lg:px-9 lg:py-8">
       <div className="mx-auto max-w-[1720px]">
         <Header clientId={selectedClient?.id ?? null} />
 
@@ -1296,7 +1296,7 @@ export function NewLoanPage() {
         )}
 
         {productsError && (
-          <p className="mt-6 rounded-[14px] border border-[#F1C9B7] bg-[#FFF4EE] px-4 py-3 text-sm font-medium text-[#9F3F25]">
+          <p className="mt-6 rounded-[14px] border border-[#F1C9B7] bg-[#FFF4EE] px-4 py-3 text-sm font-medium text-state-danger">
             {productsError}
           </p>
         )}

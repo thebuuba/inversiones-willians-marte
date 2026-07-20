@@ -5,6 +5,11 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.RippleDrawable;
+import android.content.res.ColorStateList;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -31,6 +36,12 @@ public class MainActivity extends Activity {
     private static final String API_BASE_URL = "https://inversiones-willians-marte-api-staging.natanaelpena1202.workers.dev/api/v1";
     private static final int CONNECTION_TIMEOUT_MS = 15_000;
     private static final int READ_TIMEOUT_MS = 30_000;
+    private static final int PAGE = Color.rgb(243, 244, 246);
+    private static final int CARD = Color.WHITE;
+    private static final int PRIMARY = Color.rgb(40, 92, 67);
+    private static final int TEXT = Color.rgb(23, 61, 44);
+    private static final int MUTED = Color.rgb(92, 109, 99);
+    private static final int BORDER = Color.rgb(221, 235, 227);
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
@@ -284,7 +295,8 @@ public class MainActivity extends Activity {
     private LinearLayout root() {
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(40, 64, 40, 40);
+        layout.setPadding(dp(20), dp(32), dp(20), dp(20));
+        layout.setBackgroundColor(PAGE);
         return layout;
     }
 
@@ -292,19 +304,62 @@ public class MainActivity extends Activity {
         TextView text = new TextView(this);
         text.setText(value);
         text.setTextSize(size);
-        text.setPadding(0, 10, 0, 10);
+        text.setTextColor(size >= 20 ? TEXT : MUTED);
+        text.setTypeface(Typeface.DEFAULT, size >= 20 ? Typeface.BOLD : Typeface.NORMAL);
+        text.setPadding(0, dp(6), 0, dp(10));
         return text;
     }
 
     private EditText input(String hint) {
         EditText input = new EditText(this);
         input.setHint(hint);
+        input.setTextColor(TEXT);
+        input.setHintTextColor(MUTED);
+        input.setTextSize(16);
+        input.setSingleLine(true);
+        input.setMinHeight(dp(52));
+        input.setPadding(dp(16), 0, dp(16), 0);
+        input.setBackground(surface(CARD, BORDER, 14));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, dp(6), 0, dp(10));
+        input.setLayoutParams(params);
         return input;
     }
 
     private Button button(String label) {
         Button button = new Button(this);
         button.setText(label);
+        button.setAllCaps(false);
+        button.setTextColor(Color.WHITE);
+        button.setTextSize(15);
+        button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        button.setMinHeight(dp(48));
+        button.setBackground(new RippleDrawable(
+                ColorStateList.valueOf(Color.argb(40, 255, 255, 255)),
+                surface(PRIMARY, PRIMARY, 24),
+                null
+        ));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, dp(6), 0, dp(6));
+        button.setLayoutParams(params);
         return button;
+    }
+
+    private GradientDrawable surface(int fill, int stroke, float radiusDp) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(fill);
+        drawable.setCornerRadius(dp(radiusDp));
+        drawable.setStroke(dp(1), stroke);
+        return drawable;
+    }
+
+    private int dp(float value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 }

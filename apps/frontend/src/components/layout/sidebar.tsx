@@ -85,7 +85,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           compact ? 'mx-auto h-10 w-10 justify-center p-0' : 'gap-3 px-3 py-2.5 text-sm',
           active
             ? 'bg-primary-soft font-bold text-text-primary'
-            : 'text-text-secondary hover:bg-[#f3f4f6] hover:text-text-primary',
+            : 'text-text-secondary hover:bg-page hover:text-text-primary',
         )}
         href={href}
         onClick={onClick}
@@ -137,7 +137,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         <button
           aria-expanded={!collapsed}
           aria-label={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] text-text-secondary transition-colors duration-150 hover:bg-[#f3f4f6] hover:text-text-primary"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] text-text-secondary transition-colors duration-150 hover:bg-page hover:text-text-primary"
           onClick={onCollapsedChange}
           type="button"
         >
@@ -202,7 +202,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
               )}
             >
               <button
-                className="flex h-10 w-full items-center gap-2.5 rounded-[10px] px-3 text-left text-sm font-semibold text-text-secondary transition-colors duration-150 hover:bg-[#f3f4f6] hover:text-text-primary"
+                className="flex h-10 w-full items-center gap-2.5 rounded-[10px] px-3 text-left text-sm font-semibold text-text-secondary transition-colors duration-150 hover:bg-page hover:text-text-primary"
                 onClick={logout}
                 type="button"
               >
@@ -214,7 +214,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           <button
             aria-label={compact ? `Perfil de ${user?.name ?? 'Nata'}` : undefined}
             className={cn(
-              'flex w-full items-center rounded-[12px] text-left transition-colors duration-150 hover:bg-[#f3f4f6]',
+              'flex w-full items-center rounded-[12px] text-left transition-colors duration-150 hover:bg-page',
               compact ? 'h-10 justify-center p-0' : 'gap-3 p-2',
             )}
             onClick={() => setProfileOpen((open) => !open)}
@@ -256,7 +256,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         </div>
         <button
           aria-label="Abrir menú"
-          className="flex h-10 w-10 items-center justify-center rounded-[8px] text-text-secondary transition-colors duration-150 hover:bg-[#f3f4f6] hover:text-text-primary"
+          className="flex h-10 w-10 items-center justify-center rounded-[8px] text-text-secondary transition-colors duration-150 hover:bg-page hover:text-text-primary"
           onClick={() => setMobileOpen(true)}
           type="button"
         >

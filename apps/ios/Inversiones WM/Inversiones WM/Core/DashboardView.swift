@@ -295,7 +295,7 @@ private struct AttentionCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: overdueLoans > 0 ? "exclamationmark.triangle.fill" : "checkmark.seal.fill")
-                .foregroundStyle(overdueLoans > 0 ? .red : .green)
+                .foregroundStyle(overdueLoans > 0 ? Color.appRust : Color.appGreen)
             VStack(alignment: .leading, spacing: 4) {
                 Text(overdueLoans > 0 ? "Atención requerida" : "Cartera al día")
                     .font(.headline)
