@@ -4,14 +4,15 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  AlertCircle,
   ArrowLeft,
   CalendarDays,
-  CheckCircle2,
   CircleDollarSign,
-  ClipboardList,
   Info,
+  LayoutDashboard,
+  Pencil,
+  PhoneCall,
   Plus,
+  ReceiptText,
   WalletCards,
 } from 'lucide-react';
 import { addLoanCapital, getLoan, getPayoffQuote, type LoanDetail } from '@/lib/api/loans';
@@ -23,7 +24,6 @@ import {
   getScheduleDisplayStatus,
   getScheduleRemaining,
 } from './loan-detail.helpers';
-import { getLoanTitle } from './loan-title';
 import { DatePickerInput } from '@/components/ui/date-picker-input';
 import type { LoanPayoffQuote } from '@inversiones/shared';
 import { CollectionManagementPanel } from './collection-management-panel';
@@ -55,7 +55,7 @@ function StatusBadge({ status, dueDate }: { status: string; dueDate?: string }) 
           : 'bg-state-success-bg text-state-success';
 
   return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${tone}`}>{label}</span>
+    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${tone}`}>{label}</span>
   );
 }
 
@@ -91,14 +91,27 @@ function SummaryCard({
 
   return (
     <div className="rounded-2xl border border-border-soft bg-white p-5 shadow-sm">
-      <div className={`flex h-10 w-10 items-center justify-center rounded-full ${classes.icon}`}>
-        {icon}
+      <div className="flex items-center gap-3">
+        <div className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-full sm:flex ${classes.icon}`}>
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-text-muted">{label}</p>
+          <p className={`mt-0.5 truncate text-base font-bold tabular-nums ${classes.value}`}>{value}</p>
+        </div>
       </div>
-      <p className="mt-4 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">{label}</p>
-      <p className={`mt-1 text-xl font-bold ${classes.value}`}>{value}</p>
     </div>
   );
 }
+
+type LoanTab = 'Resumen' | 'Cuotas' | 'Pagos' | 'Cobranza';
+
+const loanTabs: Array<{ label: LoanTab; icon: typeof LayoutDashboard }> = [
+  { label: 'Resumen', icon: LayoutDashboard },
+  { label: 'Cuotas', icon: CalendarDays },
+  { label: 'Pagos', icon: ReceiptText },
+  { label: 'Cobranza', icon: PhoneCall },
+];
 
 function DataRow({
   label,
@@ -111,8 +124,8 @@ function DataRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-4 border-b border-border-soft py-2.5 last:border-b-0">
-      <span className="text-sm font-semibold text-text-secondary">{label}</span>
-      <span className={`text-right text-sm font-bold ${tone}`}>{value}</span>
+      <span className="text-[13px] font-medium text-text-muted">{label}</span>
+      <span className={`text-right text-sm font-semibold ${tone}`}>{value}</span>
     </div>
   );
 }
@@ -132,7 +145,7 @@ function InfoPanel({
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-soft text-primary-accent">
           {icon}
         </div>
-        <h2 className="text-base font-bold text-text-primary">{title}</h2>
+        <h2 className="text-base font-semibold text-text-primary">{title}</h2>
       </div>
       <div className="p-5">{children}</div>
     </section>
@@ -152,6 +165,9 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
   const [capitalError, setCapitalError] = useState<string | null>(null);
   const [capitalSaving, setCapitalSaving] = useState(false);
   const [agreementOpen, setAgreementOpen] = useState(searchParams.get('agreement') === '1');
+  const [activeTab, setActiveTab] = useState<LoanTab>(
+    searchParams.get('agreement') === '1' ? 'Cobranza' : 'Resumen',
+  );
 
   const loadLoan = useCallback(async () => {
     try {
@@ -200,6 +216,14 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
       active = false;
     };
   }, [loan, payoffDate]);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    const tab = hash === '#calendario-cuotas' ? 'Cuotas' : hash === '#recibos-pagos' ? 'Pagos' : null;
+    if (!tab) return;
+    const timer = window.setTimeout(() => setActiveTab(tab), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const totals = useMemo(
     () =>
@@ -291,55 +315,58 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
     loan.interestType === 'INDEFINITE'
       ? 'Indefinido'
       : loan.interestType === 'REDUCING'
-        ? 'Reducing'
+        ? 'Saldo insoluto'
         : loan.interestType === 'FLAT'
           ? 'Simple'
-          : loan.interestType;
+          : loan.interestType === 'FIXED'
+            ? 'Cuota fija'
+            : loan.interestType === 'COMPOUND'
+              ? 'Compuesto'
+              : loan.interestType;
   const nextSchedule = operational.nextSchedule;
   const lastPayment = operational.lastPayment;
 
   return (
-    <main className="min-h-screen bg-page p-5">
-      <div className="mx-auto max-w-[1480px]">
+    <main className="min-h-screen bg-page">
+      <div className="mx-auto max-w-[1720px] px-6 py-8">
         <Link
-          className="inline-flex items-center gap-2 text-sm font-bold text-text-secondary transition hover:text-primary-accent"
+          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-primary-accent transition hover:text-primary"
           href={`/clientes/${loan.clientId}`}
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           Volver al cliente
         </Link>
 
-        <header className="mt-5 overflow-hidden rounded-3xl border border-border-soft bg-white shadow-sm">
-          <div className="flex flex-col justify-between gap-4 px-8 py-6 md:flex-row md:items-end">
+        <header className="overflow-hidden rounded-3xl border border-border-soft bg-white shadow-sm">
+          <div className="flex flex-col justify-between gap-5 px-8 py-6 md:flex-row md:items-end">
             <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-bold text-text-primary">{getLoanTitle(loan)}</h1>
-                <StatusBadge status={loan.status} />
-                <span className="inline-flex rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-accent">
-                  {totals.paidInstallments}/{totals.totalInstallments} cuotas pagadas
-                </span>
-                <span className="inline-flex rounded-full bg-state-neutral-bg px-3 py-1 text-xs font-bold text-text-secondary">
-                  #{loan.loanNumber}
-                </span>
-              </div>
-              <p className="mt-2 text-sm font-semibold text-text-secondary">
-                {loan.client.firstName} {loan.client.lastName} · {frequency}
-              </p>
-              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-sm font-bold text-primary-accent">
-                <CalendarDays className="h-4 w-4" /> Inicio: {fmtDate(loan.startDate)}
+              <h1 className="text-2xl font-bold text-text-primary">
+                {loan.client.firstName} {loan.client.lastName}
+              </h1>
+              <p className="mt-2 text-sm text-text-muted">
+                Préstamo #{loan.loanNumber} · {frequency} · Inicio {fmtDate(loan.startDate)} · {totals.paidInstallments}/{totals.totalInstallments} cuotas pagadas
               </p>
             </div>
-            <Link
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-primary"
-              href={`/prestamos/cobrar?loanId=${loan.id}`}
-            >
-              <Plus className="h-4 w-4" />
-              Registrar cobro
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary-border bg-white px-5 text-sm font-bold text-primary-accent transition hover:bg-primary-soft"
+                href={`/prestamos/${loan.id}/editar`}
+              >
+                <Pencil className="h-4 w-4" />
+                Editar
+              </Link>
+              <Link
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:bg-primary"
+                href={`/prestamos/cobrar?loanId=${loan.id}`}
+              >
+                <Plus className="h-4 w-4" />
+                Registrar cobro
+              </Link>
+            </div>
           </div>
         </header>
 
-        <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <section className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
           <SummaryCard
             icon={<WalletCards className="h-5 w-5" />}
             label="Saldo pendiente"
@@ -358,22 +385,50 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
             tone="paid"
             value={fmt(totals.totalPaid)}
           />
+          <SummaryCard
+            icon={<CircleDollarSign className="h-5 w-5" />}
+            label="Capital original"
+            tone="paid"
+            value={fmt(totals.principal)}
+          />
         </section>
 
-        <section className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-5">
-            <CollectionManagementPanel
+        <nav className="mt-6 flex w-full gap-1 overflow-x-auto rounded-2xl border border-border-soft bg-white p-1.5 shadow-sm sm:w-fit" aria-label="Secciones del préstamo">
+          {loanTabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.label;
+            return (
+              <button
+                className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition sm:px-5 ${
+                  active
+                    ? 'bg-primary-accent text-white shadow-sm'
+                    : 'text-text-muted hover:bg-primary-soft hover:text-primary-accent'
+                }`}
+                key={tab.label}
+                onClick={() => setActiveTab(tab.label)}
+                type="button"
+              >
+                <Icon className="hidden h-4 w-4 sm:block" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        <section className={`mt-5 ${activeTab === 'Resumen' ? 'grid grid-cols-1 gap-5 xl:grid-cols-2' : ''}`}>
+          <div className={activeTab === 'Resumen' ? 'contents' : 'space-y-5'}>
+            {activeTab === 'Cobranza' ? <CollectionManagementPanel
               agreementOpen={agreementOpen}
               altPhone={loan.client.altPhone}
               loanId={loan.id}
               onAgreementClose={() => setAgreementOpen(false)}
               phone={loan.client.phone}
-            />
+            /> : null}
 
-            <section className="rounded-2xl border border-border-soft bg-white p-5 shadow-sm">
+            {activeTab === 'Resumen' ? <section className="rounded-2xl border border-border-soft bg-white p-5 shadow-sm xl:col-span-2">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-base font-bold text-text-primary">
+                  <h2 className="text-base font-semibold text-text-primary">
                     {loan.interestType === 'INDEFINITE' ? 'Cobros de interés' : 'Progreso de pago'}
                   </h2>
                   <p className="mt-1 text-sm font-medium text-text-secondary">
@@ -394,21 +449,72 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                   />
                 </div>
               ) : null}
-            </section>
+            </section> : null}
 
-            <section
+            {activeTab === 'Resumen' ? (
+              <div className="xl:col-span-2">
+                <InfoPanel icon={<CalendarDays className="h-5 w-5" />} title="Estado de cuenta">
+                  <div className="grid gap-x-8 sm:grid-cols-2">
+                    <DataRow
+                      label="Próximo vencimiento"
+                      value={nextSchedule ? fmtDate(nextSchedule.dueDate) : empty}
+                    />
+                    <DataRow
+                      label="Próxima cuota"
+                      value={fmt(operational.nextSchedulePending)}
+                    />
+                    <DataRow label="Cuotas vencidas" value={operational.overdueInstallments} />
+                    <DataRow label="Cuotas pendientes" value={operational.pendingInstallments} />
+                    <DataRow
+                      label="Mora existente"
+                      tone="text-state-danger"
+                      value={fmt(operational.unpaidLateFees)}
+                    />
+                    <DataRow
+                      label="Último pago"
+                      value={lastPayment ? `${fmt(lastPayment.amount)} · ${fmtDate(lastPayment.paymentDate)}` : empty}
+                    />
+                  </div>
+                </InfoPanel>
+              </div>
+            ) : null}
+
+            {activeTab === 'Resumen' ? (
+              <InfoPanel icon={<Info className="h-5 w-5" />} title="Detalles del préstamo">
+                <div className="grid gap-x-8 sm:grid-cols-2">
+                  <DataRow label="Capital" value={fmt(totals.principal)} />
+                  <DataRow label="Cuota regular" value={fmt(totals.installment)} />
+                  <DataRow label="Tipo de préstamo" value={interestType} />
+                  <DataRow label="Tasa" value={`${Number(loan.interestRate)}%`} />
+                  <DataRow
+                    label="Fecha final"
+                    value={
+                      loan.interestType === 'INDEFINITE'
+                        ? 'Indefinido'
+                        : loan.endDate
+                          ? fmtDate(loan.endDate)
+                          : empty
+                    }
+                  />
+                  <DataRow label="Creado por" value={loan.createdBy?.name ?? empty} />
+                  <DataRow label="Cartera" value={loan.portfolio?.name ?? empty} />
+                </div>
+              </InfoPanel>
+            ) : null}
+
+            {activeTab === 'Cuotas' ? <section
               className="scroll-mt-5 overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm"
               id="calendario-cuotas"
             >
               <div className="border-b border-border-soft px-5 py-4">
-                <h2 className="text-base font-bold text-text-primary">Calendario de cuotas</h2>
+                <h2 className="text-base font-semibold text-text-primary">Calendario de cuotas</h2>
                 <p className="mt-1 text-sm font-medium text-text-secondary">
                   Detalle de vencimientos y pagos aplicados.
                 </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-[860px] w-full text-left">
-                  <thead className="bg-[#FBFCFB] text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
+                  <thead className="bg-[#FBFCFB] text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">
                     <tr>
                       <th className="px-5 py-3">Cuota</th>
                       <th className="px-5 py-3">Vencimiento</th>
@@ -427,7 +533,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                           className="border-t border-border-soft text-sm font-medium text-[#3F4542]"
                           key={row.id}
                         >
-                          <td className="px-5 py-4 font-bold text-text-primary">#{index + 1}</td>
+                          <td className="px-5 py-4 font-semibold text-text-primary">#{index + 1}</td>
                           <td className="px-5 py-4">{fmtDate(row.dueDate)}</td>
                           <td className="px-5 py-4">{fmt(amount)}</td>
                           <td className="px-5 py-4">{fmt(paidAmount)}</td>
@@ -443,14 +549,14 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                   </tbody>
                 </table>
               </div>
-            </section>
+            </section> : null}
 
-            <section
+            {activeTab === 'Pagos' ? <section
               className="scroll-mt-5 overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm"
               id="recibos-pagos"
             >
               <div className="border-b border-border-soft px-5 py-4">
-                <h2 className="text-base font-bold text-text-primary">Recibos y pagos</h2>
+                <h2 className="text-base font-semibold text-text-primary">Recibos y pagos</h2>
                 <p className="mt-1 text-sm font-medium text-text-secondary">
                   Historial de cobros registrados en este préstamo.
                 </p>
@@ -463,17 +569,17 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                       key={payment.id}
                     >
                       <div>
-                        <p className="text-sm font-bold text-text-primary">
+                        <p className="text-sm font-semibold text-text-primary">
                           Recibo {payment.id.slice(0, 8).toUpperCase()}
                         </p>
                         <p className="mt-0.5 text-xs font-medium text-[#7A7F7D]">
                           {fmtDate(payment.paymentDate)} · {payment.paymentMethod ?? 'Sin método'}
                         </p>
                       </div>
-                      <p className="text-xs font-semibold text-text-secondary">
+                      <p className="text-xs font-medium text-text-secondary">
                         Recibido por {payment.receivedBy?.name ?? '—'}
                       </p>
-                      <p className="text-base font-bold tabular-nums text-primary-accent">
+                      <p className="text-base font-semibold tabular-nums text-primary-accent">
                         {fmt(payment.amount)}
                       </p>
                     </article>
@@ -484,10 +590,10 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                   Todavía no hay pagos registrados.
                 </p>
               )}
-            </section>
+            </section> : null}
           </div>
 
-          <aside className="space-y-4">
+          {activeTab === 'Resumen' ? <aside className="contents">
             <div className="scroll-mt-5" id="saldo-anticipado">
               <InfoPanel icon={<CircleDollarSign className="h-5 w-5" />} title="Saldo anticipado">
                 <label className="mb-3 block">
@@ -573,74 +679,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               </InfoPanel>
             ) : null}
 
-            <InfoPanel icon={<ClipboardList className="h-5 w-5" />} title="Próxima cuota">
-              <DataRow
-                label="Vencimiento"
-                value={nextSchedule ? fmtDate(nextSchedule.dueDate) : empty}
-              />
-              <DataRow label="Monto" value={nextSchedule ? fmt(nextSchedule.amount) : empty} />
-              <DataRow
-                label="Pagado"
-                value={nextSchedule ? fmt(nextSchedule.paidAmount ?? 0) : empty}
-              />
-              <DataRow
-                label="Pendiente"
-                tone="text-[#B63B0B]"
-                value={fmt(operational.nextSchedulePending)}
-              />
-              <DataRow
-                label="Estado"
-                value={
-                  nextSchedule ? (
-                    <StatusBadge dueDate={nextSchedule.dueDate} status={nextSchedule.status} />
-                  ) : (
-                    empty
-                  )
-                }
-              />
-            </InfoPanel>
-
-            <InfoPanel icon={<AlertCircle className="h-5 w-5" />} title="Pendiente">
-              <DataRow label="Saldo total" tone="text-[#B63B0B]" value={fmt(totals.balance)} />
-              <DataRow label="Cuotas vencidas" value={operational.overdueInstallments} />
-              <DataRow label="Cuotas pendientes" value={operational.pendingInstallments} />
-              <DataRow
-                label="Mora existente"
-                tone="text-state-danger"
-                value={fmt(operational.unpaidLateFees)}
-              />
-            </InfoPanel>
-
-            <InfoPanel icon={<CheckCircle2 className="h-5 w-5" />} title="Último pago">
-              <DataRow label="Total pagado" tone="text-[#1E4E9A]" value={fmt(totals.totalPaid)} />
-              <DataRow label="Último pago" value={lastPayment ? fmt(lastPayment.amount) : empty} />
-              <DataRow
-                label="Fecha"
-                value={lastPayment ? fmtDate(lastPayment.paymentDate) : empty}
-              />
-              <DataRow label="Recibido por" value={lastPayment?.receivedBy?.name ?? empty} />
-            </InfoPanel>
-
-            <InfoPanel icon={<Info className="h-5 w-5" />} title="Detalles">
-              <DataRow label="Capital" value={fmt(totals.principal)} />
-              <DataRow label="Cuota regular" value={fmt(totals.installment)} />
-              <DataRow label="Producto" value={loan.product?.name ?? empty} />
-              <DataRow label="Tipo" value={interestType} />
-              <DataRow label="Tasa" value={`${Number(loan.interestRate)}%`} />
-              <DataRow
-                label="Fecha final"
-                value={
-                  loan.interestType === 'INDEFINITE'
-                    ? 'Indefinido'
-                    : loan.endDate
-                      ? fmtDate(loan.endDate)
-                      : empty
-                }
-              />
-              <DataRow label="Creado por" value={loan.createdBy?.name ?? empty} />
-              <DataRow label="Cartera" value={loan.portfolio?.name ?? empty} />
-            </InfoPanel>
-          </aside>
+          </aside> : null}
         </section>
       </div>
     </main>
