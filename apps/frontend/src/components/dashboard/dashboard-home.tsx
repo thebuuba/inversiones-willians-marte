@@ -36,12 +36,6 @@ import {
 import { formatDop } from '@/lib/currency';
 import { toDashboardAuditRow, type AuditTone } from './dashboard-audit';
 
-function formatCompact(n: number): string {
-  if (n >= 1_000_000) return `RD$${(n / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}M`;
-  if (n >= 1_000) return `RD$${(n / 1_000).toLocaleString('en-US', { maximumFractionDigits: 0 })}K`;
-  return formatDop(n, { decimals: 2 });
-}
-
 function formatCurrency(n: number): string {
   return formatDop(n, { decimals: 2 });
 }
@@ -131,7 +125,7 @@ export function DashboardHome() {
     { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, accent: '#eaf5ed', color: '#2f7654' },
     { label: 'Clientes registrados', value: String(totalClients), icon: Users, accent: '#fde4d4', color: '#9f3f25' },
     { label: 'Cobrado hoy', value: formatCurrency(collectionsToday), icon: DollarSign, accent: '#fef3c7', color: '#7a5a0a' },
-    { label: 'Saldo cartera', value: formatCompact(portfolioBalance), icon: Wallet, accent: '#dbeafe', color: '#1d4ed8' },
+    { label: 'Saldo cartera', value: formatCurrency(portfolioBalance), icon: Wallet, accent: '#dbeafe', color: '#1d4ed8' },
   ];
 
   const portfolioSafe = portfolio ?? [];
