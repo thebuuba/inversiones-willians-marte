@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertCircle,
@@ -19,6 +20,7 @@ import { formatDop } from '@/lib/currency';
 import {
   getLoanDetailTotals,
   getLoanOperationalSummary,
+  getScheduleDisplayStatus,
   getScheduleRemaining,
 } from './loan-detail.helpers';
 import { getLoanTitle } from './loan-title';
@@ -41,12 +43,12 @@ function getStatusLabel(status: string) {
   return status;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const label = getStatusLabel(status);
+function StatusBadge({ status, dueDate }: { status: string; dueDate?: string }) {
+  const label = dueDate ? getScheduleDisplayStatus(status, dueDate) : getStatusLabel(status);
   const tone =
-    label === 'Pagado'
+    label === 'Pagado' || label === 'Cancelado'
       ? 'bg-state-neutral-bg text-state-neutral'
-      : label === 'Vencido'
+      : label === 'Vencido' || label === 'Atrasado'
         ? 'bg-state-danger-bg text-state-danger'
         : label === 'Pendiente' || label === 'Parcial'
           ? 'bg-state-warning-bg text-state-warning'
@@ -138,6 +140,7 @@ function InfoPanel({
 }
 
 export function LoanDetailPage({ loanId }: { loanId: string }) {
+  const searchParams = useSearchParams();
   const [loan, setLoan] = useState<LoanDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -148,6 +151,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
   const [capitalNotes, setCapitalNotes] = useState('');
   const [capitalError, setCapitalError] = useState<string | null>(null);
   const [capitalSaving, setCapitalSaving] = useState(false);
+  const [agreementOpen, setAgreementOpen] = useState(searchParams.get('agreement') === '1');
 
   const loadLoan = useCallback(async () => {
     try {
@@ -359,8 +363,10 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
         <section className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-5">
             <CollectionManagementPanel
+              agreementOpen={agreementOpen}
               altPhone={loan.client.altPhone}
               loanId={loan.id}
+              onAgreementClose={() => setAgreementOpen(false)}
               phone={loan.client.phone}
             />
 
@@ -390,7 +396,10 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               ) : null}
             </section>
 
-            <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
+            <section
+              className="scroll-mt-5 overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm"
+              id="calendario-cuotas"
+            >
               <div className="border-b border-[#EDF2EF] px-5 py-4">
                 <h2 className="text-base font-bold text-[#173D2C]">Calendario de cuotas</h2>
                 <p className="mt-1 text-sm font-medium text-[#5C6D63]">
@@ -426,7 +435,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                             {fmt(getScheduleRemaining(amount, paidAmount))}
                           </td>
                           <td className="px-5 py-4">
-                            <StatusBadge status={row.status} />
+                            <StatusBadge dueDate={row.dueDate} status={row.status} />
                           </td>
                         </tr>
                       );
@@ -435,47 +444,90 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                 </table>
               </div>
             </section>
+
+            <section
+              className="scroll-mt-5 overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm"
+              id="recibos-pagos"
+            >
+              <div className="border-b border-[#EDF2EF] px-5 py-4">
+                <h2 className="text-base font-bold text-[#173D2C]">Recibos y pagos</h2>
+                <p className="mt-1 text-sm font-medium text-[#5C6D63]">
+                  Historial de cobros registrados en este préstamo.
+                </p>
+              </div>
+              {loan.payments.length ? (
+                <div className="divide-y divide-[#EDF2EF]">
+                  {loan.payments.map((payment) => (
+                    <article
+                      className="grid gap-2 px-5 py-4 sm:grid-cols-[1fr_1fr_auto] sm:items-center"
+                      key={payment.id}
+                    >
+                      <div>
+                        <p className="text-sm font-bold text-[#173D2C]">
+                          Recibo {payment.id.slice(0, 8).toUpperCase()}
+                        </p>
+                        <p className="mt-0.5 text-xs font-medium text-[#7A7F7D]">
+                          {fmtDate(payment.paymentDate)} · {payment.paymentMethod ?? 'Sin método'}
+                        </p>
+                      </div>
+                      <p className="text-xs font-semibold text-[#5C6D63]">
+                        Recibido por {payment.receivedBy?.name ?? '—'}
+                      </p>
+                      <p className="text-base font-bold tabular-nums text-[#2F7654]">
+                        {fmt(payment.amount)}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="px-5 py-8 text-center text-sm font-medium text-[#7A7F7D]">
+                  Todavía no hay pagos registrados.
+                </p>
+              )}
+            </section>
           </div>
 
           <aside className="space-y-4">
-            <InfoPanel icon={<CircleDollarSign className="h-5 w-5" />} title="Saldo anticipado">
-              <label className="mb-3 block">
-                <span className="mb-2 block text-sm font-semibold text-[#5C6D63]">
-                  Fecha de saldo
-                </span>
-                <DatePickerInput
-                  className="h-10 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-bold text-[#173D2C] outline-none"
-                  onChange={setPayoffDate}
-                  value={payoffDate}
+            <div className="scroll-mt-5" id="saldo-anticipado">
+              <InfoPanel icon={<CircleDollarSign className="h-5 w-5" />} title="Saldo anticipado">
+                <label className="mb-3 block">
+                  <span className="mb-2 block text-sm font-semibold text-[#5C6D63]">
+                    Fecha de saldo
+                  </span>
+                  <DatePickerInput
+                    className="h-10 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-bold text-[#173D2C] outline-none"
+                    onChange={setPayoffDate}
+                    value={payoffDate}
+                  />
+                </label>
+                <DataRow
+                  label="Capital pendiente"
+                  tone="text-[#173D2C]"
+                  value={payoffQuote ? fmt(payoffQuote.capitalOutstanding) : empty}
                 />
-              </label>
-              <DataRow
-                label="Capital pendiente"
-                tone="text-[#173D2C]"
-                value={payoffQuote ? fmt(payoffQuote.capitalOutstanding) : empty}
-              />
-              <DataRow
-                label="Interés generado"
-                tone="text-[#B63B0B]"
-                value={payoffQuote ? fmt(payoffQuote.earnedInterest) : empty}
-              />
-              <DataRow
-                label="Interés futuro descontado"
-                tone="text-[#2F7654]"
-                value={payoffQuote ? fmt(payoffQuote.unearnedInterestDiscount) : empty}
-              />
-              <DataRow label="Días generados" value={payoffQuote?.daysGenerated ?? empty} />
-              <DataRow
-                label="Interés diario"
-                value={payoffQuote ? fmt(payoffQuote.dailyInterest) : empty}
-              />
-              <DataRow label="Mora/cargos" value={payoffQuote ? fmt(payoffQuote.fees) : empty} />
-              <DataRow
-                label="Total para saldar"
-                tone="text-[#111827]"
-                value={payoffQuote ? fmt(payoffQuote.totalToPay) : empty}
-              />
-            </InfoPanel>
+                <DataRow
+                  label="Interés generado"
+                  tone="text-[#B63B0B]"
+                  value={payoffQuote ? fmt(payoffQuote.earnedInterest) : empty}
+                />
+                <DataRow
+                  label="Interés futuro descontado"
+                  tone="text-[#2F7654]"
+                  value={payoffQuote ? fmt(payoffQuote.unearnedInterestDiscount) : empty}
+                />
+                <DataRow label="Días generados" value={payoffQuote?.daysGenerated ?? empty} />
+                <DataRow
+                  label="Interés diario"
+                  value={payoffQuote ? fmt(payoffQuote.dailyInterest) : empty}
+                />
+                <DataRow label="Mora/cargos" value={payoffQuote ? fmt(payoffQuote.fees) : empty} />
+                <DataRow
+                  label="Total para saldar"
+                  tone="text-[#111827]"
+                  value={payoffQuote ? fmt(payoffQuote.totalToPay) : empty}
+                />
+              </InfoPanel>
+            </div>
 
             {loan.interestType === 'INDEFINITE' && loan.status === 'ACTIVE' ? (
               <InfoPanel icon={<Plus className="h-5 w-5" />} title="Agregar capital">
@@ -538,7 +590,13 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               />
               <DataRow
                 label="Estado"
-                value={nextSchedule ? <StatusBadge status={nextSchedule.status} /> : empty}
+                value={
+                  nextSchedule ? (
+                    <StatusBadge dueDate={nextSchedule.dueDate} status={nextSchedule.status} />
+                  ) : (
+                    empty
+                  )
+                }
               />
             </InfoPanel>
 

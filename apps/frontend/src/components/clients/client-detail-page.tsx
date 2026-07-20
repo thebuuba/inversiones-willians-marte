@@ -155,6 +155,7 @@ function LoanStatusBadge({ status }: { status: string }) {
 const loanTableColumns = 'grid-cols-[70px_170px_150px_150px_minmax(220px,1.4fr)_140px_170px_100px_50px]';
 
 function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clientName: string; onDelete: (loanId: string) => void }) {
+  const router = useRouter();
   const statusLabel = getLoanCollectionStatus(loan);
   const frequency =
     loan.paymentFreq === 'MONTHLY'
@@ -184,7 +185,11 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
   };
 
   return (
-    <div className={`grid min-w-[1220px] ${loanTableColumns} items-center border-t border-neutral-100 px-5 py-4 text-sm text-neutral-700 transition hover:bg-[#f8fbf9]`}>
+    <div
+      className={`grid min-w-[1220px] cursor-pointer ${loanTableColumns} items-center border-t border-neutral-100 px-5 py-4 text-sm text-neutral-700 transition hover:bg-[#f8fbf9]`}
+      onDoubleClick={() => router.push(`/prestamos/${loan.id}`)}
+      title="Doble clic para abrir el préstamo"
+    >
       <span className="font-semibold text-neutral-900">{loan.loanNumber}</span>
       <span className="font-semibold tabular-nums text-neutral-900">
         {fmt(nextInstallmentAmount)}

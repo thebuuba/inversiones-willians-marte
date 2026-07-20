@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   clampProgress,
   getLoanCollectionStatus,
+  getScheduleDisplayStatus,
   getClientLoanStats,
   getLoanDetailTotals,
   getLoanOperationalSummary,
@@ -121,6 +122,13 @@ test('keeps a loan on time before the next unpaid installment arrives', () => {
     ),
     'A tiempo',
   );
+});
+
+test('shows future schedule rows as on time instead of pending', () => {
+  assert.equal(getScheduleDisplayStatus('PENDING', '2026-07-15T00:00:00', today), 'A tiempo');
+  assert.equal(getScheduleDisplayStatus('PENDING', '2026-06-15T00:00:00', today), 'Pendiente');
+  assert.equal(getScheduleDisplayStatus('PENDING', '2026-06-09T00:00:00', today), 'Atrasado');
+  assert.equal(getScheduleDisplayStatus('PAID', '2026-07-15T00:00:00', today), 'Pagado');
 });
 
 test('marks a loan pending on its due date and through its five-day grace period', () => {
