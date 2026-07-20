@@ -147,11 +147,7 @@ export function DashboardHome() {
       <div className="mb-5 flex flex-col items-start justify-between gap-4 2xl:flex-row 2xl:items-end">
         <div>
           <div className="mb-3 flex items-center gap-3">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary-border bg-primary-soft px-3.5 py-1.5 text-xs font-bold text-primary-accent">
-              <span className="h-2 w-2 rounded-full bg-primary-accent" />
-              En línea
-            </span>
-            <span className="text-sm text-text-secondary">{today}</span>
+<span className="text-sm text-text-secondary">{today}</span>
           </div>
           <h1 className="text-[28px] font-bold leading-tight text-text-primary">
             Hola, {user?.name ?? 'Usuario'} 👋
