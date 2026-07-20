@@ -121,8 +121,9 @@ export function ClientsPanel() {
           <div>
             <h1 className="text-[26px] font-bold leading-tight text-text-primary">Clientes</h1>
             <p className="mt-1.5 text-sm text-text-secondary">
-              Administra tu cartera de clientes — {globalTotal} registrados en total.
+              Administra tu cartera de clientes
             </p>
+
           </div>
           <div className="flex items-center gap-3">
             <button className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-white px-5 text-sm font-bold text-text-secondary transition-colors duration-150 hover:bg-surface-subtle hover:text-text-primary">
@@ -238,13 +239,12 @@ export function ClientsPanel() {
                     {client.phone ?? <EmptyField />}
                   </span>
                   <span
-                    className={`inline-flex h-8 min-w-8 items-center justify-center justify-self-end rounded-full px-3 text-sm font-bold leading-none ${
-                      (client._count?.loans ?? 0) > 0
-                        ? 'bg-primary-soft text-primary-accent'
-                        : 'bg-state-neutral-bg text-text-secondary'
-                    }`}
+                    className="inline-flex h-9 min-w-[100px] items-center justify-center gap-2 justify-self-end rounded-full border border-primary-border bg-primary-soft px-3.5 text-primary shadow-[0_3px_10px_rgba(40,92,67,0.10)]"
                   >
-                    {client._count?.loans ?? 0}
+                    <span className="text-sm font-bold leading-none tabular-nums">
+                      {client._count?.loans ?? 0}
+                    </span>
+                    <span className="text-[11px] font-semibold leading-none">Préstamos</span>
                   </span>
                   <button
                     aria-label={`Acciones de ${fullName(client)}`}
