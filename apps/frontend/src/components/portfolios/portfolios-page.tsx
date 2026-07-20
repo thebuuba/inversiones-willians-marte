@@ -66,10 +66,10 @@ function statusLabel(status: string) {
 }
 
 function statusClass(status: string) {
-  if (status === 'ACTIVE') return 'bg-[#EAF6EF] text-[#285C43]';
-  if (status === 'OVERDUE') return 'bg-[#FADCCB] text-[#9F3F25]';
+  if (status === 'ACTIVE') return 'bg-primary-soft text-primary';
+  if (status === 'OVERDUE') return 'bg-[#FADCCB] text-state-danger';
   if (status === 'PAID') return 'bg-[#EEF0F2] text-[#555A58]';
-  return 'bg-[#FFF1C7] text-[#7A5A0A]';
+  return 'bg-[#FFF1C7] text-state-warning';
 }
 
 function SummaryCard({
@@ -84,14 +84,14 @@ function SummaryCard({
   subtext: string;
 }) {
   return (
-    <section className="flex min-h-[116px] items-center gap-4 rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#EAF6EF] text-[#285C43]">
+    <section className="flex min-h-[116px] items-center gap-4 rounded-2xl border border-border-soft bg-white p-5 shadow-sm">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
         {icon}
       </div>
       <div className="min-w-0">
         <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#7A7F7D]">{label}</p>
-        <p className="mt-2 truncate text-2xl font-bold leading-none text-[#151918]">{value}</p>
-        <p className="mt-2 truncate text-sm font-medium text-[#5C6D63]">{subtext}</p>
+        <p className="mt-2 truncate text-2xl font-bold leading-none text-text-primary">{value}</p>
+        <p className="mt-2 truncate text-sm font-medium text-text-secondary">{subtext}</p>
       </div>
     </section>
   );
@@ -100,15 +100,15 @@ function SummaryCard({
 function EmptyState() {
   return (
     <section className="rounded-2xl border border-dashed border-[#BFD7CB] bg-white p-10 text-center shadow-sm">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF6EF] text-[#285C43]">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-primary">
         <BriefcaseBusiness className="h-6 w-6" />
       </div>
-      <h2 className="mt-4 text-lg font-bold text-[#173D2C]">No hay carteras creadas</h2>
-      <p className="mx-auto mt-2 max-w-xl text-sm font-medium leading-6 text-[#5C6D63]">
+      <h2 className="mt-4 text-lg font-bold text-text-primary">No hay carteras creadas</h2>
+      <p className="mx-auto mt-2 max-w-xl text-sm font-medium leading-6 text-text-secondary">
         Crea una cartera al registrar un préstamo nuevo para ver aquí sus clientes y códigos de préstamos.
       </p>
       <Link
-        className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:bg-[#285c43]"
+        className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:bg-primary"
         href="/prestamos/nuevo"
       >
         <Plus className="h-4 w-4" />
@@ -120,18 +120,18 @@ function EmptyState() {
 
 function ClientRow({ group }: { group: PortfolioClientGroup }) {
   return (
-    <div className="rounded-2xl border border-[#EDF2EF] bg-[#FBFCFB] p-4">
+    <div className="rounded-2xl border border-border-soft bg-[#FBFCFB] p-4">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <Link className="group flex min-w-0 items-center gap-3" href={`/clientes/${group.id}`}>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EAF6EF] text-[#285C43]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
             <UserRound className="h-5 w-5" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <p className="truncate text-sm font-bold text-[#151918] group-hover:text-[#285C43]">{group.name}</p>
-              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#A7B5AD] transition group-hover:translate-x-0.5 group-hover:text-[#285C43]" />
+              <p className="truncate text-sm font-bold text-text-primary group-hover:text-primary">{group.name}</p>
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-text-subtle transition group-hover:translate-x-0.5 group-hover:text-primary" />
             </div>
-            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium text-[#5C6D63]">
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium text-text-secondary">
               <span>{group.identification ?? 'Sin cedula'}</span>
               {group.phone ? (
                 <span className="inline-flex items-center gap-1">
@@ -145,12 +145,12 @@ function ClientRow({ group }: { group: PortfolioClientGroup }) {
 
         <div className="grid grid-cols-2 gap-3 text-sm sm:min-w-[320px]">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Prestado</p>
-            <p className="mt-1 font-bold text-[#151918]">{formatDop(group.principal, { space: true })}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">Prestado</p>
+            <p className="mt-1 font-bold text-text-primary">{formatDop(group.principal, { space: true })}</p>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Balance</p>
-            <p className="mt-1 font-bold text-[#151918]">{formatDop(group.balance, { space: true })}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">Balance</p>
+            <p className="mt-1 font-bold text-text-primary">{formatDop(group.balance, { space: true })}</p>
           </div>
         </div>
       </div>
@@ -158,14 +158,14 @@ function ClientRow({ group }: { group: PortfolioClientGroup }) {
       <div className="mt-4 flex flex-wrap gap-2">
         {group.loans.map((loan) => (
           <Link
-            className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#DDEBE3] bg-white px-3 text-xs font-bold text-[#3F4542] shadow-[0_4px_10px_rgba(40,92,67,0.06)] transition hover:-translate-y-0.5 hover:border-[#B8DCC5] hover:text-[#285C43]"
+            className="inline-flex min-h-9 items-center gap-2 rounded-full border border-primary-border bg-white px-3 text-xs font-bold text-[#3F4542] shadow-[0_4px_10px_rgba(40,92,67,0.06)] transition hover:-translate-y-0.5 hover:border-[#B8DCC5] hover:text-primary"
             href={`/prestamos/${loan.id}`}
             key={loan.id}
             title={`Abrir prestamo #${loan.loanNumber}`}
           >
             <span>#{loan.loanNumber}</span>
             <span className={`rounded-full px-2 py-1 ${statusClass(loan.status)}`}>{statusLabel(loan.status)}</span>
-            <span className="text-[#5C6D63]">{formatDop(loan.balance, { space: true })}</span>
+            <span className="text-text-secondary">{formatDop(loan.balance, { space: true })}</span>
           </Link>
         ))}
       </div>
@@ -180,8 +180,8 @@ function PortfolioCard({ portfolio }: { portfolio: PortfolioItem }) {
   const totalBalance = portfolio.totals?.balance ?? loans.reduce((sum, loan) => sum + loan.balance, 0);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
-      <div className="flex flex-col gap-4 border-b border-[#EDF2EF] px-6 py-5 xl:flex-row xl:items-center xl:justify-between">
+    <section className="overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm">
+      <div className="flex flex-col gap-4 border-b border-border-soft px-6 py-5 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <div
             className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white"
@@ -190,31 +190,31 @@ function PortfolioCard({ portfolio }: { portfolio: PortfolioItem }) {
             <BriefcaseBusiness className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <h2 className="truncate text-xl font-bold text-[#173D2C]">{portfolio.name}</h2>
-            <p className="mt-1 max-w-3xl text-sm font-medium leading-6 text-[#5C6D63]">
+            <h2 className="truncate text-xl font-bold text-text-primary">{portfolio.name}</h2>
+            <p className="mt-1 max-w-3xl text-sm font-medium leading-6 text-text-secondary">
               {portfolio.description ?? 'Cartera de prestamos'}
             </p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 text-right text-sm max-sm:text-left">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Clientes</p>
-            <p className="mt-1 font-bold text-[#151918]">{clientGroups.length}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">Clientes</p>
+            <p className="mt-1 font-bold text-text-primary">{clientGroups.length}</p>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Prestamos</p>
-            <p className="mt-1 font-bold text-[#151918]">{portfolio._count.loans}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">Prestamos</p>
+            <p className="mt-1 font-bold text-text-primary">{portfolio._count.loans}</p>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63]">Balance</p>
-            <p className="mt-1 font-bold text-[#151918]">{formatDop(totalBalance, { space: true })}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">Balance</p>
+            <p className="mt-1 font-bold text-text-primary">{formatDop(totalBalance, { space: true })}</p>
           </div>
         </div>
       </div>
 
       <div className="space-y-3 p-5">
         {clientGroups.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-[#DDEBE3] bg-[#FBFCFB] px-4 py-8 text-center text-sm font-medium text-[#5C6D63]">
+          <p className="rounded-2xl border border-dashed border-primary-border bg-[#FBFCFB] px-4 py-8 text-center text-sm font-medium text-text-secondary">
             Sin prestamos asignados
           </p>
         ) : (
@@ -223,9 +223,9 @@ function PortfolioCard({ portfolio }: { portfolio: PortfolioItem }) {
       </div>
 
       {clientGroups.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#EDF2EF] px-6 py-4 text-sm font-medium text-[#5C6D63]">
-          <span>Total colocado: <strong className="text-[#151918]">{formatDop(totalPrincipal, { space: true })}</strong></span>
-          <span>Balance pendiente: <strong className="text-[#151918]">{formatDop(totalBalance, { space: true })}</strong></span>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-soft px-6 py-4 text-sm font-medium text-text-secondary">
+          <span>Total colocado: <strong className="text-text-primary">{formatDop(totalPrincipal, { space: true })}</strong></span>
+          <span>Balance pendiente: <strong className="text-text-primary">{formatDop(totalBalance, { space: true })}</strong></span>
         </div>
       ) : null}
     </section>
@@ -249,18 +249,18 @@ export function PortfoliosPage() {
   }, [portfolios]);
 
   return (
-    <main className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
+    <main className="min-h-screen bg-page p-5 font-sans text-text-primary">
       <div className="mx-auto max-w-[1640px]">
         <header className="mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#5C6D63]">GESTION</p>
-            <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#151918]">Carteras</h1>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-secondary">GESTION</p>
+            <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-text-primary">Carteras</h1>
             <p className="mt-1.5 text-base font-medium text-[#7A7F7D]">
               Consulta las carteras creadas, sus clientes y los prestamos asociados.
             </p>
           </div>
           <Link
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-[#285c43]"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-primary"
             href="/prestamos/nuevo"
           >
             <Plus className="h-4 w-4" />
@@ -276,13 +276,13 @@ export function PortfoliosPage() {
         </div>
 
         {error ? (
-          <section className="rounded-2xl border border-[#FADCCB] bg-white p-6 text-sm font-bold text-[#9F3F25] shadow-sm">
+          <section className="rounded-2xl border border-[#FADCCB] bg-white p-6 text-sm font-bold text-state-danger shadow-sm">
             {error}
           </section>
         ) : null}
 
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-sm font-medium text-[#5C6D63]">Cargando carteras...</div>
+          <div className="flex items-center justify-center py-20 text-sm font-medium text-text-secondary">Cargando carteras...</div>
         ) : portfolios.length === 0 ? (
           <EmptyState />
         ) : (

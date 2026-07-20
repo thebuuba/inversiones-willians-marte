@@ -116,12 +116,12 @@ interface HistoryEvent {
 
 function StatusBadge({ active }: { active: boolean }) {
   return active ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-semibold text-[#2f7654]">
-      <span className="h-1.5 w-1.5 rounded-full bg-[#2f7654]" />
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-accent">
+      <span className="h-1.5 w-1.5 rounded-full bg-primary-accent" />
       Activo
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EEF3EF] px-3 py-1 text-xs font-semibold text-neutral-500">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-state-neutral-bg px-3 py-1 text-xs font-semibold text-text-muted">
       <span className="h-1.5 w-1.5 rounded-full bg-neutral-300" />
       Inactivo
     </span>
@@ -136,16 +136,16 @@ function LoanStatusBadge({ status }: { status: string }) {
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
         isPaid
-          ? 'bg-[#eaf5ed] text-[#2f7654]'
+          ? 'bg-primary-soft text-primary-accent'
           : isOverdue
-            ? 'bg-[#fadccb] text-[#9f3f25]'
+            ? 'bg-[#fadccb] text-state-danger'
             : isLate
-              ? 'bg-[#fadccb] text-[#9f3f25]'
-              : 'bg-[#fff1c7] text-[#7a5a0a]'
+              ? 'bg-[#fadccb] text-state-danger'
+              : 'bg-[#fff1c7] text-state-warning'
       }`}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-[#2f7654]' : isOverdue || isLate ? 'bg-[#ff6a00]' : 'bg-[#f3b51b]'}`}
+        className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-primary-accent' : isOverdue || isLate ? 'bg-[#ff6a00]' : 'bg-[#f3b51b]'}`}
       />
       {status}
     </span>
@@ -186,29 +186,29 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
 
   return (
     <div
-      className={`grid min-w-[1220px] cursor-pointer ${loanTableColumns} items-center border-t border-neutral-100 px-5 py-4 text-sm text-neutral-700 transition hover:bg-[#f8fbf9]`}
+      className={`grid min-w-[1220px] cursor-pointer ${loanTableColumns} items-center border-t border-border-soft px-5 py-4 text-sm text-text-secondary transition hover:bg-surface-subtle`}
       onDoubleClick={() => router.push(`/prestamos/${loan.id}`)}
       title="Doble clic para abrir el préstamo"
     >
-      <span className="font-semibold text-neutral-900">{loan.loanNumber}</span>
-      <span className="font-semibold tabular-nums text-neutral-900">
+      <span className="font-semibold text-text-primary">{loan.loanNumber}</span>
+      <span className="font-semibold tabular-nums text-text-primary">
         {fmt(nextInstallmentAmount)}
       </span>
       <span className="tabular-nums">{fmtDate(nextDueDate ?? loan.endDate ?? loan.startDate)}</span>
       <span>
         <LoanStatusBadge status={statusLabel} />
       </span>
-      <span className="truncate font-medium text-neutral-900">{clientName}</span>
+      <span className="truncate font-medium text-text-primary">{clientName}</span>
       <span>{frequency}</span>
-      <span className="font-semibold tabular-nums text-neutral-900">{fmt(loan.principal)}</span>
-      <span className="font-semibold tabular-nums text-neutral-900">
+      <span className="font-semibold tabular-nums text-text-primary">{fmt(loan.principal)}</span>
+      <span className="font-semibold tabular-nums text-text-primary">
         {paidInstallments}/{loan.term}
       </span>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <button
             type="button"
-            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-text-subtle hover:bg-state-neutral-bg hover:text-text-secondary"
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>
@@ -217,12 +217,12 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
           <DropdownMenu.Content
             align="end"
             sideOffset={4}
-            className="z-50 min-w-44 overflow-hidden rounded-2xl border border-neutral-100 bg-white p-1.5 shadow-lg"
+            className="z-50 min-w-44 overflow-hidden rounded-2xl border border-border-soft bg-white p-1.5 shadow-lg"
           >
             <DropdownMenu.Item asChild>
               <Link
                 href={`/prestamos/${loan.id}`}
-                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-neutral-700 outline-none hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
               >
                 <Eye className="h-4 w-4" />
                 Detalle
@@ -231,7 +231,7 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
             <DropdownMenu.Item asChild>
               <Link
                 href={`/prestamos/cobrar?loanId=${loan.id}`}
-                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-neutral-700 outline-none hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
               >
                 <CreditCard className="h-4 w-4" />
                 Cobrar
@@ -240,13 +240,13 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
             <DropdownMenu.Item asChild>
               <Link
                 href={`/prestamos/${loan.id}/editar`}
-                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-neutral-700 outline-none hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
               >
                 <Pencil className="h-4 w-4" />
                 Editar préstamo
               </Link>
             </DropdownMenu.Item>
-            <DropdownMenu.Separator className="mx-2 my-1 border-t border-neutral-100" />
+            <DropdownMenu.Separator className="mx-2 my-1 border-t border-border-soft" />
             <DropdownMenu.Item
               disabled={deletingLoan}
               className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-red-600 outline-none hover:bg-red-50"
@@ -264,27 +264,27 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
 
 function ClientLoansTab({ loans, clientName, onDeleteLoan }: { loans: LoanSummary[]; clientName: string; onDeleteLoan: (loanId: string) => void }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
+    <div className="overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-border-soft px-5 py-4">
         <div>
-          <h3 className="text-sm font-bold text-neutral-900">Préstamos del cliente</h3>
-          <p className="mt-0.5 text-xs text-neutral-400">
+          <h3 className="text-sm font-bold text-text-primary">Préstamos del cliente</h3>
+          <p className="mt-0.5 text-xs text-text-subtle">
             Selecciona una fila para consultar el préstamo
           </p>
         </div>
-        <span className="rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-bold text-[#2f7654]">
+        <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-accent">
           {loans.length} {loans.length === 1 ? 'préstamo' : 'préstamos'}
         </span>
       </div>
 
       {loans.length === 0 ? (
         <div className="flex min-h-40 items-center justify-center">
-          <p className="text-sm text-neutral-400">Sin préstamos registrados.</p>
+          <p className="text-sm text-text-subtle">Sin préstamos registrados.</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <div
-            className={`grid min-w-[1220px] ${loanTableColumns} bg-[#fafafa] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-neutral-500`}
+            className={`grid min-w-[1220px] ${loanTableColumns} bg-[#fafafa] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted`}
           >
             <span>#</span>
             <span>Cuota</span>
@@ -334,7 +334,7 @@ const processingStatusLabels: Record<
   },
   not_applicable: {
     label: 'No aplica',
-    className: 'bg-neutral-100 text-neutral-500',
+    className: 'bg-state-neutral-bg text-text-muted',
     icon: CircleAlert,
   },
   pending: {
@@ -405,14 +405,14 @@ function DocumentCard({
 
   return (
     <div
-      className="flex cursor-pointer items-center justify-between rounded-2xl border border-neutral-100 bg-white px-5 py-4 shadow-sm transition hover:bg-[#eaf5ed]/30"
+      className="flex cursor-pointer items-center justify-between rounded-2xl border border-border-soft bg-white px-5 py-4 shadow-sm transition hover:bg-primary-soft/30"
       onClick={() => {
         if (doc.fileUrl) void openDocument();
       }}
     >
       <div className="flex min-w-0 flex-1 items-center gap-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf5ed]">
-          <FileText className="h-5 w-5 text-[#2f7654]" />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft">
+          <FileText className="h-5 w-5 text-primary-accent" />
         </div>
         <div className="min-w-0 flex-1">
           {editing ? (
@@ -423,7 +423,7 @@ function DocumentCard({
               <input
                 aria-label="Nuevo nombre del documento"
                 autoFocus
-                className="h-9 min-w-0 flex-1 rounded-xl border border-[#2f7654] bg-white px-3 text-sm font-semibold text-neutral-900 outline-none ring-2 ring-[#eaf5ed]"
+                className="h-9 min-w-0 flex-1 rounded-xl border border-primary-accent bg-white px-3 text-sm font-semibold text-text-primary outline-none ring-2 ring-[#eaf5ed]"
                 disabled={savingName}
                 maxLength={160}
                 onChange={(event) => setDraftName(event.target.value)}
@@ -439,7 +439,7 @@ function DocumentCard({
               />
               <button
                 aria-label="Guardar nombre"
-                className="rounded-full bg-[#2f7654] p-2 text-white transition hover:bg-[#285c43] disabled:opacity-50"
+                className="rounded-full bg-primary-accent p-2 text-white transition hover:bg-primary disabled:opacity-50"
                 disabled={savingName || !draftName.trim()}
                 onClick={() => void saveName()}
                 type="button"
@@ -452,7 +452,7 @@ function DocumentCard({
               </button>
               <button
                 aria-label="Cancelar cambio de nombre"
-                className="rounded-full border border-neutral-200 p-2 text-neutral-500 transition hover:bg-neutral-50"
+                className="rounded-full border border-primary-border p-2 text-text-muted transition hover:bg-surface-subtle"
                 disabled={savingName}
                 onClick={() => {
                   setDraftName(doc.name);
@@ -465,7 +465,7 @@ function DocumentCard({
               </button>
             </div>
           ) : (
-            <p className="truncate text-sm font-semibold text-neutral-900">{doc.name}</p>
+            <p className="truncate text-sm font-semibold text-text-primary">{doc.name}</p>
           )}
           {renameError ? (
             <p className="mt-1 text-xs font-semibold text-red-600">{renameError}</p>
@@ -473,8 +473,8 @@ function DocumentCard({
           {fileError ? (
             <p className="mt-1 text-xs font-semibold text-red-600">{fileError}</p>
           ) : null}
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-            <span className="rounded-full bg-[#eaf5ed] px-2.5 py-0.5 text-xs font-semibold text-[#2f7654]">
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-text-muted">
+            <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-accent">
               {documentTypeLabels[typeKey] ?? typeKey}
             </span>
             {status && StatusIcon ? (
@@ -491,11 +491,11 @@ function DocumentCard({
         </div>
       </div>
 
-      <div className="flex items-center gap-3 text-neutral-400">
+      <div className="flex items-center gap-3 text-text-subtle">
         {!editing ? (
           <button
             aria-label={`Cambiar nombre de ${doc.name}`}
-            className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+            className="rounded-full p-1.5 transition hover:bg-primary-soft hover:text-primary-accent"
             onClick={(event) => {
               event.stopPropagation();
               setDraftName(doc.name);
@@ -510,7 +510,7 @@ function DocumentCard({
         {doc.fileUrl && (
           <button
             aria-label={`Ver ${doc.name}`}
-            className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+            className="rounded-full p-1.5 transition hover:bg-primary-soft hover:text-primary-accent"
             onClick={(e) => {
               e.stopPropagation();
               void openDocument();
@@ -523,7 +523,7 @@ function DocumentCard({
         {doc.fileUrl && (
           <button
             aria-label={`Descargar ${doc.name}`}
-            className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+            className="rounded-full p-1.5 transition hover:bg-primary-soft hover:text-primary-accent"
             onClick={(e) => {
               e.stopPropagation();
               void saveDocument();
@@ -535,7 +535,7 @@ function DocumentCard({
         )}
         <button
           aria-label={`Eliminar ${doc.name}`}
-          className="rounded-full p-1.5 transition hover:bg-[#fde4d4] hover:text-[#9f3f25]"
+          className="rounded-full p-1.5 transition hover:bg-[#fde4d4] hover:text-state-danger"
           onClick={(e) => {
             e.stopPropagation();
             onDelete(doc.id);
@@ -667,21 +667,21 @@ function UploadModal({
         className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="mb-1 text-lg font-bold text-neutral-900">Subir documento</h3>
-        <p className="mb-5 text-sm text-neutral-500">
+        <h3 className="mb-1 text-lg font-bold text-text-primary">Subir documento</h3>
+        <p className="mb-5 text-sm text-text-muted">
           Selecciona un archivo y asigna un nombre opcional.
         </p>
 
         <div className="mb-4 rounded-xl border border-[#d7eadf] bg-[#f4fbf7] p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-neutral-900">Capturar con teléfono</p>
-              <p className="mt-1 text-xs text-neutral-500">
+              <p className="text-sm font-semibold text-text-primary">Capturar con teléfono</p>
+              <p className="mt-1 text-xs text-text-muted">
                 Genera un QR para tomar la foto desde el celular.
               </p>
             </div>
             <button
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2f7654] text-white transition hover:bg-[#285c43] disabled:opacity-50"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-accent text-white transition hover:bg-primary disabled:opacity-50"
               disabled={creatingCaptureSession}
               onClick={handleCreateCaptureSession}
               title="Generar QR de captura"
@@ -705,15 +705,15 @@ function UploadModal({
                 unoptimized
                 width={176}
               />
-              <p className="mt-3 text-xs font-medium text-neutral-600">
+              <p className="mt-3 text-xs font-medium text-text-secondary">
                 {captureReceived
                   ? 'Documento recibido. Cerrando...'
                   : 'Escanea este QR con el teléfono.'}
               </p>
               {captureLimitLabel ? (
-                <p className="mt-1 text-[11px] font-medium text-neutral-500">{captureLimitLabel}</p>
+                <p className="mt-1 text-[11px] font-medium text-text-muted">{captureLimitLabel}</p>
               ) : null}
-              <p className="mt-1 break-all text-[11px] text-neutral-400">{captureUrl}</p>
+              <p className="mt-1 break-all text-[11px] text-text-subtle">{captureUrl}</p>
             </div>
           ) : null}
 
@@ -723,12 +723,12 @@ function UploadModal({
         </div>
 
         <div className="mb-4">
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
             Archivo
           </label>
-          <label className="flex h-24 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50 text-sm text-neutral-400 transition hover:border-[#2f7654] hover:bg-[#eaf5ed]/30">
+          <label className="flex h-24 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-primary-border bg-surface-subtle text-sm text-text-subtle transition hover:border-primary-accent hover:bg-primary-soft/30">
             {file ? (
-              <span className="font-medium text-neutral-700">{file.name}</span>
+              <span className="font-medium text-text-secondary">{file.name}</span>
             ) : (
               <span>Haz clic para seleccionar un archivo</span>
             )}
@@ -742,11 +742,11 @@ function UploadModal({
         </div>
 
         <div className="mb-6">
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
             Nombre <span className="text-neutral-300">(opcional)</span>
           </label>
           <input
-            className="h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-[#2f7654] focus:ring-2 focus:ring-[#eaf5ed]"
+            className="h-11 w-full rounded-xl border border-primary-border bg-white px-4 text-sm text-text-primary outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-[#eaf5ed]"
             onChange={(e) => setName(e.target.value)}
             placeholder="Nombre del documento"
             value={name}
@@ -755,7 +755,7 @@ function UploadModal({
 
         <div className="flex justify-end gap-3">
           <button
-            className="h-10 rounded-full border border-neutral-200 bg-white px-5 text-sm font-semibold text-neutral-600 transition hover:bg-neutral-50"
+            className="h-10 rounded-full border border-primary-border bg-white px-5 text-sm font-semibold text-text-secondary transition hover:bg-surface-subtle"
             disabled={uploading}
             onClick={closeModal}
             type="button"
@@ -763,7 +763,7 @@ function UploadModal({
             Cancelar
           </button>
           <button
-            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm font-semibold text-white transition hover:bg-[#285c43] disabled:opacity-50"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white transition hover:bg-primary disabled:opacity-50"
             disabled={!file || uploading}
             onClick={handleSubmit}
             type="button"
@@ -831,9 +831,9 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
   return (
     <div>
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <p className="text-sm text-neutral-500">{documents.length} documentos archivados</p>
+        <p className="text-sm text-text-muted">{documents.length} documentos archivados</p>
         <button
-          className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm text-white hover:bg-[#285c43]"
+          className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm text-white hover:bg-primary"
           onClick={() => setShowModal(true)}
           type="button"
         >
@@ -853,7 +853,7 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {documents.length === 0 ? (
-          <p className="py-12 text-center text-sm text-neutral-400 lg:col-span-2">
+          <p className="py-12 text-center text-sm text-text-subtle lg:col-span-2">
             Sin documentos adjuntos.
           </p>
         ) : (
@@ -893,7 +893,7 @@ function TimelineItem({ event }: { event: HistoryEvent }) {
         </span>
       </div>
 
-      <div className="rounded-2xl border border-neutral-100 bg-white px-5 py-3.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="rounded-2xl border border-border-soft bg-white px-5 py-3.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="mb-1.5 flex flex-wrap items-center gap-2.5">
@@ -904,14 +904,14 @@ function TimelineItem({ event }: { event: HistoryEvent }) {
                 {event.type}
               </span>
               {event.amount && (
-                <span className="text-sm font-bold text-[#2f7654]">{event.amount}</span>
+                <span className="text-sm font-bold text-primary-accent">{event.amount}</span>
               )}
             </div>
-            <h3 className="text-sm font-medium text-neutral-900">{event.title}</h3>
-            {event.detail ? <p className="mt-1 text-xs text-neutral-600">{event.detail}</p> : null}
-            <p className="mt-1 text-xs text-neutral-500">{event.author}</p>
+            <h3 className="text-sm font-medium text-text-primary">{event.title}</h3>
+            {event.detail ? <p className="mt-1 text-xs text-text-secondary">{event.detail}</p> : null}
+            <p className="mt-1 text-xs text-text-muted">{event.author}</p>
           </div>
-          <time className="shrink-0 text-xs text-neutral-400">{event.date}</time>
+          <time className="shrink-0 text-xs text-text-subtle">{event.date}</time>
         </div>
       </div>
     </div>
@@ -924,9 +924,9 @@ function ClientHistoryTab({ events, loading }: { events: HistoryEvent[]; loading
       <div className="absolute bottom-0 left-[14px] top-0 w-px bg-neutral-200" />
       <div className="space-y-6">
         {loading ? (
-          <p className="py-12 text-center text-sm text-neutral-400">Cargando historial...</p>
+          <p className="py-12 text-center text-sm text-text-subtle">Cargando historial...</p>
         ) : events.length === 0 ? (
-          <p className="py-12 text-center text-sm text-neutral-400">Sin actividad registrada.</p>
+          <p className="py-12 text-center text-sm text-text-subtle">Sin actividad registrada.</p>
         ) : (
           events.map((event, index) => (
             <TimelineItem event={event} key={`${event.type}-${event.date}-${index}`} />
@@ -939,7 +939,7 @@ function ClientHistoryTab({ events, loading }: { events: HistoryEvent[]; loading
 
 function NoteIcon() {
   return (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fef3c7] text-[#7a5a0a]">
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fef3c7] text-state-warning">
       <FileText className="h-4 w-4" />
     </span>
   );
@@ -949,7 +949,7 @@ function NoteActions({ onCancel, onSave }: { onCancel: () => void; onSave: () =>
   return (
     <div className="flex flex-col justify-end gap-2 sm:flex-row">
       <button
-        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 text-sm font-semibold text-neutral-600 transition hover:bg-neutral-50"
+        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-primary-border bg-white px-4 text-sm font-semibold text-text-secondary transition hover:bg-surface-subtle"
         onClick={onCancel}
         type="button"
       >
@@ -957,7 +957,7 @@ function NoteActions({ onCancel, onSave }: { onCancel: () => void; onSave: () =>
         Cancelar
       </button>
       <button
-        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#2f7654] px-4 text-sm font-semibold text-white transition hover:bg-[#285c43]"
+        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-primary-accent px-4 text-sm font-semibold text-white transition hover:bg-primary"
         onClick={onSave}
         type="button"
       >
@@ -980,7 +980,7 @@ function NoteTextarea({
   return (
     <textarea
       autoFocus
-      className="h-[78px] w-full resize-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium leading-relaxed text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-[#2f7654] focus:ring-2 focus:ring-[#eaf5ed]"
+      className="h-[78px] w-full resize-none rounded-xl border border-primary-border bg-white px-4 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-[#eaf5ed]"
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
       value={value}
@@ -1002,13 +1002,13 @@ function EditableNoteCard({
   onSave: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-[#2f7654] bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-primary-accent bg-white p-4 shadow-sm">
       <div className="grid grid-cols-[36px_1fr] gap-4">
         <NoteIcon />
         <div>
           <NoteTextarea onChange={onChange} placeholder="Escribe una nota..." value={value} />
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-text-muted">
               {note ? `${note.author} · ${note.date}` : ''}
             </p>
             <NoteActions onCancel={onCancel} onSave={onSave} />
@@ -1029,20 +1029,20 @@ function NoteCard({
   onDelete: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl border border-neutral-100 bg-white px-5 py-4 shadow-sm transition hover:bg-[#eaf5ed]/30">
+    <div className="flex items-center justify-between gap-4 rounded-2xl border border-border-soft bg-white px-5 py-4 shadow-sm transition hover:bg-primary-soft/30">
       <div className="flex min-w-0 items-center gap-4">
         <NoteIcon />
         <div className="min-w-0">
-          <p className="text-sm font-medium leading-relaxed text-neutral-900">{note.text}</p>
-          <p className="mt-1.5 text-xs text-neutral-500">
+          <p className="text-sm font-medium leading-relaxed text-text-primary">{note.text}</p>
+          <p className="mt-1.5 text-xs text-text-muted">
             {note.author} · {note.date}
           </p>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-3 text-neutral-400">
+      <div className="flex shrink-0 items-center gap-3 text-text-subtle">
         <button
           aria-label="Editar nota"
-          className="rounded-full p-1.5 transition hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+          className="rounded-full p-1.5 transition hover:bg-primary-soft hover:text-primary-accent"
           onClick={onEdit}
           type="button"
         >
@@ -1050,7 +1050,7 @@ function NoteCard({
         </button>
         <button
           aria-label="Eliminar nota"
-          className="rounded-full p-1.5 transition hover:bg-[#fde4d4] hover:text-[#9f3f25]"
+          className="rounded-full p-1.5 transition hover:bg-[#fde4d4] hover:text-state-danger"
           onClick={onDelete}
           type="button"
         >
@@ -1086,9 +1086,9 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
 
   const summary = [
     { label: 'Préstamos activos', value: activeLoans.length, color: 'text-blue-600' },
-    { label: 'Préstamos pagados', value: paidLoans.length, color: 'text-[#2f7654]' },
-    { label: 'Capital total prestado', value: fmt(totalPrincipal), color: 'text-neutral-900' },
-    { label: 'Balance total pendiente', value: fmt(totalBalance), color: 'text-[#9F3F25]' },
+    { label: 'Préstamos pagados', value: paidLoans.length, color: 'text-primary-accent' },
+    { label: 'Capital total prestado', value: fmt(totalPrincipal), color: 'text-text-primary' },
+    { label: 'Balance total pendiente', value: fmt(totalBalance), color: 'text-state-danger' },
     { label: 'Cuotas vencidas', value: overdueLoans.length, color: 'text-red-600' },
   ];
 
@@ -1098,9 +1098,9 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
         {summary.map((s) => (
           <div
             key={s.label}
-            className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm"
+            className="rounded-2xl border border-border-soft bg-white p-5 shadow-sm"
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
               {s.label}
             </p>
             <p className={`mt-2 text-2xl font-bold ${s.color}`}>{s.value}</p>
@@ -1109,12 +1109,12 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
       </div>
 
       {loans.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
-          <div className="border-b border-neutral-100 px-5 py-4">
-            <h3 className="text-sm font-bold text-neutral-900">Detalle de préstamos</h3>
+        <div className="overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm">
+          <div className="border-b border-border-soft px-5 py-4">
+            <h3 className="text-sm font-bold text-text-primary">Detalle de préstamos</h3>
           </div>
           <div className="overflow-x-auto">
-            <div className="grid min-w-[800px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-[#fafafa] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-neutral-500">
+            <div className="grid min-w-[800px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-[#fafafa] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">
               <span># Préstamo</span>
               <span>Capital</span>
               <span>Balance</span>
@@ -1125,13 +1125,13 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
             {loans.map((loan) => (
               <div
                 key={loan.id}
-                className="grid min-w-[800px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] gap-4 border-t border-neutral-50 px-5 py-3 text-sm"
+                className="grid min-w-[800px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] gap-4 border-t border-border-soft px-5 py-3 text-sm"
               >
-                <span className="font-medium text-neutral-900">{loan.loanNumber}</span>
-                <span className="text-neutral-700">{fmt(loan.principal)}</span>
-                <span className="text-neutral-700">{fmt(loan.balance)}</span>
-                <span className="text-neutral-700">{loan.term} cuotas</span>
-                <span className="text-neutral-700">
+                <span className="font-medium text-text-primary">{loan.loanNumber}</span>
+                <span className="text-text-secondary">{fmt(loan.principal)}</span>
+                <span className="text-text-secondary">{fmt(loan.balance)}</span>
+                <span className="text-text-secondary">{loan.term} cuotas</span>
+                <span className="text-text-secondary">
                   {loan.paymentFreq === 'WEEKLY'
                     ? 'Semanal'
                     : loan.paymentFreq === 'BIWEEKLY'
@@ -1143,8 +1143,8 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
                     loan.status === 'ACTIVE'
                       ? 'text-blue-600'
                       : loan.status === 'PAID'
-                        ? 'text-[#2f7654]'
-                        : 'text-neutral-400'
+                        ? 'text-primary-accent'
+                        : 'text-text-subtle'
                   }`}
                 >
                   {loan.status === 'ACTIVE'
@@ -1242,9 +1242,9 @@ function ClientNotesTab({
   return (
     <div>
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <p className="text-sm text-neutral-500">{notes.length} notas</p>
+        <p className="text-sm text-text-muted">{notes.length} notas</p>
         <button
-          className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm text-white hover:bg-[#285c43]"
+          className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm text-white hover:bg-primary"
           onClick={startCreate}
           type="button"
         >
@@ -1297,15 +1297,15 @@ function ClientInfoGrid({ clientData }: { clientData: ClientDetail }) {
   const cards = buildInfoCards(clientData);
 
   return (
-    <div className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
-      <h3 className="mb-5 text-base font-semibold text-neutral-900">Información personal</h3>
+    <div className="rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
+      <h3 className="mb-5 text-base font-semibold text-text-primary">Información personal</h3>
       <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => (
           <div key={card.label}>
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
               {card.label}
             </p>
-            <p className="mt-1 text-sm font-semibold text-neutral-900">{card.value}</p>
+            <p className="mt-1 text-sm font-semibold text-text-primary">{card.value}</p>
           </div>
         ))}
       </div>
@@ -1393,17 +1393,17 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F3F4F6] font-sans">
-        <p className="text-sm font-medium text-neutral-400">Cargando...</p>
+      <div className="flex min-h-screen items-center justify-center bg-page font-sans">
+        <p className="text-sm font-medium text-text-subtle">Cargando...</p>
       </div>
     );
   }
 
   if (!clientData) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#F3F4F6] font-sans">
-        <p className="text-sm font-medium text-neutral-400">Cliente no encontrado.</p>
-        <Link className="mt-4 text-sm font-bold text-[#2f7654] underline" href="/clientes">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-page font-sans">
+        <p className="text-sm font-medium text-text-subtle">Cliente no encontrado.</p>
+        <Link className="mt-4 text-sm font-bold text-primary-accent underline" href="/clientes">
           Volver a clientes
         </Link>
       </div>
@@ -1466,17 +1466,17 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] font-sans">
+    <div className="min-h-screen bg-page font-sans">
       <div className="mx-auto max-w-[1720px] px-6 py-8">
         <Link
-          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#2f7654] hover:text-[#2f7654]"
+          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-primary-accent hover:text-primary-accent"
           href="/clientes"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver a clientes
         </Link>
 
-        <div className="mb-6 overflow-hidden rounded-3xl bg-white shadow-sm border border-neutral-100">
+        <div className="mb-6 overflow-hidden rounded-3xl bg-white shadow-sm border border-border-soft">
           <div className="px-8 pt-6 pb-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div className="flex items-end gap-5">
@@ -1488,19 +1488,19 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                     style={{ backgroundImage: `url(${clientData.photo})` }}
                   />
                 ) : (
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-[#eaf5ed] shadow-md">
-                    <UserRound className="h-8 w-8 text-[#2f7654]" />
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-primary-soft shadow-md">
+                    <UserRound className="h-8 w-8 text-primary-accent" />
                   </div>
                 )}
                 <div className="pb-1">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-bold text-neutral-900">{fullName}</h1>
+                    <h1 className="text-2xl font-bold text-text-primary">{fullName}</h1>
                     <StatusBadge active={clientData.active} />
                   </div>
-                  <p className="mt-0.5 text-sm text-neutral-500">
+                  <p className="mt-0.5 text-sm text-text-muted">
                     {clientData.identification ?? '—'}
                   </p>
-                  <div className="mt-2 flex flex-wrap gap-3 text-xs text-neutral-500">
+                  <div className="mt-2 flex flex-wrap gap-3 text-xs text-text-muted">
                     {clientData.phone && (
                       <span className="flex items-center gap-1">
                         <Phone className="h-3.5 w-3.5" /> {clientData.phone}
@@ -1519,7 +1519,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                   <DropdownMenu.Trigger asChild>
                     <button
                       type="button"
-                      className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#2f7654] px-5 text-sm font-semibold text-white hover:bg-[#285c43]"
+                      className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white hover:bg-primary"
                     >
                       <ChevronDown className="h-4 w-4" />
                       Acciones
@@ -1529,12 +1529,12 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                     <DropdownMenu.Content
                       align="end"
                       sideOffset={6}
-                      className="z-50 min-w-52 overflow-hidden rounded-2xl border border-neutral-100 bg-white p-1.5 shadow-lg"
+                      className="z-50 min-w-52 overflow-hidden rounded-2xl border border-border-soft bg-white p-1.5 shadow-lg"
                     >
                       <DropdownMenu.Item asChild>
                         <Link
                           href={`/clientes/${clientId}/editar`}
-                          className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-neutral-700 outline-none hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+                          className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
                         >
                           <Pencil className="h-4 w-4" />
                           Editar cliente
@@ -1544,7 +1544,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                         <DropdownMenu.Item asChild>
                           <Link
                             href={`/prestamos/${firstActiveLoan.id}/editar`}
-                            className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-neutral-700 outline-none hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+                            className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
                           >
                             <CreditCard className="h-4 w-4" />
                             Editar préstamo
@@ -1554,13 +1554,13 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                       <DropdownMenu.Item asChild>
                         <Link
                           href={`/prestamos/nuevo?cliente=${clientId}`}
-                          className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-neutral-700 outline-none hover:bg-[#eaf5ed] hover:text-[#2f7654]"
+                          className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
                         >
                           <Plus className="h-4 w-4" />
                           Nuevo préstamo
                         </Link>
                       </DropdownMenu.Item>
-                      <DropdownMenu.Separator className="mx-2 my-1 border-t border-neutral-100" />
+                      <DropdownMenu.Separator className="mx-2 my-1 border-t border-border-soft" />
                       <DropdownMenu.Item
                         disabled={deleting}
                         className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-red-600 outline-none hover:bg-red-50"
@@ -1583,7 +1583,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
             return (
               <div
                 key={k.label}
-                className="rounded-2xl bg-white p-5 shadow-sm border border-neutral-100"
+                className="rounded-2xl bg-white p-5 shadow-sm border border-border-soft"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -1593,8 +1593,8 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-neutral-500">{k.label}</p>
-                    <p className="mt-0.5 text-base font-bold text-neutral-900">{k.value}</p>
+                    <p className="text-xs font-medium text-text-muted">{k.label}</p>
+                    <p className="mt-0.5 text-base font-bold text-text-primary">{k.value}</p>
                   </div>
                 </div>
               </div>
@@ -1602,7 +1602,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
           })}
         </div>
 
-        <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-white p-1.5 shadow-sm border border-neutral-100">
+        <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-white p-1.5 shadow-sm border border-border-soft">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = activeTab === t.label;
@@ -1612,8 +1612,8 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                 onClick={() => setActiveTab(t.label)}
                 className={`flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold transition ${
                   active
-                    ? 'bg-[#2f7654] text-white shadow-sm'
-                    : 'text-neutral-500 hover:bg-[#eaf5ed] hover:text-[#2f7654]'
+                    ? 'bg-primary-accent text-white shadow-sm'
+                    : 'text-text-muted hover:bg-primary-soft hover:text-primary-accent'
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -1622,7 +1622,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                   <span
                     aria-label={`${notesCount} notas`}
                     className={`flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold ${
-                      active ? 'bg-white text-[#9F3F25]' : 'bg-[#FFE3D2] text-[#9F3F25]'
+                      active ? 'bg-white text-state-danger' : 'bg-[#FFE3D2] text-state-danger'
                     }`}
                   >
                     {notesCount}

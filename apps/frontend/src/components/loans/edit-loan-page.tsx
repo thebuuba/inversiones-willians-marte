@@ -61,7 +61,7 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F3F4F6] text-sm font-medium text-neutral-500">
+      <main className="flex min-h-screen items-center justify-center bg-page text-sm font-medium text-text-muted">
         Cargando préstamo...
       </main>
     );
@@ -69,10 +69,10 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
 
   if (!loan) {
     return (
-      <main className="min-h-screen bg-[#F3F4F6] p-5">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
+      <main className="min-h-screen bg-page p-5">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
           <p className="text-sm font-medium text-red-600">{error ?? 'Préstamo no encontrado.'}</p>
-          <Link className="mt-4 inline-flex text-sm font-bold text-[#2f7654]" href="/prestamos">
+          <Link className="mt-4 inline-flex text-sm font-bold text-primary-accent" href="/prestamos">
             Volver a préstamos
           </Link>
         </div>
@@ -81,20 +81,20 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-[#F3F4F6]">
+    <main className="min-h-screen bg-page">
       <div className="mx-auto max-w-2xl px-6 py-8">
         <Link
-          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#2f7654] hover:text-[#2f7654]"
+          className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-primary-accent hover:text-primary-accent"
           href={`/prestamos/${loanId}`}
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver al préstamo
         </Link>
 
-        <div className="rounded-3xl bg-white shadow-sm border border-neutral-100">
-          <div className="border-b border-neutral-100 px-8 py-6">
-            <h1 className="text-xl font-bold text-neutral-900">Editar préstamo</h1>
-            <p className="mt-1 text-sm text-neutral-400">
+        <div className="rounded-3xl bg-white shadow-sm border border-border-soft">
+          <div className="border-b border-border-soft px-8 py-6">
+            <h1 className="text-xl font-bold text-text-primary">Editar préstamo</h1>
+            <p className="mt-1 text-sm text-text-subtle">
               #{loan.loanNumber} — {loan.client.firstName} {loan.client.lastName}
             </p>
           </div>
@@ -105,22 +105,22 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
             )}
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-xl bg-neutral-50 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Capital</p>
-                <p className="mt-1 text-lg font-bold text-neutral-900">{fmt(loan.principal)}</p>
+              <div className="rounded-xl bg-surface-subtle px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">Capital</p>
+                <p className="mt-1 text-lg font-bold text-text-primary">{fmt(loan.principal)}</p>
               </div>
-              <div className="rounded-xl bg-neutral-50 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Balance</p>
-                <p className="mt-1 text-lg font-bold text-neutral-900">{fmt(loan.balance)}</p>
+              <div className="rounded-xl bg-surface-subtle px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">Balance</p>
+                <p className="mt-1 text-lg font-bold text-text-primary">{fmt(loan.balance)}</p>
               </div>
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-neutral-700">Estado</label>
+              <label className="mb-1.5 block text-sm font-semibold text-text-secondary">Estado</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm text-neutral-900 outline-none focus:border-[#2f7654] focus:ring-1 focus:ring-[#2f7654]"
+                className="w-full appearance-none rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent focus:ring-1 focus:ring-primary-accent"
               >
                 {statusOptions.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -131,7 +131,7 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-neutral-700">
+              <label className="mb-1.5 block text-sm font-semibold text-text-secondary">
                 Tasa de interés (%)
               </label>
               <input
@@ -140,28 +140,28 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
                 min="0"
                 value={interestRate}
                 onChange={(e) => setInterestRate(e.target.value)}
-                className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm text-neutral-900 outline-none focus:border-[#2f7654] focus:ring-1 focus:ring-[#2f7654]"
+                className="w-full rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent focus:ring-1 focus:ring-primary-accent"
               />
-              <p className="mt-1 text-xs text-neutral-400">
+              <p className="mt-1 text-xs text-text-subtle">
                 La tasa actual es {Number(loan.interestRate)}%. Cambiarla no recalcula el calendario de pagos existente.
               </p>
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-neutral-700">Notas</label>
+              <label className="mb-1.5 block text-sm font-semibold text-text-secondary">Notas</label>
               <textarea
                 rows={4}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Notas del préstamo..."
-                className="w-full resize-none rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm text-neutral-900 outline-none focus:border-[#2f7654] focus:ring-1 focus:ring-[#2f7654]"
+                className="w-full resize-none rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent focus:ring-1 focus:ring-primary-accent"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 border-t border-neutral-100 px-8 py-5">
+          <div className="flex items-center justify-end gap-3 border-t border-border-soft px-8 py-5">
             <Link
-              className="inline-flex h-10 items-center rounded-full border border-neutral-200 bg-white px-5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+              className="inline-flex h-10 items-center rounded-full border border-primary-border bg-white px-5 text-sm font-semibold text-text-secondary hover:bg-surface-subtle"
               href={`/prestamos/${loanId}`}
             >
               Cancelar
@@ -170,7 +170,7 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
               type="button"
               disabled={saving}
               onClick={handleSave}
-              className="inline-flex h-10 items-center gap-2 rounded-full bg-[#2f7654] px-6 text-sm font-semibold text-white hover:bg-[#285c43] disabled:opacity-50"
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-semibold text-white hover:bg-primary disabled:opacity-50"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {saving ? 'Guardando...' : 'Guardar cambios'}

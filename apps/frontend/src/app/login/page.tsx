@@ -42,14 +42,14 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-[#F4F5F6] px-5 py-8 font-sans text-[#1F4A36]">
+    <main className="flex min-h-dvh items-center justify-center bg-page px-5 py-8 font-sans text-text-primary">
       <div className="w-full max-w-[420px]">
         <div className="mb-8 text-center">
-          <div className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-[18px] bg-[#E9F4EE] text-base font-bold text-[#285C43] shadow-[0_10px_24px_rgba(40,92,67,0.06)]">
+          <div className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-[18px] bg-[#E9F4EE] text-base font-bold text-primary shadow-[0_10px_24px_rgba(40,92,67,0.06)]">
             WM
           </div>
-          <h1 className="mt-5 text-[26px] font-bold leading-tight text-[#173D2C]">Willians Marte</h1>
-          <p className="mt-2 text-[15px] font-medium text-[#687A70]">
+          <h1 className="mt-5 text-[26px] font-bold leading-tight text-text-primary">Willians Marte</h1>
+          <p className="mt-2 text-[15px] font-medium text-text-secondary">
             Sistema de Préstamos · Ingresa tus credenciales
           </p>
         </div>
@@ -66,10 +66,10 @@ export default function LoginPage() {
 
           <div className="space-y-5">
             <div>
-              <label htmlFor="username" className="mb-2.5 block text-[14px] font-bold text-[#173D2C]">
+              <label htmlFor="username" className="mb-2.5 block text-[14px] font-bold text-text-primary">
                 Nombre de usuario
               </label>
-              <div className="flex h-[48px] items-center rounded-[14px] border border-[#E4EBE7] bg-[#FBFCFC] px-4 transition-colors focus-within:border-[#B9C8BD] focus-within:ring-2 focus-within:ring-[#E7F4EC]">
+              <div className="flex h-[48px] items-center rounded-[14px] border border-[#E4EBE7] bg-[#FBFCFC] px-4 transition-colors focus-within:border-[#B9C8BD] focus-within:ring-2 focus-within:ring-primary-soft">
                 <input
                   id="username"
                   type="text"
@@ -77,24 +77,24 @@ export default function LoginPage() {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="usuario"
                   required
-                  className="h-full flex-1 bg-transparent text-[15px] font-medium text-[#173D2C] outline-none placeholder:text-[#A1AAA5]"
+                  className="h-full flex-1 bg-transparent text-[15px] font-medium text-text-primary outline-none placeholder:text-text-subtle"
                 />
               </div>
             </div>
 
             <div>
               <div className="mb-2.5 flex items-center justify-between gap-4">
-                <label htmlFor="password" className="block text-[14px] font-bold text-[#173D2C]">
+                <label htmlFor="password" className="block text-[14px] font-bold text-text-primary">
                   Contraseña
                 </label>
                 <button
                   type="button"
-                  className="text-[13px] font-medium text-[#2F7654] transition-colors hover:text-[#173D2C]"
+                  className="text-[13px] font-medium text-primary-accent transition-colors hover:text-text-primary"
                 >
                   ¿Olvidaste tu contraseña?
                 </button>
               </div>
-              <div className="flex h-[48px] items-center gap-3 rounded-[14px] border border-[#E4EBE7] bg-[#FBFCFC] px-4 transition-colors focus-within:border-[#B9C8BD] focus-within:ring-2 focus-within:ring-[#E7F4EC]">
+              <div className="flex h-[48px] items-center gap-3 rounded-[14px] border border-[#E4EBE7] bg-[#FBFCFC] px-4 transition-colors focus-within:border-[#B9C8BD] focus-within:ring-2 focus-within:ring-primary-soft">
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -102,12 +102,12 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="h-full flex-1 bg-transparent text-[15px] font-medium tracking-[0.18em] text-[#173D2C] outline-none placeholder:text-[#A1AAA5]"
+                  className="h-full flex-1 bg-transparent text-[15px] font-medium tracking-[0.18em] text-text-primary outline-none placeholder:text-text-subtle"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((value) => !value)}
-                  className="text-[#7A8780] transition-colors hover:text-[#2F7654]"
+                  className="text-text-muted transition-colors hover:text-primary-accent"
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
                   <Eye className="h-4 w-4" aria-hidden="true" />
@@ -125,11 +125,11 @@ export default function LoginPage() {
           </div>
         </form>
 
-        <p className="mt-7 text-center text-[13px] font-medium text-[#687A70]">
+        <p className="mt-7 text-center text-[13px] font-medium text-text-secondary">
           ¿Problemas para acceder?{' '}
           <button
             type="button"
-            className="font-bold text-[#2F7654] transition-colors hover:text-[#173D2C]"
+            className="font-bold text-primary-accent transition-colors hover:text-text-primary"
           >
             Contactar soporte
           </button>

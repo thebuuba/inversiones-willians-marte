@@ -1,6 +1,5 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import {
   CheckCircle2,
@@ -22,32 +21,23 @@ import {
   pageEntryTableClassName,
 } from '@/lib/page-entry-animation';
 import type { LoanRequestItem, CreateRequestDto } from '@inversiones/shared';
+import { Badge } from '@/components/ui/badge';
+import { Card as PanelCard } from '@/components/ui/card';
 
-const statusMap: Record<string, { label: string; bg: string; text: string }> = {
-  PENDING: { label: 'Pendiente', bg: '#fff4c8', text: '#7a5a0a' },
-  UNDER_REVIEW: { label: 'En revisión', bg: '#e4f0ff', text: '#2f5f91' },
-  APPROVED: { label: 'Aprobada', bg: '#e7f4ec', text: 'var(--primary-accent)' },
-  REJECTED: { label: 'Rechazada', bg: '#ffe8d8', text: '#9f3f25' },
+const statusLabels: Record<string, string> = {
+  PENDING: 'Pendiente',
+  UNDER_REVIEW: 'En revisión',
+  APPROVED: 'Aprobada',
+  REJECTED: 'Rechazada',
 };
 
-function PanelCard({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return (
-    <section className={`rounded-2xl border border-[var(--border-soft)] bg-white shadow-sm ${className}`}>
-      {children}
-    </section>
-  );
-}
-
 function StatusBadge({ status }: { status: string }) {
-  const style = statusMap[status] ?? { label: status, bg: '#eef3ef', text: '#5c6d63' };
+  const label = statusLabels[status] ?? status;
 
   return (
-    <span
-      className="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-bold"
-      style={{ backgroundColor: style.bg, color: style.text }}
-    >
-      {style.label}
-    </span>
+    <Badge className="px-3 py-1.5" status={label}>
+      {label}
+    </Badge>
   );
 }
 
@@ -72,7 +62,7 @@ function EmptyPendingState({ onCreate }: { onCreate: () => void }) {
           Las nuevas solicitudes de préstamo aparecerán aquí
         </p>
         <button
-          className="mt-5 flex h-11 items-center gap-2 rounded-full border border-[var(--primary-border)] bg-white px-5 text-sm font-bold text-[var(--text-secondary)] transition-colors duration-150 hover:bg-[#f9fbfa] hover:text-[var(--text-primary)] active:scale-[0.98]"
+          className="mt-5 flex h-11 items-center gap-2 rounded-full border border-[var(--primary-border)] bg-white px-5 text-sm font-bold text-[var(--text-secondary)] transition-colors duration-150 hover:bg-surface-subtle hover:text-[var(--text-primary)] active:scale-[0.98]"
           onClick={onCreate}
           type="button"
         >
@@ -140,7 +130,7 @@ export function RequestsPanel() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[var(--text-primary)]">
+    <div className="min-h-screen bg-page p-5 font-sans text-[var(--text-primary)]">
       <header
         className={`${pageEntryHeaderClassName} mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end`}
       >
@@ -182,7 +172,7 @@ export function RequestsPanel() {
       <div className={pageEntryTableClassName}>
         <PanelCard className="mb-5 p-3.5">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-            <div className="flex h-10 flex-1 items-center gap-3 rounded-full border border-[var(--primary-border)] bg-[#F8FBF9] px-4 text-[var(--text-secondary)] xl:max-w-[380px]">
+            <div className="flex h-10 flex-1 items-center gap-3 rounded-full border border-[var(--primary-border)] bg-surface-subtle px-4 text-[var(--text-secondary)] xl:max-w-[380px]">
               <Search className="h-4 w-4 shrink-0" />
               <span className="truncate text-sm">Buscar por nombre o cédula...</span>
             </div>
@@ -201,7 +191,7 @@ export function RequestsPanel() {
               <article
                 key={request.id}
                 onClick={() => setSelectedRequest(request)}
-                className="flex min-h-[86px] cursor-pointer flex-col items-stretch gap-4 rounded-[18px] border border-[var(--border-soft)] bg-white px-5 py-4 shadow-[0_7px_22px_rgba(40,92,67,0.03)] transition-colors duration-150 hover:bg-[#f9fbfa] hover:shadow-[0_14px_32px_rgba(40,92,67,0.075)] sm:flex-row sm:items-center"
+                className="flex min-h-[86px] cursor-pointer flex-col items-stretch gap-4 rounded-[18px] border border-[var(--border-soft)] bg-white px-5 py-4 shadow-[0_7px_22px_rgba(40,92,67,0.03)] transition-colors duration-150 hover:bg-surface-subtle hover:shadow-[0_14px_32px_rgba(40,92,67,0.075)] sm:flex-row sm:items-center"
               >
                 <div className="flex min-w-0 flex-1 items-center gap-4">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary-accent)]">
@@ -233,7 +223,7 @@ export function RequestsPanel() {
           <div className="overflow-hidden" style={{ backgroundColor: '#F3F4F6' }}>
             <button
               onClick={() => setHistoryOpen((v) => !v)}
-              className="flex w-full cursor-pointer items-center justify-between rounded-xl px-5 py-4 text-left transition-colors duration-150 hover:bg-[#f9fbfa]"
+              className="flex w-full cursor-pointer items-center justify-between rounded-xl px-5 py-4 text-left transition-colors duration-150 hover:bg-surface-subtle"
               type="button"
             >
               <div className="flex items-center gap-2">
@@ -248,10 +238,10 @@ export function RequestsPanel() {
                   <article
                     key={request.id}
                     onClick={() => setSelectedRequest(request)}
-                    className="flex min-h-[86px] cursor-pointer flex-col items-stretch gap-4 rounded-[18px] border border-[var(--border-soft)] bg-white px-5 py-4 shadow-[0_7px_22px_rgba(40,92,67,0.03)] transition-colors duration-150 hover:bg-[#f9fbfa] hover:shadow-[0_14px_32px_rgba(40,92,67,0.075)] sm:flex-row sm:items-center"
+                    className="flex min-h-[86px] cursor-pointer flex-col items-stretch gap-4 rounded-[18px] border border-[var(--border-soft)] bg-white px-5 py-4 shadow-[0_7px_22px_rgba(40,92,67,0.03)] transition-colors duration-150 hover:bg-surface-subtle hover:shadow-[0_14px_32px_rgba(40,92,67,0.075)] sm:flex-row sm:items-center"
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-4">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#eef3ef] text-sm font-bold text-[var(--text-secondary)]">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-state-neutral-bg text-sm font-bold text-[var(--text-secondary)]">
                         {request.firstName[0]}{request.lastName[0]}
                       </div>
                       <div className="min-w-0 flex-1">

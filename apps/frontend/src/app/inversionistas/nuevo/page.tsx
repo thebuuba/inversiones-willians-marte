@@ -55,7 +55,7 @@ function toDateInputValue(value?: string): string {
 function StepIndicator({ step, onStep }: { step: number; onStep: (s: number) => void }) {
   return (
     <div className="flex items-center gap-2.5">
-      <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+      <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">
         Paso {step} de 2
       </span>
       <div className="flex gap-1.5">
@@ -65,7 +65,7 @@ function StepIndicator({ step, onStep }: { step: number; onStep: (s: number) => 
             type="button"
             onClick={() => onStep(s)}
             className={`h-2 rounded-full transition-all ${
-              s === step ? 'w-8 bg-[#2f7654]' : 'w-2 bg-neutral-300 hover:bg-neutral-400'
+              s === step ? 'w-8 bg-primary-accent' : 'w-2 bg-neutral-300 hover:bg-neutral-400'
             }`}
           />
         ))}
@@ -103,7 +103,7 @@ function FormSection({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="h-full rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm lg:p-7 xl:p-8">
+    <div className="h-full rounded-2xl border border-border-soft bg-white p-6 shadow-sm lg:p-7 xl:p-8">
       <div className="mb-6 flex items-center justify-between gap-6 xl:mb-7">
         <div className="flex min-w-0 items-center gap-3">
           {icon && (
@@ -112,8 +112,8 @@ function FormSection({
             </div>
           )}
           <div>
-            <p className="text-lg font-bold leading-tight text-neutral-900">{title}</p>
-            <p className="mt-1 text-sm text-neutral-400">{description}</p>
+            <p className="text-lg font-bold leading-tight text-text-primary">{title}</p>
+            <p className="mt-1 text-sm text-text-subtle">{description}</p>
           </div>
         </div>
         {action}
@@ -127,17 +127,17 @@ function Field({ label, htmlFor, hint, full, children }: { label: string; htmlFo
   return (
     <div className={full ? '' : 'grid items-start gap-3 sm:grid-cols-[170px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,1fr)]'}>
       <div className={full ? 'mb-1' : 'pt-3'}>
-        <label htmlFor={htmlFor} className="text-sm font-bold text-neutral-600">
+        <label htmlFor={htmlFor} className="text-sm font-bold text-text-secondary">
           {label}
         </label>
-        {hint && <p className="mt-0.5 text-xs text-neutral-400">{hint}</p>}
+        {hint && <p className="mt-0.5 text-xs text-text-subtle">{hint}</p>}
       </div>
       <div>{children}</div>
     </div>
   );
 }
 
-const inputClass = 'h-14 w-full rounded-xl border border-neutral-200 bg-white px-5 text-base outline-none focus:border-[#2f7654] focus:ring-2 focus:ring-[#c2dfcb]/60';
+const inputClass = 'h-14 w-full rounded-xl border border-primary-border bg-white px-5 text-base outline-none focus:border-primary-accent focus:ring-2 focus:ring-[#c2dfcb]/60';
 
 function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onPhotoChange: (url: string | null) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -152,7 +152,7 @@ function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onP
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="group relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-[#c2dfcb] bg-[#eaf5ed] shadow-sm transition hover:border-[#2f7654] hover:shadow-md xl:h-[72px] xl:w-[72px]"
+        className="group relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-[#c2dfcb] bg-primary-soft shadow-sm transition hover:border-primary-accent hover:shadow-md xl:h-[72px] xl:w-[72px]"
         aria-label={photo ? 'Cambiar foto de perfil' : 'Subir foto de perfil'}
       >
         {photo ? (
@@ -163,9 +163,9 @@ function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onP
             style={{ backgroundImage: `url(${photo})` }}
           />
         ) : (
-          <Camera className="h-6 w-6 text-[#2f7654]" />
+          <Camera className="h-6 w-6 text-primary-accent" />
         )}
-        <span className="absolute inset-x-0 bottom-0 bg-[#173D2C]/72 py-1 text-[10px] font-bold text-white opacity-0 transition group-hover:opacity-100">
+        <span className="absolute inset-x-0 bottom-0 bg-text-primary/72 py-1 text-[10px] font-bold text-white opacity-0 transition group-hover:opacity-100">
           {photo ? 'Cambiar' : 'Subir'}
         </span>
       </button>
@@ -303,15 +303,15 @@ function AddInvestorForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6]">
+    <div className="min-h-screen bg-page">
       <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-5 lg:px-8 lg:py-6 xl:px-10">
         <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <Link href="/inversionistas" className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-700">
+            <Link href="/inversionistas" className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-text-muted hover:text-text-secondary">
               <ArrowLeft className="h-3.5 w-3.5" />
               Volver a inversionistas
             </Link>
-            <h1 className="text-3xl font-bold tracking-tight text-neutral-900 lg:text-[34px]">
+            <h1 className="text-3xl font-bold tracking-tight text-text-primary lg:text-[34px]">
               {isEditing
                 ? 'Editar inversionista'
                 : isCreatingAdditionalInvestment
@@ -324,34 +324,34 @@ function AddInvestorForm() {
           <div className="flex flex-wrap gap-2.5 md:justify-end">
             {step === 1 ? (
               <>
-                <button onClick={() => router.push('/inversionistas')} className="h-12 rounded-full border border-neutral-200 bg-white px-5 text-base font-bold text-neutral-700 hover:bg-neutral-50 inline-flex items-center gap-2">
+                <button onClick={() => router.push('/inversionistas')} className="h-12 rounded-full border border-primary-border bg-white px-5 text-base font-bold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-2">
                   <X className="h-4 w-4" />Cancelar
                 </button>
-                <button onClick={() => setStep(2)} className="h-12 rounded-full bg-[#2f7654] px-7 text-base font-bold text-white shadow-sm hover:bg-[#285c43] inline-flex items-center gap-2">
+                <button onClick={() => setStep(2)} className="h-12 rounded-full bg-primary-accent px-7 text-base font-bold text-white shadow-sm hover:bg-primary inline-flex items-center gap-2">
                   Siguiente <ArrowLeft className="h-4 w-4 rotate-180" />
                 </button>
               </>
             ) : (
               <>
-                <button onClick={() => router.push('/inversionistas')} className="h-11 rounded-full border border-neutral-200 bg-white px-4 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 inline-flex items-center gap-1.5">
+                <button onClick={() => router.push('/inversionistas')} className="h-11 rounded-full border border-primary-border bg-white px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5">
                   <X className="h-4 w-4" />Cancelar
                 </button>
-                <button onClick={() => setStep(1)} className="h-11 rounded-full border border-neutral-200 bg-white px-4 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 inline-flex items-center gap-1.5">
+                <button onClick={() => setStep(1)} className="h-11 rounded-full border border-primary-border bg-white px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5">
                   <ArrowLeft className="h-4 w-4" />Atrás
                 </button>
                 {!isEditing && (
-                  <button onClick={() => handleSave(true)} disabled={saving} className="h-11 rounded-full border border-[#c2dfcb] bg-[#eaf5ed] px-4 text-sm font-semibold text-[#2f7654] hover:bg-[#eaf5ed] disabled:opacity-50 inline-flex items-center gap-1.5">
+                  <button onClick={() => handleSave(true)} disabled={saving} className="h-11 rounded-full border border-[#c2dfcb] bg-primary-soft px-4 text-sm font-semibold text-primary-accent hover:bg-primary-soft disabled:opacity-50 inline-flex items-center gap-1.5">
                     <UserPlus className="h-4 w-4" />Guardar y nuevo
                   </button>
                 )}
-                <button onClick={() => handleSave(false)} disabled={saving} className="h-11 rounded-full bg-[#2f7654] px-5 text-sm font-semibold text-white shadow-sm hover:bg-[#285c43] disabled:opacity-50 inline-flex items-center gap-1.5">
+                <button onClick={() => handleSave(false)} disabled={saving} className="h-11 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-50 inline-flex items-center gap-1.5">
                   <Save className="h-4 w-4" />{saving ? 'Guardando...' : isEditing ? 'Actualizar inversionista' : 'Guardar inversión'}
                 </button>
               </>
             )}
           </div>
           {error && (
-            <div className="w-full rounded-xl border border-[#fde4d4] bg-[#fff5f0] px-5 py-3 text-sm font-medium text-[#9f3f25]">
+            <div className="w-full rounded-xl border border-[#fde4d4] bg-[#fff5f0] px-5 py-3 text-sm font-medium text-state-danger">
               {error}
             </div>
           )}
@@ -426,7 +426,7 @@ function AddInvestorForm() {
             >
               <div className="grid items-start gap-4 lg:grid-cols-2">
                 <MotionCard index={0}>
-                  <FormSection icon={<TrendingUp className="h-5 w-5 text-[#7a5a0a]" />} title="Condiciones" description="Capital e inversión." accent="#fef3c7">
+                  <FormSection icon={<TrendingUp className="h-5 w-5 text-state-warning" />} title="Condiciones" description="Capital e inversión." accent="#fef3c7">
                     <Field label="Capital inicial (RD$)" htmlFor="inv-capital" hint="Monto de inicio">
                       <input
                         id="inv-capital"
@@ -476,15 +476,15 @@ function AddInvestorForm() {
                       <button
                         type="button"
                         onClick={handleCalculateInterest}
-                        className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#2f7654] px-8 text-base font-bold text-white shadow-sm transition hover:bg-[#285c43]"
+                        className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-8 text-base font-bold text-white shadow-sm transition hover:bg-primary"
                       >
                         <Calculator className="h-5 w-5" />
                         Calcular
                       </button>
                       {monthlyInterest !== null && (
-                        <div className="rounded-xl border border-[#c2dfcb] bg-[#f3faf6] px-5 py-3">
-                          <p className="text-xs font-bold uppercase tracking-wide text-[#5c6d63]">Interés mensual</p>
-                          <p className="text-xl font-bold text-[#173D2C]">{formatDopCurrency(monthlyInterest)}</p>
+                        <div className="rounded-xl border border-[#c2dfcb] bg-surface-muted-ui px-5 py-3">
+                          <p className="text-xs font-bold uppercase tracking-wide text-text-secondary">Interés mensual</p>
+                          <p className="text-xl font-bold text-text-primary">{formatDopCurrency(monthlyInterest)}</p>
                         </div>
                       )}
                     </div>
@@ -492,9 +492,9 @@ function AddInvestorForm() {
                 </MotionCard>
 
                 <MotionCard index={2} className="lg:col-span-2">
-                  <FormSection icon={<FileText className="h-5 w-5 text-[#2f7654]" />} title="Notas y observaciones" description="Acuerdos, condiciones especiales o historial previo." accent="#c2dfcb">
+                  <FormSection icon={<FileText className="h-5 w-5 text-primary-accent" />} title="Notas y observaciones" description="Acuerdos, condiciones especiales o historial previo." accent="#c2dfcb">
                     <Field label="Comentarios" htmlFor="inv-notes" full>
-                      <textarea id="inv-notes" rows={3} value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Condiciones especiales, acuerdos verbales, historial previo..." className="w-full rounded-xl border-neutral-200 bg-white text-sm p-3.5 outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-[#2f7654] border resize-none" />
+                      <textarea id="inv-notes" rows={3} value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Condiciones especiales, acuerdos verbales, historial previo..." className="w-full rounded-xl border-primary-border bg-white text-sm p-3.5 outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent border resize-none" />
                     </Field>
                   </FormSection>
                 </MotionCard>
@@ -513,7 +513,7 @@ function AddInvestorForm() {
 
 export default function AddInvestorPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#F3F4F6]"><p className="text-sm text-neutral-400">Cargando...</p></div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-page"><p className="text-sm text-text-subtle">Cargando...</p></div>}>
       <AddInvestorForm />
     </Suspense>
   );

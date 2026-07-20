@@ -60,7 +60,7 @@ public struct CreateLoanView: View {
 
                 if let errorMessage {
                     Text(errorMessage)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.appRust)
                 }
             }
             .navigationTitle("Nuevo préstamo")

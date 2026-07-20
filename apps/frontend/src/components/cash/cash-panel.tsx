@@ -92,7 +92,7 @@ function ShellCard({
   return (
     <motion.section
       animate="visible"
-      className={`rounded-2xl border border-neutral-100 bg-white shadow-sm ${className}`}
+      className={`rounded-2xl border border-border-soft bg-white shadow-sm ${className}`}
       custom={index}
       initial="hidden"
       variants={fadeUp}
@@ -111,17 +111,17 @@ function Header({ onNewMovement }: { onNewMovement: () => void }) {
       variants={fadeUp}
     >
       <div>
-        <span className="inline-flex items-center gap-2 rounded-full bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#173D2C]">
-          <span className="h-2 w-2 rounded-full bg-[#2F7654]" />
+        <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-text-primary">
+          <span className="h-2 w-2 rounded-full bg-primary-accent" />
           Libro diario de caja
         </span>
-        <h1 className="mt-3 text-[28px] font-bold leading-tight text-[#173D2C]">Caja</h1>
-        <p className="mt-1.5 text-sm text-[#5C6D63]">
+        <h1 className="mt-3 text-[28px] font-bold leading-tight text-text-primary">Caja</h1>
+        <p className="mt-1.5 text-sm text-text-secondary">
           Entradas y salidas generadas por las operaciones del negocio.
         </p>
       </div>
       <button
-        className="flex h-11 items-center gap-2 rounded-full bg-[#2f7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
+        className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
         onClick={onNewMovement}
         type="button"
       >
@@ -165,10 +165,10 @@ function SummaryCard({
         >
           {icon}
         </div>
-        <p className="text-xs font-bold uppercase tracking-[0.09em] text-[#5C6D63]">{title}</p>
+        <p className="text-xs font-bold uppercase tracking-[0.09em] text-text-secondary">{title}</p>
       </div>
-      <p className="mt-6 text-[28px] font-bold leading-none text-[#173D2C]">{value}</p>
-      <div className="mt-4 text-sm font-medium text-[#5C6D63]">{detail}</div>
+      <p className="mt-6 text-[28px] font-bold leading-none text-text-primary">{value}</p>
+      <div className="mt-4 text-sm font-medium text-text-secondary">{detail}</div>
     </ShellCard>
   );
 }
@@ -204,13 +204,13 @@ function FilterBar({
   return (
     <ShellCard className="mb-5 p-3.5" index={4}>
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="flex shrink-0 items-center gap-1 rounded-[12px] bg-[#F8FBF9] p-1">
+        <div className="flex shrink-0 items-center gap-1 rounded-[12px] bg-surface-subtle p-1">
           {tabs.map((tab) => (
             <button
               className={`h-9 rounded-[10px] px-4 text-sm font-semibold transition ${
                 filter === tab.value
-                  ? 'bg-[#E7F4EC] text-[#173D2C] shadow-sm'
-                  : 'text-[#5C6D63] hover:bg-white'
+                  ? 'bg-primary-soft text-text-primary shadow-sm'
+                  : 'text-text-secondary hover:bg-white'
               }`}
               key={tab.value}
               onClick={() => onFilterChange(tab.value)}
@@ -220,26 +220,26 @@ function FilterBar({
             </button>
           ))}
         </div>
-        <label className="flex h-10 items-center gap-2 rounded-full border border-[#DDEBE3] bg-white px-4 text-[#5C6D63]">
+        <label className="flex h-10 items-center gap-2 rounded-full border border-primary-border bg-white px-4 text-text-secondary">
           <Calendar className="h-4 w-4" />
           <input
-            className="bg-transparent text-sm font-semibold text-[#173D2C] outline-none"
+            className="bg-transparent text-sm font-semibold text-text-primary outline-none"
             onChange={(event) => onDateChange(event.target.value)}
             type="date"
             value={date}
           />
         </label>
-        <label className="flex h-10 flex-1 items-center gap-3 rounded-full border border-[#DDEBE3] bg-[#F8FBF9] px-4 text-[#5C6D63] xl:ml-auto xl:max-w-[340px]">
+        <label className="flex h-10 flex-1 items-center gap-3 rounded-full border border-primary-border bg-surface-subtle px-4 text-text-secondary xl:ml-auto xl:max-w-[340px]">
           <Search className="h-4 w-4 shrink-0" />
           <input
-            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#8F9691]"
+            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-text-muted"
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Buscar persona o concepto..."
             value={search}
           />
         </label>
         <select
-          className="h-10 rounded-full border border-[#DDEBE3] bg-white px-4 text-sm font-semibold text-[#173D2C] outline-none"
+          className="h-10 rounded-full border border-primary-border bg-white px-4 text-sm font-semibold text-text-primary outline-none"
           onChange={(event) => onCategoryChange(event.target.value)}
           value={category}
         >
@@ -257,12 +257,12 @@ function FilterBar({
 
 function Tag({ label, tone, icon }: { label: string; tone: TagTone; icon?: string | null }) {
   const styles = {
-    green: 'bg-[#E7F4EC] text-[#173D2C]',
-    orange: 'bg-[#FFE3D2] text-[#9F3F25]',
-    blue: 'bg-[#D8E9FF] text-[#2F5F91]',
+    green: 'bg-primary-soft text-text-primary',
+    orange: 'bg-[#FFE3D2] text-state-danger',
+    blue: 'bg-[#D8E9FF] text-state-info',
     purple: 'bg-[#E8DDF6] text-[#6F55A5]',
-    yellow: 'bg-[#FFF4C8] text-[#7A5A0A]',
-    gray: 'bg-[#F3FAF6] text-[#5C6D63] border border-[#DDEBE3]',
+    yellow: 'bg-state-warning-bg text-state-warning',
+    gray: 'bg-surface-muted-ui text-text-secondary border border-primary-border',
   }[tone];
   const Icon =
     icon === 'Transferencia' ? Repeat2 : icon === 'Tarjeta' ? CreditCard : icon ? Banknote : null;
@@ -288,23 +288,23 @@ function TransactionItem({ movement }: { movement: CashLedgerMovement }) {
     .join('');
 
   return (
-    <div className="grid min-h-[76px] grid-cols-[1fr_auto] items-center gap-4 border-b border-[#EDF2EF] px-5 py-3.5 last:border-b-0 hover:bg-[#F8FBF9]">
+    <div className="grid min-h-[76px] grid-cols-[1fr_auto] items-center gap-4 border-b border-border-soft px-5 py-3.5 last:border-b-0 hover:bg-surface-subtle">
       <div className="flex min-w-0 items-center gap-4">
         <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${isIncome ? 'bg-[#E7F4EC] text-[#173D2C]' : 'bg-[#FFE3D2] text-[#9F3F25]'}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${isIncome ? 'bg-primary-soft text-text-primary' : 'bg-[#FFE3D2] text-state-danger'}`}
         >
           <DirectionIcon className="h-4 w-4" />
         </div>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F3FAF6] text-xs font-bold text-[#5C6D63]">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-muted-ui text-xs font-bold text-text-secondary">
           {initials}
         </div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-sm font-bold text-[#173D2C]">{movement.person}</h3>
-            <span className="text-[#5C6D63]">·</span>
-            <span className="text-xs text-[#5C6D63]">{movement.code}</span>
+            <h3 className="truncate text-sm font-bold text-text-primary">{movement.person}</h3>
+            <span className="text-text-secondary">·</span>
+            <span className="text-xs text-text-secondary">{movement.code}</span>
           </div>
-          <p className="mt-0.5 text-xs text-[#5C6D63]">{movement.description}</p>
+          <p className="mt-0.5 text-xs text-text-secondary">{movement.description}</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             <Tag label={movement.category} tone={categoryTone(movement.category)} />
             {!movement.affectsBalance && (
@@ -319,7 +319,7 @@ function TransactionItem({ movement }: { movement: CashLedgerMovement }) {
       </div>
       <div className="text-right">
         <p
-          className={`text-base font-bold tabular-nums ${!movement.affectsBalance ? 'text-[#7A6A45]' : isIncome ? 'text-[#173D2C]' : 'text-[#A65B3D]'}`}
+          className={`text-base font-bold tabular-nums ${!movement.affectsBalance ? 'text-[#7A6A45]' : isIncome ? 'text-text-primary' : 'text-[#A65B3D]'}`}
         >
           {formatSignedDop(movement.amount, { negative: !isIncome })}
         </p>
@@ -396,7 +396,7 @@ export function CashPanel() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
+    <div className="min-h-screen bg-page p-5 font-sans text-text-primary">
       <Header onNewMovement={() => setIsModalOpen(true)} />
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -453,31 +453,31 @@ export function CashPanel() {
       <motion.section animate="visible" initial="hidden" variants={fadeUp}>
         <div className="mb-3 flex items-center justify-between gap-4 px-1">
           <div className="flex items-center gap-2.5">
-            <Calendar className="h-4 w-4 text-[#5C6D63]" />
-            <p className="text-sm font-bold capitalize text-[#173D2C]">
+            <Calendar className="h-4 w-4 text-text-secondary" />
+            <p className="text-sm font-bold capitalize text-text-primary">
               {formatOfficeDate(date)}
-              <span className="px-2 text-[#5C6D63]">·</span>
+              <span className="px-2 text-text-secondary">·</span>
               <span className="font-medium text-[#A9B8AE]">
                 {visibleMovements.length} movimientos
               </span>
             </p>
           </div>
           <div className="hidden items-center gap-5 text-sm font-bold sm:flex">
-            <span className="text-[#173D2C]">+{formatDop(totals.income)}</span>
+            <span className="text-text-primary">+{formatDop(totals.income)}</span>
             <span className="text-[#A65B3D]">−{formatDop(totals.expense)}</span>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm">
           {loading && (
-            <p className="px-5 py-16 text-center text-sm font-medium text-[#5C6D63]">
+            <p className="px-5 py-16 text-center text-sm font-medium text-text-secondary">
               Cargando movimientos...
             </p>
           )}
           {!loading && error && (
-            <p className="px-5 py-16 text-center text-sm font-medium text-[#9F3F25]">{error}</p>
+            <p className="px-5 py-16 text-center text-sm font-medium text-state-danger">{error}</p>
           )}
           {!loading && !error && visibleMovements.length === 0 && (
-            <p className="px-5 py-16 text-center text-sm font-medium text-[#5C6D63]">
+            <p className="px-5 py-16 text-center text-sm font-medium text-text-secondary">
               No hay movimientos para esta fecha y filtros.
             </p>
           )}

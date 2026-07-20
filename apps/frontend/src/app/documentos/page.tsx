@@ -22,12 +22,12 @@ function DocumentCard({ doc, onDelete }: { doc: DocumentItem; onDelete: (id: str
   const Icon = iconMap[doc.category] ?? FileText;
 
   return (
-    <div className="flex items-center gap-4 rounded-[16px] border border-[#DDEBE3] bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(40,92,67,0.06)]">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#E7F4EC] text-[#2F7654]">
+    <div className="flex items-center gap-4 rounded-[16px] border border-primary-border bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(40,92,67,0.06)]">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-primary-soft text-primary-accent">
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold text-[#173D2C]">
+        <p className="truncate text-sm font-bold text-text-primary">
           {doc.fileUrl ? (
             <button
               className="truncate text-left hover:underline"
@@ -40,7 +40,7 @@ function DocumentCard({ doc, onDelete }: { doc: DocumentItem; onDelete: (id: str
             doc.name
           )}
         </p>
-        <p className="mt-0.5 text-xs text-[#5C6D63]">
+        <p className="mt-0.5 text-xs text-text-secondary">
           {doc.category}
           {doc.fileSize ? ` · ${(doc.fileSize / 1024).toFixed(1)} KB` : ''}
           {' · '}
@@ -48,7 +48,7 @@ function DocumentCard({ doc, onDelete }: { doc: DocumentItem; onDelete: (id: str
         </p>
       </div>
       <button
-        className="flex h-8 w-8 items-center justify-center rounded-full text-[#5C6D63] transition hover:bg-[#FFE8D8] hover:text-[#9F3F25]"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-text-secondary transition hover:bg-state-danger-bg hover:text-state-danger"
         onClick={() => onDelete(doc.id)}
         type="button"
       >
@@ -114,11 +114,11 @@ function UploadModal({
             onSubmit={handleSubmit}
           >
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[#173D2C]">Subir documento</h2>
+              <h2 className="text-lg font-bold text-text-primary">Subir documento</h2>
               <button
                 onClick={onClose}
                 type="button"
-                className="rounded-full p-1 text-[#5C6D63] hover:bg-[#F3F4F6]"
+                className="rounded-full p-1 text-text-secondary hover:bg-page"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -126,12 +126,12 @@ function UploadModal({
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-[#173D2C]">Archivo</label>
+                <label className="mb-1 block text-sm font-medium text-text-primary">Archivo</label>
                 <div
-                  className="flex cursor-pointer items-center gap-3 rounded-[12px] border-2 border-dashed border-[#DDEBE3] p-4 text-sm text-[#5C6D63] transition hover:border-[#285C43]"
+                  className="flex cursor-pointer items-center gap-3 rounded-[12px] border-2 border-dashed border-primary-border p-4 text-sm text-text-secondary transition hover:border-primary"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <Upload className="h-5 w-5 text-[#2F7654]" />
+                  <Upload className="h-5 w-5 text-primary-accent" />
                   {file ? file.name : 'Haz clic para seleccionar un archivo'}
                 </div>
                 <input
@@ -144,9 +144,9 @@ function UploadModal({
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-[#173D2C]">Nombre</label>
+                <label className="mb-1 block text-sm font-medium text-text-primary">Nombre</label>
                 <input
-                  className="w-full rounded-[12px] border border-[#DDEBE3] px-4 py-2.5 text-sm text-[#173D2C] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#285C43]/10"
+                  className="w-full rounded-[12px] border border-primary-border px-4 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-[#285C43]/10"
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Nombre del documento"
                   value={name}
@@ -154,9 +154,9 @@ function UploadModal({
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-[#173D2C]">Categoría</label>
+                <label className="mb-1 block text-sm font-medium text-text-primary">Categoría</label>
                 <select
-                  className="w-full rounded-[12px] border border-[#DDEBE3] px-4 py-2.5 text-sm text-[#173D2C] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#285C43]/10"
+                  className="w-full rounded-[12px] border border-primary-border px-4 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-[#285C43]/10"
                   onChange={(e) => setCategory(e.target.value)}
                   value={category}
                 >
@@ -171,7 +171,7 @@ function UploadModal({
 
             <div className="mt-6 flex gap-3">
               <button
-                className="flex-1 rounded-full bg-[#F3F4F6] py-2.5 text-sm font-bold text-[#5C6D63] transition hover:bg-[#E7F4EC]"
+                className="flex-1 rounded-full bg-page py-2.5 text-sm font-bold text-text-secondary transition hover:bg-primary-soft"
                 onClick={onClose}
                 type="button"
               >
@@ -180,8 +180,8 @@ function UploadModal({
               <button
                 className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
                   file && !uploading
-                    ? 'bg-[#2f7654] shadow-[0_8px_16px_rgba(90,154,122,0.22)] hover:-translate-y-0.5'
-                    : 'bg-[#5C6D63] cursor-not-allowed'
+                    ? 'bg-primary-accent shadow-[0_8px_16px_rgba(90,154,122,0.22)] hover:-translate-y-0.5'
+                    : 'bg-text-secondary cursor-not-allowed'
                 }`}
                 disabled={!file || uploading}
                 type="submit"
@@ -213,7 +213,7 @@ export default function DocumentosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
+    <div className="min-h-screen bg-page p-5 font-sans text-text-primary">
       <UploadModal open={showUpload} onClose={() => setShowUpload(false)} onUploaded={load} />
 
       <motion.header
@@ -222,12 +222,12 @@ export default function DocumentosPage() {
         initial={{ opacity: 0, y: 16 }}
       >
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#5C6D63]">ARCHIVOS</p>
-          <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-[#151918]">Documentos</h1>
-          <p className="mt-1.5 text-sm text-[#5C6D63]">Gestión documental del sistema.</p>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-secondary">ARCHIVOS</p>
+          <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-text-primary">Documentos</h1>
+          <p className="mt-1.5 text-sm text-text-secondary">Gestión documental del sistema.</p>
         </div>
         <button
-          className="flex h-11 items-center gap-2 rounded-full bg-[#2f7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
+          className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
           onClick={() => setShowUpload(true)}
           type="button"
         >
@@ -236,14 +236,14 @@ export default function DocumentosPage() {
         </button>
       </motion.header>
 
-      <div className="flex h-12 items-center gap-3 rounded-full border border-[#DDEBE3] bg-white px-5 text-[#5C6D63] shadow-[0_7px_22px_rgba(40,92,67,0.035)]">
+      <div className="flex h-12 items-center gap-3 rounded-full border border-primary-border bg-white px-5 text-text-secondary shadow-[0_7px_22px_rgba(40,92,67,0.035)]">
         <Search className="h-5 w-5 shrink-0" />
         <span className="truncate text-sm">Buscar documentos...</span>
       </div>
 
       <div className="mt-5 space-y-3">
         {documents.length === 0 && (
-          <p className="py-12 text-center text-sm font-medium text-[#5C6D63]">
+          <p className="py-12 text-center text-sm font-medium text-text-secondary">
             No hay documentos registrados
           </p>
         )}

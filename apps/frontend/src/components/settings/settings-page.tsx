@@ -49,7 +49,7 @@ function SectionCard({
   return (
     <motion.section
       animate="visible"
-      className={`rounded-2xl border border-neutral-100 bg-white shadow-sm ${className}`}
+      className={`rounded-2xl border border-border-soft bg-white shadow-sm ${className}`}
       custom={index}
       initial="hidden"
       variants={fadeUp}
@@ -68,25 +68,25 @@ function SettingsHeader() {
       variants={fadeUp}
     >
       <div>
-        <span className="inline-flex items-center gap-2 rounded-full bg-[#E7F4EC] px-3 py-1 text-xs font-bold text-[#285C43]">
-          <span className="h-2 w-2 rounded-full bg-[#2F7654]" />
+        <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
+          <span className="h-2 w-2 rounded-full bg-primary-accent" />
           Sistema
         </span>
-        <h1 className="mt-3 text-[28px] font-bold leading-tight text-[#173D2C]">Configuración</h1>
-        <p className="mt-1.5 text-sm font-medium text-[#5C6D63]">
+        <h1 className="mt-3 text-[28px] font-bold leading-tight text-text-primary">Configuración</h1>
+        <p className="mt-1.5 text-sm font-medium text-text-secondary">
           Ajusta los parámetros de tu sistema de préstamos.
         </p>
       </div>
 
       <div className="flex items-center gap-3">
         <button
-          className="h-11 rounded-full border border-[#DDEBE3] bg-white px-6 text-sm font-bold text-[#173D2C] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#F6FAF7]"
+          className="h-11 rounded-full border border-primary-border bg-white px-6 text-sm font-bold text-text-primary shadow-sm transition hover:-translate-y-0.5 hover:bg-[#F6FAF7]"
           type="button"
         >
           Cancelar
         </button>
         <button
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#2f7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285c43]"
+          className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.2)] transition hover:-translate-y-0.5 hover:bg-primary"
           type="button"
         >
           <Check className="h-4 w-4" />
@@ -107,7 +107,7 @@ function SettingsTabs({
   return (
     <motion.nav
       animate="visible"
-      className="mb-6 overflow-x-auto rounded-2xl border border-neutral-100 bg-white p-2 shadow-sm"
+      className="mb-6 overflow-x-auto rounded-2xl border border-border-soft bg-white p-2 shadow-sm"
       custom={1}
       initial="hidden"
       variants={fadeUp}
@@ -116,7 +116,7 @@ function SettingsTabs({
         {tabs.map((tab) => (
           <button
             className={`h-11 rounded-[14px] px-5 text-sm font-bold transition ${
-              activeTab === tab ? 'bg-[#E7F4EC] text-[#285C43] shadow-sm' : 'text-[#5C6D63] hover:bg-[#F6FAF7]'
+              activeTab === tab ? 'bg-primary-soft text-primary shadow-sm' : 'text-text-secondary hover:bg-[#F6FAF7]'
             }`}
             key={tab}
             onClick={() => onTabChange(tab)}
@@ -141,12 +141,12 @@ function CardTitle({
 }) {
   return (
     <div className="mb-6 flex items-start gap-4">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] bg-[#E7F4EC] text-[#285C43]">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] bg-primary-soft text-primary">
         {icon}
       </div>
       <div>
-        <h2 className="text-lg font-bold text-[#173D2C]">{title}</h2>
-        <p className="mt-1 text-sm font-medium text-[#5C6D63]">{subtitle}</p>
+        <h2 className="text-lg font-bold text-text-primary">{title}</h2>
+        <p className="mt-1 text-sm font-medium text-text-secondary">{subtitle}</p>
       </div>
     </div>
   );
@@ -156,18 +156,18 @@ function LogoUploader() {
   return (
     <div className="mb-6 flex flex-col justify-between gap-4 rounded-[18px] border border-dashed border-[#B8EBC9] bg-[#F7FCF9] p-5 sm:flex-row sm:items-center">
       <div className="flex items-center gap-5">
-        <div className="flex h-[74px] w-[74px] shrink-0 items-center justify-center rounded-[18px] bg-[#B8DCC5] text-xl font-bold text-[#285C43]">
+        <div className="flex h-[74px] w-[74px] shrink-0 items-center justify-center rounded-[18px] bg-[#B8DCC5] text-xl font-bold text-primary">
           WM
         </div>
         <div>
-          <p className="text-base font-bold text-[#173D2C]">Logo de la empresa</p>
-          <p className="mt-1 text-sm font-medium text-[#5C6D63]">
+          <p className="text-base font-bold text-text-primary">Logo de la empresa</p>
+          <p className="mt-1 text-sm font-medium text-text-secondary">
             PNG o SVG, recomendado 512×512px. Máximo 2MB.
           </p>
         </div>
       </div>
 
-      <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-[#DDEBE3] bg-white px-6 text-sm font-bold text-[#173D2C] shadow-sm transition hover:bg-[#F6FAF7]">
+      <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-primary-border bg-white px-6 text-sm font-bold text-text-primary shadow-sm transition hover:bg-[#F6FAF7]">
         <Upload className="h-4 w-4" />
         Subir logo
         <input className="hidden" type="file" />
@@ -195,23 +195,23 @@ function FormInput({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-2 block text-sm font-bold text-[#5C6D63]">{label}</span>
+      <span className="mb-2 block text-sm font-bold text-text-secondary">{label}</span>
       {multiline ? (
         <textarea
-          className="h-[96px] w-full resize-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 py-3 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#DDEBE3]"
+          className="h-[96px] w-full resize-none rounded-[10px] border border-primary-border bg-white px-4 py-3 text-sm font-medium text-text-primary shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-primary focus:ring-2 focus:ring-[#DDEBE3]"
           defaultValue={value}
         />
       ) : (
-        <div className="flex h-11 w-full items-center rounded-[10px] border border-[#DDEBE3] bg-white px-4 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] transition focus-within:border-[#285C43] focus-within:ring-2 focus-within:ring-[#DDEBE3]">
-          {prefix && <span className="mr-3 shrink-0 text-[#5C6D63]">{prefix}</span>}
+        <div className="flex h-11 w-full items-center rounded-[10px] border border-primary-border bg-white px-4 text-sm font-medium text-text-primary shadow-[0_3px_8px_rgba(40,92,67,0.06)] transition focus-within:border-primary focus-within:ring-2 focus-within:ring-[#DDEBE3]">
+          {prefix && <span className="mr-3 shrink-0 text-text-secondary">{prefix}</span>}
           <input
             className="h-full min-w-0 flex-1 bg-transparent outline-none"
             defaultValue={value}
           />
-          {suffix && <span className="ml-3 shrink-0 text-[#5C6D63]">{suffix}</span>}
+          {suffix && <span className="ml-3 shrink-0 text-text-secondary">{suffix}</span>}
         </div>
       )}
-      {helper && <span className="mt-2 block text-sm font-medium text-[#A7B5AD]">{helper}</span>}
+      {helper && <span className="mt-2 block text-sm font-medium text-text-subtle">{helper}</span>}
     </label>
   );
 }
@@ -229,19 +229,19 @@ function FormSelect({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-bold text-[#5C6D63]">{label}</span>
+      <span className="mb-2 block text-sm font-bold text-text-secondary">{label}</span>
       <div className="relative">
         <select
-          className="h-11 w-full appearance-none rounded-[10px] border border-[#DDEBE3] bg-white px-4 pr-10 text-sm font-medium text-[#173D2C] shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#DDEBE3]"
+          className="h-11 w-full appearance-none rounded-[10px] border border-primary-border bg-white px-4 pr-10 text-sm font-medium text-text-primary shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-primary focus:ring-2 focus:ring-[#DDEBE3]"
           defaultValue={value}
         >
           {options.map((option) => (
             <option key={option}>{option}</option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A7B5AD]" />
+        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
       </div>
-      {helper && <span className="mt-2 block text-sm font-medium text-[#A7B5AD]">{helper}</span>}
+      {helper && <span className="mt-2 block text-sm font-medium text-text-subtle">{helper}</span>}
     </label>
   );
 }
@@ -327,10 +327,10 @@ function SwitchRow({
   bordered?: boolean;
 }) {
   return (
-    <div className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-[#EDF2EF]' : ''}`}>
+    <div className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-border-soft' : ''}`}>
       <div>
-        <p className="text-base font-bold text-[#173D2C]">{title}</p>
-        <p className="mt-1 text-sm font-medium text-[#5C6D63]">{description}</p>
+        <p className="text-base font-bold text-text-primary">{title}</p>
+        <p className="mt-1 text-sm font-medium text-text-secondary">{description}</p>
       </div>
       <ToggleSwitch defaultChecked={defaultChecked} />
     </div>
@@ -402,11 +402,11 @@ function LoanProductsCard() {
       />
 
       <div className="space-y-4">
-        <p className="py-6 text-center text-sm font-medium text-[#5C6D63]">No hay productos configurados</p>
+        <p className="py-6 text-center text-sm font-medium text-text-secondary">No hay productos configurados</p>
       </div>
 
       <button
-        className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-[16px] border border-dashed border-[#B8EBC9] bg-[#F7FCF9] text-base font-bold text-[#285C43] transition hover:bg-[#EAF6EF]"
+        className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-[16px] border border-dashed border-[#B8EBC9] bg-[#F7FCF9] text-base font-bold text-primary transition hover:bg-primary-soft"
         onClick={() => undefined}
         type="button"
       >
@@ -486,24 +486,24 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
             onSubmit={handleSubmit}
           >
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[#173D2C]">Nuevo usuario</h2>
-              <button onClick={onClose} type="button" className="rounded-full p-1 text-[#5C6D63] hover:bg-[#F3F4F6]">
+              <h2 className="text-lg font-bold text-text-primary">Nuevo usuario</h2>
+              <button onClick={onClose} type="button" className="rounded-full p-1 text-text-secondary hover:bg-page">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {error && (
-              <p className="mb-4 rounded-[12px] bg-[#FFE8D8] p-3 text-sm text-[#9F3F25]">{error}</p>
+              <p className="mb-4 rounded-[12px] bg-state-danger-bg p-3 text-sm text-state-danger">{error}</p>
             )}
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-[#173D2C]">
-                  <UserRound className="h-4 w-4 text-[#2F7654]" />
+                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-text-primary">
+                  <UserRound className="h-4 w-4 text-primary-accent" />
                   Nombre completo
                 </label>
                 <input
-                  className="w-full rounded-[12px] border border-[#DDEBE3] px-4 py-2.5 text-sm text-[#173D2C] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#285C43]/10"
+                  className="w-full rounded-[12px] border border-primary-border px-4 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-[#285C43]/10"
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Ej: Juan Pérez"
                   required
@@ -511,12 +511,12 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
                 />
               </div>
               <div>
-                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-[#173D2C]">
-                  <Mail className="h-4 w-4 text-[#2F7654]" />
+                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-text-primary">
+                  <Mail className="h-4 w-4 text-primary-accent" />
                   Correo electrónico
                 </label>
                 <input
-                  className="w-full rounded-[12px] border border-[#DDEBE3] px-4 py-2.5 text-sm text-[#173D2C] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#285C43]/10"
+                  className="w-full rounded-[12px] border border-primary-border px-4 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-[#285C43]/10"
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="ejemplo@correo.com"
                   required
@@ -525,12 +525,12 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
                 />
               </div>
               <div>
-                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-[#173D2C]">
-                  <KeyRound className="h-4 w-4 text-[#2F7654]" />
+                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-text-primary">
+                  <KeyRound className="h-4 w-4 text-primary-accent" />
                   Contraseña
                 </label>
                 <input
-                  className="w-full rounded-[12px] border border-[#DDEBE3] px-4 py-2.5 text-sm text-[#173D2C] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#285C43]/10"
+                  className="w-full rounded-[12px] border border-primary-border px-4 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-[#285C43]/10"
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   minLength={6}
                   placeholder="Mínimo 6 caracteres"
@@ -540,12 +540,12 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
                 />
               </div>
               <div>
-                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-[#173D2C]">
-                  <ShieldCheck className="h-4 w-4 text-[#2F7654]" />
+                <label className="mb-1 flex items-center gap-2 text-sm font-medium text-text-primary">
+                  <ShieldCheck className="h-4 w-4 text-primary-accent" />
                   Rol
                 </label>
                 <select
-                  className="w-full rounded-[12px] border border-[#DDEBE3] px-4 py-2.5 text-sm text-[#173D2C] outline-none transition focus:border-[#285C43] focus:ring-2 focus:ring-[#285C43]/10"
+                  className="w-full rounded-[12px] border border-primary-border px-4 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-[#285C43]/10"
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
                   value={form.role}
                 >
@@ -557,7 +557,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
 
             <div className="mt-6 flex gap-3">
               <button
-                className="flex-1 rounded-full bg-[#F3F4F6] py-2.5 text-sm font-bold text-[#5C6D63] transition hover:bg-[#E7F4EC]"
+                className="flex-1 rounded-full bg-page py-2.5 text-sm font-bold text-text-secondary transition hover:bg-primary-soft"
                 onClick={onClose}
                 type="button"
               >
@@ -565,7 +565,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
               </button>
               <button
                 className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
-                  saving ? 'bg-[#5C6D63]' : 'bg-[#2f7654] shadow-[0_8px_16px_rgba(90,154,122,0.22)] hover:-translate-y-0.5'
+                  saving ? 'bg-text-secondary' : 'bg-primary-accent shadow-[0_8px_16px_rgba(90,154,122,0.22)] hover:-translate-y-0.5'
                 }`}
                 disabled={saving}
                 type="submit"
@@ -673,10 +673,10 @@ function SettingsUsersRolesTab() {
         </div>
 
         <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <p className="text-sm font-medium text-[#5C6D63]">{users.length} miembros · {activeCount} activos</p>
+          <p className="text-sm font-medium text-text-secondary">{users.length} miembros · {activeCount} activos</p>
           {isAdmin && (
             <button
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2f7654] px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.2)] transition hover:-translate-y-0.5 hover:bg-[#285c43]"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.2)] transition hover:-translate-y-0.5 hover:bg-primary"
               onClick={() => setShowCreate(true)}
               type="button"
             >
@@ -687,10 +687,10 @@ function SettingsUsersRolesTab() {
         </div>
 
         {users.length === 0 ? (
-          <p className="py-12 text-center text-sm font-medium text-[#5C6D63]">No hay usuarios registrados</p>
+          <p className="py-12 text-center text-sm font-medium text-text-secondary">No hay usuarios registrados</p>
         ) : (
-          <div className="overflow-hidden rounded-[18px] border border-[#EDF2EF]">
-            <div className="hidden grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] bg-[#F3F8F5] px-5 py-4 text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63] md:grid">
+          <div className="overflow-hidden rounded-[18px] border border-border-soft">
+            <div className="hidden grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] bg-[#F3F8F5] px-5 py-4 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:grid">
               <span>Miembro</span>
               <span>Rol</span>
               <span>Estado</span>
@@ -699,35 +699,35 @@ function SettingsUsersRolesTab() {
             {users.map((u) => (
               <div
                 key={u.id}
-                className="grid gap-4 border-t border-[#EDF2EF] bg-white px-5 py-4 md:grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] md:items-center"
+                className="grid gap-4 border-t border-border-soft bg-white px-5 py-4 md:grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] md:items-center"
               >
                 <div className="flex min-w-0 items-center gap-4">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E7F4EC] text-sm font-bold text-[#285C43] shadow-[0_6px_14px_rgba(40,92,67,0.12)]">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary shadow-[0_6px_14px_rgba(40,92,67,0.12)]">
                     {u.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-base font-bold leading-tight text-[#173D2C]">{u.name}</p>
-                    <p className="mt-1 truncate text-sm font-medium text-[#5C6D63]">{u.email}</p>
+                    <p className="truncate text-base font-bold leading-tight text-text-primary">{u.name}</p>
+                    <p className="mt-1 truncate text-sm font-medium text-text-secondary">{u.email}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between gap-3 md:block">
-                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63] md:hidden">Rol</span>
+                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:hidden">Rol</span>
                   <RoleBadge role={u.role} />
                 </div>
 
                 <div className="flex items-center justify-between gap-3 md:block">
-                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63] md:hidden">Estado</span>
+                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:hidden">Estado</span>
                   <StatusBadge active={u.active} />
                 </div>
 
-                <div className="flex items-center justify-end gap-4 text-[#5C6D63]">
+                <div className="flex items-center justify-end gap-4 text-text-secondary">
                   {isAdmin && (
                     <>
                       <button
                         aria-label={`${u.active ? 'Desactivar' : 'Activar'} ${u.name}`}
-                        className={`rounded-full p-1.5 transition hover:bg-[#EAF6EF] ${
-                          u.active ? 'hover:text-[#285C43]' : 'hover:text-[#285C43]'
+                        className={`rounded-full p-1.5 transition hover:bg-primary-soft ${
+                          u.active ? 'hover:text-primary' : 'hover:text-primary'
                         }`}
                         onClick={() => handleToggle(u.id)}
                         type="button"
@@ -736,7 +736,7 @@ function SettingsUsersRolesTab() {
                       </button>
                       <button
                         aria-label={`Eliminar ${u.name}`}
-                        className="rounded-full p-1.5 transition hover:bg-[#FFE3D2] hover:text-[#9F3F25]"
+                        className="rounded-full p-1.5 transition hover:bg-[#FFE3D2] hover:text-state-danger"
                         onClick={() => handleToggle(u.id)}
                         type="button"
                       >
@@ -762,14 +762,14 @@ function SettingsUsersRolesTab() {
           {Object.entries(rolesMap).map(([role, { count }]) => (
             <div
               key={role}
-              className="rounded-[18px] border border-[#EDF2EF] bg-white p-5 shadow-[0_5px_18px_rgba(40,92,67,0.025)]"
+              className="rounded-[18px] border border-border-soft bg-white p-5 shadow-[0_5px_18px_rgba(40,92,67,0.025)]"
             >
               <div className="mb-3 flex items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: roleDot[role] ?? '#ccc' }} />
-                  <p className="truncate text-base font-bold text-[#173D2C]">{roleLabel[role] ?? role}</p>
+                  <p className="truncate text-base font-bold text-text-primary">{roleLabel[role] ?? role}</p>
                 </div>
-                <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-[#E7F4EC] px-2 text-sm font-bold text-[#285C43]">
+                <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-primary-soft px-2 text-sm font-bold text-primary">
                   {count}
                 </span>
               </div>
@@ -804,7 +804,7 @@ function NotificationChannelItem({
   const Icon = channel.icon;
 
   return (
-    <div className="flex min-h-[92px] items-center gap-4 rounded-[18px] border border-[#EDF2EF] bg-white px-4 py-4 shadow-[0_5px_18px_rgba(40,92,67,0.025)]">
+    <div className="flex min-h-[92px] items-center gap-4 rounded-[18px] border border-border-soft bg-white px-4 py-4 shadow-[0_5px_18px_rgba(40,92,67,0.025)]">
       <div
         className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[16px]"
         style={{ backgroundColor: channel.iconBg, color: channel.iconColor }}
@@ -812,8 +812,8 @@ function NotificationChannelItem({
         <Icon className="h-6 w-6" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-bold text-[#173D2C]">{channel.title}</p>
-        <p className="mt-1 truncate text-sm font-medium text-[#5C6D63]">{channel.detail}</p>
+        <p className="truncate text-base font-bold text-text-primary">{channel.title}</p>
+        <p className="mt-1 truncate text-sm font-medium text-text-secondary">{channel.detail}</p>
       </div>
       <ToggleSwitch defaultChecked={channel.enabled} />
     </div>
@@ -846,10 +846,10 @@ function InternalAlertItem({
   bordered?: boolean;
 }) {
   return (
-    <div className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-[#EDF2EF]' : ''}`}>
+    <div className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-border-soft' : ''}`}>
       <div>
-        <p className="text-base font-bold text-[#173D2C]">{alert.title}</p>
-        <p className="mt-1 text-sm font-medium text-[#5C6D63]">{alert.detail}</p>
+        <p className="text-base font-bold text-text-primary">{alert.title}</p>
+        <p className="mt-1 text-sm font-medium text-text-secondary">{alert.detail}</p>
       </div>
       <ToggleSwitch defaultChecked={alert.enabled} />
     </div>
@@ -875,7 +875,7 @@ function InternalAlertsCard() {
         ))}
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-5 border-t border-[#EDF2EF] pt-6 md:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-5 border-t border-border-soft pt-6 md:grid-cols-2">
         <FormSelect
           helper="Días antes de la fecha de cuota."
           label="Recordatorio de pago al cliente"
@@ -920,10 +920,10 @@ function SecurityOptionItem({
   bordered?: boolean;
 }) {
   return (
-    <div className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-[#EDF2EF]' : ''}`}>
+    <div className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-border-soft' : ''}`}>
       <div>
-        <p className="text-base font-bold text-[#173D2C]">{option.title}</p>
-        <p className="mt-1 text-sm font-medium text-[#5C6D63]">{option.detail}</p>
+        <p className="text-base font-bold text-text-primary">{option.title}</p>
+        <p className="mt-1 text-sm font-medium text-text-secondary">{option.detail}</p>
       </div>
       <ToggleSwitch defaultChecked={option.enabled} />
     </div>
@@ -949,7 +949,7 @@ function AccessAuthenticationCard() {
         ))}
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-5 border-t border-[#EDF2EF] pt-6 md:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-5 border-t border-border-soft pt-6 md:grid-cols-2">
         <FormSelect
           label="Longitud mínima de contraseña"
           options={[]}
@@ -974,7 +974,7 @@ function BackupsCard() {
         title="Respaldos"
       />
 
-      <p className="py-6 text-center text-sm font-medium text-[#5C6D63]">No hay respaldos configurados</p>
+      <p className="py-6 text-center text-sm font-medium text-text-secondary">No hay respaldos configurados</p>
 
       <div className="space-y-5">
         <FormSelect
@@ -990,7 +990,7 @@ function BackupsCard() {
       </div>
 
       <button
-        className="mt-7 flex h-14 w-full items-center justify-center gap-3 rounded-full border border-[#DDEBE3] bg-white text-base font-bold text-[#173D2C] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#F6FAF7] hover:shadow-md"
+        className="mt-7 flex h-14 w-full items-center justify-center gap-3 rounded-full border border-primary-border bg-white text-base font-bold text-text-primary shadow-sm transition hover:-translate-y-0.5 hover:bg-[#F6FAF7] hover:shadow-md"
         onClick={() => undefined}
         type="button"
       >
@@ -1019,7 +1019,7 @@ function EmptySettingsTab({ tab }: { tab: string }) {
   return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-neutral-100 bg-white p-6 text-sm font-medium text-neutral-500 shadow-sm"
+      className="rounded-2xl border border-border-soft bg-white p-6 text-sm font-medium text-text-muted shadow-sm"
       initial={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
     >
@@ -1032,7 +1032,7 @@ export function SettingsPage() {
   const [activeTab, setActiveTab] = useState('Seguridad');
 
   return (
-    <main className="min-h-screen bg-[#F3F4F6] p-5 font-sans text-[#173D2C]">
+    <main className="min-h-screen bg-page p-5 font-sans text-text-primary">
       <SettingsHeader />
       <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
 

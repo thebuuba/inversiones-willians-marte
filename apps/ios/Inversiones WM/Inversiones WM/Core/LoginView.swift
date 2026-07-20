@@ -48,7 +48,7 @@ public struct LoginView: View {
                         Text("Inversiones Willians Marte")
                             .font(.title2.bold())
                         Text("Accede para continuar")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.appMuted)
                     }
 
                     TextField("Usuario", text: $viewModel.username)
@@ -60,7 +60,7 @@ public struct LoginView: View {
                     if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)
                             .font(.footnote)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Color.appRust)
                     }
 
                     Button {

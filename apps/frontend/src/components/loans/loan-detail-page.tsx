@@ -65,11 +65,11 @@ const summaryTones = {
     value: 'text-[#B63B0B]',
   },
   paid: {
-    icon: 'bg-[#dbeafe] text-[#2f5f91]',
+    icon: 'bg-[#dbeafe] text-state-info',
     value: 'text-[#1E4E9A]',
   },
   quota: {
-    icon: 'bg-[#FFF2CC] text-[#7A5A0A]',
+    icon: 'bg-[#FFF2CC] text-state-warning',
     value: 'text-[#6F5310]',
   },
 } as const;
@@ -90,11 +90,11 @@ function SummaryCard({
   const classes = summaryTones[tone];
 
   return (
-    <div className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border-soft bg-white p-5 shadow-sm">
       <div className={`flex h-10 w-10 items-center justify-center rounded-full ${classes.icon}`}>
         {icon}
       </div>
-      <p className="mt-4 text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63]">{label}</p>
+      <p className="mt-4 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">{label}</p>
       <p className={`mt-1 text-xl font-bold ${classes.value}`}>{value}</p>
     </div>
   );
@@ -110,8 +110,8 @@ function DataRow({
   value: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-[#EDF2EF] py-2.5 last:border-b-0">
-      <span className="text-sm font-semibold text-[#5C6D63]">{label}</span>
+    <div className="flex items-center justify-between gap-4 border-b border-border-soft py-2.5 last:border-b-0">
+      <span className="text-sm font-semibold text-text-secondary">{label}</span>
       <span className={`text-right text-sm font-bold ${tone}`}>{value}</span>
     </div>
   );
@@ -127,12 +127,12 @@ function InfoPanel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
-      <div className="flex items-center gap-3 border-b border-[#EDF2EF] bg-[#FBFCFB] px-5 py-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eaf5ed] text-[#2f7654]">
+    <section className="overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm">
+      <div className="flex items-center gap-3 border-b border-border-soft bg-[#FBFCFB] px-5 py-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-soft text-primary-accent">
           {icon}
         </div>
-        <h2 className="text-base font-bold text-[#173D2C]">{title}</h2>
+        <h2 className="text-base font-bold text-text-primary">{title}</h2>
       </div>
       <div className="p-5">{children}</div>
     </section>
@@ -302,35 +302,35 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
     <main className="min-h-screen bg-page p-5">
       <div className="mx-auto max-w-[1480px]">
         <Link
-          className="inline-flex items-center gap-2 text-sm font-bold text-[#5C6D63] transition hover:text-[#2f7654]"
+          className="inline-flex items-center gap-2 text-sm font-bold text-text-secondary transition hover:text-primary-accent"
           href={`/clientes/${loan.clientId}`}
         >
           <ArrowLeft className="h-4 w-4" />
           Volver al cliente
         </Link>
 
-        <header className="mt-5 overflow-hidden rounded-3xl border border-neutral-100 bg-white shadow-sm">
+        <header className="mt-5 overflow-hidden rounded-3xl border border-border-soft bg-white shadow-sm">
           <div className="flex flex-col justify-between gap-4 px-8 py-6 md:flex-row md:items-end">
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-bold text-neutral-900">{getLoanTitle(loan)}</h1>
+                <h1 className="text-2xl font-bold text-text-primary">{getLoanTitle(loan)}</h1>
                 <StatusBadge status={loan.status} />
-                <span className="inline-flex rounded-full bg-[#eaf5ed] px-3 py-1 text-xs font-bold text-[#2f7654]">
+                <span className="inline-flex rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-accent">
                   {totals.paidInstallments}/{totals.totalInstallments} cuotas pagadas
                 </span>
-                <span className="inline-flex rounded-full bg-neutral-100 px-3 py-1 text-xs font-bold text-neutral-600">
+                <span className="inline-flex rounded-full bg-state-neutral-bg px-3 py-1 text-xs font-bold text-text-secondary">
                   #{loan.loanNumber}
                 </span>
               </div>
-              <p className="mt-2 text-sm font-semibold text-[#5C6D63]">
+              <p className="mt-2 text-sm font-semibold text-text-secondary">
                 {loan.client.firstName} {loan.client.lastName} · {frequency}
               </p>
-              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#eaf5ed] px-3 py-1 text-sm font-bold text-[#2f7654]">
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-sm font-bold text-primary-accent">
                 <CalendarDays className="h-4 w-4" /> Inicio: {fmtDate(loan.startDate)}
               </p>
             </div>
             <Link
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2f7654] px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-[#285c43]"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-primary"
               href={`/prestamos/cobrar?loanId=${loan.id}`}
             >
               <Plus className="h-4 w-4" />
@@ -370,26 +370,26 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               phone={loan.client.phone}
             />
 
-            <section className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
+            <section className="rounded-2xl border border-border-soft bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-base font-bold text-[#173D2C]">
+                  <h2 className="text-base font-bold text-text-primary">
                     {loan.interestType === 'INDEFINITE' ? 'Cobros de interés' : 'Progreso de pago'}
                   </h2>
-                  <p className="mt-1 text-sm font-medium text-[#5C6D63]">
+                  <p className="mt-1 text-sm font-medium text-text-secondary">
                     {loan.interestType === 'INDEFINITE'
                       ? `${totals.paidInstallments} cobros registrados · capital activo`
                       : `${totals.paidInstallments} de ${totals.totalInstallments} cuotas pagadas`}
                   </p>
                 </div>
-                <span className="text-xl font-bold text-[#2f7654]">
+                <span className="text-xl font-bold text-primary-accent">
                   {loan.interestType === 'INDEFINITE' ? 'Indefinido' : `${totals.progress}%`}
                 </span>
               </div>
               {loan.interestType !== 'INDEFINITE' ? (
-                <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#EDF2EF]">
+                <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-border-soft">
                   <div
-                    className="h-full rounded-full bg-[#2f7654]"
+                    className="h-full rounded-full bg-primary-accent"
                     style={{ width: `${totals.progress}%` }}
                   />
                 </div>
@@ -397,18 +397,18 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
             </section>
 
             <section
-              className="scroll-mt-5 overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm"
+              className="scroll-mt-5 overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm"
               id="calendario-cuotas"
             >
-              <div className="border-b border-[#EDF2EF] px-5 py-4">
-                <h2 className="text-base font-bold text-[#173D2C]">Calendario de cuotas</h2>
-                <p className="mt-1 text-sm font-medium text-[#5C6D63]">
+              <div className="border-b border-border-soft px-5 py-4">
+                <h2 className="text-base font-bold text-text-primary">Calendario de cuotas</h2>
+                <p className="mt-1 text-sm font-medium text-text-secondary">
                   Detalle de vencimientos y pagos aplicados.
                 </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-[860px] w-full text-left">
-                  <thead className="bg-[#FBFCFB] text-xs font-bold uppercase tracking-[0.08em] text-[#5C6D63]">
+                  <thead className="bg-[#FBFCFB] text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
                     <tr>
                       <th className="px-5 py-3">Cuota</th>
                       <th className="px-5 py-3">Vencimiento</th>
@@ -424,10 +424,10 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                       const paidAmount = Number(row.paidAmount ?? 0);
                       return (
                         <tr
-                          className="border-t border-[#EDF2EF] text-sm font-medium text-[#3F4542]"
+                          className="border-t border-border-soft text-sm font-medium text-[#3F4542]"
                           key={row.id}
                         >
-                          <td className="px-5 py-4 font-bold text-[#173D2C]">#{index + 1}</td>
+                          <td className="px-5 py-4 font-bold text-text-primary">#{index + 1}</td>
                           <td className="px-5 py-4">{fmtDate(row.dueDate)}</td>
                           <td className="px-5 py-4">{fmt(amount)}</td>
                           <td className="px-5 py-4">{fmt(paidAmount)}</td>
@@ -446,34 +446,34 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
             </section>
 
             <section
-              className="scroll-mt-5 overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm"
+              className="scroll-mt-5 overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm"
               id="recibos-pagos"
             >
-              <div className="border-b border-[#EDF2EF] px-5 py-4">
-                <h2 className="text-base font-bold text-[#173D2C]">Recibos y pagos</h2>
-                <p className="mt-1 text-sm font-medium text-[#5C6D63]">
+              <div className="border-b border-border-soft px-5 py-4">
+                <h2 className="text-base font-bold text-text-primary">Recibos y pagos</h2>
+                <p className="mt-1 text-sm font-medium text-text-secondary">
                   Historial de cobros registrados en este préstamo.
                 </p>
               </div>
               {loan.payments.length ? (
-                <div className="divide-y divide-[#EDF2EF]">
+                <div className="divide-y divide-border-soft">
                   {loan.payments.map((payment) => (
                     <article
                       className="grid gap-2 px-5 py-4 sm:grid-cols-[1fr_1fr_auto] sm:items-center"
                       key={payment.id}
                     >
                       <div>
-                        <p className="text-sm font-bold text-[#173D2C]">
+                        <p className="text-sm font-bold text-text-primary">
                           Recibo {payment.id.slice(0, 8).toUpperCase()}
                         </p>
                         <p className="mt-0.5 text-xs font-medium text-[#7A7F7D]">
                           {fmtDate(payment.paymentDate)} · {payment.paymentMethod ?? 'Sin método'}
                         </p>
                       </div>
-                      <p className="text-xs font-semibold text-[#5C6D63]">
+                      <p className="text-xs font-semibold text-text-secondary">
                         Recibido por {payment.receivedBy?.name ?? '—'}
                       </p>
-                      <p className="text-base font-bold tabular-nums text-[#2F7654]">
+                      <p className="text-base font-bold tabular-nums text-primary-accent">
                         {fmt(payment.amount)}
                       </p>
                     </article>
@@ -491,18 +491,18 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
             <div className="scroll-mt-5" id="saldo-anticipado">
               <InfoPanel icon={<CircleDollarSign className="h-5 w-5" />} title="Saldo anticipado">
                 <label className="mb-3 block">
-                  <span className="mb-2 block text-sm font-semibold text-[#5C6D63]">
+                  <span className="mb-2 block text-sm font-semibold text-text-secondary">
                     Fecha de saldo
                   </span>
                   <DatePickerInput
-                    className="h-10 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-bold text-[#173D2C] outline-none"
+                    className="h-10 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-bold text-text-primary outline-none"
                     onChange={setPayoffDate}
                     value={payoffDate}
                   />
                 </label>
                 <DataRow
                   label="Capital pendiente"
-                  tone="text-[#173D2C]"
+                  tone="text-text-primary"
                   value={payoffQuote ? fmt(payoffQuote.capitalOutstanding) : empty}
                 />
                 <DataRow
@@ -512,7 +512,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                 />
                 <DataRow
                   label="Interés futuro descontado"
-                  tone="text-[#2F7654]"
+                  tone="text-primary-accent"
                   value={payoffQuote ? fmt(payoffQuote.unearnedInterestDiscount) : empty}
                 />
                 <DataRow label="Días generados" value={payoffQuote?.daysGenerated ?? empty} />
@@ -533,9 +533,9 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               <InfoPanel icon={<Plus className="h-5 w-5" />} title="Agregar capital">
                 <div className="space-y-3">
                   <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#5C6D63]">Monto</span>
+                    <span className="mb-2 block text-sm font-semibold text-text-secondary">Monto</span>
                     <input
-                      className="h-10 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-bold text-[#173D2C] outline-none"
+                      className="h-10 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-bold text-text-primary outline-none"
                       inputMode="decimal"
                       onChange={(event) => setCapitalAmount(event.target.value)}
                       placeholder="0.00"
@@ -543,26 +543,26 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                     />
                   </label>
                   <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#5C6D63]">
+                    <span className="mb-2 block text-sm font-semibold text-text-secondary">
                       Fecha efectiva
                     </span>
                     <DatePickerInput
-                      className="h-10 w-full rounded-xl border border-[#DDEBE3] bg-white px-3 text-sm font-bold text-[#173D2C] outline-none"
+                      className="h-10 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-bold text-text-primary outline-none"
                       onChange={setCapitalDate}
                       value={capitalDate}
                     />
                   </label>
                   <textarea
-                    className="h-20 w-full resize-none rounded-xl border border-[#DDEBE3] bg-white px-3 py-2 text-sm font-medium text-[#173D2C] outline-none"
+                    className="h-20 w-full resize-none rounded-xl border border-primary-border bg-white px-3 py-2 text-sm font-medium text-text-primary outline-none"
                     onChange={(event) => setCapitalNotes(event.target.value)}
                     placeholder="Notas"
                     value={capitalNotes}
                   />
                   {capitalError ? (
-                    <p className="text-sm font-semibold text-[#9F3F25]">{capitalError}</p>
+                    <p className="text-sm font-semibold text-state-danger">{capitalError}</p>
                   ) : null}
                   <button
-                    className="h-10 w-full rounded-full bg-[#2F7654] text-sm font-bold text-white disabled:opacity-60"
+                    className="h-10 w-full rounded-full bg-primary-accent text-sm font-bold text-white disabled:opacity-60"
                     disabled={capitalSaving}
                     onClick={handleAddCapital}
                     type="button"

@@ -87,9 +87,9 @@ export function ClientPhotoCapturePage({ token }: { token: string }) {
   const canCapture = state === 'ready' || state === 'error';
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F3F4F6] px-5 py-8 text-[#173D2C]">
-      <section className="w-full max-w-md rounded-[24px] border border-[#DDEBE3] bg-white p-7 shadow-[0_12px_36px_rgba(40,92,67,0.08)]">
-        <div className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-[#EAF6EF] text-[#285C43]">
+    <main className="flex min-h-screen items-center justify-center bg-page px-5 py-8 text-text-primary">
+      <section className="w-full max-w-md rounded-[24px] border border-primary-border bg-white p-7 shadow-[0_12px_36px_rgba(40,92,67,0.08)]">
+        <div className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-primary-soft text-primary">
           {state === 'success' ? (
             <CheckCircle2 className="h-7 w-7" />
           ) : state === 'loading' || state === 'uploading' ? (
@@ -101,12 +101,12 @@ export function ClientPhotoCapturePage({ token }: { token: string }) {
           )}
         </div>
 
-        <h1 className="mt-5 text-2xl font-bold text-[#151918]">Fotografía del cliente</h1>
-        <p className="mt-2 text-sm font-medium text-[#5C6D63]">
+        <h1 className="mt-5 text-2xl font-bold text-text-primary">Fotografía del cliente</h1>
+        <p className="mt-2 text-sm font-medium text-text-secondary">
           {session?.clientName ?? 'Enlace temporal de captura'}
         </p>
 
-        <div className="mt-6 rounded-[16px] border border-[#DDEBE3] bg-[#F7FCF9] px-4 py-4 text-sm font-medium leading-6 text-[#5C6D63]">
+        <div className="mt-6 rounded-[16px] border border-primary-border bg-[#F7FCF9] px-4 py-4 text-sm font-medium leading-6 text-text-secondary">
           {message}
         </div>
 
@@ -121,7 +121,7 @@ export function ClientPhotoCapturePage({ token }: { token: string }) {
 
         {state !== 'success' && state !== 'expired' ? (
           <button
-            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#2F7654] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(47,118,84,0.22)] transition hover:bg-[#285C43] disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(47,118,84,0.22)] transition hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!canCapture}
             onClick={() => inputRef.current?.click()}
             type="button"
