@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
@@ -537,8 +538,9 @@ function normalizeSort(sort: string): 'recent' | 'oldest' | 'amount_desc' | 'amo
 }
 
 export function LoansPage() {
+  const searchParams = useSearchParams();
   const [page, setPage] = useState(0);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams.get('search')?.trim() ?? '');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
   const [sort, setSort] = useState('Más recientes');
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);

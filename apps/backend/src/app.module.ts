@@ -21,6 +21,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { PortfoliosModule } from './modules/portfolios/portfolios.module';
 import { CollectionInteractionsModule } from './modules/collection-interactions/collection-interactions.module';
 import { CashModule } from './modules/cash/cash.module';
+import { SearchModule } from './modules/search/search.module';
 import { HealthController } from './health.controller';
 import { KeepaliveService } from './common/services/keepalive.service';
 
@@ -51,6 +52,7 @@ const isCloudflareWorker = process.env.CLOUDFLARE_WORKER === 'true';
     PortfoliosModule,
     CollectionInteractionsModule,
     CashModule,
+    SearchModule,
   ],
   controllers: [HealthController],
   providers: [

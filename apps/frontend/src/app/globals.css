@@ -181,6 +181,10 @@ body {
   outline-offset: 2px;
 }
 
+:where(input, select, textarea).outline-none:focus-visible {
+  outline: none !important;
+}
+
 :where(button, input, select, textarea):disabled {
   cursor: not-allowed;
 }
