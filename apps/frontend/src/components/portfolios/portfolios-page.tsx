@@ -67,9 +67,9 @@ function statusLabel(status: string) {
 
 function statusClass(status: string) {
   if (status === 'ACTIVE') return 'bg-primary-soft text-primary';
-  if (status === 'OVERDUE') return 'bg-[#FADCCB] text-state-danger';
-  if (status === 'PAID') return 'bg-[#EEF0F2] text-[#555A58]';
-  return 'bg-[#FFF1C7] text-state-warning';
+  if (status === 'OVERDUE') return 'bg-state-danger-bg text-state-danger';
+  if (status === 'PAID') return 'bg-state-neutral-bg text-state-neutral';
+  return 'bg-state-warning-bg text-state-warning';
 }
 
 function SummaryCard({
@@ -84,12 +84,12 @@ function SummaryCard({
   subtext: string;
 }) {
   return (
-    <section className="flex min-h-[116px] items-center gap-4 rounded-2xl border border-border-soft bg-white p-5 shadow-sm">
+    <section className="flex min-h-[116px] items-center gap-4 rounded-panel border border-border-soft bg-card p-5 shadow-card">
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#7A7F7D]">{label}</p>
+        <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-secondary">{label}</p>
         <p className="mt-2 truncate text-2xl font-bold leading-none text-text-primary">{value}</p>
         <p className="mt-2 truncate text-sm font-medium text-text-secondary">{subtext}</p>
       </div>
@@ -99,7 +99,7 @@ function SummaryCard({
 
 function EmptyState() {
   return (
-    <section className="rounded-2xl border border-dashed border-[#BFD7CB] bg-white p-10 text-center shadow-sm">
+    <section className="rounded-panel border border-dashed border-primary-border bg-card p-10 text-center shadow-card">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-primary">
         <BriefcaseBusiness className="h-6 w-6" />
       </div>
@@ -108,7 +108,7 @@ function EmptyState() {
         Crea una cartera al registrar un préstamo nuevo para ver aquí sus clientes y códigos de préstamos.
       </p>
       <Link
-        className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:bg-primary"
+        className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary"
         href="/prestamos/nuevo"
       >
         <Plus className="h-4 w-4" />
@@ -120,7 +120,7 @@ function EmptyState() {
 
 function ClientRow({ group }: { group: PortfolioClientGroup }) {
   return (
-    <div className="rounded-2xl border border-border-soft bg-[#FBFCFB] p-4">
+    <div className="rounded-panel border border-border-soft bg-surface-subtle p-4">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <Link className="group flex min-w-0 items-center gap-3" href={`/clientes/${group.id}`}>
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
@@ -158,7 +158,7 @@ function ClientRow({ group }: { group: PortfolioClientGroup }) {
       <div className="mt-4 flex flex-wrap gap-2">
         {group.loans.map((loan) => (
           <Link
-            className="inline-flex min-h-9 items-center gap-2 rounded-full border border-primary-border bg-white px-3 text-xs font-bold text-[#3F4542] shadow-[0_4px_10px_rgba(40,92,67,0.06)] transition hover:-translate-y-0.5 hover:border-[#B8DCC5] hover:text-primary"
+            className="inline-flex min-h-9 items-center gap-2 rounded-full border border-primary-border bg-card px-3 text-xs font-bold text-text-primary shadow-soft transition hover:border-border-strong-ui hover:text-primary"
             href={`/prestamos/${loan.id}`}
             key={loan.id}
             title={`Abrir prestamo #${loan.loanNumber}`}
@@ -180,7 +180,7 @@ function PortfolioCard({ portfolio }: { portfolio: PortfolioItem }) {
   const totalBalance = portfolio.totals?.balance ?? loans.reduce((sum, loan) => sum + loan.balance, 0);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm">
+    <section className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
       <div className="flex flex-col gap-4 border-b border-border-soft px-6 py-5 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <div
@@ -214,7 +214,7 @@ function PortfolioCard({ portfolio }: { portfolio: PortfolioItem }) {
 
       <div className="space-y-3 p-5">
         {clientGroups.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-primary-border bg-[#FBFCFB] px-4 py-8 text-center text-sm font-medium text-text-secondary">
+          <p className="rounded-panel border border-dashed border-primary-border bg-surface-subtle px-4 py-8 text-center text-sm font-medium text-text-secondary">
             Sin prestamos asignados
           </p>
         ) : (
@@ -255,12 +255,12 @@ export function PortfoliosPage() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-secondary">GESTION</p>
             <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-text-primary">Carteras</h1>
-            <p className="mt-1.5 text-base font-medium text-[#7A7F7D]">
+            <p className="mt-1.5 text-base font-medium text-text-secondary">
               Consulta las carteras creadas, sus clientes y los prestamos asociados.
             </p>
           </div>
           <Link
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5 hover:bg-primary"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary"
             href="/prestamos/nuevo"
           >
             <Plus className="h-4 w-4" />
@@ -276,7 +276,7 @@ export function PortfoliosPage() {
         </div>
 
         {error ? (
-          <section className="rounded-2xl border border-[#FADCCB] bg-white p-6 text-sm font-bold text-state-danger shadow-sm">
+          <section className="rounded-panel border border-state-danger/30 bg-state-danger-bg p-6 text-sm font-bold text-state-danger shadow-card">
             {error}
           </section>
         ) : null}

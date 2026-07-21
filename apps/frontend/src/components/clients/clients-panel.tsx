@@ -165,7 +165,7 @@ export function ClientsPanel() {
         </div>
 
         {error && (
-          <div className="rounded-[16px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-700">
+          <div className="rounded-panel border border-state-danger/30 bg-state-danger-bg px-5 py-3 text-sm font-medium text-state-danger">
             {error}
           </div>
         )}
@@ -239,7 +239,7 @@ export function ClientsPanel() {
                     {client.phone ?? <EmptyField />}
                   </span>
                   <span
-                    className="inline-flex h-7 w-full max-w-[96px] items-center justify-center justify-self-end rounded-md bg-[#A8DDBB] px-3 text-primary shadow-[0_2px_6px_rgba(40,92,67,0.10)]"
+                    className="inline-flex h-7 w-full max-w-[96px] items-center justify-center justify-self-end rounded-control-compact bg-primary-border px-3 text-primary shadow-soft"
                   >
                     <span className="text-xs font-bold leading-none tabular-nums">
                       {client._count?.loans ?? 0}

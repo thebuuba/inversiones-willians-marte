@@ -1,29 +1,31 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import type { Variants } from 'framer-motion';
 import {
+  ChevronLeft,
+  ChevronRight,
   Download,
   Filter,
-  MoreHorizontal,
-  Pencil,
   Plus,
   Search,
-  Trash2,
   TrendingUp,
   UsersRound,
 } from 'lucide-react';
-import { deleteInvestor, getInvestors } from '@/lib/api/investors';
-import { getStaggerDelay } from '@/lib/animation';
-import { invalidateCache, useClientCache } from '@/lib/use-client-cache';
+import { getInvestors } from '@/lib/api/investors';
+import {
+  pageEntryHeaderClassName,
+  pageEntryStatCardClassName,
+  pageEntryTableClassName,
+} from '@/lib/page-entry-animation';
+import { useClientCache } from '@/lib/use-client-cache';
 import { formatInvestorCurrency } from './investors-panel.helpers';
 import type { InvestorItem } from '@inversiones/shared';
+import { Card as PanelCard } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-const filters = ['Todos', 'Activos', 'Pausados', 'Retirados'];
+const PAGE_SIZE = 8;
 
 const statusLabels: Record<string, string> = {
   ACTIVE: 'Activo',
@@ -31,67 +33,15 @@ const statusLabels: Record<string, string> = {
   WITHDRAWN: 'Retirado',
 };
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: (index = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: getStaggerDelay(index, 0.05) },
-  }),
-};
-
-function PanelCard({ children, className = '', index = 0 }: { children: ReactNode; className?: string; index?: number }) {
-  return (
-    <motion.section
-      variants={fadeUp}
-      initial="hidden"
-      animate="visible"
-      custom={index}
-      className={`rounded-2xl border border-border-soft bg-white shadow-sm ${className}`}
-    >
-      {children}
-    </motion.section>
-  );
-}
-
-function StatusPill({ status }: { status: string }) {
-  const label = statusLabels[status] ?? status;
-
-  return (
-    <Badge className="min-w-[82px] justify-center py-1.5" dot status={label}>
-      {label}
-    </Badge>
-  );
-}
+const filters = ['Todos', 'Activos', 'Pausados', 'Retirados'];
 
 export function InvestorsPanel() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('Todos');
-  const [openActionsId, setOpenActionsId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(() => new Set());
-  const [deleteError, setDeleteError] = useState('');
-  const { data, loading } = useClientCache<InvestorItem[]>('investors', getInvestors);
-  const investors = useMemo(() => (data ?? []).filter((investor) => !deletedIds.has(investor.id)), [data, deletedIds]);
-
-  const handleDeleteInvestor = async (investor: InvestorItem) => {
-    const confirmed = window.confirm(`¿Seguro que quieres borrar a ${investor.name}? Esta acción eliminará sus pagos registrados y no se puede deshacer.`);
-    if (!confirmed) return;
-
-    setDeletingId(investor.id);
-    setDeleteError('');
-    try {
-      await deleteInvestor(investor.id);
-      setDeletedIds((current) => new Set(current).add(investor.id));
-      invalidateCache('investors');
-      setOpenActionsId(null);
-    } catch {
-      setDeleteError('No se pudo borrar el inversionista. Intenta de nuevo.');
-    } finally {
-      setDeletingId(null);
-    }
-  };
+  const [page, setPage] = useState(0);
+  const { data, loading, error } = useClientCache<InvestorItem[]>('investors', getInvestors);
+  const investors = useMemo(() => data ?? [], [data]);
 
   const stats = useMemo(() => {
     const total = investors.length;
@@ -99,233 +49,219 @@ export function InvestorsPanel() {
     const capitalTotal = investors.reduce((s, i) => s + Number(i.capital), 0);
     const tasaPromedio = total > 0 ? (investors.reduce((s, i) => s + i.rate, 0) / total).toFixed(1) : '0';
     return [
-      { label: 'Total inversionistas', value: String(total), icon: UsersRound, bg: '#E7F4EC', color: '#2F7654' },
-      { label: 'Activos', value: String(activos), icon: UsersRound, bg: '#DDEFE5', color: '#285C43' },
-      { label: 'Capital total', value: formatInvestorCurrency(capitalTotal), icon: TrendingUp, bg: '#FFF4C8', color: '#7A5A0A' },
-      { label: 'Tasa promedio', value: `${tasaPromedio}%`, icon: TrendingUp, bg: '#D8E9FF', color: '#4E7CAD' },
+      { label: 'Total inversionistas', value: String(total), icon: UsersRound, bg: 'bg-primary-soft', color: 'text-primary-accent' },
+      { label: 'Activos', value: String(activos), icon: UsersRound, bg: 'bg-primary-soft', color: 'text-primary-accent' },
+      { label: 'Capital total', value: formatInvestorCurrency(capitalTotal), icon: TrendingUp, bg: 'bg-state-warning-bg', color: 'text-state-warning' },
+      { label: 'Tasa promedio', value: `${tasaPromedio}%`, icon: TrendingUp, bg: 'bg-state-info-bg', color: 'text-state-info' },
     ];
   }, [investors]);
 
   const filteredInvestors = useMemo(() => {
     const lower = search.toLowerCase();
     return investors.filter((i) => {
-      if (filter === 'Activos') return i.status === 'ACTIVE';
-      if (filter === 'Pausados') return i.status === 'PAUSED';
-      if (filter === 'Retirados') return i.status === 'WITHDRAWN';
-      return true;
-    }).filter((i) => {
+      if (filter === 'Activos' && i.status !== 'ACTIVE') return false;
+      if (filter === 'Pausados' && i.status !== 'PAUSED') return false;
+      if (filter === 'Retirados' && i.status !== 'WITHDRAWN') return false;
       if (!search) return true;
       return i.name.toLowerCase().includes(lower) || i.code.toLowerCase().includes(lower) || (i.cedula ?? '').toLowerCase().includes(lower);
     });
   }, [investors, filter, search]);
 
+  const totalPages = Math.ceil(filteredInvestors.length / PAGE_SIZE);
+  const displayInvestors = filteredInvestors.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const initialLoading = loading && !data;
+
   return (
-    <div className="min-h-screen bg-page p-5 font-sans text-text-primary">
-      <motion.header
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end"
-      >
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-secondary">CAPITAL</p>
-          <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-text-primary">Inversionistas</h1>
-          <p className="mt-1.5 text-base text-text-secondary">
-            Administra tu cartera de capital — {investors.length} inversionistas registrados.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-white px-5 text-sm font-bold text-primary-accent shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <Download className="h-4 w-4" />
-            Exportar
-          </button>
-          <Link
-            className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
-            href="/inversionistas/nuevo"
-          >
-            <Plus className="h-4 w-4" />
-            Agregar inversionista
-          </Link>
-        </div>
-      </motion.header>
-
-      <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <PanelCard key={stat.label} className="flex items-center gap-4 p-5" index={index + 1}>
-              <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-                style={{ backgroundColor: stat.bg, color: stat.color }}
-              >
-                <Icon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-text-secondary">{stat.label}</p>
-                <p className="mt-1 text-[24px] font-bold leading-none text-text-primary">
-                  {loading ? '...' : stat.value}
-                </p>
-              </div>
-            </PanelCard>
-          );
-        })}
-      </div>
-
-      <PanelCard className="mb-5 p-5" index={5}>
-        <div className="flex flex-col gap-3 xl:flex-row">
-          <div className="flex h-12 flex-1 items-center gap-3 rounded-full border border-primary-border bg-page px-5 shadow-[0_4px_10px_rgba(40,92,67,0.06)]">
-            <Search className="h-5 w-5 shrink-0 text-text-subtle" />
-            <input
-              className="flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-[#747882]"
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre, código o cédula..."
-            />
+    <div className="flex h-[calc(100dvh-4rem-env(safe-area-inset-top))] min-h-0 flex-col overflow-hidden bg-page p-5 font-sans text-text-primary">
+      <div className="flex w-full flex-1 flex-col gap-5">
+        <header
+          className={`${pageEntryHeaderClassName} flex flex-col justify-between gap-4 xl:flex-row xl:items-end`}
+        >
+          <div>
+            <h1 className="text-[26px] font-bold leading-tight text-text-primary">Inversionistas</h1>
+            <p className="mt-1.5 text-sm text-text-secondary">
+              Administra tu cartera de capital — {investors.length} inversionistas registrados.
+            </p>
           </div>
-        </div>
-        <div className="mt-4 flex flex-wrap items-center gap-2.5">
-          <Filter className="h-4 w-4 text-text-secondary" />
-          <span className="text-sm font-bold text-text-secondary">Estado:</span>
-          {filters.map((f) => (
-            <button
-              key={f}
-              className={`h-9 rounded-full px-4 text-sm font-bold transition hover:-translate-y-0.5 ${
-                filter === f
-                  ? 'bg-primary text-white shadow-[0_10px_18px_rgba(40,92,67,0.18)]'
-                  : 'border border-primary-border bg-surface-muted-ui text-primary-accent'
-              }`}
-              onClick={() => setFilter(f)}
-            >
-              {f}
+          <div className="flex items-center gap-3">
+            <button className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-white px-5 text-sm font-bold text-text-secondary transition-colors duration-150 hover:bg-surface-subtle hover:text-text-primary">
+              <Download className="h-4 w-4" />
+              Exportar
             </button>
-          ))}
-        </div>
-      </PanelCard>
+            <Link
+              className="flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white transition-colors duration-150 hover:bg-primary-hover"
+              href="/inversionistas/nuevo"
+            >
+              <Plus className="h-4 w-4" />
+              Agregar inversionista
+            </Link>
+          </div>
+        </header>
 
-      {deleteError && (
-        <div className="mb-4 rounded-xl border border-[#F7C9C0] bg-[#FFF3F1] px-4 py-3 text-sm font-semibold text-danger">
-          {deleteError}
-        </div>
-      )}
-
-      <PanelCard className="overflow-x-auto" index={6}>
-        <div className="grid min-w-[980px] grid-cols-[2fr_1.2fr_1.2fr_1fr_1fr_0.7fr] items-center bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
-          <span>INVERSIONISTA</span>
-          <span>CÓDIGO</span>
-          <span>CAPITAL</span>
-          <span>TASA</span>
-          <span>ESTADO</span>
-          <span className="text-right">ACCIONES</span>
-        </div>
-
-        <div className="min-w-[980px]">
-          {loading ? (
-            <div className="flex items-center justify-center py-20 text-sm font-medium text-text-secondary">
-              Cargando inversionistas...
-            </div>
-          ) : filteredInvestors.length === 0 ? (
-            <div className="flex items-center justify-center py-20 text-sm font-medium text-text-subtle">
-              No se encontraron inversionistas.
-            </div>
-          ) : (
-            filteredInvestors.map((investor, index) => (
-              <motion.div
-                key={investor.id}
-                variants={fadeUp}
-                initial="hidden"
-                animate="visible"
-                custom={index + 7}
-                className="grid min-h-[74px] cursor-pointer grid-cols-[2fr_1.2fr_1.2fr_1fr_1fr_0.7fr] items-center border-t border-border-soft px-6 text-primary-accent transition hover:bg-[#F4FAF6] bg-white"
-                onClick={() => router.push(`/inversionistas/${investor.id}`)}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <PanelCard
+                key={stat.label}
+                className={`${pageEntryStatCardClassName(index)} flex items-center gap-4 p-5`}
               >
-                <div className="flex items-center gap-4">
-                  <div className="relative h-12 w-12 shrink-0">
-                    {investor.photo ? (
-                      <div
-                        aria-label={investor.name}
-                        className="h-full w-full rounded-full border-[3px] border-white bg-cover bg-center shadow-[0_6px_14px_rgba(40,92,67,0.12)]"
-                        role="img"
-                        style={{ backgroundImage: `url(${investor.photo})` }}
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center rounded-full border-[3px] border-white bg-primary-soft shadow-[0_6px_14px_rgba(40,92,67,0.12)]">
-                        <TrendingUp className="h-5 w-5 text-primary-accent" />
-                      </div>
-                    )}
-                    <span
-                      className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white ${
-                        investor.status === 'ACTIVE' ? 'bg-[#7CC99B]' : investor.status === 'PAUSED' ? 'bg-[#E2C64F]' : 'bg-text-secondary'
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold leading-tight text-text-primary">{investor.name}</p>
-                    <p className="mt-0.5 text-xs font-medium text-text-secondary">
-                      {investor.cedula ? `Cédula: ${investor.cedula}` : '—'}
-                    </p>
-                  </div>
+                <div
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${stat.bg} ${stat.color}`}
+                >
+                  <Icon className="h-5 w-5" />
                 </div>
-                <span className="font-mono text-sm text-text-secondary">{investor.code}</span>
-                <span className="text-sm font-bold text-text-primary">{formatInvestorCurrency(investor.capital)}</span>
-                <span className="text-sm text-text-secondary">{investor.rate}%</span>
-                <StatusPill status={investor.status} />
-                <div className="flex items-center justify-end gap-3">
-                  <div className="relative">
-                    <button
-                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary-soft px-4 text-sm font-bold text-primary-accent transition hover:bg-[#DDEFE5]"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setOpenActionsId((current) => (current === investor.id ? null : investor.id));
-                      }}
-                      type="button"
-                    >
-                      Acciones
-                      <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                    {openActionsId === investor.id && (
-                      <div
-                        className="absolute right-0 top-11 z-30 w-52 rounded-xl border border-primary-border bg-white p-2 text-left shadow-[0_18px_40px_rgba(40,92,67,0.16)]"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <button
-                          className="flex h-10 w-full items-center gap-2.5 rounded-lg px-3 text-sm font-semibold text-primary transition hover:bg-surface-muted-ui"
-                          onClick={() => {
-                            setOpenActionsId(null);
-                            router.push(`/inversionistas/nuevo?investorId=${investor.id}`);
-                          }}
-                          type="button"
-                        >
-                          <Pencil className="h-4 w-4 text-primary-accent" aria-hidden="true" />
-                          Editar inversionista
-                        </button>
-                        <button
-                          className="flex h-10 w-full items-center gap-2.5 rounded-lg px-3 text-sm font-semibold text-danger transition hover:bg-[#FFF3F1] disabled:cursor-not-allowed disabled:opacity-60"
-                          disabled={deletingId === investor.id}
-                          onClick={() => void handleDeleteInvestor(investor)}
-                          type="button"
-                        >
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                          {deletingId === investor.id ? 'Borrando...' : 'Borrar'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                <div>
+                  <p className="text-[13px] text-text-secondary">{stat.label}</p>
+                  <p className="mt-1 text-[22px] font-bold leading-none text-text-primary">
+                    {initialLoading ? '...' : stat.value}
+                  </p>
                 </div>
-              </motion.div>
-            ))
-          )}
+              </PanelCard>
+            );
+          })}
         </div>
 
-        <div className="flex min-w-[980px] items-center justify-between border-t border-primary-border bg-[#F7F7F7] px-6 py-4">
-          <p className="text-sm font-semibold text-text-secondary">
-            {!loading && (
-              <>
-                Mostrando <span className="font-bold text-text-primary">{filteredInvestors.length}</span> de{' '}
-                <span className="font-bold text-text-primary">{investors.length}</span> inversionistas
-              </>
+        {error && (
+          <div className="rounded-[16px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-700">
+            {error}
+          </div>
+        )}
+
+        <PanelCard
+          className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-x-auto`}
+        >
+          {/* search + filters */}
+          <div className="min-w-[760px] border-b border-border-soft p-4">
+            <div className="flex h-11 items-center gap-3 rounded-xl border border-transparent bg-page px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-soft">
+              <Search className="h-4 w-4 shrink-0 text-text-secondary" />
+              <input
+                className="flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/60"
+                onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+                placeholder="Buscar por nombre, código o cédula..."
+              />
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2.5">
+              <Filter className="h-4 w-4 text-text-secondary" />
+              <span className="text-xs font-bold text-text-secondary">Estado:</span>
+              {filters.map((f) => (
+                <button
+                  key={f}
+                  className={`h-8 rounded-full px-3.5 text-xs font-bold transition-colors duration-150 ${
+                    filter === f
+                      ? 'bg-primary text-white'
+                      : 'border border-primary-border bg-white text-primary-accent hover:bg-surface-subtle'
+                  }`}
+                  onClick={() => { setFilter(f); setPage(0); }}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* table header */}
+          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center bg-surface-subtle px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
+            <span>INVERSIONISTA</span>
+            <span>CÓDIGO</span>
+            <span>CAPITAL</span>
+            <span>TASA</span>
+            <span>ESTADO</span>
+          </div>
+
+          {/* body */}
+          <div className="relative min-w-[760px] flex-1 overflow-hidden">
+            {initialLoading ? (
+              <div className="flex h-full items-center justify-center text-sm font-medium text-text-secondary">
+                Cargando inversionistas...
+              </div>
+            ) : displayInvestors.length === 0 ? (
+              <div className="flex h-32 items-center justify-center text-center text-sm font-medium text-text-secondary">
+                {search
+                  ? `No se encontraron inversionistas para "${search}"`
+                  : 'No se encontraron inversionistas.'}
+              </div>
+            ) : (
+              displayInvestors.map((investor) => (
+                <div
+                  key={investor.id}
+                  className="group grid min-h-[64px] cursor-pointer grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center border-b border-border-soft bg-card px-6 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle"
+                  onClick={() => router.push(`/inversionistas/${investor.id}`)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 shrink-0">
+                      {investor.photo ? (
+                        <div
+                          aria-label={investor.name}
+                          className="h-full w-full rounded-full bg-cover bg-center"
+                          role="img"
+                          style={{ backgroundImage: `url(${investor.photo})` }}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center rounded-full bg-primary-soft">
+                          <TrendingUp className="h-4 w-4 text-primary-accent" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold leading-tight text-text-primary">{investor.name}</p>
+                      <p className="mt-1 text-xs leading-tight text-text-secondary/70">
+                        {investor.cedula ? `Cédula: ${investor.cedula}` : '—'}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="[font-variant-numeric:tabular-nums] text-sm text-text-secondary">{investor.code}</span>
+                  <span className="text-sm font-bold text-text-primary">{formatInvestorCurrency(investor.capital)}</span>
+                  <span className="[font-variant-numeric:tabular-nums] text-sm text-text-secondary">{investor.rate}%</span>
+                  <span>
+                    <Badge
+                      className="min-w-[76px] justify-center py-1.5"
+                      dot
+                      status={statusLabels[investor.status] ?? investor.status}
+                    >
+                      {statusLabels[investor.status] ?? investor.status}
+                    </Badge>
+                  </span>
+                </div>
+              ))
             )}
-          </p>
-        </div>
-      </PanelCard>
+          </div>
+
+          {/* footer */}
+          <div className="flex min-w-[760px] items-center justify-between border-t border-border-soft bg-card px-6 py-4">
+            <p className="text-[13px] text-text-secondary">
+              {!initialLoading && (
+                <>
+                  Mostrando {displayInvestors.length} de {filteredInvestors.length} inversionista{filteredInvestors.length !== 1 ? 's' : ''}
+                </>
+              )}
+            </p>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-white text-text-secondary transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-30"
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => p - 1)}
+                  type="button"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="text-sm font-bold text-text-secondary">
+                  {page + 1} / {totalPages}
+                </span>
+                <button
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-white text-text-secondary transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-30"
+                  disabled={page >= totalPages - 1}
+                  onClick={() => setPage((p) => p + 1)}
+                  type="button"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        </PanelCard>
+      </div>
     </div>
   );
 }

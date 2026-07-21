@@ -82,7 +82,7 @@ function PageCard({
   return (
     <motion.section
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-[24px] border border-primary-border bg-white shadow-[0_8px_24px_rgba(40,92,67,0.045)] ${className}`}
+      className={`rounded-panel border border-border-soft bg-card shadow-card ${className}`}
       initial={{ opacity: 0, y: 18 }}
       transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1], delay: index * 0.055 }}
     >
@@ -103,14 +103,14 @@ function FormHeaderActions({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap xl:justify-end">
       <Link
-        className="inline-flex h-12 items-center justify-center gap-3 rounded-full border border-primary-border bg-white px-7 text-sm font-bold text-[#3F4542] shadow-[0_5px_14px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-md"
+        className="inline-flex h-12 items-center justify-center gap-3 rounded-full border border-primary-border bg-card px-7 text-sm font-bold text-text-primary shadow-soft transition hover:bg-surface-subtle"
         href={cancelHref}
       >
         <X className="h-5 w-5" />
         Cancelar
       </Link>
       <button
-        className="inline-flex h-12 items-center justify-center gap-3 rounded-full bg-primary-accent px-7 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.24)] transition hover:-translate-y-0.5 hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex h-12 items-center justify-center gap-3 rounded-full bg-primary-accent px-7 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50"
         disabled={saving}
         onClick={onSave}
         type="button"
@@ -139,17 +139,17 @@ function StyledInput({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">
+      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
         {label}
       </span>
       <input
-        className="h-[52px] w-full rounded-[14px] border border-primary-border bg-white px-4 text-sm font-medium text-text-primary shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition placeholder:text-text-muted focus:border-primary-accent focus:ring-4 focus:ring-primary-soft"
+        className="h-[52px] w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm font-medium text-text-primary shadow-soft outline-none transition placeholder:text-text-muted focus:border-primary-accent focus:ring-4 focus:ring-primary-soft"
         placeholder={placeholder}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
-      {helper && <span className="mt-2 block text-sm font-medium text-[#9C9F9D]">{helper}</span>}
+      {helper && <span className="mt-2 block text-sm font-medium text-text-subtle">{helper}</span>}
     </label>
   );
 }
@@ -167,12 +167,12 @@ function StyledSelect({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">
+      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
         {label}
       </span>
       <div className="relative">
         <select
-          className="h-[52px] w-full appearance-none rounded-[14px] border border-primary-border bg-white px-4 pr-12 text-sm font-medium text-text-primary shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition focus:border-primary-accent focus:ring-4 focus:ring-primary-soft"
+          className="h-[52px] w-full appearance-none rounded-control-comfortable border border-primary-border bg-card px-4 pr-12 text-sm font-medium text-text-primary shadow-soft outline-none transition focus:border-primary-accent focus:ring-4 focus:ring-primary-soft"
           value={value}
           onChange={(e) => onChange(e.target.value)}
         >
@@ -180,7 +180,7 @@ function StyledSelect({
             <option key={option}>{option}</option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#9DA5A0]" />
+        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-subtle" />
       </div>
     </label>
   );
@@ -199,11 +199,11 @@ function StyledTextarea({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">
+      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
         {label}
       </span>
       <textarea
-        className="min-h-[116px] w-full resize-y rounded-[14px] border border-primary-border bg-white px-4 py-4 text-sm font-medium text-text-primary shadow-[0_4px_10px_rgba(40,92,67,0.07)] outline-none transition placeholder:text-text-muted focus:border-primary-accent focus:ring-4 focus:ring-primary-soft"
+        className="min-h-[116px] w-full resize-y rounded-control-comfortable border border-primary-border bg-card px-4 py-4 text-sm font-medium text-text-primary shadow-soft outline-none transition placeholder:text-text-muted focus:border-primary-accent focus:ring-4 focus:ring-primary-soft"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -214,8 +214,8 @@ function StyledTextarea({
 
 function CardHeader({
   icon,
-  iconBg = '#EAF6EF',
-  iconColor = '#285C43',
+  iconBg = 'var(--primary-soft)',
+  iconColor = 'var(--primary)',
   title,
   subtitle,
 }: {
@@ -228,7 +228,7 @@ function CardHeader({
   return (
     <div className="mb-7 flex items-center gap-4">
       <div
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px]"
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control-comfortable"
         style={{ backgroundColor: iconBg, color: iconColor }}
       >
         {icon}
@@ -405,7 +405,7 @@ function ClientPhotoUploader({
         <div className="relative">
           <div
             aria-label="Foto del cliente"
-            className="aspect-square w-full rounded-[22px] bg-[#F7FCF9] bg-contain bg-center bg-no-repeat"
+            className="aspect-square w-full rounded-panel bg-primary-soft bg-contain bg-center bg-no-repeat"
             role="img"
             style={{ backgroundImage: `url(${value})` }}
           />
@@ -420,10 +420,10 @@ function ClientPhotoUploader({
         </div>
       ) : (
         <button
-          className={`flex aspect-square w-full flex-col items-center justify-center rounded-[22px] border-2 border-dashed px-6 text-center transition ${
+          className={`flex aspect-square w-full flex-col items-center justify-center rounded-panel border-2 border-dashed px-6 text-center transition ${
             dragging
               ? 'border-primary-accent bg-primary-soft'
-              : 'border-[#B8EBC9] bg-[#F7FCF9] hover:border-primary-accent'
+              : 'border-border-strong-ui bg-primary-soft hover:border-primary-accent'
           }`}
           onClick={() => inputRef.current?.click()}
           onDragLeave={() => setDragging(false)}
@@ -434,10 +434,10 @@ function ClientPhotoUploader({
           onDrop={handleDrop}
           type="button"
         >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-primary shadow-[0_7px_18px_rgba(40,92,67,0.1)]">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-card text-primary shadow-soft">
             <ImageIcon className="h-7 w-7" />
           </span>
-          <span className="mt-5 text-base font-bold text-[#3F4542]">Arrastra una foto aquí</span>
+          <span className="mt-5 text-base font-bold text-text-primary">Arrastra una foto aquí</span>
           <span className="mt-4 text-sm font-medium text-text-secondary">o haz click para subir</span>
         </button>
       )}
@@ -452,7 +452,7 @@ function ClientPhotoUploader({
 
       <div className="mt-6 grid gap-3">
         <button
-          className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-[12px] border border-[#B8EBC9] bg-white text-sm font-bold text-primary-accent shadow-[0_5px_12px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:bg-[#F7FCF9] disabled:opacity-50"
+          className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-control border border-border-strong-ui bg-card text-sm font-bold text-primary-accent shadow-soft transition hover:bg-primary-soft disabled:opacity-50"
           disabled={processing}
           onClick={() => inputRef.current?.click()}
           type="button"
@@ -461,7 +461,7 @@ function ClientPhotoUploader({
           {processing ? 'Procesando...' : value ? 'Cambiar foto' : 'Subir foto'}
         </button>
         <button
-          className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-[12px] bg-primary-accent text-sm font-bold text-white shadow-[0_10px_20px_rgba(47,118,84,0.2)] transition hover:-translate-y-0.5 hover:bg-primary disabled:opacity-50"
+          className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-control bg-primary-accent text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary disabled:opacity-50"
           disabled={creatingQr}
           onClick={() => void handleCreateQr()}
           type="button"
@@ -476,9 +476,9 @@ function ClientPhotoUploader({
       </div>
 
       {qrDataUrl ? (
-        <div className="mt-5 rounded-[18px] border border-[#D7EADF] bg-[#F4FBF7] p-4 text-center">
+        <div className="mt-5 rounded-panel border border-primary-border bg-surface-muted-ui p-4 text-center">
           <p className="text-sm font-bold text-text-primary">Escanea para abrir la cámara</p>
-          <div className="mx-auto mt-3 w-fit rounded-[14px] bg-white p-3 shadow-[0_8px_20px_rgba(40,92,67,0.08)]">
+          <div className="mx-auto mt-3 w-fit rounded-control-comfortable bg-card p-3 shadow-soft">
             <Image
               alt="QR para tomar la fotografía del cliente"
               className="h-40 w-40"
@@ -491,7 +491,7 @@ function ClientPhotoUploader({
           <p className="mt-3 text-xs font-medium leading-5 text-text-secondary">
             Usa un teléfono conectado a la misma red. La foto aparecerá aquí automáticamente.
           </p>
-          <p className="mt-2 break-all text-[10px] text-[#8A9690]">{captureUrl}</p>
+          <p className="mt-2 break-all text-[10px] text-text-subtle">{captureUrl}</p>
         </div>
       ) : null}
 
@@ -535,7 +535,7 @@ function RequiredFieldsNotice() {
   return (
     <motion.aside
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-[22px] border border-[#E8EDE9] bg-[#F5F7F6] p-7 text-sm font-medium leading-7 text-text-secondary"
+      className="rounded-panel border border-border-soft bg-surface-subtle p-7 text-sm font-medium leading-7 text-text-secondary"
       initial={{ opacity: 0, y: 18 }}
       transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1], delay: 0.11 }}
     >
@@ -627,8 +627,8 @@ function ContactInfoCard({
     <PageCard className="p-7" index={2}>
       <CardHeader
         icon={<Phone className="h-6 w-6" />}
-        iconBg="#D8E9FF"
-        iconColor="#2F5F91"
+        iconBg="var(--state-info-bg)"
+        iconColor="var(--state-info)"
         title="Información de contacto"
         subtitle="Cómo localizar al cliente."
       />
@@ -657,11 +657,11 @@ function ContactInfoCard({
         </div>
         <div className="md:col-span-2">
           <label className="block">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">
+            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
               Dirección
             </span>
-            <div className="flex items-start gap-3 rounded-[14px] border border-primary-border bg-white px-4 shadow-[0_4px_10px_rgba(40,92,67,0.07)] transition focus-within:border-primary-accent focus-within:ring-4 focus-within:ring-primary-soft">
-              <MapPin className="mt-4 h-5 w-5 shrink-0 text-[#9DA5A0]" />
+            <div className="flex items-start gap-3 rounded-control-comfortable border border-primary-border bg-card px-4 shadow-soft transition focus-within:border-primary-accent focus-within:ring-4 focus-within:ring-primary-soft">
+              <MapPin className="mt-4 h-5 w-5 shrink-0 text-text-subtle" />
               <input
                 className="h-[52px] w-full bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-muted"
                 placeholder="Calle, número, sector, ciudad"
@@ -785,7 +785,7 @@ export function AddClientPage({ clientId }: { clientId?: number }) {
             <h1 className="mt-5 text-[36px] font-bold leading-none text-text-primary">
               {isEditing ? 'Editar cliente' : 'Agregar cliente'}
             </h1>
-            <p className="mt-3 max-w-[760px] text-sm font-medium text-[#6F7280]">
+            <p className="mt-3 max-w-[760px] text-sm font-medium text-text-secondary">
               {isEditing
                 ? 'Actualiza la información del cliente.'
                 : 'Completa la información para registrar un nuevo cliente en tu cartera de préstamos.'}
@@ -795,13 +795,13 @@ export function AddClientPage({ clientId }: { clientId?: number }) {
         </motion.header>
 
         {error && (
-          <div className="mb-6 rounded-[16px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-700">
+          <div className="mb-6 rounded-panel border border-state-danger/30 bg-state-danger-bg px-5 py-3 text-sm font-medium text-state-danger">
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="rounded-[24px] border border-primary-border bg-white p-7 text-sm font-bold text-text-secondary">
+          <div className="rounded-panel border border-border-soft bg-card p-7 text-sm font-bold text-text-secondary shadow-card">
             Cargando cliente...
           </div>
         ) : (

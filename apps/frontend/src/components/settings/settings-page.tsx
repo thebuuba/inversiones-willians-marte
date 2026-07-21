@@ -49,7 +49,7 @@ function SectionCard({
   return (
     <motion.section
       animate="visible"
-      className={`rounded-2xl border border-border-soft bg-white shadow-sm ${className}`}
+      className={`rounded-panel border border-border-soft bg-card shadow-card ${className}`}
       custom={index}
       initial="hidden"
       variants={fadeUp}
@@ -80,13 +80,13 @@ function SettingsHeader() {
 
       <div className="flex items-center gap-3">
         <button
-          className="h-11 rounded-full border border-primary-border bg-white px-6 text-sm font-bold text-text-primary shadow-sm transition hover:-translate-y-0.5 hover:bg-[#F6FAF7]"
+          className="h-11 rounded-full border border-primary-border bg-card px-6 text-sm font-bold text-text-primary shadow-soft transition hover:bg-surface-subtle"
           type="button"
         >
           Cancelar
         </button>
         <button
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.2)] transition hover:-translate-y-0.5 hover:bg-primary"
+          className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary"
           type="button"
         >
           <Check className="h-4 w-4" />
@@ -107,7 +107,7 @@ function SettingsTabs({
   return (
     <motion.nav
       animate="visible"
-      className="mb-6 overflow-x-auto rounded-2xl border border-border-soft bg-white p-2 shadow-sm"
+      className="mb-6 overflow-x-auto rounded-panel border border-border-soft bg-card p-2 shadow-card"
       custom={1}
       initial="hidden"
       variants={fadeUp}
@@ -116,7 +116,7 @@ function SettingsTabs({
         {tabs.map((tab) => (
           <button
             className={`h-11 rounded-[14px] px-5 text-sm font-bold transition ${
-              activeTab === tab ? 'bg-primary-soft text-primary shadow-sm' : 'text-text-secondary hover:bg-[#F6FAF7]'
+              activeTab === tab ? 'bg-primary-soft text-primary shadow-sm' : 'text-text-secondary hover:bg-surface-subtle'
             }`}
             key={tab}
             onClick={() => onTabChange(tab)}
@@ -141,7 +141,7 @@ function CardTitle({
 }) {
   return (
     <div className="mb-6 flex items-start gap-4">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] bg-primary-soft text-primary">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control-comfortable bg-primary-soft text-primary">
         {icon}
       </div>
       <div>
@@ -154,9 +154,9 @@ function CardTitle({
 
 function LogoUploader() {
   return (
-    <div className="mb-6 flex flex-col justify-between gap-4 rounded-[18px] border border-dashed border-[#B8EBC9] bg-[#F7FCF9] p-5 sm:flex-row sm:items-center">
+    <div className="mb-6 flex flex-col justify-between gap-4 rounded-panel border border-dashed border-border-strong-ui bg-primary-soft p-5 sm:flex-row sm:items-center">
       <div className="flex items-center gap-5">
-        <div className="flex h-[74px] w-[74px] shrink-0 items-center justify-center rounded-[18px] bg-[#B8DCC5] text-xl font-bold text-primary">
+        <div className="flex h-[74px] w-[74px] shrink-0 items-center justify-center rounded-panel bg-primary-border text-xl font-bold text-primary">
           WM
         </div>
         <div>
@@ -167,7 +167,7 @@ function LogoUploader() {
         </div>
       </div>
 
-      <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-primary-border bg-white px-6 text-sm font-bold text-text-primary shadow-sm transition hover:bg-[#F6FAF7]">
+      <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-primary-border bg-card px-6 text-sm font-bold text-text-primary shadow-soft transition hover:bg-surface-subtle">
         <Upload className="h-4 w-4" />
         Subir logo
         <input className="hidden" type="file" />
@@ -198,11 +198,11 @@ function FormInput({
       <span className="mb-2 block text-sm font-bold text-text-secondary">{label}</span>
       {multiline ? (
         <textarea
-          className="h-[96px] w-full resize-none rounded-[10px] border border-primary-border bg-white px-4 py-3 text-sm font-medium text-text-primary shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-primary focus:ring-2 focus:ring-[#DDEBE3]"
+          className="h-[96px] w-full resize-none rounded-control border border-primary-border bg-card px-4 py-3 text-sm font-medium text-text-primary shadow-soft outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
           defaultValue={value}
         />
       ) : (
-        <div className="flex h-11 w-full items-center rounded-[10px] border border-primary-border bg-white px-4 text-sm font-medium text-text-primary shadow-[0_3px_8px_rgba(40,92,67,0.06)] transition focus-within:border-primary focus-within:ring-2 focus-within:ring-[#DDEBE3]">
+        <div className="flex h-11 w-full items-center rounded-control border border-primary-border bg-card px-4 text-sm font-medium text-text-primary shadow-soft transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-soft">
           {prefix && <span className="mr-3 shrink-0 text-text-secondary">{prefix}</span>}
           <input
             className="h-full min-w-0 flex-1 bg-transparent outline-none"
@@ -232,7 +232,7 @@ function FormSelect({
       <span className="mb-2 block text-sm font-bold text-text-secondary">{label}</span>
       <div className="relative">
         <select
-          className="h-11 w-full appearance-none rounded-[10px] border border-primary-border bg-white px-4 pr-10 text-sm font-medium text-text-primary shadow-[0_3px_8px_rgba(40,92,67,0.06)] outline-none transition focus:border-primary focus:ring-2 focus:ring-[#DDEBE3]"
+          className="h-11 w-full appearance-none rounded-control border border-primary-border bg-card px-4 pr-10 text-sm font-medium text-text-primary shadow-soft outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
           defaultValue={value}
         >
           {options.map((option) => (
@@ -253,14 +253,14 @@ function ToggleSwitch({ defaultChecked = false }: { defaultChecked?: boolean }) 
     <button
       aria-checked={checked}
       className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-        checked ? 'bg-[#18191D] shadow-[0_5px_12px_rgba(0,0,0,0.16)]' : 'bg-[#E1E3E6] shadow-[0_4px_10px_rgba(23,61,44,0.08)]'
+        checked ? 'bg-primary shadow-action' : 'bg-state-neutral-bg shadow-soft'
       }`}
       onClick={() => setChecked((current) => !current)}
       role="switch"
       type="button"
     >
       <span
-        className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-[0_2px_5px_rgba(0,0,0,0.18)] transition ${
+        className={`absolute top-1 h-5 w-5 rounded-full bg-card shadow-soft transition ${
           checked ? 'left-6' : 'left-1'
         }`}
       />
@@ -406,7 +406,7 @@ function LoanProductsCard() {
       </div>
 
       <button
-        className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-[16px] border border-dashed border-[#B8EBC9] bg-[#F7FCF9] text-base font-bold text-primary transition hover:bg-primary-soft"
+        className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-panel border border-dashed border-border-strong-ui bg-primary-soft text-base font-bold text-primary transition hover:bg-surface-muted-ui"
         onClick={() => undefined}
         type="button"
       >
@@ -479,7 +479,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
         >
           <motion.form
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-xl"
+            className="w-full max-w-md rounded-panel border border-border-soft bg-card p-6 shadow-modal"
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             onClick={(e) => e.stopPropagation()}
@@ -503,7 +503,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
                   Nombre completo
                 </label>
                 <input
-                  className="w-full rounded-[12px] border border-primary-border px-4 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-[#285C43]/10"
+                  className="h-11 w-full rounded-control border border-primary-border bg-card px-4 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Ej: Juan Pérez"
                   required
@@ -516,7 +516,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
                   Correo electrónico
                 </label>
                 <input
-                  className="w-full rounded-[12px] border border-primary-border px-4 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-[#285C43]/10"
+                  className="h-11 w-full rounded-control border border-primary-border bg-card px-4 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="ejemplo@correo.com"
                   required
@@ -530,7 +530,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
                   Contraseña
                 </label>
                 <input
-                  className="w-full rounded-[12px] border border-primary-border px-4 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-[#285C43]/10"
+                  className="h-11 w-full rounded-control border border-primary-border bg-card px-4 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   minLength={6}
                   placeholder="Mínimo 6 caracteres"
@@ -545,7 +545,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
                   Rol
                 </label>
                 <select
-                  className="w-full rounded-[12px] border border-primary-border px-4 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-[#285C43]/10"
+                  className="h-11 w-full rounded-control border border-primary-border bg-card px-4 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
                   value={form.role}
                 >
@@ -565,7 +565,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
               </button>
               <button
                 className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
-                  saving ? 'bg-text-secondary' : 'bg-primary-accent shadow-[0_8px_16px_rgba(90,154,122,0.22)] hover:-translate-y-0.5'
+                    saving ? 'bg-text-secondary' : 'bg-primary-accent shadow-action hover:bg-primary'
                 }`}
                 disabled={saving}
                 type="submit"
@@ -676,7 +676,7 @@ function SettingsUsersRolesTab() {
           <p className="text-sm font-medium text-text-secondary">{users.length} miembros · {activeCount} activos</p>
           {isAdmin && (
             <button
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.2)] transition hover:-translate-y-0.5 hover:bg-primary"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary"
               onClick={() => setShowCreate(true)}
               type="button"
             >
@@ -689,8 +689,8 @@ function SettingsUsersRolesTab() {
         {users.length === 0 ? (
           <p className="py-12 text-center text-sm font-medium text-text-secondary">No hay usuarios registrados</p>
         ) : (
-          <div className="overflow-hidden rounded-[18px] border border-border-soft">
-            <div className="hidden grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] bg-[#F3F8F5] px-5 py-4 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:grid">
+          <div className="overflow-hidden rounded-panel border border-border-soft">
+            <div className="hidden grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] bg-surface-subtle px-5 py-4 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:grid">
               <span>Miembro</span>
               <span>Rol</span>
               <span>Estado</span>
@@ -699,10 +699,10 @@ function SettingsUsersRolesTab() {
             {users.map((u) => (
               <div
                 key={u.id}
-                className="grid gap-4 border-t border-border-soft bg-white px-5 py-4 md:grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] md:items-center"
+                className="grid gap-4 border-t border-border-soft bg-card px-5 py-4 md:grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] md:items-center"
               >
                 <div className="flex min-w-0 items-center gap-4">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary shadow-[0_6px_14px_rgba(40,92,67,0.12)]">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary shadow-soft">
                     {u.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
@@ -736,7 +736,7 @@ function SettingsUsersRolesTab() {
                       </button>
                       <button
                         aria-label={`Eliminar ${u.name}`}
-                        className="rounded-full p-1.5 transition hover:bg-[#FFE3D2] hover:text-state-danger"
+                        className="rounded-full p-1.5 transition hover:bg-state-danger-bg hover:text-state-danger"
                         onClick={() => handleToggle(u.id)}
                         type="button"
                       >
@@ -762,7 +762,7 @@ function SettingsUsersRolesTab() {
           {Object.entries(rolesMap).map(([role, { count }]) => (
             <div
               key={role}
-              className="rounded-[18px] border border-border-soft bg-white p-5 shadow-[0_5px_18px_rgba(40,92,67,0.025)]"
+              className="rounded-panel border border-border-soft bg-card p-5 shadow-card"
             >
               <div className="mb-3 flex items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
@@ -804,9 +804,9 @@ function NotificationChannelItem({
   const Icon = channel.icon;
 
   return (
-    <div className="flex min-h-[92px] items-center gap-4 rounded-[18px] border border-border-soft bg-white px-4 py-4 shadow-[0_5px_18px_rgba(40,92,67,0.025)]">
+    <div className="flex min-h-[92px] items-center gap-4 rounded-panel border border-border-soft bg-card px-4 py-4 shadow-card">
       <div
-        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[16px]"
+        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-control-comfortable"
         style={{ backgroundColor: channel.iconBg, color: channel.iconColor }}
       >
         <Icon className="h-6 w-6" />
@@ -990,7 +990,7 @@ function BackupsCard() {
       </div>
 
       <button
-        className="mt-7 flex h-14 w-full items-center justify-center gap-3 rounded-full border border-primary-border bg-white text-base font-bold text-text-primary shadow-sm transition hover:-translate-y-0.5 hover:bg-[#F6FAF7] hover:shadow-md"
+        className="mt-7 flex h-14 w-full items-center justify-center gap-3 rounded-full border border-primary-border bg-card text-base font-bold text-text-primary shadow-soft transition hover:bg-surface-subtle hover:shadow-card"
         onClick={() => undefined}
         type="button"
       >
