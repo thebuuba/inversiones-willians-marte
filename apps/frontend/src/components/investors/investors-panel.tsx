@@ -8,21 +8,18 @@ import {
   ChevronRight,
   Download,
   Filter,
-  MoreHorizontal,
-  Pencil,
   Plus,
   Search,
   TrendingUp,
-  Trash2,
   UsersRound,
 } from 'lucide-react';
-import { deleteInvestor, getInvestors } from '@/lib/api/investors';
+import { getInvestors } from '@/lib/api/investors';
 import {
   pageEntryHeaderClassName,
   pageEntryStatCardClassName,
   pageEntryTableClassName,
 } from '@/lib/page-entry-animation';
-import { invalidateCache, useClientCache } from '@/lib/use-client-cache';
+import { useClientCache } from '@/lib/use-client-cache';
 import { formatInvestorCurrency } from './investors-panel.helpers';
 import type { InvestorItem } from '@inversiones/shared';
 import { Card as PanelCard } from '@/components/ui/card';
@@ -43,12 +40,8 @@ export function InvestorsPanel() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('Todos');
   const [page, setPage] = useState(0);
-  const [openActionsId, setOpenActionsId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(() => new Set());
-  const [deleteError, setDeleteError] = useState('');
   const { data, loading, error } = useClientCache<InvestorItem[]>('investors', getInvestors);
-  const investors = useMemo(() => (data ?? []).filter((investor) => !deletedIds.has(investor.id)), [data, deletedIds]);
+  const investors = useMemo(() => data ?? [], [data]);
 
   const stats = useMemo(() => {
     const total = investors.length;
@@ -78,27 +71,8 @@ export function InvestorsPanel() {
   const displayInvestors = filteredInvestors.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const initialLoading = loading && !data;
 
-  const handleDeleteInvestor = async (investor: InvestorItem) => {
-    const confirmed = window.confirm(`¿Seguro que quieres borrar a ${investor.name}? Esta acción eliminará sus pagos registrados y no se puede deshacer.`);
-    if (!confirmed) return;
-
-    setDeletingId(investor.id);
-    setDeleteError('');
-    try {
-      await deleteInvestor(investor.id);
-      setDeletedIds((current) => new Set(current).add(investor.id));
-      invalidateCache('investors');
-      setOpenActionsId(null);
-      setPage(0);
-    } catch {
-      setDeleteError('No se pudo borrar el inversionista. Intenta de nuevo.');
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-page p-5 font-sans text-text-primary">
+    <div className="flex h-[calc(100dvh-4rem-env(safe-area-inset-top))] min-h-0 flex-col overflow-hidden bg-page p-5 font-sans text-text-primary">
       <div className="flex w-full flex-1 flex-col gap-5">
         <header
           className={`${pageEntryHeaderClassName} flex flex-col justify-between gap-4 xl:flex-row xl:items-end`}
@@ -187,20 +161,13 @@ export function InvestorsPanel() {
           </div>
 
           {/* table header */}
-          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr_44px] items-center bg-surface-subtle px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
+          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center bg-surface-subtle px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
             <span>INVERSIONISTA</span>
             <span>CÓDIGO</span>
             <span>CAPITAL</span>
             <span>TASA</span>
             <span>ESTADO</span>
-            <span className="text-right">ACCIONES</span>
           </div>
-
-          {deleteError && (
-            <div className="min-w-[760px] border-b border-red-200 bg-red-50 px-6 py-3 text-sm font-medium text-red-700">
-              {deleteError}
-            </div>
-          )}
 
           {/* body */}
           <div className="relative min-w-[760px] flex-1 overflow-hidden">
@@ -218,7 +185,7 @@ export function InvestorsPanel() {
               displayInvestors.map((investor) => (
                 <div
                   key={investor.id}
-                  className="group grid min-h-[64px] cursor-pointer grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr_44px] items-center border-b border-border-soft bg-card px-6 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle"
+                  className="group grid min-h-[64px] cursor-pointer grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center border-b border-border-soft bg-card px-6 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle"
                   onClick={() => router.push(`/inversionistas/${investor.id}`)}
                 >
                   <div className="flex items-center gap-3">
@@ -255,46 +222,6 @@ export function InvestorsPanel() {
                       {statusLabels[investor.status] ?? investor.status}
                     </Badge>
                   </span>
-                  <div className="relative flex items-center justify-end">
-                    <button
-                      aria-label={`Acciones de ${investor.name}`}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-text-secondary opacity-0 transition-colors duration-150 hover:bg-state-neutral-bg hover:text-text-primary group-hover:opacity-100"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setOpenActionsId((current) => (current === investor.id ? null : investor.id));
-                      }}
-                      type="button"
-                    >
-                      <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                    {openActionsId === investor.id && (
-                      <div
-                        className="absolute right-0 top-10 z-30 w-48 rounded-lg border border-border-soft bg-card p-1.5 text-left shadow-lg"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <button
-                          className="flex h-9 w-full items-center gap-2.5 rounded-md px-3 text-sm font-semibold text-text-primary transition hover:bg-surface-subtle"
-                          onClick={() => {
-                            setOpenActionsId(null);
-                            router.push(`/inversionistas/nuevo?investorId=${investor.id}`);
-                          }}
-                          type="button"
-                        >
-                          <Pencil className="h-4 w-4 text-primary-accent" />
-                          Editar
-                        </button>
-                        <button
-                          className="flex h-9 w-full items-center gap-2.5 rounded-md px-3 text-sm font-semibold text-danger transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-                          disabled={deletingId === investor.id}
-                          onClick={() => void handleDeleteInvestor(investor)}
-                          type="button"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          {deletingId === investor.id ? 'Borrando...' : 'Borrar'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
                 </div>
               ))
             )}
