@@ -30,6 +30,14 @@ import { Badge } from '@/components/ui/badge';
 
 const PAGE_SIZE = 8;
 
+const statusLabels: Record<string, string> = {
+  ACTIVE: 'Activo',
+  PAUSED: 'Pausado',
+  WITHDRAWN: 'Retirado',
+};
+
+const filters = ['Todos', 'Activos', 'Pausados', 'Retirados'];
+
 export function InvestorsPanel() {
   const router = useRouter();
   const [search, setSearch] = useState('');
@@ -39,7 +47,7 @@ export function InvestorsPanel() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(() => new Set());
   const [deleteError, setDeleteError] = useState('');
-  const { data, loading } = useClientCache<InvestorItem[]>('investors', getInvestors);
+  const { data, loading, error } = useClientCache<InvestorItem[]>('investors', getInvestors);
   const investors = useMemo(() => (data ?? []).filter((investor) => !deletedIds.has(investor.id)), [data, deletedIds]);
 
   const stats = useMemo(() => {
@@ -55,22 +63,12 @@ export function InvestorsPanel() {
     ];
   }, [investors]);
 
-  const statusLabels: Record<string, string> = {
-    ACTIVE: 'Activo',
-    PAUSED: 'Pausado',
-    WITHDRAWN: 'Retirado',
-  };
-
-  const filters = ['Todos', 'Activos', 'Pausados', 'Retirados'];
-
   const filteredInvestors = useMemo(() => {
     const lower = search.toLowerCase();
     return investors.filter((i) => {
-      if (filter === 'Activos') return i.status === 'ACTIVE';
-      if (filter === 'Pausados') return i.status === 'PAUSED';
-      if (filter === 'Retirados') return i.status === 'WITHDRAWN';
-      return true;
-    }).filter((i) => {
+      if (filter === 'Activos' && i.status !== 'ACTIVE') return false;
+      if (filter === 'Pausados' && i.status !== 'PAUSED') return false;
+      if (filter === 'Retirados' && i.status !== 'WITHDRAWN') return false;
       if (!search) return true;
       return i.name.toLowerCase().includes(lower) || i.code.toLowerCase().includes(lower) || (i.cedula ?? '').toLowerCase().includes(lower);
     });
@@ -149,6 +147,12 @@ export function InvestorsPanel() {
             );
           })}
         </div>
+
+        {error && (
+          <div className="rounded-[16px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-700">
+            {error}
+          </div>
+        )}
 
         <PanelCard
           className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-x-auto`}
