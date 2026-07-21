@@ -80,20 +80,20 @@ export function DatePickerInput({
           setVisibleMonth(getInitialMonth(value));
           setOpen((current) => !current);
         }}
-        className={`${className} flex items-center justify-between text-left ${invalid ? 'border-[#e4a58b]' : ''}`}
+        className={`${className} flex items-center justify-between text-left ${invalid ? 'border-state-danger' : ''}`}
       >
-        <span className={value ? '' : 'text-[#8f9691]'}>{value || placeholder}</span>
+        <span className={value ? '' : 'text-text-subtle'}>{value || placeholder}</span>
         <CalendarDays className="h-4 w-4 shrink-0 text-text-secondary" />
       </button>
 
       {open && (
-        <div className="absolute left-0 top-[calc(100%+6px)] z-[80] w-[292px] rounded-[6px] border border-[#d7dce0] bg-white p-4 text-[#4b535b] shadow-[0_18px_42px_rgba(23,61,44,0.16)]">
+        <div className="absolute left-0 top-[calc(100%+6px)] z-[80] w-[292px] rounded-panel border border-border-soft bg-card p-4 text-text-secondary shadow-modal">
           <div className="mb-4 grid grid-cols-[32px_1fr_32px] items-center">
             <button
               type="button"
               aria-label="Mes anterior"
               onClick={() => moveMonth(-1)}
-              className="flex h-7 w-7 items-center justify-center rounded-md font-bold text-[#4b535b] hover:bg-[#eef3f6]"
+              className="flex h-7 w-7 items-center justify-center rounded-control-compact font-bold text-text-secondary hover:bg-surface-subtle"
             >
               <ChevronLeft className="h-4 w-4" strokeWidth={3} />
             </button>
@@ -102,7 +102,7 @@ export function DatePickerInput({
               type="button"
               aria-label="Mes siguiente"
               onClick={() => moveMonth(1)}
-              className="ml-auto flex h-7 w-7 items-center justify-center rounded-md font-bold text-[#4b535b] hover:bg-[#eef3f6]"
+              className="ml-auto flex h-7 w-7 items-center justify-center rounded-control-compact font-bold text-text-secondary hover:bg-surface-subtle"
             >
               <ChevronRight className="h-4 w-4" strokeWidth={3} />
             </button>
@@ -121,10 +121,10 @@ export function DatePickerInput({
                 onClick={() => selectDate(day.iso)}
                 className={`mx-auto flex h-9 w-9 items-center justify-center rounded-md text-base font-medium transition ${
                   day.selected
-                    ? 'bg-[#2f6f9f] font-bold text-white'
+                    ? 'bg-primary-accent font-bold text-text-inverse'
                     : day.inCurrentMonth
-                      ? 'text-[#4b535b] hover:bg-[#eef3f6]'
-                      : 'text-[#4b535b] hover:bg-[#f4f6f7]'
+                      ? 'text-text-secondary hover:bg-surface-subtle'
+                      : 'text-text-subtle hover:bg-surface-subtle'
                 }`}
               >
                 {day.date}

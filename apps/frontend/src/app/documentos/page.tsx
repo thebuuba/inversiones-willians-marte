@@ -22,7 +22,7 @@ function DocumentCard({ doc, onDelete }: { doc: DocumentItem; onDelete: (id: str
   const Icon = iconMap[doc.category] ?? FileText;
 
   return (
-    <div className="flex items-center gap-4 rounded-[16px] border border-primary-border bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(40,92,67,0.06)]">
+    <div className="flex items-center gap-4 rounded-panel border border-border-soft bg-card p-4 transition hover:bg-surface-subtle hover:shadow-soft">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-primary-soft text-primary-accent">
         <Icon className="h-5 w-5" />
       </div>
@@ -107,7 +107,7 @@ function UploadModal({
         >
           <motion.form
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-full max-w-lg rounded-[24px] bg-white p-6 shadow-xl"
+            className="w-full max-w-lg rounded-panel border border-border-soft bg-card p-6 shadow-modal"
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             onClick={(e) => e.stopPropagation()}
@@ -128,7 +128,7 @@ function UploadModal({
               <div>
                 <label className="mb-1 block text-sm font-medium text-text-primary">Archivo</label>
                 <div
-                  className="flex cursor-pointer items-center gap-3 rounded-[12px] border-2 border-dashed border-primary-border p-4 text-sm text-text-secondary transition hover:border-primary"
+                  className="flex cursor-pointer items-center gap-3 rounded-control border-2 border-dashed border-primary-border p-4 text-sm text-text-secondary transition hover:border-primary"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload className="h-5 w-5 text-primary-accent" />
@@ -146,7 +146,7 @@ function UploadModal({
               <div>
                 <label className="mb-1 block text-sm font-medium text-text-primary">Nombre</label>
                 <input
-                  className="w-full rounded-[12px] border border-primary-border px-4 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-[#285C43]/10"
+                  className="h-11 w-full rounded-control border border-primary-border bg-card px-4 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Nombre del documento"
                   value={name}
@@ -156,7 +156,7 @@ function UploadModal({
               <div>
                 <label className="mb-1 block text-sm font-medium text-text-primary">Categoría</label>
                 <select
-                  className="w-full rounded-[12px] border border-primary-border px-4 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-[#285C43]/10"
+                  className="h-11 w-full rounded-control border border-primary-border bg-card px-4 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                   onChange={(e) => setCategory(e.target.value)}
                   value={category}
                 >
@@ -180,7 +180,7 @@ function UploadModal({
               <button
                 className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
                   file && !uploading
-                    ? 'bg-primary-accent shadow-[0_8px_16px_rgba(90,154,122,0.22)] hover:-translate-y-0.5'
+                    ? 'bg-primary-accent shadow-action hover:bg-primary'
                     : 'bg-text-secondary cursor-not-allowed'
                 }`}
                 disabled={!file || uploading}
@@ -227,7 +227,7 @@ export default function DocumentosPage() {
           <p className="mt-1.5 text-sm text-text-secondary">Gestión documental del sistema.</p>
         </div>
         <button
-          className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
+          className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary"
           onClick={() => setShowUpload(true)}
           type="button"
         >
@@ -236,7 +236,7 @@ export default function DocumentosPage() {
         </button>
       </motion.header>
 
-      <div className="flex h-12 items-center gap-3 rounded-full border border-primary-border bg-white px-5 text-text-secondary shadow-[0_7px_22px_rgba(40,92,67,0.035)]">
+      <div className="flex h-12 items-center gap-3 rounded-full border border-primary-border bg-card px-5 text-text-secondary shadow-soft">
         <Search className="h-5 w-5 shrink-0" />
         <span className="truncate text-sm">Buscar documentos...</span>
       </div>

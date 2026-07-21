@@ -45,7 +45,7 @@ import { DatePickerInput } from '@/components/ui/date-picker-input';
 import { getNextMonthIsoDate } from '@/components/ui/date-picker.helpers';
 import type { Client, LoanOperationType, LoanPayoffQuote, LoanSummary } from '@inversiones/shared';
 
-const LOAN_CARD_SHADOW = 'shadow-[0_4px_12px_rgba(17,24,39,0.16)]';
+const LOAN_CARD_SHADOW = 'shadow-card';
 
 function getDefaultFirstPaymentDate(): string {
   return getNextMonthIsoDate();
@@ -84,9 +84,9 @@ function TextInput({
     <label className={`block ${className}`}>
       {label && <span className="mb-1.5 block text-xs font-bold text-text-secondary">{label}</span>}
       <div
-        className={`flex h-[42px] items-center rounded-[8px] border bg-white px-3 text-sm font-medium text-text-primary shadow-[0_2px_6px_rgba(40,92,67,0.05)] transition focus-within:ring-2 ${
+        className={`flex h-[42px] items-center rounded-control-compact border bg-card px-3 text-sm font-medium text-text-primary shadow-soft transition focus-within:ring-2 ${
           error
-            ? 'border-red-300 focus-within:border-red-400 focus-within:ring-red-100'
+            ? 'border-state-danger focus-within:border-state-danger focus-within:ring-state-danger-bg'
             : 'border-primary-border focus-within:border-primary focus-within:ring-primary-soft'
         }`}
       >
@@ -99,7 +99,7 @@ function TextInput({
         />
         {suffix && <span className="ml-2 shrink-0 text-xs text-text-secondary">{suffix}</span>}
       </div>
-      {error && <span className="mt-1 block text-xs font-medium text-red-500">{error}</span>}
+      {error && <span className="mt-1 block text-xs font-medium text-state-danger">{error}</span>}
     </label>
   );
 }

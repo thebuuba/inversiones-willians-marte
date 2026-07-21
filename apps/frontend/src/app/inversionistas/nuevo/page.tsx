@@ -94,6 +94,7 @@ function FormSection({
   accent,
   children,
   action,
+  contentClassName = 'space-y-5 xl:space-y-6',
 }: {
   icon?: React.ReactNode;
   title: string;
@@ -101,9 +102,10 @@ function FormSection({
   accent: string;
   children: React.ReactNode;
   action?: React.ReactNode;
+  contentClassName?: string;
 }) {
   return (
-    <div className="h-full rounded-2xl border border-border-soft bg-white p-6 shadow-sm lg:p-7 xl:p-8">
+    <div className="h-full rounded-panel border border-border-soft bg-card p-7 shadow-card xl:p-8">
       <div className="mb-6 flex items-center justify-between gap-6 xl:mb-7">
         <div className="flex min-w-0 items-center gap-3">
           {icon && (
@@ -118,26 +120,33 @@ function FormSection({
         </div>
         {action}
       </div>
-      <div className="space-y-5 xl:space-y-6">{children}</div>
+      <div className={contentClassName}>{children}</div>
     </div>
   );
 }
 
 function Field({ label, htmlFor, hint, full, children }: { label: string; htmlFor: string; hint?: string; full?: boolean; children: React.ReactNode }) {
-  return (
-    <div className={full ? '' : 'grid items-start gap-3 sm:grid-cols-[170px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,1fr)]'}>
-      <div className={full ? 'mb-1' : 'pt-3'}>
-        <label htmlFor={htmlFor} className="text-sm font-bold text-text-secondary">
+  return full ? (
+    <div>
+      <label htmlFor={htmlFor} className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
+        {label}
+      </label>
+      {children}
+    </div>
+  ) : (
+    <div className="space-y-2">
+      <div>
+        <label htmlFor={htmlFor} className="block text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
           {label}
         </label>
-        {hint && <p className="mt-0.5 text-xs text-text-subtle">{hint}</p>}
+        {hint && <p className="mt-1 text-xs text-text-subtle">{hint}</p>}
       </div>
-      <div>{children}</div>
+      {children}
     </div>
   );
 }
 
-const inputClass = 'h-14 w-full rounded-xl border border-primary-border bg-white px-5 text-base outline-none focus:border-primary-accent focus:ring-2 focus:ring-[#c2dfcb]/60';
+const inputClass = 'h-14 w-full rounded-control-comfortable border border-primary-border bg-card px-5 text-base outline-none focus:border-primary-accent focus:ring-2 focus:ring-primary-soft';
 
 function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onPhotoChange: (url: string | null) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -152,7 +161,7 @@ function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onP
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="group relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-[#c2dfcb] bg-primary-soft shadow-sm transition hover:border-primary-accent hover:shadow-md xl:h-[72px] xl:w-[72px]"
+        className="group relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-border-strong-ui bg-primary-soft shadow-soft transition hover:border-primary-accent hover:shadow-card xl:h-[72px] xl:w-[72px]"
         aria-label={photo ? 'Cambiar foto de perfil' : 'Subir foto de perfil'}
       >
         {photo ? (
@@ -303,15 +312,15 @@ function AddInvestorForm() {
   };
 
   return (
-    <div className="min-h-screen bg-page">
-      <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-5 lg:px-8 lg:py-6 xl:px-10">
-        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+    <div className="min-h-screen bg-page p-5 font-sans text-text-primary lg:p-7">
+      <div className="mx-auto max-w-[1640px]">
+        <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
           <div>
-            <Link href="/inversionistas" className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-text-muted hover:text-text-secondary">
+            <Link href="/inversionistas" className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.14em] text-primary-accent transition hover:text-text-primary">
               <ArrowLeft className="h-3.5 w-3.5" />
               Volver a inversionistas
             </Link>
-            <h1 className="text-3xl font-bold tracking-tight text-text-primary lg:text-[34px]">
+            <h1 className="mt-5 text-[36px] font-bold leading-none text-text-primary">
               {isEditing
                 ? 'Editar inversionista'
                 : isCreatingAdditionalInvestment
@@ -320,8 +329,13 @@ function AddInvestorForm() {
                     ? 'Agregar inversionista'
                     : 'Condiciones de inversión'}
             </h1>
+            <p className="mt-3 max-w-[760px] text-sm font-medium text-text-secondary">
+              {step === 1
+                ? 'Completa la información básica para registrar al inversionista.'
+                : 'Define el capital, la tasa y la vigencia de la inversión.'}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2.5 md:justify-end">
+          <div className="flex flex-wrap gap-2 md:justify-end">
             {step === 1 ? (
               <>
                 <button onClick={() => router.push('/inversionistas')} className="h-12 rounded-full border border-primary-border bg-white px-5 text-base font-bold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-2">
@@ -333,25 +347,25 @@ function AddInvestorForm() {
               </>
             ) : (
               <>
-                <button onClick={() => router.push('/inversionistas')} className="h-11 rounded-full border border-primary-border bg-white px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5">
+                <button onClick={() => router.push('/inversionistas')} className="h-10 rounded-full border border-primary-border bg-white px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5">
                   <X className="h-4 w-4" />Cancelar
                 </button>
-                <button onClick={() => setStep(1)} className="h-11 rounded-full border border-primary-border bg-white px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5">
+                <button onClick={() => setStep(1)} className="h-10 rounded-full border border-primary-border bg-white px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5">
                   <ArrowLeft className="h-4 w-4" />Atrás
                 </button>
                 {!isEditing && (
-                  <button onClick={() => handleSave(true)} disabled={saving} className="h-11 rounded-full border border-[#c2dfcb] bg-primary-soft px-4 text-sm font-semibold text-primary-accent hover:bg-primary-soft disabled:opacity-50 inline-flex items-center gap-1.5">
+                  <button onClick={() => handleSave(true)} disabled={saving} className="h-10 rounded-full border border-border-strong-ui bg-primary-soft px-4 text-sm font-semibold text-primary-accent hover:bg-surface-muted-ui disabled:opacity-50 inline-flex items-center gap-1.5">
                     <UserPlus className="h-4 w-4" />Guardar y nuevo
                   </button>
                 )}
-                <button onClick={() => handleSave(false)} disabled={saving} className="h-11 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-50 inline-flex items-center gap-1.5">
+                <button onClick={() => handleSave(false)} disabled={saving} className="h-10 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-50 inline-flex items-center gap-1.5">
                   <Save className="h-4 w-4" />{saving ? 'Guardando...' : isEditing ? 'Actualizar inversionista' : 'Guardar inversión'}
                 </button>
               </>
             )}
           </div>
           {error && (
-            <div className="w-full rounded-xl border border-[#fde4d4] bg-[#fff5f0] px-5 py-3 text-sm font-medium text-state-danger">
+            <div className="w-full rounded-panel border border-state-danger/30 bg-state-danger-bg px-5 py-3 text-sm font-medium text-state-danger">
               {error}
             </div>
           )}
@@ -371,8 +385,9 @@ function AddInvestorForm() {
                   <FormSection
                     title="Datos personales"
                     description="Información de identificación del inversionista."
-                    accent="#eaf5ed"
+                    accent="var(--primary-soft)"
                     action={<ProfilePhotoInput photo={photo} onPhotoChange={setPhoto} />}
+                    contentClassName="grid grid-cols-1 gap-5 md:grid-cols-2"
                   >
                     <Field label="Nombres" htmlFor="inv-first">
                       <input id="inv-first" value={form.firstName} onChange={(e) => set('firstName', e.target.value)} placeholder="Juan Carlos" className={inputClass} />
@@ -401,16 +416,24 @@ function AddInvestorForm() {
                 </MotionCard>
 
                 <MotionCard index={1}>
-                  <FormSection icon={<Phone className="h-5 w-5 text-[#3b82f6]" />} title="Información de contacto" description="Cómo comunicarse con el inversionista." accent="#dbeafe">
+                  <FormSection
+                    icon={<Phone className="h-5 w-5 text-state-info" />}
+                    title="Información de contacto"
+                    description="Cómo comunicarse con el inversionista."
+                    accent="var(--state-info-bg)"
+                    contentClassName="grid grid-cols-1 gap-5 md:grid-cols-2"
+                  >
                     <Field label="Teléfono móvil" htmlFor="inv-phone">
                       <input id="inv-phone" value={form.phone} onChange={(e) => set('phone', maskPhone(e.target.value))} placeholder="(000) 000-0000" className={inputClass} maxLength={15} />
                     </Field>
                     <Field label="Teléfono alternativo" htmlFor="inv-phone2">
                       <input id="inv-phone2" value={form.phone2} onChange={(e) => set('phone2', maskPhone(e.target.value))} placeholder="(000) 000-0000" className={inputClass} maxLength={15} />
                     </Field>
-                    <Field label="Correo electrónico" htmlFor="inv-email">
-                      <input id="inv-email" type="email" value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="inversionista@correo.com" className={inputClass} />
-                    </Field>
+                    <div className="md:col-span-2">
+                      <Field label="Correo electrónico" htmlFor="inv-email">
+                        <input id="inv-email" type="email" value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="inversionista@correo.com" className={inputClass} />
+                      </Field>
+                    </div>
                   </FormSection>
                 </MotionCard>
 
@@ -426,7 +449,7 @@ function AddInvestorForm() {
             >
               <div className="grid items-start gap-4 lg:grid-cols-2">
                 <MotionCard index={0}>
-                  <FormSection icon={<TrendingUp className="h-5 w-5 text-state-warning" />} title="Condiciones" description="Capital e inversión." accent="#fef3c7">
+                  <FormSection icon={<TrendingUp className="h-5 w-5 text-state-warning" />} title="Condiciones" description="Capital e inversión." accent="var(--state-warning-bg)">
                     <Field label="Capital inicial (RD$)" htmlFor="inv-capital" hint="Monto de inicio">
                       <input
                         id="inv-capital"
@@ -467,7 +490,7 @@ function AddInvestorForm() {
 
                 <MotionCard index={1}>
                   <div className="space-y-4">
-                    <FormSection icon={<Calendar className="h-5 w-5 text-[#6d28d9]" />} title="Plazo" description="Vigencia de la inversión." accent="#e9e2f5">
+                    <FormSection icon={<Calendar className="h-5 w-5 text-state-info" />} title="Plazo" description="Vigencia de la inversión." accent="var(--state-info-bg)">
                       <Field label="Fecha de inicio" htmlFor="inv-start">
                         <DatePickerInput id="inv-start" value={form.startDate} onChange={(value) => set('startDate', value)} className={inputClass} />
                       </Field>
@@ -476,13 +499,13 @@ function AddInvestorForm() {
                       <button
                         type="button"
                         onClick={handleCalculateInterest}
-                        className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-8 text-base font-bold text-white shadow-sm transition hover:bg-primary"
+                        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary-accent px-8 text-base font-bold text-white shadow-sm transition hover:bg-primary"
                       >
                         <Calculator className="h-5 w-5" />
                         Calcular
                       </button>
                       {monthlyInterest !== null && (
-                        <div className="rounded-xl border border-[#c2dfcb] bg-surface-muted-ui px-5 py-3">
+                        <div className="rounded-control border border-border-strong-ui bg-surface-muted-ui px-5 py-2.5">
                           <p className="text-xs font-bold uppercase tracking-wide text-text-secondary">Interés mensual</p>
                           <p className="text-xl font-bold text-text-primary">{formatDopCurrency(monthlyInterest)}</p>
                         </div>
@@ -492,9 +515,9 @@ function AddInvestorForm() {
                 </MotionCard>
 
                 <MotionCard index={2} className="lg:col-span-2">
-                  <FormSection icon={<FileText className="h-5 w-5 text-primary-accent" />} title="Notas y observaciones" description="Acuerdos, condiciones especiales o historial previo." accent="#c2dfcb">
+                  <FormSection icon={<FileText className="h-5 w-5 text-primary-accent" />} title="Notas y observaciones" description="Acuerdos, condiciones especiales o historial previo." accent="var(--border-strong-ui)">
                     <Field label="Comentarios" htmlFor="inv-notes" full>
-                      <textarea id="inv-notes" rows={3} value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Condiciones especiales, acuerdos verbales, historial previo..." className="w-full rounded-xl border-primary-border bg-white text-sm p-3.5 outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent border resize-none" />
+                      <textarea id="inv-notes" rows={3} value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Condiciones especiales, acuerdos verbales, historial previo..." className="w-full resize-none rounded-control-comfortable border border-primary-border bg-card p-3.5 text-sm outline-none focus:border-primary-accent focus:ring-2 focus:ring-primary-soft" />
                     </Field>
                   </FormSection>
                 </MotionCard>
@@ -503,7 +526,7 @@ function AddInvestorForm() {
           )}
         </AnimatePresence>
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-4 flex justify-end pb-3">
           <StepIndicator step={step} onStep={setStep} />
         </div>
       </div>
