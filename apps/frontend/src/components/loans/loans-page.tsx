@@ -24,16 +24,9 @@ import { getLoans, type LoanListItem } from '@/lib/api/loans';
 import { getStaggerDelay } from '@/lib/animation';
 import { useClientCache } from '@/lib/use-client-cache';
 import { formatDop } from '@/lib/currency';
+import { getLoanTypeLabel } from '@/lib/loan-type';
 
-const AMORTIZATION_LABELS: Record<string, string> = {
-  FLAT: 'Plana',
-  REDUCING: 'Reducción',
-  COMPOUND: 'Compuesto',
-  FIXED: 'Fijo',
-  INDEFINITE: 'Indefinido',
-};
-
-const statusFilters = ['Todos', 'Al día', 'Atrasados', 'Pendientes', 'Pagados'];
+const statusFilters = ['Todos', 'Al día', 'Pendientes', 'Atrasados', 'Vencidos', 'Pagados'];
 const sortOptions = ['Más recientes', 'Más antiguos', 'Mayor monto', 'Menor monto'];
 
 function loanToRow(loan: LoanListItem) {
@@ -47,14 +40,15 @@ function loanToRow(loan: LoanListItem) {
     loan.principal > 0 ? Math.round(((loan.principal - loan.balance) / loan.principal) * 100) : 0;
   const nextPayment = '—';
 
-  let statusLabel: string;
-  if (loan.status === 'ACTIVE') statusLabel = 'Al día';
-  else if (loan.status === 'OVERDUE') statusLabel = 'Atrasado';
-  else if (loan.status === 'PAID') statusLabel = 'Pagado';
-  else if (loan.status === 'RESTRUCTURED') statusLabel = 'Pendiente';
-  else statusLabel = 'Pendiente';
+  const collectionLabels = {
+    CURRENT: 'Al día',
+    PENDING: 'Pendiente',
+    LATE: 'Atrasado',
+    EXPIRED: 'Vencido',
+  } as const;
+  const statusLabel = loan.status === 'PAID' ? 'Pagado' : collectionLabels[loan.collectionStatus];
 
-  const typeLabel = AMORTIZATION_LABELS[loan.interestType] ?? loan.interestType;
+  const typeLabel = getLoanTypeLabel(loan.interestType, loan.interestRate);
 
   return {
     id: loan.id,
@@ -347,7 +341,12 @@ function LoanStatusBadge({ status }: { status: string }) {
   const styles: Record<string, { className: string; dot: string; label: string }> = {
     'Al día': { className: 'bg-primary-soft text-primary-accent', dot: '#7CC99B', label: 'Al día' },
     Atrasado: { className: 'bg-[#FADCCB] text-state-danger', dot: '#FF6A00', label: 'Atrasado' },
-    Pendiente: { className: 'bg-[#FFF1C7] text-state-warning', dot: '#F3B51B', label: 'Pendiente' },
+    Pendiente: { className: 'bg-[#F1F3F2] text-[#374151]', dot: '#374151', label: 'Pendiente' },
+    Vencido: {
+      className: 'bg-state-danger-bg text-state-danger',
+      dot: '#B73B2F',
+      label: 'Vencido',
+    },
     Pagado: { className: 'bg-[#EEF0F2] text-[#555A58]', dot: '#B9BCBE', label: 'Pagado' },
   };
   const style = styles[status];
@@ -523,9 +522,10 @@ function LoansTable({
 }
 
 function normalizeStatusFilter(status: string) {
-  if (status === 'Al día') return 'ACTIVE';
-  if (status === 'Atrasados') return 'OVERDUE';
-  if (status === 'Pendientes') return 'RESTRUCTURED';
+  if (status === 'Al día') return 'CURRENT';
+  if (status === 'Atrasados') return 'LATE';
+  if (status === 'Pendientes') return 'PENDING';
+  if (status === 'Vencidos') return 'EXPIRED';
   if (status === 'Pagados') return 'PAID';
   return status;
 }

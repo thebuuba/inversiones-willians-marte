@@ -45,6 +45,7 @@ export interface LoanListItem {
   startDate: string;
   endDate: string | null;
   status: string;
+  collectionStatus: 'CURRENT' | 'PENDING' | 'LATE' | 'EXPIRED';
   balance: number;
   notes: string | null;
   createdAt: string;
@@ -111,6 +112,7 @@ export interface LoanDetailLateFee {
 }
 
 export interface LoanDetail extends LoanListItem {
+  graceDays: number;
   schedule: LoanScheduleItem[];
   payments: LoanDetailPayment[];
   capitalMovements?: LoanCapitalMovement[];

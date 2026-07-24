@@ -59,7 +59,7 @@ async function main() {
           maxAmount: 50000,
         },
         {
-          name: 'Préstamo Comercial (Reducing)',
+          name: 'Préstamo Comercial',
           interestType: 'REDUCING',
           interestRate: 18,
           paymentFrequency: 'MONTHLY',

@@ -107,7 +107,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           {label}
         </span>
         {compact && (
-          <span className="pointer-events-none absolute left-[calc(100%+10px)] z-50 rounded-[8px] bg-text-primary px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-card transition-opacity delay-300 duration-150 group-hover/sidebar-item:opacity-100">
+          <span className="pointer-events-none absolute left-[calc(100%+10px)] z-50 -translate-x-1 rounded-[8px] bg-text-primary px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-card transition duration-100 ease-out group-hover/sidebar-item:translate-x-0 group-hover/sidebar-item:opacity-100">
             {label}
           </span>
         )}
