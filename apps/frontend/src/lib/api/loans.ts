@@ -49,6 +49,10 @@ export interface LoanListItem {
   balance: number;
   notes: string | null;
   createdAt: string;
+  paidInstallments: number;
+  totalInstallments: number;
+  paymentProgress: number;
+  nextPaymentDate: string | null;
   lateFeeEnabled?: boolean;
   lateFeeMode?: 'PER_INSTALLMENT' | 'DAILY';
   lateFeeCalculation?: 'PERCENTAGE' | 'AMOUNT';
