@@ -13,6 +13,10 @@ function calendarDay(date: Date) {
   return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
+export function isPastGracePeriod(dueDate: Date, graceDays: number, now = new Date()) {
+  return Math.floor((calendarDay(now) - calendarDay(dueDate)) / DAY_MS) > graceDays;
+}
+
 export function getLoanCollectionStatus(
   loan: LoanForCollectionStatus,
   graceDays: number,
@@ -30,9 +34,9 @@ export function getLoanCollectionStatus(
 
   const oldestUnpaid = (loan.schedule ?? [])
     .filter((row) => row.status !== 'PAID' && row.status !== 'CANCELLED')
-    .map((row) => calendarDay(row.dueDate))
-    .sort((left, right) => left - right)[0];
+    .map((row) => row.dueDate)
+    .sort((left, right) => calendarDay(left) - calendarDay(right))[0];
 
-  if (oldestUnpaid == null || oldestUnpaid > today) return 'CURRENT';
-  return Math.floor((today - oldestUnpaid) / DAY_MS) <= graceDays ? 'PENDING' : 'LATE';
+  if (oldestUnpaid == null || calendarDay(oldestUnpaid) > today) return 'CURRENT';
+  return isPastGracePeriod(oldestUnpaid, graceDays, now) ? 'LATE' : 'PENDING';
 }

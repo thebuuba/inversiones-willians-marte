@@ -1,10 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { CreatePortfolioDto } from './dto/create-portfolio.dto';
-import {
-  getLoanCollectionStatus,
-  isPastGracePeriod,
-} from '../../common/loan-collection-status';
+import { getLoanCollectionStatus, isPastGracePeriod } from '../../common/loan-collection-status';
 
 @Injectable()
 export class PortfoliosService {
