@@ -5,45 +5,48 @@ import { getLoanCollectionStatus } from '../../common/loan-collection-status';
 
 @Injectable()
 export class PortfoliosService {
-  private mapPortfolio(portfolio: {
-    id: string;
-    name: string;
-    description: string | null;
-    color: string;
-    createdAt: Date;
-    updatedAt: Date;
-    _count: { loans: number };
-    loans?: Array<{
+  private mapPortfolio(
+    portfolio: {
       id: string;
-      loanNumber: number;
-      clientId: number;
-      principal: unknown;
-      interestRate: unknown;
-      interestType: string;
-      totalAmount: unknown;
-      balance: unknown;
-      status: string;
-      endDate: Date | null;
+      name: string;
+      description: string | null;
+      color: string;
       createdAt: Date;
-      schedule: Array<{
-        dueDate: Date;
-        amount: unknown;
-        paidAmount: unknown;
-        status: string;
-      }>;
-      client: {
-        id: number;
-        firstName: string;
-        lastName: string;
-        identification: string | null;
-        phone: string | null;
-      };
-      product: {
+      updatedAt: Date;
+      _count: { loans: number };
+      loans?: Array<{
         id: string;
-        name: string;
-      };
-    }>;
-  }, graceDays = 5) {
+        loanNumber: number;
+        clientId: number;
+        principal: unknown;
+        interestRate: unknown;
+        interestType: string;
+        totalAmount: unknown;
+        balance: unknown;
+        status: string;
+        endDate: Date | null;
+        createdAt: Date;
+        schedule: Array<{
+          dueDate: Date;
+          amount: unknown;
+          paidAmount: unknown;
+          status: string;
+        }>;
+        client: {
+          id: number;
+          firstName: string;
+          lastName: string;
+          identification: string | null;
+          phone: string | null;
+        };
+        product: {
+          id: string;
+          name: string;
+        };
+      }>;
+    },
+    graceDays = 5,
+  ) {
     const loans = portfolio.loans ?? [];
 
     return {
@@ -63,12 +66,12 @@ export class PortfoliosService {
         const overdue = loan.schedule.filter(
           (item) => item.status === 'OVERDUE' || item.status === 'PARTIAL',
         );
-        const amountToCollect = (overdue.length > 0 ? overdue : nextPayment ? [nextPayment] : [])
-          .reduce(
-            (sum, item) =>
-              sum + Math.max(0, Number(item.amount) - Number(item.paidAmount ?? 0)),
-            0,
-          );
+        const amountToCollect = (
+          overdue.length > 0 ? overdue : nextPayment ? [nextPayment] : []
+        ).reduce(
+          (sum, item) => sum + Math.max(0, Number(item.amount) - Number(item.paidAmount ?? 0)),
+          0,
+        );
 
         return {
           id: loan.id,
@@ -106,49 +109,49 @@ export class PortfoliosService {
     const [settings, portfolios] = await Promise.all([
       prisma.systemSettings.findUnique({ where: { id: 1 } }),
       prisma.portfolio.findMany({
-      include: {
-        _count: { select: { loans: true } },
-        loans: {
-          orderBy: { createdAt: 'desc' },
-          take: 200,
-          select: {
-            id: true,
-            loanNumber: true,
-            clientId: true,
-            principal: true,
-            interestRate: true,
-            interestType: true,
-            totalAmount: true,
-            balance: true,
-            status: true,
-            endDate: true,
-            createdAt: true,
-            schedule: {
-              where: { status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] } },
-              orderBy: { dueDate: 'asc' },
-              select: { dueDate: true, amount: true, paidAmount: true, status: true },
-            },
-            client: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                identification: true,
-                phone: true,
+        include: {
+          _count: { select: { loans: true } },
+          loans: {
+            orderBy: { createdAt: 'desc' },
+            take: 200,
+            select: {
+              id: true,
+              loanNumber: true,
+              clientId: true,
+              principal: true,
+              interestRate: true,
+              interestType: true,
+              totalAmount: true,
+              balance: true,
+              status: true,
+              endDate: true,
+              createdAt: true,
+              schedule: {
+                where: { status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] } },
+                orderBy: { dueDate: 'asc' },
+                select: { dueDate: true, amount: true, paidAmount: true, status: true },
               },
-            },
-            product: {
-              select: {
-                id: true,
-                name: true,
+              client: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  identification: true,
+                  phone: true,
+                },
+              },
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      take,
-      skip,
+        orderBy: { createdAt: 'desc' },
+        take,
+        skip,
       }),
     ]);
 
@@ -159,47 +162,47 @@ export class PortfoliosService {
     const [settings, portfolio] = await Promise.all([
       prisma.systemSettings.findUnique({ where: { id: 1 } }),
       prisma.portfolio.findUnique({
-      where: { id },
-      include: {
-        _count: { select: { loans: true } },
-        loans: {
-          orderBy: { createdAt: 'desc' },
-          take: 200,
-          select: {
-            id: true,
-            loanNumber: true,
-            clientId: true,
-            principal: true,
-            interestRate: true,
-            interestType: true,
-            totalAmount: true,
-            balance: true,
-            status: true,
-            endDate: true,
-            createdAt: true,
-            schedule: {
-              where: { status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] } },
-              orderBy: { dueDate: 'asc' },
-              select: { dueDate: true, amount: true, paidAmount: true, status: true },
-            },
-            client: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                identification: true,
-                phone: true,
+        where: { id },
+        include: {
+          _count: { select: { loans: true } },
+          loans: {
+            orderBy: { createdAt: 'desc' },
+            take: 200,
+            select: {
+              id: true,
+              loanNumber: true,
+              clientId: true,
+              principal: true,
+              interestRate: true,
+              interestType: true,
+              totalAmount: true,
+              balance: true,
+              status: true,
+              endDate: true,
+              createdAt: true,
+              schedule: {
+                where: { status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] } },
+                orderBy: { dueDate: 'asc' },
+                select: { dueDate: true, amount: true, paidAmount: true, status: true },
               },
-            },
-            product: {
-              select: {
-                id: true,
-                name: true,
+              client: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  identification: true,
+                  phone: true,
+                },
+              },
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
         },
-      },
       }),
     ]);
     if (!portfolio) throw new NotFoundException('Portfolio not found');
