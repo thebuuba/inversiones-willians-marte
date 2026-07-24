@@ -18,6 +18,7 @@ public struct DashboardView: View {
         service: DashboardService,
         clientsService: ClientsService,
         loansService: LoansService,
+        upcomingPaymentsService: UpcomingPaymentsService,
         openLoans: @escaping () -> Void,
         logout: @escaping () -> Void
     ) {
@@ -28,7 +29,13 @@ public struct DashboardView: View {
         self.productsService = LoanProductsService(baseURL: loansService.baseURL)
         self.openLoans = openLoans
         self.logout = logout
-        _viewModel = StateObject(wrappedValue: DashboardViewModel(accessToken: accessToken, service: service))
+        _viewModel = StateObject(
+            wrappedValue: DashboardViewModel(
+                accessToken: accessToken,
+                service: service,
+                upcomingPaymentsService: upcomingPaymentsService
+            )
+        )
     }
 
     public var body: some View {
@@ -83,6 +90,11 @@ public struct DashboardView: View {
                         }
 
                         AttentionCard(overdueLoans: dashboard.overdueLoans)
+
+                        UpcomingPaymentsCard(
+                            payments: Array(viewModel.upcomingPayments.prefix(3)),
+                            openLoans: openLoans
+                        )
                     }
                     .padding(16)
                 }
@@ -131,6 +143,72 @@ public struct DashboardView: View {
         } catch {
             return false
         }
+    }
+}
+
+private struct UpcomingPaymentsCard: View {
+    let payments: [UpcomingPayment]
+    let openLoans: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Próximos cobros")
+                        .font(.headline)
+                        .foregroundStyle(Color.appText)
+                    Text("Cuotas que requieren seguimiento")
+                        .font(.caption)
+                        .foregroundStyle(Color.appMuted)
+                }
+                Spacer()
+                Button("Ver todos", action: openLoans)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.appGreen)
+            }
+
+            if payments.isEmpty {
+                Label("No hay cobros próximos", systemImage: "checkmark.circle.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.appGreen)
+                    .padding(.vertical, 8)
+            } else {
+                ForEach(payments) { payment in
+                    HStack(spacing: 12) {
+                        Image(systemName: "calendar")
+                            .foregroundStyle(Color.appGreen)
+                            .frame(width: 36, height: 36)
+                            .background(Color.appGreenSoft)
+                            .clipShape(Circle())
+
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(payment.clientName)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.appText)
+                                .lineLimit(1)
+                            Text(formattedDate(payment.dueDate))
+                                .font(.caption)
+                                .foregroundStyle(Color.appMuted)
+                        }
+                        Spacer()
+                        Text(payment.amount, format: .currency(code: "DOP"))
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(Color.appText)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .appCard()
+    }
+
+    private func formattedDate(_ value: String) -> String {
+        guard let date = ISO8601DateFormatter().date(from: value) else { return value }
+        return date.formatted(date: .abbreviated, time: .omitted)
     }
 }
 

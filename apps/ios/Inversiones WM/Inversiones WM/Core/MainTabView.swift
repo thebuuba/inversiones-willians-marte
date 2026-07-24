@@ -51,6 +51,7 @@ public struct MainTabView: View {
                 service: dashboardService,
                 clientsService: clientsService,
                 loansService: loansService,
+                upcomingPaymentsService: upcomingPaymentsService,
                 openLoans: { selectedTab = 2 },
                 logout: logout
             )
