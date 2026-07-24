@@ -227,7 +227,49 @@ export class LoansService {
     const { take: pageSize, skip: offset } = normalizePagination(take, skip);
     const filters: Prisma.Sql[] = [];
 
-    if (status) filters.push(Prisma.sql`l.status::text = ${status}`);
+    const oldestUnpaidDue = Prisma.sql`(
+      SELECT MIN(ps.due_date)::date
+      FROM payment_schedule ps
+      WHERE ps.loan_id = l.id
+        AND ps.status::text NOT IN ('PAID', 'CANCELLED')
+    )`;
+    const graceDaysSql = Prisma.sql`COALESCE(
+      (SELECT grace_days FROM system_settings WHERE id = 1),
+      5
+    )`;
+    const collectibleLoan = Prisma.sql`l.status::text <> 'PAID'`;
+    const expiredLoan = Prisma.sql`(
+      l.interest_type::text <> 'INDEFINITE'
+      AND l.balance > 0
+      AND l.end_date::date < CURRENT_DATE
+    )`;
+
+    if (status === 'PAID') {
+      filters.push(Prisma.sql`l.status::text = 'PAID'`);
+    } else if (status === 'EXPIRED') {
+      filters.push(Prisma.sql`${collectibleLoan} AND ${expiredLoan}`);
+    } else if (status === 'CURRENT') {
+      filters.push(
+        Prisma.sql`${collectibleLoan}
+          AND NOT ${expiredLoan}
+          AND (${oldestUnpaidDue} IS NULL OR ${oldestUnpaidDue} > CURRENT_DATE)`,
+      );
+    } else if (status === 'PENDING') {
+      filters.push(
+        Prisma.sql`${collectibleLoan}
+          AND NOT ${expiredLoan}
+          AND ${oldestUnpaidDue} <= CURRENT_DATE
+          AND ${oldestUnpaidDue} >= CURRENT_DATE - (${graceDaysSql} * INTERVAL '1 day')`,
+      );
+    } else if (status === 'LATE') {
+      filters.push(
+        Prisma.sql`${collectibleLoan}
+          AND NOT ${expiredLoan}
+          AND ${oldestUnpaidDue} < CURRENT_DATE - (${graceDaysSql} * INTERVAL '1 day')`,
+      );
+    } else if (status) {
+      filters.push(Prisma.sql`l.status::text = ${status}`);
+    }
     if (search) {
       const pattern = `%${search}%`;
       filters.push(Prisma.sql`(

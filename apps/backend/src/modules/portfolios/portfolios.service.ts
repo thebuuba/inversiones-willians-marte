@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { CreatePortfolioDto } from './dto/create-portfolio.dto';
-import { getLoanCollectionStatus } from '../../common/loan-collection-status';
+import {
+  getLoanCollectionStatus,
+  isPastGracePeriod,
+} from '../../common/loan-collection-status';
 
 @Injectable()
 export class PortfoliosService {
@@ -63,11 +66,14 @@ export class PortfoliosService {
       },
       loans: loans.map((loan) => {
         const nextPayment = loan.schedule[0] ?? null;
-        const overdue = loan.schedule.filter(
-          (item) => item.status === 'OVERDUE' || item.status === 'PARTIAL',
+        const duePayments = loan.schedule.filter(
+          (item) =>
+            item.status === 'OVERDUE' ||
+            item.status === 'PARTIAL' ||
+            isPastGracePeriod(item.dueDate, graceDays),
         );
         const amountToCollect = (
-          overdue.length > 0 ? overdue : nextPayment ? [nextPayment] : []
+          duePayments.length > 0 ? duePayments : nextPayment ? [nextPayment] : []
         ).reduce(
           (sum, item) => sum + Math.max(0, Number(item.amount) - Number(item.paidAmount ?? 0)),
           0,

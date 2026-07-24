@@ -55,7 +55,7 @@ describe('PortfoliosService', () => {
   });
 
   it('returns the next payment and the outstanding overdue amount', async () => {
-    const dueDate = new Date('2026-07-30T12:00:00.000Z');
+    const dueDate = new Date('2020-07-30T12:00:00.000Z');
     jest.mocked(prisma.portfolio.findUnique).mockResolvedValue({
       id: 'portfolio-1',
       name: 'Principal',
@@ -78,7 +78,7 @@ describe('PortfoliosService', () => {
           createdAt: new Date(),
           schedule: [
             { dueDate, amount: 5000, paidAmount: 1000, status: 'PARTIAL' },
-            { dueDate: new Date('2026-08-30'), amount: 5000, paidAmount: null, status: 'PENDING' },
+            { dueDate: new Date('2020-08-30'), amount: 5000, paidAmount: null, status: 'PENDING' },
           ],
           client: { id: 1, firstName: 'Ana', lastName: 'Pérez', identification: null, phone: null },
           product: { id: 'product-1', name: 'Préstamo Comercial' },
@@ -91,7 +91,7 @@ describe('PortfoliosService', () => {
     expect(portfolio.loans[0]).toEqual(
       expect.objectContaining({
         nextPaymentDate: dueDate,
-        amountToCollect: 4000,
+        amountToCollect: 9000,
       }),
     );
   });

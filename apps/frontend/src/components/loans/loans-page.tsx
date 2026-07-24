@@ -26,7 +26,7 @@ import { useClientCache } from '@/lib/use-client-cache';
 import { formatDop } from '@/lib/currency';
 import { getLoanTypeLabel } from '@/lib/loan-type';
 
-const statusFilters = ['Todos', 'Al día', 'Atrasados', 'Pendientes', 'Pagados'];
+const statusFilters = ['Todos', 'Al día', 'Pendientes', 'Atrasados', 'Vencidos', 'Pagados'];
 const sortOptions = ['Más recientes', 'Más antiguos', 'Mayor monto', 'Menor monto'];
 
 function loanToRow(loan: LoanListItem) {
@@ -342,7 +342,11 @@ function LoanStatusBadge({ status }: { status: string }) {
     'Al día': { className: 'bg-primary-soft text-primary-accent', dot: '#7CC99B', label: 'Al día' },
     Atrasado: { className: 'bg-[#FADCCB] text-state-danger', dot: '#FF6A00', label: 'Atrasado' },
     Pendiente: { className: 'bg-[#F1F3F2] text-[#374151]', dot: '#374151', label: 'Pendiente' },
-    Vencido: { className: 'bg-state-danger-bg text-state-danger', dot: '#B73B2F', label: 'Vencido' },
+    Vencido: {
+      className: 'bg-state-danger-bg text-state-danger',
+      dot: '#B73B2F',
+      label: 'Vencido',
+    },
     Pagado: { className: 'bg-[#EEF0F2] text-[#555A58]', dot: '#B9BCBE', label: 'Pagado' },
   };
   const style = styles[status];
@@ -518,9 +522,10 @@ function LoansTable({
 }
 
 function normalizeStatusFilter(status: string) {
-  if (status === 'Al día') return 'ACTIVE';
-  if (status === 'Atrasados') return 'OVERDUE';
-  if (status === 'Pendientes') return 'RESTRUCTURED';
+  if (status === 'Al día') return 'CURRENT';
+  if (status === 'Atrasados') return 'LATE';
+  if (status === 'Pendientes') return 'PENDING';
+  if (status === 'Vencidos') return 'EXPIRED';
   if (status === 'Pagados') return 'PAID';
   return status;
 }
