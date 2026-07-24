@@ -32,13 +32,12 @@ const sortOptions = ['Más recientes', 'Más antiguos', 'Mayor monto', 'Menor mo
 function loanToRow(loan: LoanListItem) {
   const clientName = `${loan.client.firstName} ${loan.client.lastName}`;
   const detail = `${loan.client.identification ?? '—'}`;
-  const paidSchedules = Math.round(
-    loan.principal > 0 ? ((loan.principal - loan.balance) / loan.principal) * loan.term : 0,
-  );
-  const totalSchedules = loan.term;
-  const percent =
-    loan.principal > 0 ? Math.round(((loan.principal - loan.balance) / loan.principal) * 100) : 0;
-  const nextPayment = '—';
+  const paidSchedules = loan.paidInstallments;
+  const totalSchedules = loan.totalInstallments;
+  const percent = loan.paymentProgress;
+  const nextPayment = loan.nextPaymentDate
+    ? new Date(loan.nextPaymentDate).toLocaleDateString('es-DO')
+    : 'Sin cuotas pendientes';
 
   const collectionLabels = {
     CURRENT: 'Al día',
@@ -317,21 +316,9 @@ function LoanFilters({
   );
 }
 
-const badgeColors = [
-  'bg-[#FFF1C7] text-state-warning',
-  'bg-primary-soft text-primary',
-  'bg-[#DCEBFF] text-state-info',
-  'bg-[#E9DDFB] text-[#6D28D9]',
-  'bg-[#FADCCB] text-state-danger',
-];
 function LoanTypeBadge({ type }: { type: string }) {
-  const idx =
-    Math.abs(type.split('').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0)) %
-    badgeColors.length;
   return (
-    <span
-      className={`inline-flex rounded-full px-3.5 py-1.5 text-sm font-bold ${badgeColors[idx]}`}
-    >
+    <span className="inline-flex justify-self-start rounded-full border border-primary-border bg-surface-subtle px-3 py-1 text-xs font-bold text-primary-accent">
       {type}
     </span>
   );
@@ -363,13 +350,16 @@ function LoanStatusBadge({ status }: { status: string }) {
 
 function ProgressCell({ progress, percent }: { progress: string; percent: number }) {
   return (
-    <div className="min-w-[200px]">
+    <div className="min-w-[180px]">
       <div className="flex items-center justify-between gap-4 text-sm">
         <span className="font-medium text-text-secondary">{progress}</span>
         <span className="font-bold text-[#3F4542]">{percent}%</span>
       </div>
-      <div className="mt-3 h-2 rounded-full bg-[#F0F2F3]">
-        <div className="h-full rounded-full bg-[#7CC99B]" style={{ width: `${percent}%` }} />
+      <div className="mt-2 h-1.5 rounded-full bg-surface-muted-ui">
+        <div
+          className="h-full rounded-full bg-primary-accent transition-[width]"
+          style={{ width: `${percent}%` }}
+        />
       </div>
     </div>
   );
@@ -381,9 +371,7 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
   return (
     <motion.div
       animate="visible"
-      className={`grid min-w-[1180px] grid-cols-[2.15fr_1.35fr_1.4fr_1.85fr_1.2fr_1.65fr] items-center border-t border-border-soft px-6 py-4 transition hover:bg-surface-subtle ${
-        index === 3 ? 'bg-[#F6FAF7]' : 'bg-white'
-      }`}
+      className="grid min-w-[1180px] grid-cols-[2.15fr_1.1fr_1.35fr_1.85fr_1.25fr_1.65fr] items-center border-t border-border-soft bg-white px-6 py-3.5 transition hover:bg-surface-subtle"
       custom={index + 7}
       initial="hidden"
       variants={fadeUp}
@@ -408,7 +396,7 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
       </div>
       <ProgressCell percent={loan.percent} progress={loan.progress} />
       <p className="text-sm font-medium text-[#3F4542]">{loan.nextPayment}</p>
-      <div className="flex items-center justify-end gap-4">
+      <div className="flex items-center justify-end gap-2.5">
         <LoanStatusBadge status={loan.status} />
         <Link
           aria-label={`Cobrar préstamo de ${loan.client}`}
@@ -495,7 +483,7 @@ function LoansTable({
   return (
     <PanelCard className="overflow-hidden" index={6}>
       <div className="overflow-x-auto">
-        <div className="grid min-w-[1180px] grid-cols-[2.15fr_1.35fr_1.4fr_1.85fr_1.2fr_1.65fr] bg-[#F7F7F7] px-6 py-4 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
+        <div className="grid min-w-[1180px] grid-cols-[2.15fr_1.1fr_1.35fr_1.85fr_1.25fr_1.65fr] bg-surface-subtle px-6 py-3.5 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
           <span>CLIENTE</span>
           <span>AMORTIZACIÓN</span>
           <span>MONTO</span>

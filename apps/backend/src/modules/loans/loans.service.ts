@@ -404,18 +404,23 @@ export class LoansService {
     `;
     const hasMore = rows.length > pageSize;
     const pageRows = rows.slice(0, pageSize);
-    const [settings, unpaidSchedules] = await Promise.all([
+    const [settings, schedules] = await Promise.all([
       prisma.systemSettings.findUnique({ where: { id: 1 } }),
       prisma.paymentSchedule.findMany({
         where: {
           loanId: { in: pageRows.map((row) => row.id) },
-          status: { notIn: ['PAID', 'CANCELLED'] },
         },
-        select: { loanId: true, dueDate: true, status: true },
+        select: {
+          loanId: true,
+          dueDate: true,
+          status: true,
+          amount: true,
+          paidAmount: true,
+        },
       }),
     ]);
-    const schedulesByLoan = new Map<string, typeof unpaidSchedules>();
-    for (const schedule of unpaidSchedules) {
+    const schedulesByLoan = new Map<string, typeof schedules>();
+    for (const schedule of schedules) {
       const current = schedulesByLoan.get(schedule.loanId) ?? [];
       current.push(schedule);
       schedulesByLoan.set(schedule.loanId, current);
@@ -432,38 +437,71 @@ export class LoansService {
     const totalPrincipal = Number(aggregation[0]?.totalPrincipal ?? 0);
 
     return {
-      data: pageRows.map((row) => ({
-        id: row.id,
-        loanNumber: row.loanNumber,
-        clientId: row.clientId,
-        productId: row.productId,
-        principal: row.principal,
-        interestRate: row.interestRate,
-        interestType: row.interestType,
-        totalAmount: row.totalAmount,
-        paymentFreq: row.paymentFreq,
-        term: row.term,
-        startDate: row.startDate,
-        endDate: row.endDate,
-        status: row.status,
-        collectionStatus: getLoanCollectionStatus(
-          { ...row, schedule: schedulesByLoan.get(row.id) ?? [] },
-          graceDays,
-        ),
-        balance: row.balance,
-        notes: row.notes,
-        createdAt: row.createdAt,
-        client: {
-          id: row.clientId,
-          firstName: row.clientFirstName,
-          lastName: row.clientLastName,
-          identification: row.clientIdentification,
-        },
-        product: {
-          id: row.productId,
-          name: row.productName,
-        },
-      })),
+      data: pageRows.map((row) => {
+        const loanSchedules = schedulesByLoan.get(row.id) ?? [];
+        const collectibleSchedules = loanSchedules.filter(
+          (schedule) => schedule.status !== 'CANCELLED',
+        );
+        const totalScheduled = collectibleSchedules.reduce(
+          (sum, schedule) => sum + Number(schedule.amount),
+          0,
+        );
+        const totalPaid = collectibleSchedules.reduce(
+          (sum, schedule) => sum + Number(schedule.paidAmount ?? 0),
+          0,
+        );
+        const nextPaymentDate =
+          collectibleSchedules
+            .filter((schedule) => schedule.status !== 'PAID')
+            .sort((left, right) => left.dueDate.getTime() - right.dueDate.getTime())[0]?.dueDate ??
+          null;
+
+        return {
+          id: row.id,
+          paidInstallments: collectibleSchedules.filter((schedule) => schedule.status === 'PAID')
+            .length,
+          totalInstallments: collectibleSchedules.length,
+          paymentProgress:
+            totalScheduled > 0
+              ? Math.min(100, Math.max(0, Math.round((totalPaid / totalScheduled) * 100)))
+              : 0,
+          nextPaymentDate,
+          loanNumber: row.loanNumber,
+          clientId: row.clientId,
+          productId: row.productId,
+          principal: row.principal,
+          interestRate: row.interestRate,
+          interestType: row.interestType,
+          totalAmount: row.totalAmount,
+          paymentFreq: row.paymentFreq,
+          term: row.term,
+          startDate: row.startDate,
+          endDate: row.endDate,
+          status: row.status,
+          collectionStatus: getLoanCollectionStatus(
+            {
+              ...row,
+              schedule: (schedulesByLoan.get(row.id) ?? []).filter(
+                (schedule) => schedule.status !== 'PAID' && schedule.status !== 'CANCELLED',
+              ),
+            },
+            graceDays,
+          ),
+          balance: row.balance,
+          notes: row.notes,
+          createdAt: row.createdAt,
+          client: {
+            id: row.clientId,
+            firstName: row.clientFirstName,
+            lastName: row.clientLastName,
+            identification: row.clientIdentification,
+          },
+          product: {
+            id: row.productId,
+            name: row.productName,
+          },
+        };
+      }),
       total,
       totalPrincipal,
     };
