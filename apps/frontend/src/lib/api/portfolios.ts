@@ -61,3 +61,7 @@ export async function createPortfolio(params: {
   const { data } = await api.post<ApiResponse<PortfolioItem>>('/portfolios', params);
   return data.data as PortfolioItem;
 }
+
+export async function deletePortfolio(id: string): Promise<void> {
+  await api.delete(`/portfolios/${id}`);
+}
