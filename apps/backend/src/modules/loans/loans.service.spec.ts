@@ -12,8 +12,12 @@ jest.mock('@inversiones/database', () => ({
     },
     loanReplacement: { createMany: jest.fn() },
     paymentSchedule: {
+      findMany: jest.fn(),
       upsert: jest.fn(),
       updateMany: jest.fn(),
+    },
+    systemSettings: {
+      findUnique: jest.fn(),
     },
     paymentPromise: { updateMany: jest.fn() },
     lateFee: { updateMany: jest.fn() },
@@ -35,6 +39,7 @@ describe('LoansService', () => {
 
   beforeEach(() => {
     service = new LoansService({} as any, {} as any);
+    jest.mocked(prisma.systemSettings.findUnique).mockResolvedValue({ id: 1, graceDays: 5 } as any);
     jest
       .mocked(prisma.$transaction)
       .mockImplementation((callback: (tx: typeof prisma) => unknown) =>

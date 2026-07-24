@@ -4,6 +4,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { getUsers, createUser, toggleActiveUser, type UserItem, type CreateUserInput } from '@/lib/api/users';
+import { getSettings, updateSettings } from '@/lib/api/settings';
 import { useAuth } from '@/lib/auth-context';
 import {
   Building2,
@@ -338,6 +339,26 @@ function SwitchRow({
 }
 
 function DefaultLoanParametersCard() {
+  const [graceDays, setGraceDays] = useState(5);
+  const [savingGrace, setSavingGrace] = useState(false);
+  const [graceSaved, setGraceSaved] = useState(false);
+
+  useEffect(() => {
+    getSettings().then((settings) => setGraceDays(settings.graceDays)).catch(() => undefined);
+  }, []);
+
+  async function saveGraceDays() {
+    setSavingGrace(true);
+    setGraceSaved(false);
+    try {
+      const settings = await updateSettings(graceDays);
+      setGraceDays(settings.graceDays);
+      setGraceSaved(true);
+    } finally {
+      setSavingGrace(false);
+    }
+  }
+
   return (
     <SectionCard className="p-6 lg:p-7" index={2}>
       <CardTitle
@@ -345,6 +366,37 @@ function DefaultLoanParametersCard() {
         subtitle="Valores aplicados al crear un préstamo nuevo."
         title="Parámetros por defecto"
       />
+
+      <div className="mb-6 rounded-panel border border-primary-border bg-primary-soft p-4">
+        <label className="block">
+          <span className="text-sm font-bold text-text-primary">Días de gracia para pagar una cuota</span>
+          <span className="mt-1 block text-sm font-medium text-text-secondary">
+            La cuota queda pendiente desde su vencimiento y pasa a atrasada al superar este plazo.
+          </span>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <input
+              className="h-11 w-24 rounded-control border border-primary-border bg-card px-4 text-sm font-bold outline-none focus:border-primary focus:ring-2 focus:ring-primary-soft"
+              max={30}
+              min={0}
+              onChange={(event) => {
+                setGraceDays(Math.min(30, Math.max(0, Number(event.target.value))));
+                setGraceSaved(false);
+              }}
+              type="number"
+              value={graceDays}
+            />
+            <span className="text-sm font-medium text-text-secondary">días</span>
+            <button
+              className="ml-auto h-10 rounded-full bg-primary-accent px-5 text-sm font-bold text-white hover:bg-primary disabled:opacity-50"
+              disabled={savingGrace}
+              onClick={saveGraceDays}
+              type="button"
+            >
+              {savingGrace ? 'Guardando...' : graceSaved ? 'Guardado' : 'Guardar plazo'}
+            </button>
+          </div>
+        </label>
+      </div>
 
       <div className="grid grid-cols-1 gap-x-7 gap-y-5 md:grid-cols-2">
         <FormInput

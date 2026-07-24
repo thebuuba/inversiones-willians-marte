@@ -32,6 +32,7 @@ import {
   type LoanListItem,
 } from '@/lib/api/loans';
 import { formatDop, parseCurrencyInput } from '@/lib/currency';
+import { getLoanTypeLabel } from '@/lib/loan-type';
 import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
 import {
   buildPaymentAllocationPreview,
@@ -54,13 +55,6 @@ const frequencyLabels: Record<string, string> = {
   BIWEEKLY: 'Quincenal',
   MONTHLY: 'Mensual',
   QUARTERLY: 'Trimestral',
-};
-const interestTypeLabels: Record<string, string> = {
-  FLAT: 'Plana',
-  REDUCING: 'Reducción',
-  COMPOUND: 'Compuesto',
-  FIXED: 'Fijo',
-  INDEFINITE: 'Plazo indefinido',
 };
 const fmt = (value: number | string) => formatDop(value, { decimals: 2, space: true });
 const fmtDate = (value: string | Date) =>
@@ -700,7 +694,7 @@ export function RegisterLoanPaymentPage() {
                         />
                         <FinancialDetail
                           label="Tipo de préstamo"
-                          value={interestTypeLabels[loan.interestType] ?? loan.interestType}
+                          value={getLoanTypeLabel(loan.interestType, loan.interestRate)}
                         />
                         <FinancialDetail
                           label="Tasa"

@@ -6,6 +6,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, Phone, Sparkles, UserRound, X } from 'lucide-react';
 import { getPortfolio, type PortfolioLoan } from '@/lib/api/portfolios';
 import { formatDop } from '@/lib/currency';
+import { getLoanTypeLabel } from '@/lib/loan-type';
 import { useClientCache } from '@/lib/use-client-cache';
 
 interface ClientGroup {
@@ -38,13 +39,21 @@ function groupByClient(loans: PortfolioLoan[]) {
   return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-const statusNames: Record<string, string> = {
-  ACTIVE: 'Activo',
-  OVERDUE: 'Atrasado',
-  PAID: 'Pagado',
-  RESTRUCTURED: 'Reestructurado',
-  WRITTEN_OFF: 'Castigado',
+const collectionStatuses = {
+  CURRENT: { label: 'Al día', color: '#2F7654', background: '#E7F4EC' },
+  PENDING: { label: 'Pendiente', color: '#374151', background: '#F1F3F2' },
+  LATE: { label: 'Atrasado', color: '#9A6A00', background: '#FFF1C7' },
+  EXPIRED: { label: 'Vencido', color: '#B73B2F', background: '#FADCCB' },
 };
+
+function formatDate(value: string | null) {
+  if (!value) return '—';
+  return new Date(value).toLocaleDateString('es-DO', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
 
 export function PortfolioDetailPage({ portfolioId }: { portfolioId: string }) {
   const fetcher = useCallback(() => getPortfolio(portfolioId), [portfolioId]);
@@ -139,7 +148,7 @@ export function PortfolioDetailPage({ portfolioId }: { portfolioId: string }) {
           {clients.length === 0 ? (
             <div className="rounded-panel border border-dashed border-primary-border bg-card p-10 text-center text-sm font-medium text-text-secondary">Esta cartera todavía no tiene préstamos.</div>
           ) : clients.map((client) => (
-            <article className="grid overflow-hidden rounded-panel border border-border-soft bg-card shadow-card lg:grid-cols-[minmax(260px,0.8fr)_minmax(520px,2.2fr)]" key={client.id}>
+            <article className="grid overflow-hidden rounded-panel border border-border-soft bg-card shadow-card lg:grid-cols-[minmax(260px,0.7fr)_minmax(700px,2.5fr)]" key={client.id}>
               <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3 lg:border-b-0 lg:border-r">
                 <Link className="group flex min-w-0 items-center gap-3" href={`/clientes/${client.id}`}>
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary"><UserRound className="h-4 w-4" /></div>
@@ -156,10 +165,27 @@ export function PortfolioDetailPage({ portfolioId }: { portfolioId: string }) {
 
               <div className="divide-y divide-border-soft">
                 {client.loans.map((loan) => (
-                  <Link className="grid gap-2 px-4 py-3 transition hover:bg-surface-subtle sm:grid-cols-[1.4fr_0.7fr_0.9fr] sm:items-center" href={`/prestamos/${loan.id}`} key={loan.id}>
-                    <div><p className="text-sm font-bold">Préstamo #{loan.loanNumber}</p><p className="mt-0.5 text-[11px] font-medium text-text-secondary">{loan.product.name}</p></div>
-                    <div><p className="text-[10px] font-bold uppercase text-text-secondary">Estado</p><p className="mt-0.5 text-sm font-bold">{statusNames[loan.status] ?? loan.status}</p></div>
-                    <div className="sm:text-right"><p className="text-[10px] font-bold uppercase text-text-secondary">Balance</p><p className="mt-0.5 text-sm font-bold">{formatDop(loan.balance, { space: true })}</p></div>
+                  <Link className="grid gap-2 px-4 py-3 transition hover:bg-surface-subtle sm:grid-cols-2 sm:items-center xl:grid-cols-[1.2fr_0.9fr_0.9fr_0.7fr_0.9fr]" href={`/prestamos/${loan.id}`} key={loan.id}>
+                    <div><p className="text-sm font-bold">Préstamo #{loan.loanNumber}</p><p className="mt-0.5 text-[11px] font-medium text-text-secondary">{getLoanTypeLabel(loan.interestType, loan.interestRate)}</p></div>
+                    <div><p className="text-[10px] font-bold uppercase text-text-secondary">Próximo pago</p><p className="mt-0.5 text-sm font-bold">{formatDate(loan.nextPaymentDate)}</p></div>
+                    <div><p className="text-[10px] font-bold uppercase text-text-secondary">Monto a cobrar</p><p className="mt-0.5 text-sm font-bold">{formatDop(loan.amountToCollect, { space: true })}</p></div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase text-text-secondary">Estado</p>
+                      <span
+                        className="mt-0.5 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-bold"
+                        style={{ color: collectionStatuses[loan.collectionStatus].color, backgroundColor: collectionStatuses[loan.collectionStatus].background }}
+                      >
+                        <span className="h-2 w-2 rounded-[2px]" style={{ backgroundColor: collectionStatuses[loan.collectionStatus].color }} />
+                        {collectionStatuses[loan.collectionStatus].label}
+                      </span>
+                    </div>
+                    <div className="sm:text-right">
+                      <p className="text-[10px] font-bold uppercase text-text-secondary">Balance</p>
+                      <p className="mt-0.5 inline-flex items-center gap-2 text-sm font-bold">
+                        <span className="h-3 w-3 rounded-[3px]" style={{ backgroundColor: collectionStatuses[loan.collectionStatus].color }} />
+                        {formatDop(loan.balance, { space: true })}
+                      </p>
+                    </div>
                   </Link>
                 ))}
               </div>

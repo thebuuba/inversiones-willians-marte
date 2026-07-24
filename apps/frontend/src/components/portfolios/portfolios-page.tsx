@@ -1,11 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useMemo, type ReactNode } from 'react';
-import { ArrowRight, BriefcaseBusiness, Landmark, Plus, UserRound, WalletCards } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { ArrowRight, BriefcaseBusiness, Landmark, Plus, UserRound, WalletCards, X } from 'lucide-react';
 import { formatDop } from '@/lib/currency';
-import { getPortfolios, type PortfolioItem } from '@/lib/api/portfolios';
+import { createPortfolio, getPortfolios, type PortfolioItem } from '@/lib/api/portfolios';
 import { useClientCache } from '@/lib/use-client-cache';
+
+const portfolioColors = ['#2F7654', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#14B8A6'];
 
 function SummaryCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
@@ -63,6 +67,13 @@ function PortfolioCard({ portfolio }: { portfolio: PortfolioItem }) {
 }
 
 export function PortfoliosPage() {
+  const router = useRouter();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [color, setColor] = useState(portfolioColors[0]);
+  const [saving, setSaving] = useState(false);
+  const [createError, setCreateError] = useState('');
   const fetcher = useCallback(() => getPortfolios(), []);
   const { data, loading, error } = useClientCache('portfolios:with-loans', fetcher, 30_000, 'Error al cargar carteras');
   const portfolios = useMemo(() => data ?? [], [data]);
@@ -75,6 +86,26 @@ export function PortfoliosPage() {
     };
   }, [portfolios]);
 
+  async function handleCreate(event: FormEvent) {
+    event.preventDefault();
+    if (name.trim().length < 2 || saving) return;
+    setSaving(true);
+    setCreateError('');
+    try {
+      const portfolio = await createPortfolio({
+        name: name.trim(),
+        description: description.trim() || undefined,
+        color,
+      });
+      setCreateOpen(false);
+      router.push(`/carteras/${portfolio.id}`);
+    } catch {
+      setCreateError('No se pudo crear la cartera. Inténtalo nuevamente.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-page p-5 font-sans text-text-primary">
       <div className="mx-auto max-w-[1640px]">
@@ -86,10 +117,80 @@ export function PortfoliosPage() {
               Listados personalizados de clientes y sus préstamos.
             </p>
           </div>
-          <Link className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary" href="/prestamos/nuevo">
-            <Plus className="h-4 w-4" />
-            Nuevo préstamo
-          </Link>
+          <Dialog.Root open={createOpen} onOpenChange={setCreateOpen}>
+            <Dialog.Trigger asChild>
+              <button className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary" type="button">
+                <Plus className="h-4 w-4" />
+                Nueva cartera
+              </button>
+            </Dialog.Trigger>
+            <Dialog.Portal>
+              <Dialog.Overlay className="fixed inset-0 z-50 bg-black/35" />
+              <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-panel border border-border-soft bg-card p-6 shadow-2xl">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <Dialog.Title className="text-xl font-bold">Nueva cartera</Dialog.Title>
+                    <Dialog.Description className="mt-1 text-sm font-medium text-text-secondary">
+                      Crea un listado para organizar clientes y préstamos.
+                    </Dialog.Description>
+                  </div>
+                  <Dialog.Close className="rounded-full p-2 text-text-secondary hover:bg-surface-subtle" aria-label="Cerrar">
+                    <X className="h-5 w-5" />
+                  </Dialog.Close>
+                </div>
+
+                <form className="mt-5 space-y-4" onSubmit={handleCreate}>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-bold uppercase text-text-secondary">Nombre</span>
+                    <input
+                      autoFocus
+                      className="h-11 w-full rounded-control border border-primary-border bg-card px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary-soft"
+                      onChange={(event) => setName(event.target.value)}
+                      placeholder="Ej. Cobros especiales"
+                      required
+                      minLength={2}
+                      value={name}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-bold uppercase text-text-secondary">Descripción opcional</span>
+                    <textarea
+                      className="min-h-20 w-full resize-none rounded-control border border-primary-border bg-card px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary-soft"
+                      onChange={(event) => setDescription(event.target.value)}
+                      placeholder="Para qué utilizarás esta cartera"
+                      value={description}
+                    />
+                  </label>
+                  <fieldset>
+                    <legend className="mb-2 text-xs font-bold uppercase text-text-secondary">Color</legend>
+                    <div className="flex flex-wrap gap-2">
+                      {portfolioColors.map((option) => (
+                        <button
+                          aria-label={`Seleccionar color ${option}`}
+                          className={`h-8 w-8 rounded-full border-2 transition ${color === option ? 'scale-110 border-text-primary' : 'border-transparent'}`}
+                          key={option}
+                          onClick={() => setColor(option)}
+                          style={{ backgroundColor: option }}
+                          type="button"
+                        />
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  {createError ? <p className="rounded-control bg-state-danger-bg px-3 py-2 text-sm font-bold text-state-danger">{createError}</p> : null}
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <Dialog.Close className="h-10 rounded-full border border-primary-border px-5 text-sm font-bold text-text-secondary hover:bg-surface-subtle" type="button">
+                      Cancelar
+                    </Dialog.Close>
+                    <button className="h-10 rounded-full bg-primary-accent px-5 text-sm font-bold text-white hover:bg-primary disabled:opacity-50" disabled={name.trim().length < 2 || saving} type="submit">
+                      {saving ? 'Creando...' : 'Crear cartera'}
+                    </button>
+                  </div>
+                </form>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
         </header>
 
         <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -106,7 +207,7 @@ export function PortfoliosPage() {
           <section className="rounded-panel border border-dashed border-primary-border bg-card p-10 text-center shadow-card">
             <BriefcaseBusiness className="mx-auto h-8 w-8 text-primary" />
             <h2 className="mt-4 text-lg font-bold">No hay carteras creadas</h2>
-            <p className="mt-2 text-sm font-medium text-text-secondary">Puedes crear una al registrar un préstamo.</p>
+            <p className="mt-2 text-sm font-medium text-text-secondary">Usa “Nueva cartera” para crear tu primer listado.</p>
           </section>
         ) : (
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">

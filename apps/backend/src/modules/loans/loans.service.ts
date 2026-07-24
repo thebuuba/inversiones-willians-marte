@@ -11,6 +11,7 @@ import {
 } from './indefinite-loan';
 import { normalizePagination } from '../../common/pagination';
 import { moneyToCents } from '../../common/money';
+import { getLoanCollectionStatus } from '../../common/loan-collection-status';
 
 type LoanListRow = {
   id: string;
@@ -280,6 +281,23 @@ export class LoansService {
     `;
     const hasMore = rows.length > pageSize;
     const pageRows = rows.slice(0, pageSize);
+    const [settings, unpaidSchedules] = await Promise.all([
+      prisma.systemSettings.findUnique({ where: { id: 1 } }),
+      prisma.paymentSchedule.findMany({
+        where: {
+          loanId: { in: pageRows.map((row) => row.id) },
+          status: { notIn: ['PAID', 'CANCELLED'] },
+        },
+        select: { loanId: true, dueDate: true, status: true },
+      }),
+    ]);
+    const schedulesByLoan = new Map<string, typeof unpaidSchedules>();
+    for (const schedule of unpaidSchedules) {
+      const current = schedulesByLoan.get(schedule.loanId) ?? [];
+      current.push(schedule);
+      schedulesByLoan.set(schedule.loanId, current);
+    }
+    const graceDays = settings?.graceDays ?? 5;
 
     const aggregation = await prisma.$queryRaw<Array<{ count: number; totalPrincipal: number }>>`
       SELECT COUNT(*)::int AS count, COALESCE(SUM(l.principal)::float8, 0) AS "totalPrincipal"
@@ -305,6 +323,10 @@ export class LoansService {
         startDate: row.startDate,
         endDate: row.endDate,
         status: row.status,
+        collectionStatus: getLoanCollectionStatus(
+          { ...row, schedule: schedulesByLoan.get(row.id) ?? [] },
+          graceDays,
+        ),
         balance: row.balance,
         notes: row.notes,
         createdAt: row.createdAt,
@@ -356,6 +378,8 @@ export class LoansService {
       },
     });
     if (!loan) throw new NotFoundException('Loan not found');
+    const settings = await prisma.systemSettings.findUnique({ where: { id: 1 } });
+    const graceDays = settings?.graceDays ?? 5;
     if (
       loan.status === 'ACTIVE' &&
       loan.interestType === 'INDEFINITE' &&
@@ -389,15 +413,22 @@ export class LoansService {
         where: { id: loan.id },
         data: { totalAmount: amount },
       });
+      const schedule = [...loan.schedule, nextSchedule].sort(
+        (left, right) => left.dueDate.getTime() - right.dueDate.getTime(),
+      );
       return {
         ...loan,
         totalAmount: amount,
-        schedule: [...loan.schedule, nextSchedule].sort(
-          (left, right) => left.dueDate.getTime() - right.dueDate.getTime(),
-        ),
+        schedule,
+        graceDays,
+        collectionStatus: getLoanCollectionStatus({ ...loan, schedule }, graceDays),
       };
     }
-    return loan;
+    return {
+      ...loan,
+      graceDays,
+      collectionStatus: getLoanCollectionStatus(loan, graceDays),
+    };
   }
 
   async addCapital(id: string, dto: AddLoanCapitalDto, userId: string) {

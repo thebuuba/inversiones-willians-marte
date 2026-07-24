@@ -158,6 +158,24 @@ test('marks a loan overdue after its five-day grace period', () => {
   );
 });
 
+test('uses a configured grace period for installment and loan status', () => {
+  const today = new Date('2026-06-10T12:00:00');
+  assert.equal(getScheduleDisplayStatus('PENDING', '2026-06-03T00:00:00', today, 10), 'Pendiente');
+  assert.equal(
+    getLoanCollectionStatus(
+      {
+        balance: 1000,
+        interestType: 'FIXED',
+        endDate: '2026-12-30T00:00:00',
+        schedule: [{ dueDate: '2026-06-03T00:00:00', status: 'PENDING' }],
+      },
+      today,
+      10,
+    ),
+    'Pendiente',
+  );
+});
+
 test('marks finite loans expired after the final date while balance remains', () => {
   assert.equal(
     getLoanCollectionStatus({ ...finiteLoan, endDate: '2026-06-14T00:00:00', schedule: [] }, today),

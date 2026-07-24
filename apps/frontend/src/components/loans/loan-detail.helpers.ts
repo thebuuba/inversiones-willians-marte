@@ -72,6 +72,7 @@ export function getScheduleDisplayStatus(
   status: string,
   dueDate: string,
   now = new Date(),
+  graceDays = 5,
 ): string {
   if (status === 'PAID') return 'Pagado';
   if (status === 'CANCELLED') return 'Cancelado';
@@ -79,13 +80,14 @@ export function getScheduleDisplayStatus(
 
   const daysPastDue = Math.floor((getCalendarDay(now) - getCalendarDay(dueDate)) / DAY_MS);
   if (daysPastDue < 0) return 'A tiempo';
-  if (status === 'OVERDUE' || daysPastDue > 5) return 'Atrasado';
+  if (status === 'OVERDUE' || daysPastDue > graceDays) return 'Atrasado';
   return 'Pendiente';
 }
 
 export function getLoanCollectionStatus(
   loan: LoanCollectionStatusLike,
   now = new Date(),
+  graceDays = 5,
 ): LoanCollectionStatus {
   const today = getCalendarDay(now);
   const isFiniteLoan = loan.interestType !== 'INDEFINITE';
@@ -102,7 +104,7 @@ export function getLoanCollectionStatus(
   if (oldestUnpaidDueDate == null || oldestUnpaidDueDate > today) return 'A tiempo';
 
   const daysPastDue = Math.floor((today - oldestUnpaidDueDate) / DAY_MS);
-  return daysPastDue <= 5 ? 'Pendiente' : 'Atrasado';
+  return daysPastDue <= graceDays ? 'Pendiente' : 'Atrasado';
 }
 
 export function getClientLoanStats(loans: ClientLoanStatsLike[]) {

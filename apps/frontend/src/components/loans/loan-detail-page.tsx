@@ -18,6 +18,7 @@ import {
 import { addLoanCapital, getLoan, getPayoffQuote, type LoanDetail } from '@/lib/api/loans';
 import { invalidateCachePrefix } from '@/lib/use-client-cache';
 import { formatDop } from '@/lib/currency';
+import { getLoanTypeLabel } from '@/lib/loan-type';
 import {
   getLoanDetailTotals,
   getLoanOperationalSummary,
@@ -43,8 +44,8 @@ function getStatusLabel(status: string) {
   return status;
 }
 
-function StatusBadge({ status, dueDate }: { status: string; dueDate?: string }) {
-  const label = dueDate ? getScheduleDisplayStatus(status, dueDate) : getStatusLabel(status);
+function StatusBadge({ status, dueDate, graceDays = 5 }: { status: string; dueDate?: string; graceDays?: number }) {
+  const label = dueDate ? getScheduleDisplayStatus(status, dueDate, new Date(), graceDays) : getStatusLabel(status);
   const tone =
     label === 'Pagado' || label === 'Cancelado'
       ? 'bg-state-neutral-bg text-state-neutral'
@@ -311,18 +312,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
       : loan.paymentFreq === 'DAILY'
         ? 'Diario'
         : loan.paymentFreq;
-  const interestType =
-    loan.interestType === 'INDEFINITE'
-      ? 'Indefinido'
-      : loan.interestType === 'REDUCING'
-        ? 'Saldo insoluto'
-        : loan.interestType === 'FLAT'
-          ? 'Simple'
-          : loan.interestType === 'FIXED'
-            ? 'Cuota fija'
-            : loan.interestType === 'COMPOUND'
-              ? 'Compuesto'
-              : loan.interestType;
+  const interestType = getLoanTypeLabel(loan.interestType, loan.interestRate);
   const nextSchedule = operational.nextSchedule;
   const lastPayment = operational.lastPayment;
 
@@ -541,7 +531,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                             {fmt(getScheduleRemaining(amount, paidAmount))}
                           </td>
                           <td className="px-5 py-4">
-                            <StatusBadge dueDate={row.dueDate} status={row.status} />
+                            <StatusBadge dueDate={row.dueDate} graceDays={loan.graceDays} status={row.status} />
                           </td>
                         </tr>
                       );

@@ -7,6 +7,9 @@ jest.mock('@inversiones/database', () => ({
       findUnique: jest.fn(),
       delete: jest.fn(),
     },
+    systemSettings: {
+      findUnique: jest.fn(),
+    },
     auditLog: {
       create: jest.fn(),
     },
@@ -18,6 +21,7 @@ describe('PortfoliosService', () => {
 
   beforeEach(() => {
     service = new PortfoliosService();
+    jest.mocked(prisma.systemSettings.findUnique).mockResolvedValue({ id: 1, graceDays: 5 } as any);
   });
 
   afterEach(() => {
@@ -48,5 +52,43 @@ describe('PortfoliosService', () => {
         oldValues: { name: 'Principal' },
       }),
     });
+  });
+
+  it('returns the next payment and the outstanding overdue amount', async () => {
+    const dueDate = new Date('2026-07-30T12:00:00.000Z');
+    jest.mocked(prisma.portfolio.findUnique).mockResolvedValue({
+      id: 'portfolio-1',
+      name: 'Principal',
+      description: null,
+      color: '#5FA37D',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      _count: { loans: 1 },
+      loans: [{
+        id: 'loan-1',
+        loanNumber: 2,
+        clientId: 1,
+        principal: 70000,
+        interestRate: 10,
+        interestType: 'FIXED',
+        totalAmount: 80000,
+        balance: 66010,
+        status: 'OVERDUE',
+        createdAt: new Date(),
+        schedule: [
+          { dueDate, amount: 5000, paidAmount: 1000, status: 'PARTIAL' },
+          { dueDate: new Date('2026-08-30'), amount: 5000, paidAmount: null, status: 'PENDING' },
+        ],
+        client: { id: 1, firstName: 'Ana', lastName: 'Pérez', identification: null, phone: null },
+        product: { id: 'product-1', name: 'Préstamo Comercial' },
+      }],
+    } as any);
+
+    const portfolio = await service.findOne('portfolio-1');
+
+    expect(portfolio.loans[0]).toEqual(expect.objectContaining({
+      nextPaymentDate: dueDate,
+      amountToCollect: 4000,
+    }));
   });
 });

@@ -731,6 +731,14 @@ model Portfolio {
   @@map("portfolios")
 }
 
+model SystemSettings {
+  id        Int      @id @default(1)
+  graceDays Int      @default(5) @map("grace_days")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
 // ─── Audit Log ──────────────────────────────────────────────────────────────
 
 model AuditLog {
