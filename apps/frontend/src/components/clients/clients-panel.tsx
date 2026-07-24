@@ -190,7 +190,7 @@ export function ClientsPanel() {
             <span className="justify-self-end text-center">PRÉSTAMOS</span>
           </div>
 
-          <div ref={bodyRef} className="relative min-w-[760px] flex-1 overflow-hidden">
+          <div ref={bodyRef} className="relative min-w-[760px] flex-1 overflow-hidden bg-white">
             {initialLoading ? (
               <div className="flex h-full items-center justify-center text-sm font-medium text-text-secondary">
                 Cargando clientes...
@@ -205,7 +205,7 @@ export function ClientsPanel() {
               displayClients.map((client) => (
                 <div
                   key={client.id}
-                  className="group grid min-h-[64px] cursor-pointer grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center border-b border-border-soft bg-card px-6 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle"
+                  className="group grid min-h-[64px] cursor-pointer grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center border-b border-border-soft bg-white px-6 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle"
                   onClick={() => router.push(`/clientes/${client.id}`)}
                 >
                   <div className="flex items-center gap-3">
@@ -258,7 +258,7 @@ export function ClientsPanel() {
             )}
           </div>
 
-          <div className="flex min-w-[760px] items-center justify-between border-t border-border-soft bg-card px-6 py-4">
+          <div className="flex min-w-[760px] items-center justify-between border-t border-border-soft bg-white px-6 py-4">
             <p className="text-[13px] text-text-secondary">
               {!initialLoading && (
                 <>
