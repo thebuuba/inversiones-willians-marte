@@ -43,6 +43,11 @@ export async function getPortfolios(): Promise<PortfolioItem[]> {
   return data.data ?? [];
 }
 
+export async function getPortfolio(id: string): Promise<PortfolioItem> {
+  const { data } = await api.get<ApiResponse<PortfolioItem>>(`/portfolios/${id}`);
+  return data.data as PortfolioItem;
+}
+
 export async function createPortfolio(params: {
   name: string;
   description?: string;
