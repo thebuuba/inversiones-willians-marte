@@ -5,6 +5,8 @@ import {
   IsNumber,
   IsEnum,
   IsOptional,
+  IsBoolean,
+  IsIn,
   IsArray,
   ArrayUnique,
   Max,
@@ -67,6 +69,40 @@ export class CreateLoanDto {
   @ArrayUnique()
   @IsString({ each: true })
   sourceLoanIds?: string[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(600)
+  paidInstallments?: number;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  paidLateFee?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  lateFeeEnabled?: boolean;
+
+  @IsOptional()
+  @IsIn(['PER_INSTALLMENT', 'DAILY'])
+  lateFeeMode?: 'PER_INSTALLMENT' | 'DAILY';
+
+  @IsOptional()
+  @IsIn(['PERCENTAGE', 'AMOUNT'])
+  lateFeeCalculation?: 'PERCENTAGE' | 'AMOUNT';
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  lateFeeValue?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(365)
+  lateFeeGraceDays?: number;
 }
 
 export interface AmortizationRow {

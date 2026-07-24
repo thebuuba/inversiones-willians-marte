@@ -16,11 +16,17 @@ jest.mock('@inversiones/database', () => ({
       upsert: jest.fn(),
       updateMany: jest.fn(),
     },
+    payment: { create: jest.fn() },
     systemSettings: {
       findUnique: jest.fn(),
     },
     paymentPromise: { updateMany: jest.fn() },
-    lateFee: { updateMany: jest.fn() },
+    lateFee: {
+      create: jest.fn(),
+      deleteMany: jest.fn(),
+      updateMany: jest.fn(),
+      upsert: jest.fn(),
+    },
     loanProduct: {
       findUnique: jest.fn(),
     },
@@ -178,6 +184,113 @@ describe('LoansService', () => {
         clientId: 1,
         newValues: expect.objectContaining({ loanNumber: 15, principal: 1000 }),
       }),
+    });
+  });
+
+  it('creates real historical payments for installments already paid', async () => {
+    const amortization = {
+      calculate: jest.fn().mockReturnValue([
+        {
+          dueDate: new Date('2026-05-01'),
+          amount: 600,
+          principalPart: 500,
+          interestPart: 100,
+          balanceAfter: 500,
+        },
+        {
+          dueDate: new Date('2026-06-01'),
+          amount: 600,
+          principalPart: 500,
+          interestPart: 100,
+          balanceAfter: 0,
+        },
+      ]),
+    };
+    service = new LoansService(amortization as any, {} as any);
+    jest.mocked(prisma.loanProduct.findUnique).mockResolvedValue({
+      id: 'product-1',
+      active: true,
+      interestRate: 10,
+      interestType: 'FIXED',
+      paymentFrequency: 'MONTHLY',
+      maxTerm: 12,
+    } as any);
+    jest.mocked(prisma.client.findUnique).mockResolvedValue({ id: 1, active: true } as any);
+    jest.mocked(prisma.loan.create).mockResolvedValue({
+      id: 'loan-1',
+      loanNumber: 16,
+      clientId: 1,
+      principal: 1000,
+      totalAmount: 1200,
+      schedule: [
+        {
+          id: 'schedule-1',
+          dueDate: new Date('2026-05-01'),
+          amount: 600,
+          principalPart: 500,
+          interestPart: 100,
+        },
+        {
+          id: 'schedule-2',
+          dueDate: new Date('2026-06-01'),
+          amount: 600,
+          principalPart: 500,
+          interestPart: 100,
+        },
+      ],
+    } as any);
+
+    await service.create(
+      {
+        clientId: 1,
+        productId: 'product-1',
+        principal: 1000,
+        term: 2,
+        startDate: '2026-05-01',
+        paidInstallments: 1,
+        paidLateFee: 25,
+      },
+      'user-1',
+    );
+
+    expect(prisma.loan.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          balance: 600,
+          schedule: {
+            create: expect.arrayContaining([
+              expect.objectContaining({
+                status: 'PAID',
+                paidAmount: 600,
+              }),
+            ]),
+          },
+        }),
+      }),
+    );
+    expect(prisma.payment.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        loanId: 'loan-1',
+        amount: 625,
+        paymentDate: new Date('2026-05-01'),
+        allocations: {
+          create: [
+            { scheduleId: 'schedule-1', amount: 100, type: 'INTEREST' },
+            { scheduleId: 'schedule-1', amount: 500, type: 'PRINCIPAL' },
+            { scheduleId: 'schedule-1', amount: 25, type: 'PENALTY' },
+          ],
+        },
+      }),
+    });
+    expect(prisma.lateFee.create).toHaveBeenCalledWith({
+      data: {
+        loanId: 'loan-1',
+        scheduleId: 'schedule-1',
+        amount: 25,
+        calculatedDate: new Date('2026-05-01'),
+        paid: true,
+        paidAmount: 25,
+      },
     });
   });
 

@@ -129,11 +129,11 @@ export function InvestorsPanel() {
         )}
 
         <PanelCard
-          className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-x-auto`}
+          className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-x-auto bg-white`}
         >
           {/* search + filters */}
-          <div className="min-w-[760px] border-b border-border-soft p-4">
-            <div className="flex h-11 items-center gap-3 rounded-xl border border-transparent bg-page px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-soft">
+          <div className="min-w-[760px] border-b border-border-soft bg-white p-4">
+            <div className="flex h-11 items-center gap-3 rounded-xl border border-primary-border bg-surface-subtle px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-soft">
               <Search className="h-4 w-4 shrink-0 text-text-secondary" />
               <input
                 className="flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/60"
@@ -161,7 +161,7 @@ export function InvestorsPanel() {
           </div>
 
           {/* table header */}
-          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center bg-surface-subtle px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
+          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center border-b border-border-soft bg-white px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
             <span>INVERSIONISTA</span>
             <span>CÓDIGO</span>
             <span>CAPITAL</span>
@@ -185,7 +185,7 @@ export function InvestorsPanel() {
               displayInvestors.map((investor) => (
                 <div
                   key={investor.id}
-                  className="group grid min-h-[64px] cursor-pointer grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center border-b border-border-soft bg-card px-6 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle"
+                  className="group grid min-h-[64px] cursor-pointer grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center border-b border-border-soft bg-white px-6 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle"
                   onClick={() => router.push(`/inversionistas/${investor.id}`)}
                 >
                   <div className="flex items-center gap-3">
@@ -228,7 +228,7 @@ export function InvestorsPanel() {
           </div>
 
           {/* footer */}
-          <div className="flex min-w-[760px] items-center justify-between border-t border-border-soft bg-card px-6 py-4">
+          <div className="flex min-w-[760px] items-center justify-between border-t border-border-soft bg-white px-6 py-4">
             <p className="text-[13px] text-text-secondary">
               {!initialLoading && (
                 <>

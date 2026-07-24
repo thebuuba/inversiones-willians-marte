@@ -28,10 +28,23 @@ export interface LoanPaymentSummary {
   paidInstallments: number;
 }
 
+type PaymentLateFee = {
+  scheduleId?: string;
+  amount: number | string;
+  paid: boolean;
+  paidAmount?: number | string | null;
+};
+
+function getOutstandingFees(lateFees: PaymentLateFee[]): number {
+  return lateFees
+    .filter((fee) => !fee.paid)
+    .reduce((sum, fee) => sum + Math.max(0, Number(fee.amount) - Number(fee.paidAmount ?? 0)), 0);
+}
+
 export function getLoanPaymentSummary(
   schedule: PaymentPreviewSchedule[],
   payments: PaymentPreviewPayment[],
-  lateFees: Array<{ amount: number | string; paid: boolean }>,
+  lateFees: PaymentLateFee[],
   principal: number,
   balance: number,
   asOfDate: string,
@@ -62,9 +75,7 @@ export function getLoanPaymentSummary(
         0,
       ),
     ),
-    feesOutstanding: roundMoney(
-      lateFees.filter((fee) => !fee.paid).reduce((sum, fee) => sum + Number(fee.amount), 0),
-    ),
+    feesOutstanding: roundMoney(getOutstandingFees(lateFees)),
     totalPaid: roundMoney(payments.reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0)),
     overdueAmount: roundMoney(
       overdueRows.reduce(
@@ -85,22 +96,37 @@ export interface PaymentAllocationPreviewRow {
   principal: number;
 }
 
-export function getOutstandingScheduledAmount(schedule: PaymentPreviewSchedule[]): number {
+export function getOutstandingScheduledAmount(
+  schedule: PaymentPreviewSchedule[],
+  lateFees: PaymentLateFee[] = [],
+): number {
   return roundMoney(
     schedule
       .filter((row) => row.status !== 'PAID')
-      .reduce((sum, row) => sum + Math.max(0, Number(row.amount) - Number(row.paidAmount ?? 0)), 0),
+      .reduce(
+        (sum, row) => sum + Math.max(0, Number(row.amount) - Number(row.paidAmount ?? 0)),
+        getOutstandingFees(lateFees),
+      ),
   );
 }
 
 export function getAmountToBringCurrent(
   schedule: PaymentPreviewSchedule[],
   asOfDate: string,
+  lateFees: PaymentLateFee[] = [],
 ): number {
+  const dueScheduleIds = new Set(
+    schedule.filter((row) => row.dueDate.slice(0, 10) <= asOfDate).map((row) => row.id),
+  );
   return roundMoney(
     schedule
       .filter((row) => row.status !== 'PAID' && row.dueDate.slice(0, 10) <= asOfDate)
-      .reduce((sum, row) => sum + Math.max(0, Number(row.amount) - Number(row.paidAmount ?? 0)), 0),
+      .reduce(
+        (sum, row) => sum + Math.max(0, Number(row.amount) - Number(row.paidAmount ?? 0)),
+        getOutstandingFees(
+          lateFees.filter((fee) => !fee.scheduleId || dueScheduleIds.has(fee.scheduleId)),
+        ),
+      ),
   );
 }
 

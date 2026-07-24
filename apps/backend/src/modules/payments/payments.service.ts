@@ -4,10 +4,12 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 import { centsToDecimal, moneyToCents } from '../../common/money';
 import { addPaymentInterval, calculateIndefiniteInterest } from '../loans/indefinite-loan';
 import type { PaymentFrequency } from '@inversiones/shared';
+import { syncLoanLateFees } from '../loans/late-fee';
 
 @Injectable()
 export class PaymentsService {
   async create(dto: CreatePaymentDto, userId: string) {
+    await syncLoanLateFees(dto.loanId, new Date(dto.paymentDate));
     return prisma.$transaction(
       async (tx) => {
         const loan = await tx.loan.findUnique({
@@ -17,6 +19,7 @@ export class PaymentsService {
               orderBy: { dueDate: 'asc' },
               include: {
                 paymentAllocs: { select: { amount: true, type: true } },
+                lateFees: true,
               },
             },
           },
@@ -42,7 +45,7 @@ export class PaymentsService {
             startDate: loan.startDate,
             schedules,
           });
-          schedules.push({ ...nextSchedule, paymentAllocs: [] });
+          schedules.push({ ...nextSchedule, paymentAllocs: [], lateFees: [] });
         }
 
         const paymentAmountCents = moneyToCents(dto.amount);
@@ -61,35 +64,52 @@ export class PaymentsService {
           if (allocatedCents >= paymentAmountCents) break;
 
           const owedCents = moneyToCents(schedule.amount) - moneyToCents(schedule.paidAmount ?? 0);
-          if (owedCents <= 0) continue;
+          if (owedCents > 0) {
+            const toAllocateCents = Math.min(owedCents, paymentAmountCents - allocatedCents);
+            const interestPaidCents = schedule.paymentAllocs
+              .filter((allocation) => allocation.type === 'INTEREST')
+              .reduce((sum, allocation) => sum + moneyToCents(allocation.amount), 0);
+            const remainingInterestCents = Math.max(
+              0,
+              moneyToCents(schedule.interestPart) - interestPaidCents,
+            );
+            const interestAllocationCents = Math.min(toAllocateCents, remainingInterestCents);
 
-          const toAllocateCents = Math.min(owedCents, paymentAmountCents - allocatedCents);
-          const interestPaidCents = schedule.paymentAllocs
-            .filter((allocation) => allocation.type === 'INTEREST')
-            .reduce((sum, allocation) => sum + moneyToCents(allocation.amount), 0);
-          const remainingInterestCents = Math.max(
-            0,
-            moneyToCents(schedule.interestPart) - interestPaidCents,
-          );
-          const interestAllocationCents = Math.min(toAllocateCents, remainingInterestCents);
+            if (interestAllocationCents > 0) {
+              allocations.push({
+                scheduleId: schedule.id,
+                amountCents: interestAllocationCents,
+                type: 'INTEREST',
+              });
+              allocatedCents += interestAllocationCents;
+            }
 
-          if (interestAllocationCents > 0) {
-            allocations.push({
-              scheduleId: schedule.id,
-              amountCents: interestAllocationCents,
-              type: 'INTEREST',
-            });
-            allocatedCents += interestAllocationCents;
+            const principalAllocationCents = toAllocateCents - interestAllocationCents;
+            if (principalAllocationCents > 0) {
+              allocations.push({
+                scheduleId: schedule.id,
+                amountCents: principalAllocationCents,
+                type: 'PRINCIPAL',
+              });
+              allocatedCents += principalAllocationCents;
+            }
           }
 
-          const principalAllocationCents = toAllocateCents - interestAllocationCents;
-          if (principalAllocationCents > 0) {
-            allocations.push({
-              scheduleId: schedule.id,
-              amountCents: principalAllocationCents,
-              type: 'PRINCIPAL',
-            });
-            allocatedCents += principalAllocationCents;
+          const lateFee = schedule.lateFees?.find((fee) => !fee.paid);
+          if (lateFee && allocatedCents < paymentAmountCents) {
+            const remainingFeeCents = Math.max(
+              0,
+              moneyToCents(lateFee.amount) - moneyToCents(lateFee.paidAmount),
+            );
+            const penaltyCents = Math.min(remainingFeeCents, paymentAmountCents - allocatedCents);
+            if (penaltyCents > 0) {
+              allocations.push({
+                scheduleId: schedule.id,
+                amountCents: penaltyCents,
+                type: 'PENALTY',
+              });
+              allocatedCents += penaltyCents;
+            }
           }
         }
 
@@ -119,11 +139,33 @@ export class PaymentsService {
         });
 
         const paidBySchedule = new Map<string, number>();
-        for (const alloc of allocations) {
+        for (const alloc of allocations.filter((item) => item.type !== 'PENALTY')) {
           paidBySchedule.set(
             alloc.scheduleId,
             (paidBySchedule.get(alloc.scheduleId) ?? 0) + alloc.amountCents,
           );
+        }
+
+        const penaltiesBySchedule = new Map<string, number>();
+        for (const allocation of allocations.filter((item) => item.type === 'PENALTY')) {
+          penaltiesBySchedule.set(
+            allocation.scheduleId,
+            (penaltiesBySchedule.get(allocation.scheduleId) ?? 0) + allocation.amountCents,
+          );
+        }
+        for (const [scheduleId, amountCents] of penaltiesBySchedule) {
+          const fee = schedules
+            .find((schedule) => schedule.id === scheduleId)
+            ?.lateFees?.find((item) => !item.paid);
+          if (!fee) continue;
+          const totalPaidCents = moneyToCents(fee.paidAmount) + amountCents;
+          await tx.lateFee.update({
+            where: { scheduleId },
+            data: {
+              paidAmount: centsToDecimal(totalPaidCents),
+              paid: totalPaidCents >= moneyToCents(fee.amount),
+            },
+          });
         }
 
         for (const [scheduleId, amountCents] of paidBySchedule) {

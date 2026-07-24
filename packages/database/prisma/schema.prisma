@@ -165,17 +165,17 @@ model AuthSession {
 // ─── Manual cash movements ────────────────────────────────────────────────
 
 model CashMovement {
-  id            String           @id @default(uuid())
-  type          CashMovementType
-  person        String
-  amount        Decimal
-  movementDate  DateTime         @map("movement_date")
-  category      String
-  paymentMethod String?          @map("payment_method")
-  description   String?
+  id             String           @id @default(uuid())
+  type           CashMovementType
+  person         String
+  amount         Decimal
+  movementDate   DateTime         @map("movement_date")
+  category       String
+  paymentMethod  String?          @map("payment_method")
+  description    String?
   affectsBalance Boolean          @default(true) @map("affects_balance")
-  createdById   String           @map("created_by")
-  createdAt     DateTime         @default(now()) @map("created_at")
+  createdById    String           @map("created_by")
+  createdAt      DateTime         @default(now()) @map("created_at")
 
   createdBy User @relation(fields: [createdById], references: [id])
 
@@ -276,26 +276,31 @@ model LoanProduct {
 // ─── Loans ──────────────────────────────────────────────────────────────────
 
 model Loan {
-  id           String           @id @default(uuid())
-  loanNumber   Int              @unique @default(autoincrement()) @map("loan_number")
-  clientId     Int              @map("client_id")
-  productId    String           @map("product_id")
-  principal    Decimal
-  interestRate Decimal          @map("interest_rate")
-  interestType InterestType     @map("interest_type")
-  totalAmount  Decimal          @map("total_amount")
-  paymentFreq  PaymentFrequency @map("payment_frequency")
-  term         Int
-  startDate    DateTime         @map("start_date")
-  endDate      DateTime?        @map("end_date")
-  status       LoanStatus       @default(ACTIVE)
-  balance      Decimal
-  notes        String?
-  createdById  String           @map("created_by")
-  createdAt    DateTime         @default(now()) @map("created_at")
-  updatedAt    DateTime         @updatedAt @map("updated_at")
-  operationType   LoanOperationType @default(NORMAL) @map("operation_type")
-  disbursedAmount Decimal?          @map("disbursed_amount")
+  id                 String            @id @default(uuid())
+  loanNumber         Int               @unique @default(autoincrement()) @map("loan_number")
+  clientId           Int               @map("client_id")
+  productId          String            @map("product_id")
+  principal          Decimal
+  interestRate       Decimal           @map("interest_rate")
+  interestType       InterestType      @map("interest_type")
+  totalAmount        Decimal           @map("total_amount")
+  paymentFreq        PaymentFrequency  @map("payment_frequency")
+  term               Int
+  startDate          DateTime          @map("start_date")
+  endDate            DateTime?         @map("end_date")
+  status             LoanStatus        @default(ACTIVE)
+  balance            Decimal
+  notes              String?
+  createdById        String            @map("created_by")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  operationType      LoanOperationType @default(NORMAL) @map("operation_type")
+  disbursedAmount    Decimal?          @map("disbursed_amount")
+  lateFeeEnabled     Boolean           @default(false) @map("late_fee_enabled")
+  lateFeeMode        String            @default("PER_INSTALLMENT") @map("late_fee_mode")
+  lateFeeCalculation String            @default("PERCENTAGE") @map("late_fee_calculation")
+  lateFeeValue       Decimal           @default(5) @map("late_fee_value")
+  lateFeeGraceDays   Int               @default(5) @map("late_fee_grace_days")
 
   client                 Client                  @relation(fields: [clientId], references: [id])
   product                LoanProduct             @relation(fields: [productId], references: [id])
@@ -462,11 +467,13 @@ model LateFee {
   amount         Decimal
   calculatedDate DateTime @map("calculated_date")
   paid           Boolean  @default(false)
+  paidAmount     Decimal  @default(0) @map("paid_amount")
   createdAt      DateTime @default(now()) @map("created_at")
 
   loan     Loan            @relation(fields: [loanId], references: [id])
   schedule PaymentSchedule @relation(fields: [scheduleId], references: [id])
 
+  @@unique([scheduleId])
   @@index([loanId])
   @@index([scheduleId])
   @@map("late_fees")

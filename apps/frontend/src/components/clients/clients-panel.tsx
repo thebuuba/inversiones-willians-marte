@@ -174,7 +174,7 @@ export function ClientsPanel() {
           className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-x-auto bg-white`}
         >
           <div className="min-w-[760px] border-b border-border-soft bg-white p-4">
-            <div className="flex h-11 items-center gap-3 rounded-xl border border-transparent bg-white px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:ring-2 focus-within:ring-primary-soft">
+            <div className="flex h-11 items-center gap-3 rounded-xl border border-primary-border bg-surface-subtle px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-soft">
               <Search className="h-4 w-4 shrink-0 text-text-secondary" />
               <input
                 className="flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/60"

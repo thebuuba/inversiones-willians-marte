@@ -49,6 +49,11 @@ export interface LoanListItem {
   balance: number;
   notes: string | null;
   createdAt: string;
+  lateFeeEnabled?: boolean;
+  lateFeeMode?: 'PER_INSTALLMENT' | 'DAILY';
+  lateFeeCalculation?: 'PERCENTAGE' | 'AMOUNT';
+  lateFeeValue?: number;
+  lateFeeGraceDays?: number;
   client: LoanListClient;
   product: LoanListProduct;
   portfolio: LoanListPortfolio | null;
@@ -108,6 +113,7 @@ export interface LoanDetailLateFee {
   amount: number;
   calculatedDate: string;
   paid: boolean;
+  paidAmount?: number;
   createdAt: string;
 }
 

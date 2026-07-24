@@ -12,6 +12,8 @@ import {
 import { normalizePagination } from '../../common/pagination';
 import { moneyToCents } from '../../common/money';
 import { getLoanCollectionStatus } from '../../common/loan-collection-status';
+import { UpdateLoanDto } from './dto/update-loan.dto';
+import { syncLoanLateFees } from './late-fee';
 
 type LoanListRow = {
   id: string;
@@ -125,10 +127,23 @@ export class LoansService {
           startDate: new Date(dto.startDate),
           customPayment: dto.customPayment,
         });
+        const paidInstallments = dto.paidInstallments ?? 0;
+        const paidLateFee = dto.paidLateFee ?? 0;
+        if (paidInstallments > schedule.length) {
+          throw new BadRequestException('Paid installments exceed the loan term');
+        }
+        if (paidLateFee > 0 && paidInstallments === 0) {
+          throw new BadRequestException('A paid late fee requires at least one paid installment');
+        }
         const totalAmount = schedule.reduce((sum, row) => sum + row.amount, 0);
+        const initiallyPaidAmount = schedule
+          .slice(0, paidInstallments)
+          .reduce((sum, row) => sum + row.amount, 0);
         const lastRow = schedule[schedule.length - 1];
         const balance =
-          interestType === 'INDEFINITE' ? dto.principal : Math.round(totalAmount * 100) / 100;
+          interestType === 'INDEFINITE'
+            ? dto.principal
+            : Math.round((totalAmount - initiallyPaidAmount) * 100) / 100;
         const disbursedAmount =
           operationType === 'NORMAL' ? dto.principal : (principalCents - settlementCents) / 100;
 
@@ -145,18 +160,30 @@ export class LoansService {
             startDate: new Date(dto.startDate),
             endDate: interestType === 'INDEFINITE' ? null : (lastRow?.dueDate ?? null),
             balance,
+            status:
+              interestType !== 'INDEFINITE' && paidInstallments === schedule.length
+                ? 'PAID'
+                : 'ACTIVE',
             notes: dto.notes,
             portfolioId: dto.portfolioId ?? null,
             createdById: userId,
             operationType,
             disbursedAmount,
+            lateFeeEnabled: dto.lateFeeEnabled ?? false,
+            lateFeeMode: dto.lateFeeMode ?? 'PER_INSTALLMENT',
+            lateFeeCalculation: dto.lateFeeCalculation ?? 'PERCENTAGE',
+            lateFeeValue: dto.lateFeeValue ?? 5,
+            lateFeeGraceDays: dto.lateFeeGraceDays ?? 5,
             schedule: {
-              create: schedule.map((row) => ({
+              create: schedule.map((row, index) => ({
                 dueDate: row.dueDate,
                 amount: row.amount,
                 principalPart: row.principalPart,
                 interestPart: row.interestPart,
                 balanceAfter: row.balanceAfter,
+                status: index < paidInstallments ? 'PAID' : 'PENDING',
+                paidDate: index < paidInstallments ? row.dueDate : null,
+                paidAmount: index < paidInstallments ? row.amount : null,
               })),
             },
           },
@@ -166,6 +193,58 @@ export class LoansService {
             schedule: { orderBy: { dueDate: 'asc' } },
           },
         });
+
+        for (const [index, paidSchedule] of (paidInstallments
+          ? loan.schedule.slice(0, paidInstallments)
+          : []
+        ).entries()) {
+          const lateFee = index === paidInstallments - 1 ? paidLateFee : 0;
+          await tx.payment.create({
+            data: {
+              loanId: loan.id,
+              clientId: dto.clientId,
+              amount: Number(paidSchedule.amount) + lateFee,
+              paymentDate: paidSchedule.dueDate,
+              receivedById: userId,
+              notes: 'Pago histórico registrado con el préstamo',
+              allocations: {
+                create: [
+                  {
+                    scheduleId: paidSchedule.id,
+                    amount: paidSchedule.interestPart,
+                    type: 'INTEREST' as const,
+                  },
+                  {
+                    scheduleId: paidSchedule.id,
+                    amount: paidSchedule.principalPart,
+                    type: 'PRINCIPAL' as const,
+                  },
+                  ...(lateFee
+                    ? [
+                        {
+                          scheduleId: paidSchedule.id,
+                          amount: lateFee,
+                          type: 'PENALTY' as const,
+                        },
+                      ]
+                    : []),
+                ].filter((allocation) => Number(allocation.amount) > 0),
+              },
+            },
+          });
+          if (lateFee) {
+            await tx.lateFee.create({
+              data: {
+                loanId: loan.id,
+                scheduleId: paidSchedule.id,
+                amount: lateFee,
+                calculatedDate: paidSchedule.dueDate,
+                paid: true,
+                paidAmount: lateFee,
+              },
+            });
+          }
+        }
 
         if (settlements.length) {
           await tx.loanReplacement.createMany({
@@ -213,6 +292,8 @@ export class LoansService {
               sourceLoanIds,
               settlementTotal,
               disbursedAmount,
+              paidInstallments,
+              paidLateFee,
             },
           },
         });
@@ -389,6 +470,7 @@ export class LoansService {
   }
 
   async findOne(id: string) {
+    await syncLoanLateFees(id);
     const loan = await prisma.loan.findUnique({
       where: { id },
       include: {
@@ -580,11 +662,7 @@ export class LoansService {
     });
   }
 
-  async update(
-    id: string,
-    dto: { notes?: string; status?: string; portfolioId?: string | null; interestRate?: number },
-    userId?: string,
-  ) {
+  async update(id: string, dto: UpdateLoanDto, userId?: string) {
     const loan = await prisma.loan.findUnique({ where: { id } });
     if (!loan) throw new NotFoundException('Loan not found');
 
@@ -593,8 +671,24 @@ export class LoansService {
     if (dto.status !== undefined) data.status = dto.status;
     if (dto.portfolioId !== undefined) data.portfolioId = dto.portfolioId;
     if (dto.interestRate !== undefined) data.interestRate = dto.interestRate;
+    if (dto.lateFeeEnabled !== undefined) data.lateFeeEnabled = dto.lateFeeEnabled;
+    if (dto.lateFeeMode !== undefined) data.lateFeeMode = dto.lateFeeMode;
+    if (dto.lateFeeCalculation !== undefined) data.lateFeeCalculation = dto.lateFeeCalculation;
+    if (dto.lateFeeValue !== undefined) data.lateFeeValue = dto.lateFeeValue;
+    if (dto.lateFeeGraceDays !== undefined) data.lateFeeGraceDays = dto.lateFeeGraceDays;
 
     const updated = await prisma.loan.update({ where: { id }, data });
+    if (dto.lateFeeEnabled === false) {
+      await prisma.lateFee.deleteMany({ where: { loanId: id, paid: false } });
+    } else if (
+      dto.lateFeeEnabled ||
+      dto.lateFeeMode ||
+      dto.lateFeeCalculation ||
+      dto.lateFeeValue !== undefined ||
+      dto.lateFeeGraceDays !== undefined
+    ) {
+      await syncLoanLateFees(id);
+    }
 
     if (userId) {
       await prisma.auditLog.create({
@@ -609,6 +703,11 @@ export class LoansService {
             status: loan.status,
             portfolioId: loan.portfolioId,
             interestRate: Number(loan.interestRate),
+            lateFeeEnabled: loan.lateFeeEnabled,
+            lateFeeMode: loan.lateFeeMode,
+            lateFeeCalculation: loan.lateFeeCalculation,
+            lateFeeValue: Number(loan.lateFeeValue),
+            lateFeeGraceDays: loan.lateFeeGraceDays,
           },
           newValues: { ...dto },
         },
@@ -619,6 +718,10 @@ export class LoansService {
   }
 
   async getPayoffQuote(id: string, payoffDate: string) {
+    const normalizedDate = new Date(`${payoffDate}T00:00:00.000Z`);
+    if (Number.isNaN(normalizedDate.getTime()))
+      throw new BadRequestException('Invalid payoff date');
+    await syncLoanLateFees(id);
     const loan = await prisma.loan.findUnique({
       where: { id },
       include: {
@@ -638,9 +741,6 @@ export class LoansService {
     });
     if (!loan) throw new NotFoundException('Loan not found');
 
-    const normalizedDate = new Date(`${payoffDate}T00:00:00.000Z`);
-    if (Number.isNaN(normalizedDate.getTime()))
-      throw new BadRequestException('Invalid payoff date');
     return this.payoff.quote(loan, normalizedDate);
   }
 
