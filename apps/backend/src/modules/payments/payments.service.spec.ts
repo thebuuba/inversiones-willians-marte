@@ -165,6 +165,60 @@ describe('PaymentsService', () => {
     });
   });
 
+  it('allocates and marks a late fee as paid with its installment', async () => {
+    const paymentCreate = jest.fn().mockResolvedValue({ id: 'payment-1', allocations: [] });
+    const lateFeeUpdate = jest.fn();
+    const tx = {
+      payment: { create: paymentCreate },
+      paymentSchedule: { update: jest.fn() },
+      lateFee: { update: lateFeeUpdate },
+      paymentPromise: {
+        findMany: jest.fn().mockResolvedValue([]),
+        update: jest.fn(),
+      },
+      loan: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValueOnce({
+            ...loan,
+            schedule: [
+              {
+                ...schedule,
+                lateFees: [{ amount: 10, paidAmount: 0, paid: false }],
+              },
+            ],
+          })
+          .mockResolvedValueOnce({
+            ...loan,
+            schedule: [{ ...schedule, paidAmount: 100, status: 'PAID' }],
+          }),
+        update: jest.fn(),
+      },
+      auditLog: { create: jest.fn() },
+    };
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
+
+    await service.create({ loanId: 'loan-1', clientId: 1, amount: 110, paymentDate }, 'user-1');
+
+    expect(paymentCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          allocations: {
+            create: [
+              { scheduleId: 'schedule-1', amount: 20, type: 'INTEREST' },
+              { scheduleId: 'schedule-1', amount: 80, type: 'PRINCIPAL' },
+              { scheduleId: 'schedule-1', amount: 10, type: 'PENALTY' },
+            ],
+          },
+        }),
+      }),
+    );
+    expect(lateFeeUpdate).toHaveBeenCalledWith({
+      where: { scheduleId: 'schedule-1' },
+      data: { paidAmount: 10, paid: true },
+    });
+  });
+
   it('keeps indefinite loans active with principal balance after interest payment', async () => {
     const loanUpdate = jest.fn();
     const paymentScheduleUpsert = jest.fn().mockResolvedValue({

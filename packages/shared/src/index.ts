@@ -12,8 +12,7 @@ export const LoanOperationTypeEnum = {
   REENGAGEMENT: 'REENGAGEMENT',
   REFINANCE: 'REFINANCE',
 } as const;
-export type LoanOperationType =
-  (typeof LoanOperationTypeEnum)[keyof typeof LoanOperationTypeEnum];
+export type LoanOperationType = (typeof LoanOperationTypeEnum)[keyof typeof LoanOperationTypeEnum];
 
 export const InterestTypeEnum = {
   FLAT: 'FLAT',
@@ -190,6 +189,13 @@ export interface CreateLoanDto {
   customPayment?: number;
   operationType?: LoanOperationType;
   sourceLoanIds?: string[];
+  paidInstallments?: number;
+  paidLateFee?: number;
+  lateFeeEnabled?: boolean;
+  lateFeeMode?: 'PER_INSTALLMENT' | 'DAILY';
+  lateFeeCalculation?: 'PERCENTAGE' | 'AMOUNT';
+  lateFeeValue?: number;
+  lateFeeGraceDays?: number;
 }
 
 export interface UpdateLoanDto {
@@ -197,6 +203,11 @@ export interface UpdateLoanDto {
   status?: LoanStatus;
   portfolioId?: string | null;
   interestRate?: number;
+  lateFeeEnabled?: boolean;
+  lateFeeMode?: 'PER_INSTALLMENT' | 'DAILY';
+  lateFeeCalculation?: 'PERCENTAGE' | 'AMOUNT';
+  lateFeeValue?: number;
+  lateFeeGraceDays?: number;
 }
 
 export interface AddLoanCapitalDto {

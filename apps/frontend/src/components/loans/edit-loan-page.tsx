@@ -28,6 +28,13 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState('ACTIVE');
   const [interestRate, setInterestRate] = useState('');
+  const [lateFeeEnabled, setLateFeeEnabled] = useState(false);
+  const [lateFeeMode, setLateFeeMode] = useState<'PER_INSTALLMENT' | 'DAILY'>('PER_INSTALLMENT');
+  const [lateFeeCalculation, setLateFeeCalculation] = useState<'PERCENTAGE' | 'AMOUNT'>(
+    'PERCENTAGE',
+  );
+  const [lateFeeValue, setLateFeeValue] = useState('5');
+  const [lateFeeGraceDays, setLateFeeGraceDays] = useState('5');
 
   useEffect(() => {
     getLoan(loanId)
@@ -36,6 +43,11 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
         setNotes(data.notes ?? '');
         setStatus(data.status);
         setInterestRate(String(Number(data.interestRate)));
+        setLateFeeEnabled(data.lateFeeEnabled ?? false);
+        setLateFeeMode(data.lateFeeMode ?? 'PER_INSTALLMENT');
+        setLateFeeCalculation(data.lateFeeCalculation ?? 'PERCENTAGE');
+        setLateFeeValue(String(Number(data.lateFeeValue ?? 5)));
+        setLateFeeGraceDays(String(data.lateFeeGraceDays ?? 5));
       })
       .catch(() => setError('No se pudo cargar el préstamo.'))
       .finally(() => setLoading(false));
@@ -50,6 +62,11 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
         notes: notes.trim() || undefined,
         status: status as keyof typeof LoanStatusEnum,
         interestRate: interestRate ? Number(interestRate) : undefined,
+        lateFeeEnabled,
+        lateFeeMode,
+        lateFeeCalculation,
+        lateFeeValue: Number(lateFeeValue),
+        lateFeeGraceDays: Number(lateFeeGraceDays),
       });
       router.push(`/prestamos/${loanId}`);
     } catch {
@@ -72,7 +89,10 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
       <main className="min-h-screen bg-page p-5">
         <div className="mx-auto max-w-2xl rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
           <p className="text-sm font-medium text-red-600">{error ?? 'Préstamo no encontrado.'}</p>
-          <Link className="mt-4 inline-flex text-sm font-bold text-primary-accent" href="/prestamos">
+          <Link
+            className="mt-4 inline-flex text-sm font-bold text-primary-accent"
+            href="/prestamos"
+          >
             Volver a préstamos
           </Link>
         </div>
@@ -106,17 +126,23 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-xl bg-surface-subtle px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">Capital</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                  Capital
+                </p>
                 <p className="mt-1 text-lg font-bold text-text-primary">{fmt(loan.principal)}</p>
               </div>
               <div className="rounded-xl bg-surface-subtle px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">Balance</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                  Balance
+                </p>
                 <p className="mt-1 text-lg font-bold text-text-primary">{fmt(loan.balance)}</p>
               </div>
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-text-secondary">Estado</label>
+              <label className="mb-1.5 block text-sm font-semibold text-text-secondary">
+                Estado
+              </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
@@ -143,12 +169,92 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
                 className="w-full rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent focus:ring-1 focus:ring-primary-accent"
               />
               <p className="mt-1 text-xs text-text-subtle">
-                La tasa actual es {Number(loan.interestRate)}%. Cambiarla no recalcula el calendario de pagos existente.
+                La tasa actual es {Number(loan.interestRate)}%. Cambiarla no recalcula el calendario
+                de pagos existente.
               </p>
             </div>
 
+            <section className="overflow-hidden rounded-2xl border border-primary-border">
+              <label className="flex items-center justify-between gap-4 bg-surface-subtle px-4 py-3.5">
+                <span>
+                  <strong className="block text-sm text-text-primary">Aplicar mora</strong>
+                  <small className="text-xs font-medium text-text-secondary">
+                    Desactívala para eliminar los cargos pendientes
+                  </small>
+                </span>
+                <input
+                  checked={lateFeeEnabled}
+                  className="h-5 w-5 accent-primary-accent"
+                  onChange={(event) => setLateFeeEnabled(event.target.checked)}
+                  type="checkbox"
+                />
+              </label>
+              {lateFeeEnabled && (
+                <div className="grid gap-4 border-t border-primary-border p-4 sm:grid-cols-2">
+                  <label>
+                    <span className="mb-1.5 block text-sm font-semibold text-text-secondary">
+                      Modalidad
+                    </span>
+                    <select
+                      className="w-full rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent"
+                      onChange={(event) =>
+                        setLateFeeMode(event.target.value as 'PER_INSTALLMENT' | 'DAILY')
+                      }
+                      value={lateFeeMode}
+                    >
+                      <option value="PER_INSTALLMENT">Monto fijo por cuota</option>
+                      <option value="DAILY">Mora diaria</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span className="mb-1.5 block text-sm font-semibold text-text-secondary">
+                      Tipo de cálculo
+                    </span>
+                    <select
+                      className="w-full rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent"
+                      onChange={(event) =>
+                        setLateFeeCalculation(event.target.value as 'PERCENTAGE' | 'AMOUNT')
+                      }
+                      value={lateFeeCalculation}
+                    >
+                      <option value="PERCENTAGE">Porcentaje de la cuota</option>
+                      <option value="AMOUNT">Monto fijo</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span className="mb-1.5 block text-sm font-semibold text-text-secondary">
+                      {lateFeeCalculation === 'PERCENTAGE' ? 'Porcentaje de mora' : 'Monto de mora'}
+                    </span>
+                    <input
+                      className="w-full rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent"
+                      min="0"
+                      onChange={(event) => setLateFeeValue(event.target.value)}
+                      step="0.01"
+                      type="number"
+                      value={lateFeeValue}
+                    />
+                  </label>
+                  <label>
+                    <span className="mb-1.5 block text-sm font-semibold text-text-secondary">
+                      Días de gracia
+                    </span>
+                    <input
+                      className="w-full rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent"
+                      min="0"
+                      onChange={(event) => setLateFeeGraceDays(event.target.value)}
+                      step="1"
+                      type="number"
+                      value={lateFeeGraceDays}
+                    />
+                  </label>
+                </div>
+              )}
+            </section>
+
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-text-secondary">Notas</label>
+              <label className="mb-1.5 block text-sm font-semibold text-text-secondary">
+                Notas
+              </label>
               <textarea
                 rows={4}
                 value={notes}

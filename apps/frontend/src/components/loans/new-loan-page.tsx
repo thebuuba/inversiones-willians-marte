@@ -6,12 +6,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
+  AlertCircle,
   Banknote,
   Calculator,
   Check,
   ChevronDown,
   ChevronRight,
   Landmark,
+  PlayCircle,
   ReceiptText,
   RefreshCw,
   RotateCcw,
@@ -184,7 +186,9 @@ function ClientSearchCard({
             onClick={() => setChangingClient(true)}
             type="button"
           >
-            <p className="truncate text-base font-bold leading-tight text-text-primary">{fullName}</p>
+            <p className="truncate text-base font-bold leading-tight text-text-primary">
+              {fullName}
+            </p>
             <p className="mt-0.5 text-xs font-medium text-text-secondary">
               {selectedClient.identification ?? '—'}
             </p>
@@ -466,9 +470,9 @@ function ReplacementOptions({
                           {loan.interestType === 'INDEFINITE' ? 'Modalidad' : 'Cuotas restantes'}
                         </small>
                         <strong className="text-text-primary">
-                            {loan.interestType === 'INDEFINITE'
-                              ? 'Indefinido'
-                              : `${remainingInstallments}/${loan.term}`}
+                          {loan.interestType === 'INDEFINITE'
+                            ? 'Indefinido'
+                            : `${remainingInstallments}/${loan.term}`}
                         </strong>
                       </span>
                     </label>
@@ -689,7 +693,9 @@ function MainInfoCard({
               error={errors?.paymentFrequency}
             />
             <label className="block">
-              <span className="mb-1.5 block text-xs font-bold text-text-secondary">Primera cuota</span>
+              <span className="mb-1.5 block text-xs font-bold text-text-secondary">
+                Primera cuota
+              </span>
               <DatePickerInput
                 value={firstPaymentDate}
                 onChange={onFirstPaymentDateChange}
@@ -753,6 +759,20 @@ function NewLoanStepTwo({
   sourceLoanIds,
   settlementTotal,
   onApplyReplacement,
+  paidInstallments,
+  onPaidInstallmentsChange,
+  paidLateFee,
+  onPaidLateFeeChange,
+  lateFeeEnabled,
+  onLateFeeEnabledChange,
+  lateFeeMode,
+  onLateFeeModeChange,
+  lateFeeCalculation,
+  onLateFeeCalculationChange,
+  lateFeeValue,
+  onLateFeeValueChange,
+  lateFeeGraceDays,
+  onLateFeeGraceDaysChange,
 }: {
   amount: string;
   term: string;
@@ -780,6 +800,20 @@ function NewLoanStepTwo({
   sourceLoanIds: string[];
   settlementTotal: number;
   onApplyReplacement: (type: ReplacementType, loanIds: string[], total: number) => void;
+  paidInstallments: string;
+  onPaidInstallmentsChange: (value: string) => void;
+  paidLateFee: string;
+  onPaidLateFeeChange: (value: string) => void;
+  lateFeeEnabled: boolean;
+  onLateFeeEnabledChange: (value: boolean) => void;
+  lateFeeMode: 'PER_INSTALLMENT' | 'DAILY';
+  onLateFeeModeChange: (value: 'PER_INSTALLMENT' | 'DAILY') => void;
+  lateFeeCalculation: 'PERCENTAGE' | 'AMOUNT';
+  onLateFeeCalculationChange: (value: 'PERCENTAGE' | 'AMOUNT') => void;
+  lateFeeValue: string;
+  onLateFeeValueChange: (value: string) => void;
+  lateFeeGraceDays: string;
+  onLateFeeGraceDaysChange: (value: string) => void;
 }) {
   const rate = customInterestRate || '0';
   const rawRate = parseStrictNumber(rate) ?? 0;
@@ -787,6 +821,8 @@ function NewLoanStepTwo({
   const termUnit = getTermUnitForFrequency(paymentFrequency);
 
   const [showSchedule, setShowSchedule] = useState(false);
+  const [openHistoricalLoan, setOpenHistoricalLoan] = useState(false);
+  const [openLateFee, setOpenLateFee] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   function validate(): boolean {
@@ -816,6 +852,13 @@ function NewLoanStepTwo({
       /^\d{4}-\d{2}-\d{2}$/.test(firstPaymentDate) &&
       !Number.isNaN(new Date(`${firstPaymentDate}T00:00:00Z`).getTime());
     if (!dateValid) newErrors.firstPaymentDate = 'Selecciona una fecha válida';
+    const paidCount = Number(paidInstallments || 0);
+    if (!Number.isInteger(paidCount) || paidCount < 0 || paidCount > summary.months) {
+      newErrors.paidInstallments = `Debe ser un número entre 0 y ${summary.months}`;
+    }
+    if (parseNumber(paidLateFee) > 0 && paidCount === 0) {
+      newErrors.paidInstallments = 'Indica al menos una cuota cobrada';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -887,6 +930,21 @@ function NewLoanStepTwo({
     [summary.principal, effectiveRate, summary.months, amortizationType, customPayment],
   );
   const summaryTotals = getLoanSummaryTotals(summary.principal, scheduleData.totalInterest);
+  const paidCount = Number(paidInstallments || 0);
+  const paidRows = Number.isInteger(paidCount) ? scheduleData.schedule.slice(0, paidCount) : [];
+  const paidPrincipal = paidRows.reduce((sum, row) => sum + row.principal, 0);
+  const paidInterest = paidRows.reduce((sum, row) => sum + row.interest, 0);
+  const historicalDataValid =
+    Number.isInteger(paidCount) &&
+    paidCount >= 0 &&
+    paidCount <= summary.months &&
+    (parseNumber(paidLateFee) === 0 || paidCount > 0);
+  const lateFeeDataValid =
+    !lateFeeEnabled ||
+    (parseStrictNumber(lateFeeValue) !== null &&
+      parseNumber(lateFeeValue) >= 0 &&
+      Number.isInteger(Number(lateFeeGraceDays)) &&
+      Number(lateFeeGraceDays) >= 0);
   const calculationReady =
     canCalculateLoan({
       amount,
@@ -898,7 +956,9 @@ function NewLoanStepTwo({
       firstPaymentDate,
       customPayment,
     }) &&
-    (operationType !== 'REENGAGEMENT' || parseNumber(amount) > settlementTotal);
+    (operationType !== 'REENGAGEMENT' || parseNumber(amount) > settlementTotal) &&
+    historicalDataValid &&
+    lateFeeDataValid;
 
   return (
     <div className="mt-8 space-y-5">
@@ -958,6 +1018,146 @@ function NewLoanStepTwo({
         />
       </div>
 
+      <div className="space-y-3">
+        <section className={`overflow-hidden rounded-xl bg-white ${LOAN_CARD_SHADOW}`}>
+          <button
+            className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-subtle"
+            onClick={() => setOpenHistoricalLoan((open) => !open)}
+            type="button"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-primary-soft text-primary-accent">
+              <PlayCircle className="h-4.5 w-4.5" />
+            </span>
+            <span className="flex-1">
+              <strong className="block text-sm font-bold text-text-primary">
+                Préstamo ya iniciado
+              </strong>
+              <small className="mt-0.5 block text-xs font-medium text-text-secondary">
+                Registra las cuotas cobradas antes de ingresar el préstamo
+              </small>
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 text-text-secondary transition ${openHistoricalLoan ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {openHistoricalLoan && (
+            <div className="grid gap-3 border-t border-primary-border bg-surface-subtle p-4 md:grid-cols-4">
+              <label>
+                <span className="mb-1.5 block text-xs font-bold text-text-secondary">
+                  Cuotas cobradas
+                </span>
+                <input
+                  className="h-[42px] w-full rounded-control-compact border border-primary-border bg-card px-3 text-sm font-medium text-text-primary shadow-soft outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
+                  min="0"
+                  max={summary.months}
+                  step="1"
+                  type="number"
+                  value={paidInstallments}
+                  onChange={(event) => onPaidInstallmentsChange(event.target.value)}
+                />
+                {errors.paidInstallments && (
+                  <span className="mt-1 block text-xs font-medium text-state-danger">
+                    {errors.paidInstallments}
+                  </span>
+                )}
+              </label>
+              <TextInput
+                label="Capital pagado"
+                prefix="RD$"
+                readOnly
+                value={formatNumberInput(String(Math.round(paidPrincipal)))}
+              />
+              <TextInput
+                label="Interés pagado"
+                prefix="RD$"
+                readOnly
+                value={formatNumberInput(String(Math.round(paidInterest)))}
+              />
+              <TextInput
+                label="Mora pagada"
+                prefix="RD$"
+                value={formatNumberInput(paidLateFee)}
+                onChange={(value) => onPaidLateFeeChange(value.replace(/,/g, ''))}
+              />
+            </div>
+          )}
+        </section>
+
+        <section className={`overflow-hidden rounded-xl bg-white ${LOAN_CARD_SHADOW}`}>
+          <button
+            className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-subtle"
+            onClick={() => setOpenLateFee((open) => !open)}
+            type="button"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-state-danger-bg text-state-danger">
+              <AlertCircle className="h-4.5 w-4.5" />
+            </span>
+            <span className="flex-1">
+              <strong className="block text-sm font-bold text-text-primary">Mora</strong>
+              <small className="mt-0.5 block text-xs font-medium text-text-secondary">
+                Configuración de la mora del préstamo
+              </small>
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 text-text-secondary transition ${openLateFee ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {openLateFee && (
+            <div className="space-y-4 border-t border-primary-border bg-surface-subtle p-4">
+              <label className="flex items-center justify-between gap-4 rounded-xl bg-white px-4 py-3 shadow-soft">
+                <span>
+                  <strong className="block text-sm text-text-primary">Aplicar mora</strong>
+                  <small className="text-xs font-medium text-text-secondary">
+                    Puedes cambiar esta configuración luego
+                  </small>
+                </span>
+                <input
+                  checked={lateFeeEnabled}
+                  className="h-5 w-5 accent-primary-accent"
+                  onChange={(event) => onLateFeeEnabledChange(event.target.checked)}
+                  type="checkbox"
+                />
+              </label>
+              {lateFeeEnabled && (
+                <div className="grid gap-3 md:grid-cols-4">
+                  <SelectInput
+                    label="Modalidad"
+                    options={['Por cuota', 'Diaria']}
+                    value={lateFeeMode === 'PER_INSTALLMENT' ? 'Por cuota' : 'Diaria'}
+                    onChange={(value) =>
+                      onLateFeeModeChange(value === 'Diaria' ? 'DAILY' : 'PER_INSTALLMENT')
+                    }
+                  />
+                  <SelectInput
+                    label="Tipo de cálculo"
+                    options={['Porcentaje', 'Monto fijo']}
+                    value={lateFeeCalculation === 'PERCENTAGE' ? 'Porcentaje' : 'Monto fijo'}
+                    onChange={(value) =>
+                      onLateFeeCalculationChange(value === 'Monto fijo' ? 'AMOUNT' : 'PERCENTAGE')
+                    }
+                  />
+                  <TextInput
+                    label={
+                      lateFeeCalculation === 'PERCENTAGE' ? 'Porcentaje de mora' : 'Monto de mora'
+                    }
+                    onChange={onLateFeeValueChange}
+                    suffix={lateFeeCalculation === 'PERCENTAGE' ? '%' : undefined}
+                    prefix={lateFeeCalculation === 'AMOUNT' ? 'RD$' : undefined}
+                    value={lateFeeValue}
+                  />
+                  <TextInput
+                    label="Aplicar luego de"
+                    onChange={(value) => onLateFeeGraceDaysChange(value.replace(/\D/g, ''))}
+                    suffix="días"
+                    value={lateFeeGraceDays}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      </div>
+
       <button
         className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-primary-accent text-sm font-bold text-white shadow-[0_6px_16px_rgba(47,118,84,0.15)] transition hover:-translate-y-0.5 hover:bg-primary"
         onClick={handleCalculate}
@@ -976,6 +1176,7 @@ function NewLoanStepTwo({
           term={summary.months}
           firstPaymentDate={firstPaymentDate}
           paymentFrequency={paymentFrequency}
+          paidInstallments={paidCount}
         />
       )}
 
@@ -1005,6 +1206,7 @@ function NewLoanStepTwo({
 function AmortizationRow({
   row,
   total = false,
+  paid = false,
   totalInstallments,
 }: {
   row: {
@@ -1016,6 +1218,7 @@ function AmortizationRow({
     balance: number | string;
   };
   total?: boolean;
+  paid?: boolean;
   totalInstallments: number;
 }) {
   const fmt = (v: number | string) => (typeof v === 'number' ? formatCurrency(v) : v);
@@ -1025,10 +1228,18 @@ function AmortizationRow({
   return (
     <div
       className={`grid min-w-[980px] grid-cols-[90px_1.1fr_1.2fr_1.2fr_1.2fr_1.3fr] items-center border-t px-5 py-2.5 text-sm ${
-        total ? 'bg-surface-subtle font-bold' : 'bg-white'
+        total ? 'bg-surface-subtle font-bold' : paid ? 'bg-primary-soft' : 'bg-white'
       } ${total ? 'border-[#C8D7CF]' : 'border-primary-border'}`}
     >
-      <span className={total ? 'text-[#374151]' : 'font-medium text-[#111827]'}>
+      <span
+        className={
+          total
+            ? 'text-[#374151]'
+            : paid
+              ? 'font-bold text-primary-accent'
+              : 'font-medium text-[#111827]'
+        }
+      >
         {installmentLabel}
       </span>
       <span className={total ? 'font-medium text-[#9CA3AF]' : 'font-medium text-[#374151]'}>
@@ -1052,6 +1263,7 @@ function AmortizationTableCard({
   term,
   firstPaymentDate,
   paymentFrequency,
+  paidInstallments,
 }: {
   schedule: {
     number: number;
@@ -1066,6 +1278,7 @@ function AmortizationTableCard({
   term: number;
   firstPaymentDate: string;
   paymentFrequency: 'MONTHLY' | 'FORTNIGHTLY' | 'WEEKLY';
+  paidInstallments: number;
 }) {
   return (
     <div className="relative">
@@ -1098,13 +1311,14 @@ function AmortizationTableCard({
               </div>
 
               <motion.div layout>
-                {schedule.map((row) => (
+                {schedule.map((row, index) => (
                   <AmortizationRow
                     key={row.number}
                     row={{
                       ...row,
                       date: getInstallmentIsoDate(firstPaymentDate, row.number, paymentFrequency),
                     }}
+                    paid={index < paidInstallments}
                     totalInstallments={term}
                   />
                 ))}
@@ -1173,6 +1387,15 @@ export function NewLoanPage() {
   const [operationType, setOperationType] = useState<ReplacementType | null>(null);
   const [sourceLoanIds, setSourceLoanIds] = useState<string[]>([]);
   const [settlementTotal, setSettlementTotal] = useState(0);
+  const [paidInstallments, setPaidInstallments] = useState('0');
+  const [paidLateFee, setPaidLateFee] = useState('0');
+  const [lateFeeEnabled, setLateFeeEnabled] = useState(true);
+  const [lateFeeMode, setLateFeeMode] = useState<'PER_INSTALLMENT' | 'DAILY'>('PER_INSTALLMENT');
+  const [lateFeeCalculation, setLateFeeCalculation] = useState<'PERCENTAGE' | 'AMOUNT'>(
+    'PERCENTAGE',
+  );
+  const [lateFeeValue, setLateFeeValue] = useState('5');
+  const [lateFeeGraceDays, setLateFeeGraceDays] = useState('5');
 
   useEffect(() => {
     getLoanProducts()
@@ -1258,6 +1481,13 @@ export function NewLoanPage() {
         notes: purpose || undefined,
         operationType: operationType ?? undefined,
         sourceLoanIds: sourceLoanIds.length ? sourceLoanIds : undefined,
+        paidInstallments: Number(paidInstallments || 0),
+        paidLateFee: parseNumber(paidLateFee),
+        lateFeeEnabled,
+        lateFeeMode,
+        lateFeeCalculation,
+        lateFeeValue: parseNumber(lateFeeValue),
+        lateFeeGraceDays: Number(lateFeeGraceDays),
       });
       invalidateCachePrefix('loans:');
       invalidateCachePrefix('clients:');
@@ -1335,6 +1565,20 @@ export function NewLoanPage() {
             sourceLoanIds={sourceLoanIds}
             settlementTotal={settlementTotal}
             onApplyReplacement={handleApplyReplacement}
+            paidInstallments={paidInstallments}
+            onPaidInstallmentsChange={setPaidInstallments}
+            paidLateFee={paidLateFee}
+            onPaidLateFeeChange={setPaidLateFee}
+            lateFeeEnabled={lateFeeEnabled}
+            onLateFeeEnabledChange={setLateFeeEnabled}
+            lateFeeMode={lateFeeMode}
+            onLateFeeModeChange={setLateFeeMode}
+            lateFeeCalculation={lateFeeCalculation}
+            onLateFeeCalculationChange={setLateFeeCalculation}
+            lateFeeValue={lateFeeValue}
+            onLateFeeValueChange={setLateFeeValue}
+            lateFeeGraceDays={lateFeeGraceDays}
+            onLateFeeGraceDaysChange={setLateFeeGraceDays}
           />
         )}
       </div>

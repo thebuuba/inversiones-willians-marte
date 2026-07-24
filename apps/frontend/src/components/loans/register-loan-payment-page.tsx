@@ -132,7 +132,11 @@ function Metric({
   tone?: string;
 }) {
   const valueTone =
-    tone === 'green' ? 'text-primary-accent' : tone === 'orange' ? 'text-[#B64A24]' : 'text-text-primary';
+    tone === 'green'
+      ? 'text-primary-accent'
+      : tone === 'orange'
+        ? 'text-[#B64A24]'
+        : 'text-text-primary';
   return (
     <div className="border-l border-[#E4ECE7] px-4 first:border-l-0 first:pl-0">
       <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7A7F7D]">{label}</p>
@@ -203,7 +207,9 @@ export function RegisterLoanPaymentPage() {
       .then((selected) => {
         if (!active) return;
         setLoan(selected);
-        setAmount(String(getAmountToBringCurrent(selected.schedule, today())));
+        setAmount(
+          String(getAmountToBringCurrent(selected.schedule, today(), selected.lateFees ?? [])),
+        );
       })
       .catch(() => {
         if (active) setError('No se pudo cargar el préstamo seleccionado.');
@@ -238,7 +244,9 @@ export function RegisterLoanPaymentPage() {
     try {
       const selected = await getLoan(id);
       setLoan(selected);
-      setAmount(String(getAmountToBringCurrent(selected.schedule, today())));
+      setAmount(
+        String(getAmountToBringCurrent(selected.schedule, today(), selected.lateFees ?? [])),
+      );
       setSubmitted(false);
     } catch {
       setError('No se pudo cargar el préstamo seleccionado.');
@@ -250,9 +258,11 @@ export function RegisterLoanPaymentPage() {
   const amountNumber = parseCurrencyInput(amount);
   const nextScheduled = loan ? getNextScheduledAmount(loan.schedule) : 0;
   const amountToBringCurrent = loan
-    ? getAmountToBringCurrent(loan.schedule, paymentDate || today())
+    ? getAmountToBringCurrent(loan.schedule, paymentDate || today(), loan.lateFees ?? [])
     : 0;
-  const totalOutstanding = loan ? getOutstandingScheduledAmount(loan.schedule) : 0;
+  const totalOutstanding = loan
+    ? getOutstandingScheduledAmount(loan.schedule, loan.lateFees ?? [])
+    : 0;
   const allocationPreview = useMemo(
     () => (loan ? buildPaymentAllocationPreview(loan.schedule, loan.payments, amountNumber) : []),
     [amountNumber, loan],
@@ -305,7 +315,9 @@ export function RegisterLoanPaymentPage() {
       invalidateCache('upcomingPayments');
       const refreshed = await getLoan(loan.id);
       setLoan(refreshed);
-      setAmount(String(getAmountToBringCurrent(refreshed.schedule, today())));
+      setAmount(
+        String(getAmountToBringCurrent(refreshed.schedule, today(), refreshed.lateFees ?? [])),
+      );
       setReference('');
       setNotes('');
       setSubmitted(false);
@@ -651,7 +663,9 @@ export function RegisterLoanPaymentPage() {
                       <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3.5">
                         <div className="flex items-center gap-2">
                           <WalletCards className="h-4 w-4 text-primary-accent" />
-                          <h2 className="text-sm font-bold text-text-primary">Estado del préstamo</h2>
+                          <h2 className="text-sm font-bold text-text-primary">
+                            Estado del préstamo
+                          </h2>
                         </div>
                         <span className="text-[11px] font-bold text-primary-accent">
                           {loanSummary?.paidInstallments ?? 0}/{loan.term} cuotas pagadas
