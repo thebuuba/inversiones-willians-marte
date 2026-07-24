@@ -204,7 +204,6 @@ describe('ClientsService', () => {
 
   describe('remove', () => {
     it('should soft-delete a client', async () => {
-      jest.mocked(prisma.client.findUnique).mockResolvedValue(mockClient as any);
       jest.mocked(prisma.client.update).mockResolvedValue({ ...mockClient, active: false } as any);
 
       const result = await service.remove(1, 'user-1');

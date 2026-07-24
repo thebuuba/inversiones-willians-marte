@@ -299,7 +299,6 @@ export class ClientsService {
   }
 
   async remove(id: number, userId?: string) {
-    const previous = await this.findOne(id);
     const updated = await prisma.client.update({ where: { id }, data: { active: false } });
 
     if (userId) {
@@ -309,7 +308,7 @@ export class ClientsService {
         entityType: 'Client',
         entityId: String(id),
         action: 'CLIENT_DELETED',
-        oldValues: { active: previous.active },
+        oldValues: { active: true },
         newValues: { active: false },
       });
     }

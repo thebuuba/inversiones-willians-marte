@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import QRCode from 'qrcode';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { getClient, updateClient, deleteClient } from '@/lib/api/clients';
@@ -28,6 +28,7 @@ import {
   getNextInstallmentAmount,
 } from '@/components/loans/loan-detail.helpers';
 import { deleteLoan } from '@/lib/api/loans';
+import { invalidateCachePrefix } from '@/lib/use-client-cache';
 import {
   countClientNotes,
   formatClientNotesPreview,
@@ -250,7 +251,11 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
             <DropdownMenu.Item
               disabled={deletingLoan}
               className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-red-600 outline-none hover:bg-red-50"
-              onSelect={handleDelete}
+              onSelect={(event) => {
+                event.preventDefault();
+                if (deletingLoan) return;
+                void handleDelete();
+              }}
             >
               <Trash2 className="h-4 w-4" />
               {deletingLoan ? 'Eliminando...' : 'Eliminar'}
@@ -1322,6 +1327,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const deletingClientRef = useRef(false);
 
   const loadHistory = useCallback(() => {
     let cancelled = false;
@@ -1423,14 +1429,19 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   };
 
   const handleDeleteClient = async () => {
+    if (deletingClientRef.current) return;
     if (!window.confirm('¿Estás seguro de eliminar este cliente? Esta acción no se puede deshacer.')) return;
+    deletingClientRef.current = true;
     setDeleting(true);
     try {
       await deleteClient(clientId);
+      invalidateCachePrefix('clients:');
       router.push('/clientes');
     } catch {
       setDeleting(false);
       alert('Error al eliminar el cliente. Intenta de nuevo.');
+    } finally {
+      deletingClientRef.current = false;
     }
   };
 
@@ -1564,7 +1575,12 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                       <DropdownMenu.Item
                         disabled={deleting}
                         className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-red-600 outline-none hover:bg-red-50"
-                        onSelect={handleDeleteClient}
+                        onSelect={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          if (deleting) return;
+                          void handleDeleteClient();
+                        }}
                       >
                         <Trash2 className="h-4 w-4" />
                         {deleting ? 'Eliminando...' : 'Eliminar cliente'}
