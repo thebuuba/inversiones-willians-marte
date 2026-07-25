@@ -22,7 +22,7 @@ const MONTHS = [
 const METHODS = ['Efectivo', 'Transferencia', 'Tarjeta'];
 
 const inputClass =
-  'h-11 w-full rounded-xl border border-primary-border bg-white px-4 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent';
+  'h-11 w-full rounded-xl border border-primary-border bg-card px-4 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent';
 
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1;
@@ -179,7 +179,7 @@ export function RegisterInvestorPaymentPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[400px_1fr]">
           {/* Left column: Investor info */}
           <div className="space-y-5">
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-border-soft">
+            <div className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
               <div className="flex items-center gap-4">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary-soft">
                   <TrendingUp className="h-7 w-7 text-primary-accent" />
@@ -194,7 +194,7 @@ export function RegisterInvestorPaymentPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-border-soft">
+            <div className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
               <h3 className="mb-4 text-sm font-semibold text-text-primary">Información financiera</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between border-b border-border-soft pb-2">
@@ -230,7 +230,7 @@ export function RegisterInvestorPaymentPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-border-soft">
+            <div className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
               <h3 className="mb-4 text-sm font-semibold text-text-primary">Últimos pagos</h3>
               {payments.length === 0 ? (
                 <p className="text-sm text-text-subtle">No hay pagos registrados aún.</p>
@@ -253,7 +253,7 @@ export function RegisterInvestorPaymentPage() {
           </div>
 
           {/* Right column: Payment form */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-border-soft">
+          <div className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
             <h2 className="mb-1 text-xl font-bold text-text-primary">Registrar pago de interés</h2>
             <p className="mb-6 text-sm text-text-muted">
               Registra el pago mensual correspondiente al período seleccionado.
@@ -360,7 +360,7 @@ export function RegisterInvestorPaymentPage() {
                   <label className="block sm:col-span-2">
                     <span className="mb-2 block text-sm font-bold text-text-secondary">Notas</span>
                     <textarea
-                      className="h-24 w-full resize-none rounded-xl border border-primary-border bg-white px-4 py-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent"
+                      className="h-24 w-full resize-none rounded-xl border border-primary-border bg-card px-4 py-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Opcional"
@@ -372,7 +372,7 @@ export function RegisterInvestorPaymentPage() {
 
                 <div className="mt-6 flex justify-end gap-3 border-t border-border-soft pt-4">
                   <Link
-                    className="inline-flex h-11 items-center rounded-full border border-primary-border bg-white px-6 text-sm font-bold text-text-primary"
+                    className="inline-flex h-11 items-center rounded-full border border-primary-border bg-card px-6 text-sm font-bold text-text-primary"
                     href={`/inversionistas/${investor.id}`}
                   >
                     Cancelar

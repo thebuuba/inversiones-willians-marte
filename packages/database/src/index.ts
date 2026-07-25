@@ -5,12 +5,17 @@ import { PrismaClient } from '@prisma/client';
 const requestPrisma = new AsyncLocalStorage<PrismaClient>();
 const globalForPrisma = globalThis as unknown as { nodePrisma: PrismaClient | undefined };
 
+export function allowsSelfSignedCertificate(connectionString: string) {
+  return new URL(connectionString).searchParams.get('sslmode') === 'no-verify';
+}
+
 export function createPrismaClient(connectionString = process.env.DATABASE_URL) {
   if (!connectionString) throw new Error('DATABASE_URL is required');
 
   const adapter = new PrismaPg({
     connectionString,
     max: 3,
+    ssl: allowsSelfSignedCertificate(connectionString) ? { rejectUnauthorized: false } : undefined,
   });
 
   return new PrismaClient({

@@ -53,7 +53,7 @@ function EmptyPendingState({ onCreate }: { onCreate: () => void }) {
       <div className="flex flex-col items-center px-6 py-12 text-center">
         <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[var(--primary-accent)]">
           <Inbox className="h-6 w-6" />
-          <CheckCircle2 className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-white text-[var(--primary-accent)]" />
+          <CheckCircle2 className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-card text-[var(--primary-accent)]" />
         </div>
         <h2 className="mt-4 text-[15px] font-bold leading-tight text-[var(--text-primary)]">
           Todo al día
@@ -62,7 +62,7 @@ function EmptyPendingState({ onCreate }: { onCreate: () => void }) {
           Las nuevas solicitudes de préstamo aparecerán aquí
         </p>
         <button
-          className="mt-5 flex h-11 items-center gap-2 rounded-full border border-[var(--primary-border)] bg-white px-5 text-sm font-bold text-[var(--text-secondary)] transition-colors duration-150 hover:bg-surface-subtle hover:text-[var(--text-primary)] active:scale-[0.98]"
+          className="mt-5 flex h-11 items-center gap-2 rounded-full border border-[var(--primary-border)] bg-card px-5 text-sm font-bold text-[var(--text-secondary)] transition-colors duration-150 hover:bg-surface-subtle hover:text-[var(--text-primary)] active:scale-[0.98]"
           onClick={onCreate}
           type="button"
         >
@@ -191,7 +191,7 @@ export function RequestsPanel() {
               <article
                 key={request.id}
                 onClick={() => setSelectedRequest(request)}
-                className="flex min-h-[86px] cursor-pointer flex-col items-stretch gap-4 rounded-[18px] border border-[var(--border-soft)] bg-white px-5 py-4 shadow-[0_7px_22px_rgba(40,92,67,0.03)] transition-colors duration-150 hover:bg-surface-subtle hover:shadow-[0_14px_32px_rgba(40,92,67,0.075)] sm:flex-row sm:items-center"
+                className="flex min-h-[86px] cursor-pointer flex-col items-stretch gap-4 rounded-[18px] border border-[var(--border-soft)] bg-card px-5 py-4 shadow-[0_7px_22px_rgba(40,92,67,0.03)] transition-colors duration-150 hover:bg-surface-subtle hover:shadow-[0_14px_32px_rgba(40,92,67,0.075)] sm:flex-row sm:items-center"
               >
                 <div className="flex min-w-0 flex-1 items-center gap-4">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary-accent)]">
@@ -220,10 +220,10 @@ export function RequestsPanel() {
         )}
 
         {history.length > 0 && (
-          <div className="overflow-hidden" style={{ backgroundColor: '#F3F4F6' }}>
+          <div className="overflow-hidden rounded-xl border border-border-soft bg-surface-subtle">
             <button
               onClick={() => setHistoryOpen((v) => !v)}
-              className="flex w-full cursor-pointer items-center justify-between rounded-xl px-5 py-4 text-left transition-colors duration-150 hover:bg-surface-subtle"
+              className="flex w-full cursor-pointer items-center justify-between px-5 py-4 text-left transition-colors duration-150 hover:bg-surface-elevated"
               type="button"
             >
               <div className="flex items-center gap-2">
@@ -238,7 +238,7 @@ export function RequestsPanel() {
                   <article
                     key={request.id}
                     onClick={() => setSelectedRequest(request)}
-                    className="flex min-h-[86px] cursor-pointer flex-col items-stretch gap-4 rounded-[18px] border border-[var(--border-soft)] bg-white px-5 py-4 shadow-[0_7px_22px_rgba(40,92,67,0.03)] transition-colors duration-150 hover:bg-surface-subtle hover:shadow-[0_14px_32px_rgba(40,92,67,0.075)] sm:flex-row sm:items-center"
+                    className="flex min-h-[86px] cursor-pointer flex-col items-stretch gap-4 rounded-[18px] border border-[var(--border-soft)] bg-card px-5 py-4 shadow-[0_7px_22px_rgba(40,92,67,0.03)] transition-colors duration-150 hover:bg-surface-subtle hover:shadow-[0_14px_32px_rgba(40,92,67,0.075)] sm:flex-row sm:items-center"
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-4">
                       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-state-neutral-bg text-sm font-bold text-[var(--text-secondary)]">

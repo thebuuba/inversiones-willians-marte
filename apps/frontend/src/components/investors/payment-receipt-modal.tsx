@@ -128,7 +128,7 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
       onClick={onClose}
     >
       <div
-        className="flex w-full max-w-[560px] flex-col overflow-hidden rounded-2xl border border-border-soft bg-white shadow-[0_28px_80px_rgba(0,0,0,0.26)]"
+        className="flex w-full max-w-[560px] flex-col overflow-hidden rounded-2xl border border-border-soft bg-card shadow-[0_28px_80px_rgba(0,0,0,0.26)]"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-start justify-between gap-4 bg-[#f1f8f4] px-6 py-5">
@@ -140,7 +140,7 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
           </div>
           <button
             aria-label="Cerrar"
-            className="rounded-full p-1.5 text-[#3d443f] hover:bg-white"
+            className="rounded-full p-1.5 text-text-primary hover:bg-card"
             onClick={onClose}
             type="button"
           >
@@ -215,7 +215,7 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
 
         <footer className="flex flex-wrap justify-end gap-3 border-t border-border-soft px-6 py-4">
           <button
-            className="inline-flex h-11 items-center gap-2 rounded-full border border-primary-border bg-white px-6 text-sm font-bold text-text-primary"
+            className="inline-flex h-11 items-center gap-2 rounded-full border border-primary-border bg-card px-6 text-sm font-bold text-text-primary"
             onClick={handlePrint}
             type="button"
           >
@@ -223,7 +223,7 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
             Imprimir
           </button>
           <button
-            className="inline-flex h-11 items-center gap-2 rounded-full border border-[#c8ead6] bg-white px-6 text-sm font-bold text-[#1f7a4e] hover:bg-[#f1faf5]"
+            className="inline-flex h-11 items-center gap-2 rounded-full border border-[#c8ead6] bg-card px-6 text-sm font-bold text-[#1f7a4e] hover:bg-[#f1faf5]"
             onClick={handleWhatsApp}
             type="button"
           >
@@ -239,7 +239,7 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
             Guardar PDF
           </button>
           <button
-            className="inline-flex h-11 items-center rounded-full border border-primary-border bg-white px-6 text-sm font-bold text-text-primary"
+            className="inline-flex h-11 items-center rounded-full border border-primary-border bg-card px-6 text-sm font-bold text-text-primary"
             onClick={onClose}
             type="button"
           >

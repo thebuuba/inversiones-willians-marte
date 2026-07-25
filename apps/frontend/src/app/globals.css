@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 
 :root {
+  color-scheme: light;
   --background: #f0fbf4;
   --foreground: #102018;
 
@@ -79,6 +80,71 @@
   --radius-control-compact: 0.5rem;
   --radius-control: 0.625rem;
   --radius-control-comfortable: 0.875rem;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --surface: #0a0a0a;
+  --surface-muted: #1c1c1c;
+  --border: #2d2d2d;
+  --border-strong: #494949;
+  --ink: #ededed;
+  --ink-secondary: #b8b8b8;
+  --ink-muted: #9b9b9b;
+  --ink-inverse: #0a0a0a;
+
+  --success: #86c99d;
+  --success-bg: #183d27;
+  --warning: #e3c873;
+  --warning-bg: #403713;
+  --danger: #ef9a86;
+  --danger-bg: #48241d;
+  --info: #9fc5ed;
+  --info-bg: #1d334a;
+
+  --page: #070707;
+  --card: #141414;
+  --surface-subtle: #1c1c1c;
+  --surface-muted-ui: #222222;
+  --surface-elevated: #292929;
+  --primary: #8bc7a1;
+  --primary-hover: #a1d5b3;
+  --primary-accent: #78b890;
+  --primary-soft: #17251c;
+  --primary-border: #304438;
+  --text-primary: #ededed;
+  --text-secondary: #b8b8b8;
+  --text-muted: #a6a6a6;
+  --text-subtle: #929292;
+  --text-inverse: #0a0a0a;
+  --border-soft: #272727;
+  --border-strong-ui: #424242;
+  --state-success: #86c99d;
+  --state-success-bg: #183d27;
+  --state-success-dot: #72bd8b;
+  --state-warning: #e3c873;
+  --state-warning-bg: #403713;
+  --state-warning-dot: #d6b94e;
+  --state-danger: #ef9a86;
+  --state-danger-bg: #48241d;
+  --state-danger-dot: #df806b;
+  --state-info: #9fc5ed;
+  --state-info-bg: #1d334a;
+  --state-info-dot: #79aee4;
+  --state-neutral: #b5c2ba;
+  --state-neutral-bg: #292929;
+  --state-neutral-dot: #a0a0a0;
+  --shadow-soft: 0 3px 8px rgba(0, 0, 0, 0.18);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-action: 0 12px 22px rgba(0, 0, 0, 0.28);
+  --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme='dark'] .sidebar-toggle-icon {
+  filter: grayscale(1) invert(1);
 }
 
 @theme inline {
@@ -191,7 +257,7 @@ body {
 
 .modal-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #b9c8bd transparent;
+  scrollbar-color: var(--border-strong) transparent;
 }
 
 .modal-scroll::-webkit-scrollbar {
@@ -203,13 +269,13 @@ body {
 }
 
 .modal-scroll::-webkit-scrollbar-thumb {
-  background: #b9c8bd;
+  background: var(--border-strong);
   border-radius: 999px;
 }
 
 .drawer-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #b9c8bd transparent;
+  scrollbar-color: var(--border-strong) transparent;
 }
 
 .drawer-scroll::-webkit-scrollbar {
@@ -221,6 +287,6 @@ body {
 }
 
 .drawer-scroll::-webkit-scrollbar-thumb {
-  background: #b9c8bd;
+  background: var(--border-strong);
   border-radius: 999px;
 }

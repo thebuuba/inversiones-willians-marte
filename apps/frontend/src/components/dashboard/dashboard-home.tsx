@@ -70,7 +70,7 @@ function Card({ children, className = '', index = 0 }: { children: ReactNode; cl
       initial="hidden"
       animate="visible"
       custom={index}
-      className={`rounded-2xl border border-border-soft bg-white shadow-sm ${className}`}
+      className={`rounded-2xl border border-border-soft bg-card shadow-sm ${className}`}
     >
       {children}
     </motion.section>
@@ -122,10 +122,10 @@ export function DashboardHome() {
   const portfolioBalance = dash?.portfolioBalance ?? 0;
 
   const metricCards = [
-    { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, accent: '#eaf5ed', color: '#2f7654' },
-    { label: 'Clientes registrados', value: String(totalClients), icon: Users, accent: '#fde4d4', color: '#9f3f25' },
-    { label: 'Cobrado hoy', value: formatCurrency(collectionsToday), icon: DollarSign, accent: '#fef3c7', color: '#7a5a0a' },
-    { label: 'Saldo cartera', value: formatCurrency(portfolioBalance), icon: Wallet, accent: '#dbeafe', color: '#1d4ed8' },
+    { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, tone: 'bg-primary-soft text-primary' },
+    { label: 'Clientes registrados', value: String(totalClients), icon: Users, tone: 'bg-state-danger-bg text-state-danger' },
+    { label: 'Cobrado hoy', value: formatCurrency(collectionsToday), icon: DollarSign, tone: 'bg-state-warning-bg text-state-warning' },
+    { label: 'Saldo cartera', value: formatCurrency(portfolioBalance), icon: Wallet, tone: 'bg-state-info-bg text-state-info' },
   ];
 
   const portfolioSafe = portfolio ?? [];
@@ -155,7 +155,7 @@ export function DashboardHome() {
           <p className="mt-1.5 text-base text-text-secondary">Aquí tienes un resumen de tu cartera hoy.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="h-11 rounded-full border border-primary-border bg-white px-5 text-sm font-bold text-primary-accent shadow-sm">
+          <button className="h-11 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-primary-accent shadow-sm">
             Ver reportes
           </button>
           <Link
@@ -172,11 +172,10 @@ export function DashboardHome() {
         {metricCards.map((k) => {
           const Icon = k.icon;
           return (
-            <div key={k.label} className="rounded-2xl bg-white p-6 shadow-sm border border-border-soft">
+            <div key={k.label} className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
               <div className="flex items-center gap-4">
                 <div
-                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
-                  style={{ backgroundColor: k.accent, color: k.color }}
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${k.tone}`}
                 >
                   <Icon className="h-6 w-6" />
                 </div>
@@ -202,11 +201,13 @@ export function DashboardHome() {
                     <stop offset="95%" stopColor="#7CC99B" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid stroke="#DDEBE3" strokeDasharray="4 6" vertical={false} />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6F7280', fontSize: 13 }} dy={10} />
+                <CartesianGrid stroke="var(--border-strong)" strokeDasharray="4 6" vertical={false} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} dy={10} />
                 <Tooltip
-                  cursor={{ stroke: '#DDEBE3', strokeDasharray: '4 6' }}
-                  contentStyle={{ border: '1px solid #DDEBE3', borderRadius: 16, boxShadow: '0 12px 28px rgba(40,92,67,0.08)' }}
+                  cursor={{ stroke: 'var(--border-strong)', strokeDasharray: '4 6' }}
+                  contentStyle={{ background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 16, color: 'var(--text-primary)' }}
+                  itemStyle={{ color: 'var(--text-primary)' }}
+                  labelStyle={{ color: 'var(--text-secondary)' }}
                 />
                 <Area type="monotone" dataKey="collected" stroke="#7CC99B" strokeWidth={3} fill="url(#cobradoGradient)" isAnimationActive animationDuration={1400} />
                 <Line type="monotone" dataKey="expected" stroke="#B8E0CF" strokeWidth={3} strokeDasharray="6 7" dot={false} isAnimationActive animationDuration={1300} />
@@ -222,7 +223,7 @@ export function DashboardHome() {
               <PieChart>
                 <Pie data={portfolioPie} dataKey="value" innerRadius={50} outerRadius={80} paddingAngle={2} startAngle={0} endAngle={360} isAnimationActive animationDuration={1200}>
                   {portfolioPie.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} stroke="#FFFFFF" strokeWidth={4} />
+                    <Cell key={entry.name} fill={entry.color} stroke="var(--card)" strokeWidth={4} />
                   ))}
                 </Pie>
               </PieChart>
@@ -252,9 +253,14 @@ export function DashboardHome() {
           <div className="h-[230px] min-w-0">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 720, height: 230 }}>
               <BarChart data={weeklyMovement ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke="#DDEBE3" strokeDasharray="4 6" vertical={false} />
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#6F7280', fontSize: 13 }} dy={10} />
-                <Tooltip cursor={{ fill: 'rgba(231,244,236,0.45)' }} contentStyle={{ border: '1px solid #DDEBE3', borderRadius: 16 }} />
+                <CartesianGrid stroke="var(--border-strong)" strokeDasharray="4 6" vertical={false} />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} dy={10} />
+                <Tooltip
+                  cursor={{ fill: 'var(--surface-muted-ui)' }}
+                  contentStyle={{ background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 16, color: 'var(--text-primary)' }}
+                  itemStyle={{ color: 'var(--text-primary)' }}
+                  labelStyle={{ color: 'var(--text-secondary)' }}
+                />
                 <Bar dataKey="nuevos" fill="#7CC99B" radius={[7, 7, 0, 0]} barSize={34} animationDuration={1100} />
                 <Bar dataKey="cerrados" fill="#F7C49E" radius={[7, 7, 0, 0]} barSize={34} animationDuration={1200} />
               </BarChart>
@@ -362,8 +368,8 @@ export function DashboardHome() {
               else if (diffDays === 1) { tag = 'MAÑ'; warm = true; }
 
               return (
-                <div key={payment.id} className={`flex items-center gap-3 rounded-[16px] border p-3 ${warm ? 'border-[#F7D6BD] bg-[#FFF7EF]' : 'border-primary-border bg-surface-muted-ui'}`}>
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-[11px] font-bold ${warm ? 'bg-[#9F3F25] text-white' : 'bg-white text-primary-accent'}`}>
+                <div key={payment.id} className={`flex items-center gap-3 rounded-[16px] border p-3 ${warm ? 'border-state-danger-dot bg-state-danger-bg' : 'border-primary-border bg-surface-muted-ui'}`}>
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-[11px] font-bold ${warm ? 'bg-state-danger text-white' : 'bg-card text-primary-accent'}`}>
                     {tag}
                   </div>
                   <div className="min-w-0 flex-1">

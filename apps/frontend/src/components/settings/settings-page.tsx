@@ -6,6 +6,7 @@ import type { Variants } from 'framer-motion';
 import { getUsers, createUser, toggleActiveUser, type UserItem, type CreateUserInput } from '@/lib/api/users';
 import { getSettings, updateSettings } from '@/lib/api/settings';
 import { useAuth } from '@/lib/auth-context';
+import { ThemeSelector } from './theme-selector';
 import {
   Building2,
   Bell,
@@ -478,7 +479,10 @@ function SettingsGeneralTab() {
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
     >
       <CompanyInfoCard />
-      <LocalizationCard />
+      <div className="space-y-5">
+        <ThemeSelector />
+        <LocalizationCard />
+      </div>
     </motion.div>
   );
 }
@@ -1071,7 +1075,7 @@ function EmptySettingsTab({ tab }: { tab: string }) {
   return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-border-soft bg-white p-6 text-sm font-medium text-text-muted shadow-sm"
+      className="rounded-2xl border border-border-soft bg-card p-6 text-sm font-medium text-text-muted shadow-sm"
       initial={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
     >

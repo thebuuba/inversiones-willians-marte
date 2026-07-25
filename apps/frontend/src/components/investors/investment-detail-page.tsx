@@ -97,7 +97,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           Volver al inversionista
         </Link>
 
-        <div className="mb-6 rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
+        <div className="mb-6 rounded-2xl border border-border-soft bg-card p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-sm font-semibold text-primary-accent">{investment.investor?.name}</p>
@@ -124,7 +124,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           </div>
         </div>
 
-        <section className="mb-6 rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
+        <section className="mb-6 rounded-2xl border border-border-soft bg-card p-6 shadow-sm">
           <div className="mb-5 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft">
               <Banknote className="h-5 w-5 text-primary-accent" />
@@ -156,7 +156,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
         </section>
 
         <div>
-          <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-white p-1.5 shadow-sm border border-border-soft">
+          <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-card p-1.5 shadow-sm border border-border-soft">
             {TABS.map((t, i) => (
               <button
                 key={t}
@@ -171,7 +171,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           </div>
 
           {tab === 0 && (
-            <section className="rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border border-border-soft bg-card p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-bold">Historial de pagos</h2>
               {(investment.payments ?? []).length === 0 ? (
                 <p className="text-sm text-text-subtle">No hay pagos registrados.</p>
@@ -192,7 +192,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           )}
 
           {tab === 1 && (
-            <section className="rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border border-border-soft bg-card p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-bold">Movimientos de capital</h2>
               {(investment.movements ?? []).length === 0 ? (
                 <p className="text-sm text-text-subtle">No hay movimientos registrados.</p>
@@ -232,7 +232,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
 
 function Summary({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-[#fafafa] p-4">
+    <div className="rounded-xl bg-surface-subtle p-4">
       <p className="text-xs text-text-subtle">{label}</p>
       <p className="mt-1 text-base font-bold text-text-primary">{value}</p>
     </div>

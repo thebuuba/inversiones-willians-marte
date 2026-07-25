@@ -84,7 +84,7 @@ function PanelCard({
   return (
     <motion.section
       animate="visible"
-      className={`rounded-2xl border border-border-soft bg-white shadow-sm ${className}`}
+      className={`rounded-2xl border border-border-soft bg-card shadow-sm ${className}`}
       custom={index}
       initial="hidden"
       variants={fadeUp}
@@ -105,14 +105,14 @@ function LoansHeader({ total, totalPrincipal }: { total: number; totalPrincipal:
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-secondary">GESTIÓN</p>
         <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-text-primary">Préstamos</h1>
-        <p className="mt-1.5 text-base font-medium text-[#7A7F7D]">
+        <p className="mt-1.5 text-base font-medium text-text-muted">
           Administra los préstamos activos — {total} registrados,{' '}
           {formatDop(totalPrincipal, { space: true })} colocados.
         </p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary-border bg-white px-5 text-sm font-bold text-[#3F4542] shadow-[0_6px_14px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-md"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-text-primary shadow-[0_6px_14px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-md"
           type="button"
         >
           <Download className="h-4 w-4" />
@@ -210,7 +210,7 @@ function SummaryCard({
         {icon}
       </div>
       <div>
-        <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#7A7F7D]">{label}</p>
+        <p className="text-sm font-bold uppercase tracking-[0.08em] text-text-muted">{label}</p>
         <p className="mt-2 text-[26px] font-bold leading-none text-text-primary">{value}</p>
         <p className="mt-2 text-sm font-medium text-text-secondary">{subtext}</p>
       </div>
@@ -230,7 +230,7 @@ function SelectControl({
   options: string[];
 }) {
   return (
-    <label className="relative flex h-12 min-w-[230px] items-center gap-3 rounded-full border border-primary-border bg-white px-5 shadow-[0_4px_10px_rgba(40,92,67,0.06)]">
+    <label className="relative flex h-12 min-w-[230px] items-center gap-3 rounded-full border border-primary-border bg-card px-5 shadow-[0_4px_10px_rgba(40,92,67,0.06)]">
       <span className="text-[#7CC99B]">{icon}</span>
       <select
         className="h-full min-w-0 flex-1 appearance-none bg-transparent pr-8 text-sm font-bold text-text-primary outline-none"
@@ -255,7 +255,7 @@ function LoanStatusPills({
 }) {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2.5">
-      <span className="flex items-center gap-2 text-sm font-bold text-[#7A7F7D]">
+      <span className="flex items-center gap-2 text-sm font-bold text-text-muted">
         <Filter className="h-5 w-5 text-text-secondary" />
         Estado:
       </span>
@@ -263,8 +263,8 @@ function LoanStatusPills({
         <button
           className={`h-9 rounded-full px-4 text-sm font-bold transition hover:-translate-y-0.5 ${
             activeStatus === status
-              ? 'bg-text-primary text-white shadow-[0_9px_16px_rgba(23,61,44,0.18)]'
-              : 'bg-primary-soft text-primary-accent hover:bg-[#DFF1E7]'
+              ? 'bg-primary-accent text-text-inverse shadow-action'
+              : 'bg-primary-soft text-primary-accent hover:bg-surface-muted-ui'
           }`}
           key={status}
           onClick={() => onChange(status)}
@@ -298,7 +298,7 @@ function LoanFilters({
         <label className="flex h-12 flex-1 items-center gap-3 rounded-full border border-primary-border bg-page px-5 shadow-[0_4px_10px_rgba(40,92,67,0.06)]">
           <Search className="h-5 w-5 text-text-subtle" />
           <input
-            className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-[#747882]"
+            className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-subtle"
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Buscar por cliente, cédula o ID de préstamo..."
             value={search}
@@ -328,7 +328,7 @@ function LoanStatusBadge({ status }: { status: string }) {
   const styles: Record<string, { className: string; dot: string; label: string }> = {
     'Al día': { className: 'bg-primary-soft text-primary-accent', dot: '#7CC99B', label: 'Al día' },
     Atrasado: { className: 'bg-[#FADCCB] text-state-danger', dot: '#FF6A00', label: 'Atrasado' },
-    Pendiente: { className: 'bg-[#F1F3F2] text-[#374151]', dot: '#374151', label: 'Pendiente' },
+    Pendiente: { className: 'bg-[#F1F3F2] text-text-primary', dot: '#374151', label: 'Pendiente' },
     Vencido: {
       className: 'bg-state-danger-bg text-state-danger',
       dot: '#B73B2F',
@@ -353,7 +353,7 @@ function ProgressCell({ progress, percent }: { progress: string; percent: number
     <div className="min-w-[180px]">
       <div className="flex items-center justify-between gap-4 text-sm">
         <span className="font-medium text-text-secondary">{progress}</span>
-        <span className="font-bold text-[#3F4542]">{percent}%</span>
+        <span className="font-bold text-text-primary">{percent}%</span>
       </div>
       <div className="mt-2 h-1.5 rounded-full bg-surface-muted-ui">
         <div
@@ -371,7 +371,7 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
   return (
     <motion.div
       animate="visible"
-      className="grid min-w-[1180px] grid-cols-[2.15fr_1.1fr_1.35fr_1.85fr_1.25fr_1.65fr] items-center border-t border-border-soft bg-white px-6 py-3.5 transition hover:bg-surface-subtle"
+      className="grid min-w-[1180px] grid-cols-[2.15fr_1.1fr_1.35fr_1.85fr_1.25fr_1.65fr] items-center border-t border-border-soft bg-card px-6 py-3.5 transition hover:bg-surface-subtle"
       custom={index + 7}
       initial="hidden"
       variants={fadeUp}
@@ -395,7 +395,7 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
         <p className="mt-1 text-sm font-medium text-text-secondary">{loan.interest}</p>
       </div>
       <ProgressCell percent={loan.percent} progress={loan.progress} />
-      <p className="text-sm font-medium text-[#3F4542]">{loan.nextPayment}</p>
+      <p className="text-sm font-medium text-text-primary">{loan.nextPayment}</p>
       <div className="flex items-center justify-end gap-2.5">
         <LoanStatusBadge status={loan.status} />
         <Link
@@ -441,7 +441,7 @@ function Pagination({
       {totalPages > 1 && (
         <div className="flex items-center gap-2">
           <button
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border-soft bg-white text-text-secondary disabled:opacity-30"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border-soft bg-card text-text-secondary disabled:opacity-30"
             disabled={page === 0}
             onClick={onPrev}
             type="button"
@@ -452,7 +452,7 @@ function Pagination({
             {page + 1} / {totalPages}
           </span>
           <button
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border-soft bg-white text-text-secondary disabled:opacity-30"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border-soft bg-card text-text-secondary disabled:opacity-30"
             disabled={page >= totalPages - 1}
             onClick={onNext}
             type="button"

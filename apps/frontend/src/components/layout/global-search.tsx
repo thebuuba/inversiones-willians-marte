@@ -53,7 +53,7 @@ export function GlobalSearch() {
 
   return (
     <div className="relative w-full max-w-xl" ref={containerRef}>
-      <div className="flex h-10 items-center gap-3 rounded-full border border-primary-border bg-page px-4 transition focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-soft">
+      <div className="flex h-10 items-center gap-3 rounded-full border border-primary-border bg-page px-4 transition focus-within:bg-card focus-within:ring-2 focus-within:ring-primary-soft">
         <Search className="h-4 w-4 shrink-0 text-text-muted" aria-hidden="true" />
         <input
           aria-autocomplete="list"
@@ -81,7 +81,7 @@ export function GlobalSearch() {
 
       {showPanel && (
         <section
-          className="absolute left-0 right-0 top-12 overflow-hidden rounded-[18px] border border-primary-border bg-white shadow-[0_18px_45px_rgba(32,76,54,0.16)]"
+          className="absolute left-0 right-0 top-12 overflow-hidden rounded-[18px] border border-primary-border bg-card shadow-[0_18px_45px_rgba(32,76,54,0.16)]"
           id="global-search-results"
           role="listbox"
         >

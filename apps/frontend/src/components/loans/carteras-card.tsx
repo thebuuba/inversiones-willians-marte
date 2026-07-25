@@ -66,7 +66,7 @@ export function CarterasCard({
       </span>
       <motion.section
         animate={{ opacity: 1, y: 0 }}
-        className={`rounded-xl bg-white p-4 pt-6 ${LOAN_CARD_SHADOW} lg:p-5 lg:pt-7`}
+        className={`rounded-xl bg-card p-4 pt-6 ${LOAN_CARD_SHADOW} lg:p-5 lg:pt-7`}
         initial={{ opacity: 0, y: 14 }}
         transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
       >
@@ -111,7 +111,7 @@ export function CarterasCard({
                   <span className="mb-1.5 block text-xs font-bold text-text-secondary">Nombre</span>
                   <input
                     ref={inputRef}
-                    className="h-[38px] w-full rounded-[8px] border border-primary-border bg-white px-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
+                    className="h-[38px] w-full rounded-[8px] border border-primary-border bg-card px-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                     placeholder="Ej. Cartera Personal"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
@@ -122,7 +122,7 @@ export function CarterasCard({
                   <span className="mb-1.5 block text-xs font-bold text-text-secondary">Color</span>
                   <div className="flex items-center gap-2">
                     <button
-                      className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-primary-border bg-white"
+                      className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-primary-border bg-card"
                       onClick={() => setShowColorPicker(!showColorPicker)}
                       type="button"
                     >

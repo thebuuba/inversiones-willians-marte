@@ -91,7 +91,7 @@ function SummaryCard({
   const classes = summaryTones[tone];
 
   return (
-    <div className="rounded-2xl border border-border-soft bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border-soft bg-card p-5 shadow-sm">
       <div className="flex items-center gap-3">
         <div className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-full sm:flex ${classes.icon}`}>
           {icon}
@@ -141,8 +141,8 @@ function InfoPanel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm">
-      <div className="flex items-center gap-3 border-b border-border-soft bg-[#FBFCFB] px-5 py-4">
+    <section className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
+      <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-soft text-primary-accent">
           {icon}
         </div>
@@ -291,7 +291,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
   if (!loan || !totals || !operational) {
     return (
       <main className="min-h-screen bg-page p-5">
-        <div className="mx-auto max-w-[1480px] rounded-2xl border border-border-soft bg-white p-6 shadow-card">
+        <div className="mx-auto max-w-[1480px] rounded-2xl border border-border-soft bg-card p-6 shadow-card">
           <p className="text-sm font-medium text-state-danger">
             {loadError ?? 'Préstamo no encontrado.'}
           </p>
@@ -327,7 +327,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
           Volver al cliente
         </Link>
 
-        <header className="overflow-hidden rounded-3xl border border-border-soft bg-white shadow-sm">
+        <header className="overflow-hidden rounded-3xl border border-border-soft bg-card shadow-sm">
           <div className="flex flex-col justify-between gap-5 px-8 py-6 md:flex-row md:items-end">
             <div>
               <h1 className="text-2xl font-bold text-text-primary">
@@ -339,7 +339,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
             </div>
             <div className="flex flex-wrap gap-2">
               <Link
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary-border bg-white px-5 text-sm font-bold text-primary-accent transition hover:bg-primary-soft"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-primary-accent transition hover:bg-primary-soft"
                 href={`/prestamos/${loan.id}/editar`}
               >
                 <Pencil className="h-4 w-4" />
@@ -383,7 +383,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
           />
         </section>
 
-        <nav className="mt-6 flex w-full gap-1 overflow-x-auto rounded-2xl border border-border-soft bg-white p-1.5 shadow-sm sm:w-fit" aria-label="Secciones del préstamo">
+        <nav className="mt-6 flex w-full gap-1 overflow-x-auto rounded-2xl border border-border-soft bg-card p-1.5 shadow-sm sm:w-fit" aria-label="Secciones del préstamo">
           {loanTabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.label;
@@ -415,7 +415,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               phone={loan.client.phone}
             /> : null}
 
-            {activeTab === 'Resumen' ? <section className="rounded-2xl border border-border-soft bg-white p-5 shadow-sm xl:col-span-2">
+            {activeTab === 'Resumen' ? <section className="rounded-2xl border border-border-soft bg-card p-5 shadow-sm xl:col-span-2">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-base font-semibold text-text-primary">
@@ -493,7 +493,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
             ) : null}
 
             {activeTab === 'Cuotas' ? <section
-              className="scroll-mt-5 overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm"
+              className="scroll-mt-5 overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm"
               id="calendario-cuotas"
             >
               <div className="border-b border-border-soft px-5 py-4">
@@ -504,7 +504,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-[860px] w-full text-left">
-                  <thead className="bg-[#FBFCFB] text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">
+                  <thead className="bg-surface-subtle text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">
                     <tr>
                       <th className="px-5 py-3">Cuota</th>
                       <th className="px-5 py-3">Vencimiento</th>
@@ -520,7 +520,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                       const paidAmount = Number(row.paidAmount ?? 0);
                       return (
                         <tr
-                          className="border-t border-border-soft text-sm font-medium text-[#3F4542]"
+                          className="border-t border-border-soft text-sm font-medium text-text-primary"
                           key={row.id}
                         >
                           <td className="px-5 py-4 font-semibold text-text-primary">#{index + 1}</td>
@@ -542,7 +542,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
             </section> : null}
 
             {activeTab === 'Pagos' ? <section
-              className="scroll-mt-5 overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm"
+              className="scroll-mt-5 overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm"
               id="recibos-pagos"
             >
               <div className="border-b border-border-soft px-5 py-4">
@@ -562,7 +562,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                         <p className="text-sm font-semibold text-text-primary">
                           Recibo {payment.id.slice(0, 8).toUpperCase()}
                         </p>
-                        <p className="mt-0.5 text-xs font-medium text-[#7A7F7D]">
+                        <p className="mt-0.5 text-xs font-medium text-text-muted">
                           {fmtDate(payment.paymentDate)} · {payment.paymentMethod ?? 'Sin método'}
                         </p>
                       </div>
@@ -576,7 +576,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                   ))}
                 </div>
               ) : (
-                <p className="px-5 py-8 text-center text-sm font-medium text-[#7A7F7D]">
+                <p className="px-5 py-8 text-center text-sm font-medium text-text-muted">
                   Todavía no hay pagos registrados.
                 </p>
               )}
@@ -591,7 +591,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                     Fecha de saldo
                   </span>
                   <DatePickerInput
-                    className="h-10 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-bold text-text-primary outline-none"
+                    className="h-10 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
                     onChange={setPayoffDate}
                     value={payoffDate}
                   />
@@ -619,7 +619,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                 <DataRow label="Mora/cargos" value={payoffQuote ? fmt(payoffQuote.fees) : empty} />
                 <DataRow
                   label="Total para saldar"
-                  tone="text-[#111827]"
+                  tone="text-text-primary"
                   value={payoffQuote ? fmt(payoffQuote.totalToPay) : empty}
                 />
               </InfoPanel>
@@ -631,7 +631,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                   <label className="block">
                     <span className="mb-2 block text-sm font-semibold text-text-secondary">Monto</span>
                     <input
-                      className="h-10 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-bold text-text-primary outline-none"
+                      className="h-10 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
                       inputMode="decimal"
                       onChange={(event) => setCapitalAmount(event.target.value)}
                       placeholder="0.00"
@@ -643,13 +643,13 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                       Fecha efectiva
                     </span>
                     <DatePickerInput
-                      className="h-10 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-bold text-text-primary outline-none"
+                      className="h-10 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
                       onChange={setCapitalDate}
                       value={capitalDate}
                     />
                   </label>
                   <textarea
-                    className="h-20 w-full resize-none rounded-xl border border-primary-border bg-white px-3 py-2 text-sm font-medium text-text-primary outline-none"
+                    className="h-20 w-full resize-none rounded-xl border border-primary-border bg-card px-3 py-2 text-sm font-medium text-text-primary outline-none"
                     onChange={(event) => setCapitalNotes(event.target.value)}
                     placeholder="Notas"
                     value={capitalNotes}

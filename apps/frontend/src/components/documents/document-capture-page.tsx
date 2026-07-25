@@ -82,7 +82,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-page px-5 py-8">
-      <section className="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm">
+      <section className="w-full max-w-md rounded-2xl bg-card p-6 shadow-sm">
         <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary-accent">
           {state === 'success' ? (
             <CheckCircle2 className="h-6 w-6" />
@@ -131,7 +131,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
             Tomar foto
           </button>
           <button
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-primary-accent bg-white px-5 text-sm font-semibold text-primary-accent transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-primary-accent bg-card px-5 text-sm font-semibold text-primary-accent transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!isReady}
             onClick={() => fileInputRef.current?.click()}
             type="button"
@@ -143,7 +143,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
 
         {state === 'success' ? (
           <button
-            className="mt-3 h-11 w-full rounded-full border border-primary-border bg-white px-5 text-sm font-semibold text-text-secondary"
+            className="mt-3 h-11 w-full rounded-full border border-primary-border bg-card px-5 text-sm font-semibold text-text-secondary"
             onClick={() => {
               if (cameraInputRef.current) cameraInputRef.current.value = '';
               if (fileInputRef.current) fileInputRef.current.value = '';
