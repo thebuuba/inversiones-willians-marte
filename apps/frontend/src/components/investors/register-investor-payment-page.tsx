@@ -22,7 +22,7 @@ const MONTHS = [
 const METHODS = ['Efectivo', 'Transferencia', 'Tarjeta'];
 
 const inputClass =
-  'h-11 w-full rounded-xl border border-primary-border bg-card px-4 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent';
+  'h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent';
 
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1;
@@ -179,9 +179,9 @@ export function RegisterInvestorPaymentPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[400px_1fr]">
           {/* Left column: Investor info */}
           <div className="space-y-5">
-            <div className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
+            <div className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
               <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary-soft">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-panel bg-primary-soft">
                   <TrendingUp className="h-7 w-7 text-primary-accent" />
                 </div>
                 <div>
@@ -194,7 +194,7 @@ export function RegisterInvestorPaymentPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
+            <div className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
               <h3 className="mb-4 text-sm font-semibold text-text-primary">Información financiera</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between border-b border-border-soft pb-2">
@@ -230,7 +230,7 @@ export function RegisterInvestorPaymentPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
+            <div className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
               <h3 className="mb-4 text-sm font-semibold text-text-primary">Últimos pagos</h3>
               {payments.length === 0 ? (
                 <p className="text-sm text-text-subtle">No hay pagos registrados aún.</p>
@@ -253,14 +253,14 @@ export function RegisterInvestorPaymentPage() {
           </div>
 
           {/* Right column: Payment form */}
-          <div className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
+          <div className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
             <h2 className="mb-1 text-xl font-bold text-text-primary">Registrar pago de interés</h2>
             <p className="mb-6 text-sm text-text-muted">
               Registra el pago mensual correspondiente al período seleccionado.
             </p>
 
             {periodPaid && (
-              <div className="rounded-xl bg-primary-soft p-5 border border-[#c2dfcb]/60">
+              <div className="rounded-control-comfortable bg-primary-soft p-5 border border-border-soft">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-primary-accent" />
                   <p className="font-semibold text-primary-accent">Este período ya tiene pagos</p>
@@ -313,7 +313,7 @@ export function RegisterInvestorPaymentPage() {
                         RD$
                       </span>
                       <input
-                        className={`${inputClass} pl-14 ${invalidAmount ? 'border-[#e4a58b]' : ''}`}
+                        className={`${inputClass} pl-14 ${invalidAmount ? 'border-state-danger-dot' : ''}`}
                         type="text"
                         inputMode="decimal"
                         value={amount}
@@ -326,7 +326,7 @@ export function RegisterInvestorPaymentPage() {
                   <label className="block">
                     <span className="mb-2 block text-sm font-bold text-text-secondary">Fecha del pago</span>
                     <input
-                      className={`${inputClass} ${invalidDate ? 'border-[#e4a58b]' : ''}`}
+                      className={`${inputClass} ${invalidDate ? 'border-state-danger-dot' : ''}`}
                       type="date"
                       value={paymentDate}
                       onChange={(e) => setPaymentDate(e.target.value)}
@@ -360,7 +360,7 @@ export function RegisterInvestorPaymentPage() {
                   <label className="block sm:col-span-2">
                     <span className="mb-2 block text-sm font-bold text-text-secondary">Notas</span>
                     <textarea
-                      className="h-24 w-full resize-none rounded-xl border border-primary-border bg-card px-4 py-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent"
+                      className="h-24 w-full resize-none rounded-control-comfortable border border-primary-border bg-card px-4 py-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Opcional"

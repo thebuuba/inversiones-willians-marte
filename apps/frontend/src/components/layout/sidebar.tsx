@@ -127,10 +127,10 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           WM
         </div>
         <div className={cn('min-w-0 flex-1 transition-opacity duration-150', compact && 'hidden opacity-0')}>
-          <h1 className="whitespace-nowrap text-[15px] font-bold leading-tight text-text-primary">
+          <h1 className="whitespace-nowrap text-base font-bold leading-tight text-text-primary">
             Willians Marte
           </h1>
-          <p className="mt-0.5 whitespace-nowrap text-[11.5px] leading-tight text-text-secondary">
+          <p className="mt-0.5 whitespace-nowrap text-xs leading-tight text-text-secondary">
             Sistema de Préstamos
           </p>
         </div>
@@ -158,7 +158,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             {compact ? (
               groupIndex > 0 && <div className="mx-auto mb-4 h-px w-6 bg-border-soft" />
             ) : (
-              <p className="mb-3 px-3 text-[10.5px] font-bold uppercase tracking-[0.14em] text-text-secondary/70">
+              <p className="mb-3 px-3 text-xs font-bold uppercase tracking-[0.14em] text-text-secondary/70">
                 {group.label}
               </p>
             )}

@@ -227,7 +227,7 @@ export function PortfoliosPage() {
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-secondary">
               GESTIÓN
             </p>
-            <h1 className="mt-1.5 text-[28px] font-bold leading-tight">Carteras</h1>
+            <h1 className="mt-1.5 text-3xl font-bold leading-tight">Carteras</h1>
             <p className="mt-1.5 text-base font-medium text-text-secondary">
               Listados personalizados de clientes y sus préstamos.
             </p>
@@ -244,7 +244,7 @@ export function PortfoliosPage() {
             </Dialog.Trigger>
             <Dialog.Portal>
               <Dialog.Overlay className="fixed inset-0 z-50 bg-black/35" />
-              <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-panel border border-border-soft bg-card p-6 shadow-2xl">
+              <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-panel border border-border-soft bg-card p-6 shadow-modal">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <Dialog.Title className="text-xl font-bold">Nueva cartera</Dialog.Title>

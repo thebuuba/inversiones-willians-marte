@@ -4,14 +4,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { buildCalendarWeeks, parseIsoDate } from './date-picker.helpers';
 
-const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const weekdays = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'];
 
 function getInitialMonth(value: string): Date {
   return parseIsoDate(value) ?? new Date();
 }
 
 function monthLabel(date: Date): string {
-  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  return date.toLocaleDateString('es-DO', { month: 'long', year: 'numeric' });
 }
 
 interface DatePickerInputProps {

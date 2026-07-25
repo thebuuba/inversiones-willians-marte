@@ -128,10 +128,10 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
       onClick={onClose}
     >
       <div
-        className="flex w-full max-w-[560px] flex-col overflow-hidden rounded-2xl border border-border-soft bg-card shadow-[0_28px_80px_rgba(0,0,0,0.26)]"
+        className="flex w-full max-w-[560px] flex-col overflow-hidden rounded-panel border border-border-soft bg-card shadow-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-start justify-between gap-4 bg-[#f1f8f4] px-6 py-5">
+        <header className="flex items-start justify-between gap-4 bg-surface-muted px-6 py-5">
           <div>
             <h2 className="text-xl font-bold text-text-primary">Recibo de pago</h2>
             <p className="mt-1 text-sm font-medium text-text-muted">
@@ -223,7 +223,7 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
             Imprimir
           </button>
           <button
-            className="inline-flex h-11 items-center gap-2 rounded-full border border-[#c8ead6] bg-card px-6 text-sm font-bold text-[#1f7a4e] hover:bg-[#f1faf5]"
+            className="inline-flex h-11 items-center gap-2 rounded-full border border-primary-border bg-card px-6 text-sm font-bold text-state-success hover:bg-primary-soft"
             onClick={handleWhatsApp}
             type="button"
           >
@@ -231,7 +231,7 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
             WhatsApp
           </button>
           <button
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-white hover:bg-[#1f4a34]"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-white hover:bg-primary-hover"
             onClick={handleDownload}
             type="button"
           >

@@ -97,7 +97,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           Volver al inversionista
         </Link>
 
-        <div className="mb-6 rounded-2xl border border-border-soft bg-card p-6 shadow-sm">
+        <div className="mb-6 rounded-panel border border-border-soft bg-card p-6 shadow-card">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-sm font-semibold text-primary-accent">{investment.investor?.name}</p>
@@ -107,7 +107,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className={`rounded-full px-3 py-2 text-sm font-bold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-state-danger' : investment.paymentStatus === 'PAID' ? 'bg-primary-soft text-primary-accent' : 'bg-[#fef3c7] text-state-warning'}`}>
+              <span className={`rounded-full px-3 py-2 text-sm font-bold ${investment.paymentStatus === 'OVERDUE' ? 'bg-state-danger-bg text-state-danger' : investment.paymentStatus === 'PAID' ? 'bg-primary-soft text-primary-accent' : 'bg-state-warning-bg text-state-warning'}`}>
                 {status}
               </span>
               <Link className="rounded-full bg-primary-accent px-5 py-2 text-sm font-bold text-white" href={`/inversionistas/pago?investmentId=${investment.id}`}>
@@ -124,9 +124,9 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           </div>
         </div>
 
-        <section className="mb-6 rounded-2xl border border-border-soft bg-card p-6 shadow-sm">
+        <section className="mb-6 rounded-panel border border-border-soft bg-card p-6 shadow-card">
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft">
+            <div className="flex h-10 w-10 items-center justify-center rounded-control-comfortable bg-primary-soft">
               <Banknote className="h-5 w-5 text-primary-accent" />
             </div>
             <div>
@@ -137,15 +137,15 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           <form onSubmit={handleAddCapital} className="space-y-4">
             <label className="block">
               <span className="mb-2 block text-sm font-bold text-text-secondary">Monto</span>
-              <input className="h-11 w-full rounded-xl border border-primary-border px-4 text-sm outline-none focus:border-primary-accent" inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="100,000" />
+              <input className="h-11 w-full rounded-control-comfortable border border-primary-border px-4 text-sm outline-none focus:border-primary-accent" inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="100,000" />
             </label>
             <label className="block">
               <span className="mb-2 block text-sm font-bold text-text-secondary">Fecha</span>
-              <input className="h-11 w-full rounded-xl border border-primary-border px-4 text-sm outline-none focus:border-primary-accent" type="date" value={movementDate} onChange={(event) => setMovementDate(event.target.value)} />
+              <input className="h-11 w-full rounded-control-comfortable border border-primary-border px-4 text-sm outline-none focus:border-primary-accent" type="date" value={movementDate} onChange={(event) => setMovementDate(event.target.value)} />
             </label>
             <label className="block">
               <span className="mb-2 block text-sm font-bold text-text-secondary">Nota</span>
-              <textarea className="h-24 w-full resize-none rounded-xl border border-primary-border px-4 py-3 text-sm outline-none focus:border-primary-accent" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" />
+              <textarea className="h-24 w-full resize-none rounded-control-comfortable border border-primary-border px-4 py-3 text-sm outline-none focus:border-primary-accent" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" />
             </label>
             {error && <p className="text-sm font-semibold text-state-danger">{error}</p>}
             <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white disabled:opacity-60" disabled={saving} type="submit">
@@ -156,13 +156,13 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
         </section>
 
         <div>
-          <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-card p-1.5 shadow-sm border border-border-soft">
+          <div className="mb-5 flex w-fit gap-1 rounded-panel bg-card p-1.5 shadow-card border border-border-soft">
             {TABS.map((t, i) => (
               <button
                 key={t}
                 onClick={() => setTab(i)}
-                className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${
-                  tab === i ? 'bg-primary-accent text-white shadow-sm' : 'text-text-muted hover:bg-primary-soft hover:text-primary-accent'
+                className={`rounded-control-comfortable px-5 py-2 text-sm font-semibold transition ${
+                  tab === i ? 'bg-primary-accent text-white shadow-card' : 'text-text-muted hover:bg-primary-soft hover:text-primary-accent'
                 }`}
               >
                 {t}
@@ -171,7 +171,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           </div>
 
           {tab === 0 && (
-            <section className="rounded-2xl border border-border-soft bg-card p-6 shadow-sm">
+            <section className="rounded-panel border border-border-soft bg-card p-6 shadow-card">
               <h2 className="mb-4 text-lg font-bold">Historial de pagos</h2>
               {(investment.payments ?? []).length === 0 ? (
                 <p className="text-sm text-text-subtle">No hay pagos registrados.</p>
@@ -192,7 +192,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           )}
 
           {tab === 1 && (
-            <section className="rounded-2xl border border-border-soft bg-card p-6 shadow-sm">
+            <section className="rounded-panel border border-border-soft bg-card p-6 shadow-card">
               <h2 className="mb-4 text-lg font-bold">Movimientos de capital</h2>
               {(investment.movements ?? []).length === 0 ? (
                 <p className="text-sm text-text-subtle">No hay movimientos registrados.</p>
@@ -232,7 +232,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
 
 function Summary({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-surface-subtle p-4">
+    <div className="rounded-control-comfortable bg-surface-subtle p-4">
       <p className="text-xs text-text-subtle">{label}</p>
       <p className="mt-1 text-base font-bold text-text-primary">{value}</p>
     </div>

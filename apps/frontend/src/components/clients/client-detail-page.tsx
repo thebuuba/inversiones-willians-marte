@@ -123,7 +123,7 @@ function StatusBadge({ active }: { active: boolean }) {
     </span>
   ) : (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-state-neutral-bg px-3 py-1 text-xs font-semibold text-text-muted">
-      <span className="h-1.5 w-1.5 rounded-full bg-neutral-300" />
+      <span className="h-1.5 w-1.5 rounded-full bg-state-neutral-dot" />
       Inactivo
     </span>
   );
@@ -139,14 +139,14 @@ function LoanStatusBadge({ status }: { status: string }) {
         isPaid
           ? 'bg-primary-soft text-primary-accent'
           : isOverdue
-            ? 'bg-[#fadccb] text-state-danger'
+            ? 'bg-state-danger-bg text-state-danger'
             : isLate
-              ? 'bg-[#fadccb] text-state-danger'
-              : 'bg-[#fff1c7] text-state-warning'
+              ? 'bg-state-danger-bg text-state-danger'
+              : 'bg-state-warning-bg text-state-warning'
       }`}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-primary-accent' : isOverdue || isLate ? 'bg-[#ff6a00]' : 'bg-[#f3b51b]'}`}
+        className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-primary-accent' : isOverdue || isLate ? 'bg-state-danger-dot' : 'bg-state-warning-dot'}`}
       />
       {status}
     </span>
@@ -209,7 +209,7 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
         <DropdownMenu.Trigger asChild>
           <button
             type="button"
-            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-text-subtle hover:bg-state-neutral-bg hover:text-text-secondary"
+            className="ml-auto flex h-8 w-8 items-center justify-center rounded-control-compact text-text-subtle hover:bg-state-neutral-bg hover:text-text-secondary"
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>
@@ -218,12 +218,12 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
           <DropdownMenu.Content
             align="end"
             sideOffset={4}
-            className="z-50 min-w-44 overflow-hidden rounded-2xl border border-border-soft bg-card p-1.5 shadow-lg"
+            className="z-50 min-w-44 overflow-hidden rounded-panel border border-border-soft bg-card p-1.5 shadow-card"
           >
             <DropdownMenu.Item asChild>
               <Link
                 href={`/prestamos/${loan.id}`}
-                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
+                className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
               >
                 <Eye className="h-4 w-4" />
                 Detalle
@@ -232,7 +232,7 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
             <DropdownMenu.Item asChild>
               <Link
                 href={`/prestamos/cobrar?loanId=${loan.id}`}
-                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
+                className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
               >
                 <CreditCard className="h-4 w-4" />
                 Cobrar
@@ -241,7 +241,7 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
             <DropdownMenu.Item asChild>
               <Link
                 href={`/prestamos/${loan.id}/editar`}
-                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
+                className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
               >
                 <Pencil className="h-4 w-4" />
                 Editar préstamo
@@ -250,7 +250,7 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
             <DropdownMenu.Separator className="mx-2 my-1 border-t border-border-soft" />
             <DropdownMenu.Item
               disabled={deletingLoan}
-              className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-red-600 outline-none hover:bg-red-50"
+              className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-state-danger outline-none hover:bg-state-danger-bg"
               onSelect={(event) => {
                 event.preventDefault();
                 if (deletingLoan) return;
@@ -269,7 +269,7 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
 
 function ClientLoansTab({ loans, clientName, onDeleteLoan }: { loans: LoanSummary[]; clientName: string; onDeleteLoan: (loanId: string) => void }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
+    <div className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
       <div className="flex items-center justify-between border-b border-border-soft px-5 py-4">
         <div>
           <h3 className="text-sm font-bold text-text-primary">Préstamos del cliente</h3>
@@ -289,7 +289,7 @@ function ClientLoansTab({ loans, clientName, onDeleteLoan }: { loans: LoanSummar
       ) : (
         <div className="overflow-x-auto">
           <div
-            className={`grid min-w-[1220px] ${loanTableColumns} bg-surface-subtle px-5 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted`}
+            className={`grid min-w-[1220px] ${loanTableColumns} bg-surface-subtle px-5 py-3 text-xs font-bold uppercase tracking-[0.08em] text-text-muted`}
           >
             <span>#</span>
             <span>Cuota</span>
@@ -324,17 +324,17 @@ const processingStatusLabels: Record<
 > = {
   processed: {
     label: 'Procesado',
-    className: 'bg-emerald-50 text-emerald-700',
+    className: 'bg-state-success-bg text-state-success',
     icon: CircleCheck,
   },
   needs_review: {
     label: 'Revisar',
-    className: 'bg-amber-50 text-amber-700',
+    className: 'bg-state-warning-bg text-state-warning',
     icon: CircleAlert,
   },
   failed: {
     label: 'Fallo',
-    className: 'bg-red-50 text-red-700',
+    className: 'bg-state-danger-bg text-state-danger',
     icon: CircleAlert,
   },
   not_applicable: {
@@ -344,7 +344,7 @@ const processingStatusLabels: Record<
   },
   pending: {
     label: 'Pendiente',
-    className: 'bg-blue-50 text-blue-700',
+    className: 'bg-state-info-bg text-state-info',
     icon: CircleAlert,
   },
 };
@@ -410,13 +410,13 @@ function DocumentCard({
 
   return (
     <div
-      className="flex cursor-pointer items-center justify-between rounded-2xl border border-border-soft bg-card px-5 py-4 shadow-sm transition hover:bg-primary-soft/30"
+      className="flex cursor-pointer items-center justify-between rounded-panel border border-border-soft bg-card px-5 py-4 shadow-card transition hover:bg-primary-soft/30"
       onClick={() => {
         if (doc.fileUrl) void openDocument();
       }}
     >
       <div className="flex min-w-0 flex-1 items-center gap-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control-comfortable bg-primary-soft">
           <FileText className="h-5 w-5 text-primary-accent" />
         </div>
         <div className="min-w-0 flex-1">
@@ -428,7 +428,7 @@ function DocumentCard({
               <input
                 aria-label="Nuevo nombre del documento"
                 autoFocus
-                className="h-9 min-w-0 flex-1 rounded-xl border border-primary-accent bg-card px-3 text-sm font-semibold text-text-primary outline-none ring-2 ring-[#eaf5ed]"
+                className="h-9 min-w-0 flex-1 rounded-control-comfortable border border-primary-accent bg-card px-3 text-sm font-semibold text-text-primary outline-none ring-2 ring-primary-soft"
                 disabled={savingName}
                 maxLength={160}
                 onChange={(event) => setDraftName(event.target.value)}
@@ -473,10 +473,10 @@ function DocumentCard({
             <p className="truncate text-sm font-semibold text-text-primary">{doc.name}</p>
           )}
           {renameError ? (
-            <p className="mt-1 text-xs font-semibold text-red-600">{renameError}</p>
+            <p className="mt-1 text-xs font-semibold text-state-danger">{renameError}</p>
           ) : null}
           {fileError ? (
-            <p className="mt-1 text-xs font-semibold text-red-600">{fileError}</p>
+            <p className="mt-1 text-xs font-semibold text-state-danger">{fileError}</p>
           ) : null}
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-text-muted">
             <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-accent">
@@ -540,7 +540,7 @@ function DocumentCard({
         )}
         <button
           aria-label={`Eliminar ${doc.name}`}
-          className="rounded-full p-1.5 transition hover:bg-[#fde4d4] hover:text-state-danger"
+          className="rounded-full p-1.5 transition hover:bg-state-danger-bg hover:text-state-danger"
           onClick={(e) => {
             e.stopPropagation();
             onDelete(doc.id);
@@ -669,7 +669,7 @@ function UploadModal({
       onClick={closeModal}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-card p-6 shadow-lg"
+        className="w-full max-w-md rounded-panel bg-card p-6 shadow-card"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="mb-1 text-lg font-bold text-text-primary">Subir documento</h3>
@@ -677,7 +677,7 @@ function UploadModal({
           Selecciona un archivo y asigna un nombre opcional.
         </p>
 
-        <div className="mb-4 rounded-xl border border-[#d7eadf] bg-[#f4fbf7] p-4">
+        <div className="mb-4 rounded-control-comfortable border border-primary-border bg-primary-soft p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-text-primary">Capturar con teléfono</p>
@@ -701,7 +701,7 @@ function UploadModal({
           </div>
 
           {qrDataUrl ? (
-            <div className="mt-4 flex flex-col items-center rounded-xl bg-card p-4 text-center">
+            <div className="mt-4 flex flex-col items-center rounded-control-comfortable bg-card p-4 text-center">
               <Image
                 alt="QR para capturar documento con el teléfono"
                 className="h-44 w-44"
@@ -716,14 +716,14 @@ function UploadModal({
                   : 'Escanea este QR con el teléfono.'}
               </p>
               {captureLimitLabel ? (
-                <p className="mt-1 text-[11px] font-medium text-text-muted">{captureLimitLabel}</p>
+                <p className="mt-1 text-xs font-medium text-text-muted">{captureLimitLabel}</p>
               ) : null}
-              <p className="mt-1 break-all text-[11px] text-text-subtle">{captureUrl}</p>
+              <p className="mt-1 break-all text-xs text-text-subtle">{captureUrl}</p>
             </div>
           ) : null}
 
           {captureError ? (
-            <p className="mt-3 text-xs font-semibold text-red-600">{captureError}</p>
+            <p className="mt-3 text-xs font-semibold text-state-danger">{captureError}</p>
           ) : null}
         </div>
 
@@ -731,7 +731,7 @@ function UploadModal({
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
             Archivo
           </label>
-          <label className="flex h-24 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-primary-border bg-surface-subtle text-sm text-text-subtle transition hover:border-primary-accent hover:bg-primary-soft/30">
+          <label className="flex h-24 cursor-pointer items-center justify-center rounded-control-comfortable border-2 border-dashed border-primary-border bg-surface-subtle text-sm text-text-subtle transition hover:border-primary-accent hover:bg-primary-soft/30">
             {file ? (
               <span className="font-medium text-text-secondary">{file.name}</span>
             ) : (
@@ -751,7 +751,7 @@ function UploadModal({
             Nombre <span className="text-neutral-300">(opcional)</span>
           </label>
           <input
-            className="h-11 w-full rounded-xl border border-primary-border bg-card px-4 text-sm text-text-primary outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-[#eaf5ed]"
+            className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm text-text-primary outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-[#eaf5ed]"
             onChange={(e) => setName(e.target.value)}
             placeholder="Nombre del documento"
             value={name}
@@ -872,13 +872,13 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
 }
 
 function historyTone(type: string) {
-  const styles: Record<string, { bg: string; text: string; dot: string; icon: typeof CreditCard }> =
+  const styles: Record<string, { className: string; icon: typeof CreditCard }> =
     {
-      Pago: { bg: '#eaf5ed', text: '#2f7654', dot: '#2f7654', icon: CreditCard },
-      Cliente: { bg: '#dbeafe', text: '#1d4ed8', dot: '#3b82f6', icon: UserRound },
-      Préstamo: { bg: '#e9ddfb', text: '#7c3aed', dot: '#8b5cf6', icon: TrendingUp },
-      Nota: { bg: '#fef3c7', text: '#7a5a0a', dot: '#eab308', icon: StickyNote },
-      Documento: { bg: '#eaf5ed', text: '#2f7654', dot: '#2f7654', icon: NotebookPen },
+      Pago: { className: 'bg-primary-soft text-primary-accent', icon: CreditCard },
+      Cliente: { className: 'bg-state-info-bg text-state-info', icon: UserRound },
+      Préstamo: { className: 'bg-state-neutral-bg text-text-secondary', icon: TrendingUp },
+      Nota: { className: 'bg-state-warning-bg text-state-warning', icon: StickyNote },
+      Documento: { className: 'bg-primary-soft text-primary-accent', icon: NotebookPen },
     };
   return styles[type] ?? styles.Nota;
 }
@@ -891,20 +891,18 @@ function TimelineItem({ event }: { event: HistoryEvent }) {
     <div className="relative grid grid-cols-[30px_1fr] gap-5">
       <div className="relative flex justify-center">
         <span
-          className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full border-[3px] border-white shadow-sm"
-          style={{ backgroundColor: style.bg, color: style.text }}
+          className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full shadow-card ${style.className}`}
         >
           <Icon className="h-3 w-3" />
         </span>
       </div>
 
-      <div className="rounded-2xl border border-border-soft bg-card px-5 py-3.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="rounded-panel border border-border-soft bg-card px-5 py-3.5 shadow-card transition hover:-translate-y-0.5 hover:shadow-card">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="mb-1.5 flex flex-wrap items-center gap-2.5">
               <span
-                className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                style={{ backgroundColor: style.bg, color: style.text }}
+                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${style.className}`}
               >
                 {event.type}
               </span>
@@ -926,7 +924,7 @@ function TimelineItem({ event }: { event: HistoryEvent }) {
 function ClientHistoryTab({ events, loading }: { events: HistoryEvent[]; loading: boolean }) {
   return (
     <div className="relative">
-      <div className="absolute bottom-0 left-[14px] top-0 w-px bg-neutral-200" />
+      <div className="absolute bottom-0 left-[14px] top-0 w-px bg-border-soft" />
       <div className="space-y-6">
         {loading ? (
           <p className="py-12 text-center text-sm text-text-subtle">Cargando historial...</p>
@@ -944,7 +942,7 @@ function ClientHistoryTab({ events, loading }: { events: HistoryEvent[]; loading
 
 function NoteIcon() {
   return (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fef3c7] text-state-warning">
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control-comfortable bg-state-warning-bg text-state-warning">
       <FileText className="h-4 w-4" />
     </span>
   );
@@ -985,7 +983,7 @@ function NoteTextarea({
   return (
     <textarea
       autoFocus
-      className="h-[78px] w-full resize-none rounded-xl border border-primary-border bg-card px-4 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-[#eaf5ed]"
+      className="h-[78px] w-full resize-none rounded-control-comfortable border border-primary-border bg-card px-4 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-[#eaf5ed]"
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
       value={value}
@@ -1007,7 +1005,7 @@ function EditableNoteCard({
   onSave: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-primary-accent bg-card p-4 shadow-sm">
+    <div className="rounded-panel border border-primary-accent bg-card p-4 shadow-card">
       <div className="grid grid-cols-[36px_1fr] gap-4">
         <NoteIcon />
         <div>
@@ -1034,7 +1032,7 @@ function NoteCard({
   onDelete: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl border border-border-soft bg-card px-5 py-4 shadow-sm transition hover:bg-primary-soft/30">
+    <div className="flex items-center justify-between gap-4 rounded-panel border border-border-soft bg-card px-5 py-4 shadow-card transition hover:bg-primary-soft/30">
       <div className="flex min-w-0 items-center gap-4">
         <NoteIcon />
         <div className="min-w-0">
@@ -1055,7 +1053,7 @@ function NoteCard({
         </button>
         <button
           aria-label="Eliminar nota"
-          className="rounded-full p-1.5 transition hover:bg-[#fde4d4] hover:text-state-danger"
+          className="rounded-full p-1.5 transition hover:bg-state-danger-bg hover:text-state-danger"
           onClick={onDelete}
           type="button"
         >
@@ -1094,7 +1092,7 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
     { label: 'Préstamos pagados', value: paidLoans.length, color: 'text-primary-accent' },
     { label: 'Capital total prestado', value: fmt(totalPrincipal), color: 'text-text-primary' },
     { label: 'Balance total pendiente', value: fmt(totalBalance), color: 'text-state-danger' },
-    { label: 'Cuotas vencidas', value: overdueLoans.length, color: 'text-red-600' },
+    { label: 'Cuotas vencidas', value: overdueLoans.length, color: 'text-state-danger' },
   ];
 
   return (
@@ -1103,7 +1101,7 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
         {summary.map((s) => (
           <div
             key={s.label}
-            className="rounded-2xl border border-border-soft bg-card p-5 shadow-sm"
+            className="rounded-panel border border-border-soft bg-card p-5 shadow-card"
           >
             <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
               {s.label}
@@ -1114,12 +1112,12 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
       </div>
 
       {loans.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
+        <div className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
           <div className="border-b border-border-soft px-5 py-4">
             <h3 className="text-sm font-bold text-text-primary">Detalle de préstamos</h3>
           </div>
           <div className="overflow-x-auto">
-            <div className="grid min-w-[800px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-surface-subtle px-5 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">
+            <div className="grid min-w-[800px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-surface-subtle px-5 py-3 text-xs font-bold uppercase tracking-[0.08em] text-text-muted">
               <span># Préstamo</span>
               <span>Capital</span>
               <span>Balance</span>
@@ -1302,7 +1300,7 @@ function ClientInfoGrid({ clientData }: { clientData: ClientDetail }) {
   const cards = buildInfoCards(clientData);
 
   return (
-    <div className="rounded-2xl border border-border-soft bg-card p-6 shadow-sm">
+    <div className="rounded-panel border border-border-soft bg-card p-6 shadow-card">
       <h3 className="mb-5 text-base font-semibold text-text-primary">Información personal</h3>
       <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => (
@@ -1450,29 +1448,25 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
       label: 'Préstamos activos',
       value: String(activeLoans),
       icon: BriefcaseBusiness,
-      accent: '#eaf5ed',
-      color: '#2f7654',
+      className: 'bg-primary-soft text-primary-accent',
     },
     {
       label: 'Total prestado',
       value: fmt(totalLoaned),
       icon: Banknote,
-      accent: '#c2dfcb',
-      color: '#2f7654',
+      className: 'bg-primary-soft text-primary-accent',
     },
     {
       label: 'Saldo pendiente',
       value: fmt(totalBalance),
       icon: CircleAlert,
-      accent: '#fde4d4',
-      color: '#9f3f25',
+      className: 'bg-state-danger-bg text-state-danger',
     },
     {
       label: 'Total pagado',
       value: fmt(totalPaid),
       icon: CircleCheck,
-      accent: '#dbeafe',
-      color: '#1d4ed8',
+      className: 'bg-state-info-bg text-state-info',
     },
   ];
 
@@ -1487,19 +1481,19 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
           Volver a clientes
         </Link>
 
-        <div className="mb-6 overflow-hidden rounded-3xl bg-card shadow-sm border border-border-soft">
+        <div className="mb-6 overflow-hidden rounded-panel bg-card shadow-card border border-border-soft">
           <div className="px-8 pt-6 pb-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div className="flex items-end gap-5">
                 {clientData.photo ? (
                   <div
                     aria-label={fullName}
-                    className="h-20 w-20 shrink-0 rounded-2xl border-4 border-white bg-cover bg-center shadow-md"
+                    className="h-20 w-20 shrink-0 rounded-panel border-4 border-card bg-cover bg-center shadow-card"
                     role="img"
                     style={{ backgroundImage: `url(${clientData.photo})` }}
                   />
                 ) : (
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-primary-soft shadow-md">
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-panel border-4 border-card bg-primary-soft shadow-card">
                     <UserRound className="h-8 w-8 text-primary-accent" />
                   </div>
                 )}
@@ -1540,12 +1534,12 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                     <DropdownMenu.Content
                       align="end"
                       sideOffset={6}
-                      className="z-50 min-w-52 overflow-hidden rounded-2xl border border-border-soft bg-card p-1.5 shadow-lg"
+                      className="z-50 min-w-52 overflow-hidden rounded-panel border border-border-soft bg-card p-1.5 shadow-card"
                     >
                       <DropdownMenu.Item asChild>
                         <Link
                           href={`/clientes/${clientId}/editar`}
-                          className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
+                          className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
                         >
                           <Pencil className="h-4 w-4" />
                           Editar cliente
@@ -1555,7 +1549,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                         <DropdownMenu.Item asChild>
                           <Link
                             href={`/prestamos/${firstActiveLoan.id}/editar`}
-                            className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
+                            className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
                           >
                             <CreditCard className="h-4 w-4" />
                             Editar préstamo
@@ -1565,7 +1559,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                       <DropdownMenu.Item asChild>
                         <Link
                           href={`/prestamos/nuevo?cliente=${clientId}`}
-                          className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
+                          className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
                         >
                           <Plus className="h-4 w-4" />
                           Nuevo préstamo
@@ -1574,7 +1568,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                       <DropdownMenu.Separator className="mx-2 my-1 border-t border-border-soft" />
                       <DropdownMenu.Item
                         disabled={deleting}
-                        className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-red-600 outline-none hover:bg-red-50"
+className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-state-danger outline-none hover:bg-state-danger-bg"
                         onSelect={(event) => {
                           event.preventDefault();
                           event.stopPropagation();
@@ -1599,12 +1593,11 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
             return (
               <div
                 key={k.label}
-                className="rounded-2xl bg-card p-5 shadow-sm border border-border-soft"
+                className="rounded-panel bg-card p-5 shadow-card border border-border-soft"
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-                    style={{ backgroundColor: k.accent, color: k.color }}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${k.className}`}
                   >
                     <Icon className="h-5 w-5" />
                   </div>
@@ -1618,7 +1611,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
           })}
         </div>
 
-        <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-card p-1.5 shadow-sm border border-border-soft">
+        <div className="mb-5 flex w-fit gap-1 rounded-panel bg-card p-1.5 shadow-card border border-border-soft">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = activeTab === t.label;
@@ -1626,9 +1619,9 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
               <button
                 key={t.label}
                 onClick={() => setActiveTab(t.label)}
-                className={`flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold transition ${
+                className={`flex items-center gap-2 rounded-control-comfortable px-5 py-2 text-sm font-semibold transition ${
                   active
-                    ? 'bg-primary-accent text-white shadow-sm'
+                    ? 'bg-primary-accent text-white shadow-card'
                     : 'text-text-muted hover:bg-primary-soft hover:text-primary-accent'
                 }`}
               >
@@ -1638,7 +1631,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                   <span
                     aria-label={`${notesCount} notas`}
                     className={`flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold ${
-                      active ? 'bg-card text-state-danger' : 'bg-[#FFE3D2] text-state-danger'
+                      active ? 'bg-card text-state-danger' : 'bg-state-danger-bg text-state-danger'
                     }`}
                   >
                     {notesCount}

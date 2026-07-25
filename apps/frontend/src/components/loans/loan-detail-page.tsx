@@ -91,7 +91,7 @@ function SummaryCard({
   const classes = summaryTones[tone];
 
   return (
-    <div className="rounded-2xl border border-border-soft bg-card p-5 shadow-sm">
+    <div className="rounded-panel border border-border-soft bg-card p-5 shadow-card">
       <div className="flex items-center gap-3">
         <div className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-full sm:flex ${classes.icon}`}>
           {icon}
@@ -125,7 +125,7 @@ function DataRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-4 border-b border-border-soft py-2.5 last:border-b-0">
-      <span className="text-[13px] font-medium text-text-muted">{label}</span>
+      <span className="text-sm font-medium text-text-muted">{label}</span>
       <span className={`text-right text-sm font-semibold ${tone}`}>{value}</span>
     </div>
   );
@@ -141,7 +141,7 @@ function InfoPanel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
+    <section className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
       <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-soft text-primary-accent">
           {icon}
@@ -291,7 +291,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
   if (!loan || !totals || !operational) {
     return (
       <main className="min-h-screen bg-page p-5">
-        <div className="mx-auto max-w-[1480px] rounded-2xl border border-border-soft bg-card p-6 shadow-card">
+        <div className="mx-auto max-w-[1480px] rounded-panel border border-border-soft bg-card p-6 shadow-card">
           <p className="text-sm font-medium text-state-danger">
             {loadError ?? 'Préstamo no encontrado.'}
           </p>
@@ -327,7 +327,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
           Volver al cliente
         </Link>
 
-        <header className="overflow-hidden rounded-3xl border border-border-soft bg-card shadow-sm">
+        <header className="overflow-hidden rounded-3xl border border-border-soft bg-card shadow-card">
           <div className="flex flex-col justify-between gap-5 px-8 py-6 md:flex-row md:items-end">
             <div>
               <h1 className="text-2xl font-bold text-text-primary">
@@ -383,15 +383,15 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
           />
         </section>
 
-        <nav className="mt-6 flex w-full gap-1 overflow-x-auto rounded-2xl border border-border-soft bg-card p-1.5 shadow-sm sm:w-fit" aria-label="Secciones del préstamo">
+        <nav className="mt-6 flex w-full gap-1 overflow-x-auto rounded-panel border border-border-soft bg-card p-1.5 shadow-card sm:w-fit" aria-label="Secciones del préstamo">
           {loanTabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.label;
             return (
               <button
-                className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition sm:px-5 ${
+                className={`flex shrink-0 items-center gap-2 rounded-control-comfortable px-3 py-2 text-sm font-semibold transition sm:px-5 ${
                   active
-                    ? 'bg-primary-accent text-white shadow-sm'
+                    ? 'bg-primary-accent text-white shadow-card'
                     : 'text-text-muted hover:bg-primary-soft hover:text-primary-accent'
                 }`}
                 key={tab.label}
@@ -415,7 +415,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               phone={loan.client.phone}
             /> : null}
 
-            {activeTab === 'Resumen' ? <section className="rounded-2xl border border-border-soft bg-card p-5 shadow-sm xl:col-span-2">
+            {activeTab === 'Resumen' ? <section className="rounded-panel border border-border-soft bg-card p-5 shadow-card xl:col-span-2">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-base font-semibold text-text-primary">
@@ -493,7 +493,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
             ) : null}
 
             {activeTab === 'Cuotas' ? <section
-              className="scroll-mt-5 overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm"
+              className="scroll-mt-5 overflow-hidden rounded-panel border border-border-soft bg-card shadow-card"
               id="calendario-cuotas"
             >
               <div className="border-b border-border-soft px-5 py-4">
@@ -542,7 +542,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
             </section> : null}
 
             {activeTab === 'Pagos' ? <section
-              className="scroll-mt-5 overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm"
+              className="scroll-mt-5 overflow-hidden rounded-panel border border-border-soft bg-card shadow-card"
               id="recibos-pagos"
             >
               <div className="border-b border-border-soft px-5 py-4">
@@ -591,7 +591,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                     Fecha de saldo
                   </span>
                   <DatePickerInput
-                    className="h-10 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
+                    className="h-10 w-full rounded-control-comfortable border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
                     onChange={setPayoffDate}
                     value={payoffDate}
                   />
@@ -631,7 +631,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                   <label className="block">
                     <span className="mb-2 block text-sm font-semibold text-text-secondary">Monto</span>
                     <input
-                      className="h-10 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
+                      className="h-10 w-full rounded-control-comfortable border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
                       inputMode="decimal"
                       onChange={(event) => setCapitalAmount(event.target.value)}
                       placeholder="0.00"
@@ -643,13 +643,13 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                       Fecha efectiva
                     </span>
                     <DatePickerInput
-                      className="h-10 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
+                      className="h-10 w-full rounded-control-comfortable border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
                       onChange={setCapitalDate}
                       value={capitalDate}
                     />
                   </label>
                   <textarea
-                    className="h-20 w-full resize-none rounded-xl border border-primary-border bg-card px-3 py-2 text-sm font-medium text-text-primary outline-none"
+                    className="h-20 w-full resize-none rounded-control-comfortable border border-primary-border bg-card px-3 py-2 text-sm font-medium text-text-primary outline-none"
                     onChange={(event) => setCapitalNotes(event.target.value)}
                     placeholder="Notas"
                     value={capitalNotes}

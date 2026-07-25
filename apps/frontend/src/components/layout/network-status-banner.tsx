@@ -49,7 +49,7 @@ export function NetworkStatusBanner() {
   if (!message) return null;
 
   return (
-    <div className="fixed inset-x-3 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-[520px] rounded-lg border border-[#F7D6BD] bg-[#FFF7EF] px-4 py-3 text-center text-sm font-semibold text-[#9A4E2F] shadow-lg">
+    <div className="fixed inset-x-3 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-[520px] rounded-control-compact border border-state-danger-dot bg-state-danger-bg px-4 py-3 text-center text-sm font-semibold text-state-danger shadow-card">
       {message}
     </div>
   );

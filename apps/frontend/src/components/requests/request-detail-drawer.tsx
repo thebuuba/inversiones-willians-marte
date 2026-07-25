@@ -25,21 +25,25 @@ interface RequestDetailDrawerProps {
   onReject?: () => void;
 }
 
-const statusMap: Record<string, { label: string; bg: string; text: string; dot: string }> = {
-  PENDING: { label: 'Pendiente', bg: '#FFF4C8', text: '#B89A22', dot: '#E2C64F' },
-  UNDER_REVIEW: { label: 'En revisión', bg: '#E4F0FF', text: '#2F5F91', dot: '#6EA8E8' },
-  APPROVED: { label: 'Aprobada', bg: '#E7F4EC', text: '#2F7654', dot: '#2F7654' },
-  REJECTED: { label: 'Rechazada', bg: '#FFE8D8', text: '#9F3F25', dot: '#E6A07A' },
+const statusMap: Record<string, { label: string; className: string; dot: string }> = {
+  PENDING: { label: 'Pendiente', className: 'bg-state-warning-bg text-state-warning', dot: 'bg-state-warning-dot' },
+  UNDER_REVIEW: { label: 'En revisión', className: 'bg-state-info-bg text-state-info', dot: 'bg-state-info-dot' },
+  APPROVED: { label: 'Aprobada', className: 'bg-state-success-bg text-state-success', dot: 'bg-state-success-dot' },
+  REJECTED: { label: 'Rechazada', className: 'bg-state-danger-bg text-state-danger', dot: 'bg-state-danger-dot' },
+};
+
+const printStatusColors: Record<string, { label: string; bg: string; text: string }> = {
+  PENDING: { label: 'Pendiente', bg: '#FFF4C8', text: '#B89A22' },
+  UNDER_REVIEW: { label: 'En revisión', bg: '#E4F0FF', text: '#2F5F91' },
+  APPROVED: { label: 'Aprobada', bg: '#E7F4EC', text: '#2F7654' },
+  REJECTED: { label: 'Rechazada', bg: '#FFE8D8', text: '#9F3F25' },
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const style = statusMap[status] ?? { label: status, bg: '#F3FAF6', text: '#5C6D63', dot: '#5C6D63' };
+  const style = statusMap[status] ?? { label: status, className: 'bg-state-neutral-bg text-state-neutral', dot: 'bg-state-neutral-dot' };
   return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
-      style={{ backgroundColor: style.bg, color: style.text }}
-    >
-      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: style.dot }} />
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${style.className}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
       {style.label}
     </span>
   );
@@ -47,12 +51,12 @@ function StatusBadge({ status }: { status: string }) {
 
 function InfoCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-[14px] bg-card p-3.5 transition hover:-translate-y-0.5">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-state-neutral-bg text-text-muted">
+    <div className="flex items-center gap-3 rounded-panel bg-card p-3.5 transition hover:-translate-y-0.5">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-state-neutral-bg text-text-muted">
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-text-subtle">{label}</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-text-subtle">{label}</p>
         <p className="mt-1 truncate text-sm font-bold text-text-primary">{value}</p>
       </div>
     </div>
@@ -73,7 +77,7 @@ function formatRequestDate(value: string, options?: Intl.DateTimeFormatOptions):
 }
 
 function getPrintableStatus(status: string) {
-  return statusMap[status] ?? { label: status, bg: '#F3FAF6', text: '#5C6D63', dot: '#5C6D63' };
+  return printStatusColors[status] ?? { label: status, bg: '#F3FAF6', text: '#5C6D63' };
 }
 
 export function RequestDetailDrawer({
@@ -409,7 +413,7 @@ export function RequestDetailDrawer({
         >
           <motion.aside
             animate={{ x: 0 }}
-            className="drawer-scroll ml-auto flex h-screen w-full max-w-[540px] flex-col overflow-y-auto border-l border-primary-border bg-page shadow-[-24px_0_60px_rgba(0,0,0,0.22)]"
+            className="drawer-scroll ml-auto flex h-screen w-full max-w-[540px] flex-col overflow-y-auto border-l border-primary-border bg-page shadow-modal"
             exit={{ x: '100%' }}
             initial={{ x: '100%' }}
             onClick={(e) => e.stopPropagation()}
@@ -441,7 +445,7 @@ export function RequestDetailDrawer({
             <div className="flex-1 px-6 py-5 pb-32">
               <motion.div
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-[20px] border border-primary-border bg-card p-5"
+                className="rounded-panel border border-primary-border bg-card p-5"
                 initial={{ opacity: 0, y: 10 }}
                 transition={{ delay: 0.08 }}
               >
@@ -476,7 +480,7 @@ export function RequestDetailDrawer({
                     <FileText className="h-4 w-4" />
                     DESCRIPCIÓN
                   </h3>
-                  <div className="rounded-[16px] bg-card p-4 text-sm leading-relaxed text-text-primary">
+                  <div className="rounded-panel bg-card p-4 text-sm leading-relaxed text-text-primary">
                     {data.description}
                   </div>
                 </section>
@@ -487,7 +491,7 @@ export function RequestDetailDrawer({
                   <ImageIcon className="h-4 w-4" />
                   FOTOGRAFÍAS
                 </h3>
-                <div className="flex h-[118px] w-[155px] items-center justify-center rounded-[14px] bg-state-neutral-bg text-xs text-text-subtle">
+                <div className="flex h-[118px] w-[155px] items-center justify-center rounded-panel bg-state-neutral-bg text-xs text-text-subtle">
                   Sin fotos
                 </div>
               </section>
@@ -505,7 +509,7 @@ export function RequestDetailDrawer({
                     Imprimir
                   </button>
                   <button
-                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-primary-border bg-card text-sm font-bold text-[#0F7A3A] transition hover:bg-surface-muted-ui"
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-primary-border bg-card text-sm font-bold text-state-success transition hover:bg-surface-muted-ui"
                     onClick={handleWhatsApp}
                     type="button"
                   >
@@ -515,7 +519,7 @@ export function RequestDetailDrawer({
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#F7D6BD] bg-card text-sm font-bold text-state-danger transition hover:bg-[#FFF7EF]"
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-state-danger-bg bg-card text-sm font-bold text-state-danger transition hover:bg-state-danger-bg"
                     onClick={onReject}
                     type="button"
                   >
@@ -523,7 +527,7 @@ export function RequestDetailDrawer({
                     Rechazar
                   </button>
                   <button
-                    className="flex h-10 items-center justify-center gap-2.5 rounded-full bg-primary text-sm font-bold text-white shadow-[0_12px_22px_rgba(40,92,67,0.22)] transition hover:bg-[#1F4734]"
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full bg-primary text-sm font-bold text-white shadow-action transition hover:bg-primary-hover"
                     onClick={onApprove}
                     type="button"
                   >

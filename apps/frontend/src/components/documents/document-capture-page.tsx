@@ -82,8 +82,8 @@ export function DocumentCapturePage({ token }: { token: string }) {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-page px-5 py-8">
-      <section className="w-full max-w-md rounded-2xl bg-card p-6 shadow-sm">
-        <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary-accent">
+      <section className="w-full max-w-md rounded-panel bg-card p-6 shadow-card">
+        <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-panel bg-primary-soft text-primary-accent">
           {state === 'success' ? (
             <CheckCircle2 className="h-6 w-6" />
           ) : state === 'loading' || state === 'uploading' ? (
@@ -100,7 +100,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
           {session ? `Cliente: ${session.clientName}` : 'Enlace temporal de captura'}
         </p>
 
-        <div className="mt-6 rounded-xl border border-border-soft bg-surface-subtle px-4 py-3 text-sm text-text-secondary">
+        <div className="mt-6 rounded-control-comfortable border border-border-soft bg-surface-subtle px-4 py-3 text-sm text-text-secondary">
           {message}
         </div>
 

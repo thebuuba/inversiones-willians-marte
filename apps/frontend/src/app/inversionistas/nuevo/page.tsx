@@ -109,7 +109,7 @@ function FormSection({
       <div className="mb-6 flex items-center justify-between gap-6 xl:mb-7">
         <div className="flex min-w-0 items-center gap-3">
           {icon && (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: accent }}>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control-comfortable" style={{ backgroundColor: accent }}>
               {icon}
             </div>
           )}
@@ -174,7 +174,7 @@ function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onP
         ) : (
           <Camera className="h-6 w-6 text-primary-accent" />
         )}
-        <span className="absolute inset-x-0 bottom-0 bg-text-primary/72 py-1 text-[10px] font-bold text-white opacity-0 transition group-hover:opacity-100">
+        <span className="absolute inset-x-0 bottom-0 bg-text-primary/72 py-1 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100">
           {photo ? 'Cambiar' : 'Subir'}
         </span>
       </button>
@@ -341,7 +341,7 @@ function AddInvestorForm() {
                 <button onClick={() => router.push('/inversionistas')} className="h-12 rounded-full border border-primary-border bg-card px-5 text-base font-bold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-2">
                   <X className="h-4 w-4" />Cancelar
                 </button>
-                <button onClick={() => setStep(2)} className="h-12 rounded-full bg-primary-accent px-7 text-base font-bold text-white shadow-sm hover:bg-primary inline-flex items-center gap-2">
+                <button onClick={() => setStep(2)} className="h-12 rounded-full bg-primary-accent px-7 text-base font-bold text-white shadow-card hover:bg-primary inline-flex items-center gap-2">
                   Siguiente <ArrowLeft className="h-4 w-4 rotate-180" />
                 </button>
               </>
@@ -358,7 +358,7 @@ function AddInvestorForm() {
                     <UserPlus className="h-4 w-4" />Guardar y nuevo
                   </button>
                 )}
-                <button onClick={() => handleSave(false)} disabled={saving} className="h-10 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-50 inline-flex items-center gap-1.5">
+                <button onClick={() => handleSave(false)} disabled={saving} className="h-10 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white shadow-card hover:bg-primary disabled:opacity-50 inline-flex items-center gap-1.5">
                   <Save className="h-4 w-4" />{saving ? 'Guardando...' : isEditing ? 'Actualizar inversionista' : 'Guardar inversión'}
                 </button>
               </>
@@ -499,7 +499,7 @@ function AddInvestorForm() {
                       <button
                         type="button"
                         onClick={handleCalculateInterest}
-                        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary-accent px-8 text-base font-bold text-white shadow-sm transition hover:bg-primary"
+                        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control-comfortable bg-primary-accent px-8 text-base font-bold text-white shadow-card transition hover:bg-primary"
                       >
                         <Calculator className="h-5 w-5" />
                         Calcular

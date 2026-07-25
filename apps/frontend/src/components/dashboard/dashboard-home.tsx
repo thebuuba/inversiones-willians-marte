@@ -110,7 +110,7 @@ function Card({ children, className = '', index = 0 }: { children: ReactNode; cl
       initial="hidden"
       animate="visible"
       custom={index}
-      className={`rounded-2xl border border-border-soft bg-card shadow-sm ${className}`}
+      className={`rounded-panel border border-border-soft bg-card shadow-card ${className}`}
     >
       {children}
     </motion.section>
@@ -191,17 +191,17 @@ export function DashboardHome() {
           <div className="mb-3 flex items-center gap-3">
 <span className="text-sm text-text-secondary">{today}</span>
           </div>
-          <h1 className="text-[28px] font-bold leading-tight text-text-primary">
+          <h1 className="text-3xl font-bold leading-tight text-text-primary">
             Hola, {user?.name ?? 'Usuario'} 👋
           </h1>
           <p className="mt-1.5 text-base text-text-secondary">Aquí tienes un resumen de tu cartera hoy.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="h-11 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-primary-accent shadow-sm">
+          <button className="h-11 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-primary-accent shadow-card">
             Ver reportes
           </button>
           <Link
-            className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)]"
+            className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-action"
             href="/prestamos/nuevo"
           >
             <Plus className="h-4 w-4" />
@@ -214,7 +214,7 @@ export function DashboardHome() {
         {metricCards.map((k) => {
           const Icon = k.icon;
           return (
-            <div key={k.label} className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
+            <div key={k.label} className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
               <div className="flex items-center gap-4">
                 <div
                   className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${k.tone}`}
@@ -272,7 +272,7 @@ export function DashboardHome() {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-sm text-text-secondary">Total</span>
-              <span className="text-[24px] font-bold text-text-primary">{portfolioTotal}</span>
+              <span className="text-2xl font-bold text-text-primary">{portfolioTotal}</span>
             </div>
           </div>
           <div className="mt-3 space-y-2">
@@ -361,7 +361,7 @@ export function DashboardHome() {
                 >
                   <span className={`h-2 w-2 rounded-full ${auditToneDots[row.tone]}`} aria-hidden="true" />
                   <div className="min-w-0">
-                    <p className="truncate text-[13px] leading-5 text-text-secondary">
+                    <p className="truncate text-sm leading-5 text-text-secondary">
                       <span className="font-bold text-text-primary">{row.actor}</span>{' '}
                       {row.action}
                     </p>
@@ -380,7 +380,7 @@ export function DashboardHome() {
                     )}
                   </div>
                   <time
-                    className="col-start-2 text-[11px] font-medium text-text-secondary sm:col-start-auto sm:row-start-1"
+                    className="col-start-2 text-xs font-medium text-text-secondary sm:col-start-auto sm:row-start-1"
                     dateTime={row.createdAt}
                   >
                     {timeAgo(row.createdAt)}
@@ -388,7 +388,7 @@ export function DashboardHome() {
                 </article>
               );
             }) : (
-              <div className="rounded-xl bg-surface-subtle px-4 py-5 text-center">
+              <div className="rounded-control-comfortable bg-surface-subtle px-4 py-5 text-center">
                 <p className="text-sm font-bold text-text-primary">
                   {user?.role === 'ADMIN' ? 'No hay actividad reciente' : 'Auditoría restringida'}
                 </p>
@@ -414,7 +414,7 @@ export function DashboardHome() {
 
               return (
                 <div key={payment.id} className={`flex items-center gap-3 rounded-[16px] border p-3 ${warm ? 'border-state-danger-dot bg-state-danger-bg' : 'border-primary-border bg-surface-muted-ui'}`}>
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-[11px] font-bold ${warm ? 'bg-state-danger text-white' : 'bg-card text-primary-accent'}`}>
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-xs font-bold ${warm ? 'bg-state-danger text-white' : 'bg-card text-primary-accent'}`}>
                     {tag}
                   </div>
                   <div className="min-w-0 flex-1">

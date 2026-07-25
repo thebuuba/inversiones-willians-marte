@@ -10,7 +10,7 @@ const PRESET_COLORS = [
   '#2F7654', '#3B82F6', '#F59E0B', '#EF4444',
   '#8B5CF6', '#EC4899', '#14B8A6', '#F97316',
 ];
-const LOAN_CARD_SHADOW = 'shadow-[0_4px_12px_rgba(17,24,39,0.16)]';
+const LOAN_CARD_SHADOW = 'shadow-card';
 
 export function CarterasCard({
   selectedPortfolioId,
@@ -60,13 +60,13 @@ export function CarterasCard({
 
   return (
     <div className="relative">
-      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-primary-soft px-3 py-1.5 text-sm font-bold text-primary-accent shadow-sm">
+      <span className="absolute -top-3 left-5 z-10 inline-flex items-center gap-1.5 rounded-control-compact bg-primary-soft px-3 py-1.5 text-sm font-bold text-primary-accent shadow-card">
         <FolderOpen className="h-4 w-4" />
         Carteras
       </span>
       <motion.section
         animate={{ opacity: 1, y: 0 }}
-        className={`rounded-xl bg-card p-4 pt-6 ${LOAN_CARD_SHADOW} lg:p-5 lg:pt-7`}
+        className={`rounded-control-comfortable bg-card p-4 pt-6 ${LOAN_CARD_SHADOW} lg:p-5 lg:pt-7`}
         initial={{ opacity: 0, y: 14 }}
         transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
       >
@@ -98,7 +98,7 @@ export function CarterasCard({
         {active && (
           <>
             {error && (
-              <p className="mb-3 rounded-lg border border-[#F1C9B7] bg-[#FFF4EE] px-3 py-2 text-xs font-medium text-state-danger">
+              <p className="mb-3 rounded-control-compact border border-state-danger-bg bg-state-danger-bg px-3 py-2 text-xs font-medium text-state-danger">
                 {error}
             </p>
             )}
@@ -111,7 +111,7 @@ export function CarterasCard({
                   <span className="mb-1.5 block text-xs font-bold text-text-secondary">Nombre</span>
                   <input
                     ref={inputRef}
-                    className="h-[38px] w-full rounded-[8px] border border-primary-border bg-card px-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
+                    className="h-[38px] w-full rounded-control-compact border border-primary-border bg-card px-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                     placeholder="Ej. Cartera Personal"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
@@ -122,7 +122,7 @@ export function CarterasCard({
                   <span className="mb-1.5 block text-xs font-bold text-text-secondary">Color</span>
                   <div className="flex items-center gap-2">
                     <button
-                      className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-primary-border bg-card"
+                      className="flex h-[34px] w-[34px] items-center justify-center rounded-control-compact border border-primary-border bg-card"
                       onClick={() => setShowColorPicker(!showColorPicker)}
                       type="button"
                     >
@@ -149,7 +149,7 @@ export function CarterasCard({
                 </div>
                 <div className="flex gap-2">
                   <button
-                    className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary-accent text-xs font-bold text-white transition hover:bg-primary disabled:opacity-50"
+                    className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-control-compact bg-primary-accent text-xs font-bold text-white transition hover:bg-primary disabled:opacity-50"
                     disabled={newName.trim().length < 2 || saving}
                     onClick={handleCreate}
                     type="button"
@@ -158,7 +158,7 @@ export function CarterasCard({
                     {saving ? 'Creando...' : 'Crear'}
                   </button>
                   <button
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-primary-border text-text-secondary transition hover:bg-surface-muted-ui"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-control-compact border border-primary-border text-text-secondary transition hover:bg-surface-muted-ui"
                     onClick={() => setCreating(false)}
                     type="button"
                   >
@@ -174,7 +174,7 @@ export function CarterasCard({
                   portfolios.map((p) => (
                     <button
                       key={p.id}
-                      className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition ${
+                      className={`flex w-full items-center gap-3 rounded-control-compact border px-3 py-2.5 text-left transition ${
                         selectedPortfolioId === p.id
                           ? 'border-primary-accent bg-primary-soft'
                           : 'border-border-soft hover:bg-surface-subtle'
@@ -197,7 +197,7 @@ export function CarterasCard({
                   ))
                 )}
                 <button
-                  className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary-border text-xs font-bold text-primary-accent transition hover:bg-surface-muted-ui"
+                  className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-control-compact border border-dashed border-primary-border text-xs font-bold text-primary-accent transition hover:bg-surface-muted-ui"
                   onClick={() => { setCreating(true); setError(''); }}
                   type="button"
                 >

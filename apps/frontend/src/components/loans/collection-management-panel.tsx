@@ -47,7 +47,7 @@ const promiseTones = {
   PENDING: 'bg-amber-50 text-amber-700',
   PARTIAL: 'bg-blue-50 text-blue-700',
   FULFILLED: 'bg-emerald-50 text-emerald-700',
-  BROKEN: 'bg-red-50 text-red-700',
+  BROKEN: 'bg-state-danger-bg text-state-danger',
   CANCELLED: 'bg-state-neutral-bg text-text-secondary',
 } as const;
 
@@ -134,7 +134,7 @@ function InteractionModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 backdrop-blur-sm"
       onClick={(event) => event.target === event.currentTarget && onClose()}
     >
-      <section className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-border-soft bg-card shadow-2xl">
+      <section className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-panel border border-border-soft bg-card shadow-modal">
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border-soft bg-card px-6 py-5">
           <div>
             <h2 className="text-lg font-bold text-text-primary">Registrar gestión de cobro</h2>
@@ -158,7 +158,7 @@ function InteractionModal({
                 Canal
               </span>
               <select
-                className="h-11 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-semibold text-text-primary"
+                className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-3 text-sm font-semibold text-text-primary"
                 onChange={(event) => setChannel(event.target.value as CollectionChannel)}
                 value={channel}
               >
@@ -174,7 +174,7 @@ function InteractionModal({
                 Resultado
               </span>
               <select
-                className="h-11 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-semibold text-text-primary"
+                className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-3 text-sm font-semibold text-text-primary"
                 onChange={(event) => setResult(event.target.value as CollectionResult)}
                 value={result}
               >
@@ -193,7 +193,7 @@ function InteractionModal({
             </span>
             <textarea
               autoFocus
-              className="min-h-28 w-full resize-y rounded-xl border border-primary-border px-4 py-3 text-sm text-text-primary outline-none focus:border-primary-accent"
+              className="min-h-28 w-full resize-y rounded-control-comfortable border border-primary-border px-4 py-3 text-sm text-text-primary outline-none focus:border-primary-accent"
               maxLength={2000}
               onChange={(event) => {
                 setNotes(event.target.value);
@@ -205,13 +205,13 @@ function InteractionModal({
           </label>
 
           {result === 'PAYMENT_PROMISE' ? (
-            <div className="grid gap-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-4 sm:grid-cols-2">
+            <div className="grid gap-4 rounded-panel border border-state-warning-bg bg-state-warning-bg p-4 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-amber-800">
+                <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-state-warning">
                   Monto prometido
                 </span>
                 <input
-                  className="h-11 w-full rounded-xl border border-amber-200 bg-card px-3 text-sm font-bold text-text-primary"
+                  className="h-11 w-full rounded-control-comfortable border border-state-warning-bg bg-card px-3 text-sm font-bold text-text-primary"
                   inputMode="decimal"
                   onChange={(event) => setPromiseAmount(event.target.value)}
                   placeholder="0.00"
@@ -219,11 +219,11 @@ function InteractionModal({
                 />
               </label>
               <label className="block">
-                <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-amber-800">
+                <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-state-warning">
                   Fecha prometida
                 </span>
                 <DatePickerInput
-                  className="h-11 w-full rounded-xl border border-amber-200 bg-card px-3 text-sm font-bold text-text-primary"
+                  className="h-11 w-full rounded-control-comfortable border border-state-warning-bg bg-card px-3 text-sm font-bold text-text-primary"
                   onChange={setPromiseDate}
                   value={promiseDate}
                 />
@@ -237,7 +237,7 @@ function InteractionModal({
                 Próximo seguimiento
               </span>
               <DatePickerInput
-                className="h-11 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-semibold text-text-primary"
+                className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-3 text-sm font-semibold text-text-primary"
                 onChange={setFollowUpDate}
                 value={followUpDate}
               />
@@ -247,7 +247,7 @@ function InteractionModal({
                 Hora
               </span>
               <input
-                className="h-11 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-semibold text-text-primary disabled:bg-surface-subtle"
+                className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-3 text-sm font-semibold text-text-primary disabled:bg-surface-subtle"
                 disabled={!followUpDate}
                 onChange={(event) => setFollowUpTime(event.target.value)}
                 type="time"
@@ -257,7 +257,7 @@ function InteractionModal({
           </div>
 
           {error ? (
-            <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            <p className="rounded-control-comfortable bg-state-danger-bg px-4 py-3 text-sm font-semibold text-state-danger">
               {error}
             </p>
           ) : null}
@@ -314,7 +314,7 @@ export function CollectionManagementPanel({
   }, [loanId]);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
+    <section className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
       <header className="flex flex-col justify-between gap-4 border-b border-border-soft px-5 py-4 sm:flex-row sm:items-center">
         <div>
           <h2 className="flex items-center gap-2 text-base font-bold text-text-primary">
@@ -365,7 +365,7 @@ export function CollectionManagementPanel({
         </p>
       ) : null}
       {error ? (
-        <p className="m-5 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+        <p className="m-5 rounded-control-comfortable bg-state-danger-bg px-4 py-3 text-sm font-semibold text-state-danger">
           {error}
         </p>
       ) : null}
@@ -401,7 +401,7 @@ export function CollectionManagementPanel({
             </div>
 
             {item.promise ? (
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-amber-100 bg-amber-50/50 px-4 py-3 text-sm">
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-control-comfortable border border-state-warning-bg bg-state-warning-bg/50 px-4 py-3 text-sm">
                 <span className="font-bold text-text-primary">
                   Promesa: {formatDop(item.promise.amount, { decimals: 2, space: true })}
                 </span>

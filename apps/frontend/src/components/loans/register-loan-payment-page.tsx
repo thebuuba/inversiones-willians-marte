@@ -92,12 +92,12 @@ function getLoanStatusLabel(status: string) {
 function LoanSearchResult({ loan, onSelect }: { loan: LoanListItem; onSelect: () => void }) {
   return (
     <button
-      className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t border-border-soft px-4 py-3.5 text-left transition first:border-t-0 hover:bg-[#F6FAF7]"
+      className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t border-border-soft px-4 py-3.5 text-left transition first:border-t-0 hover:bg-surface-subtle"
       onClick={onSelect}
       type="button"
     >
       <div className="flex min-w-0 items-center gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-accent">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control-comfortable bg-primary-soft text-primary-accent">
           <UserRound className="h-4 w-4" />
         </span>
         <div className="min-w-0">
@@ -112,11 +112,11 @@ function LoanSearchResult({ loan, onSelect }: { loan: LoanListItem; onSelect: ()
       <div className="flex items-center gap-3">
         <div className="text-right">
           <p className="text-sm font-bold tabular-nums text-text-primary">{fmt(loan.balance)}</p>
-          <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
+          <p className="mt-0.5 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
             {getLoanStatusLabel(loan.status)}
           </p>
         </div>
-        <ChevronRight className="h-4 w-4 text-[#9AA69F]" />
+        <ChevronRight className="h-4 w-4 text-text-muted" />
       </div>
     </button>
   );
@@ -135,11 +135,11 @@ function Metric({
     tone === 'green'
       ? 'text-primary-accent'
       : tone === 'orange'
-        ? 'text-[#B64A24]'
+        ? 'text-state-danger'
         : 'text-text-primary';
   return (
-    <div className="border-l border-[#E4ECE7] px-4 first:border-l-0 first:pl-0">
-      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted">{label}</p>
+    <div className="border-l border-border-soft px-4 first:border-l-0 first:pl-0">
+      <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-muted">{label}</p>
       <p className={`mt-1.5 text-base font-bold tabular-nums ${valueTone}`}>{value}</p>
     </div>
   );
@@ -149,7 +149,7 @@ function FinancialDetail({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 border-b border-border-soft py-2.5 last:border-b-0">
       <dt className="text-xs font-medium text-text-muted">{label}</dt>
-      <dd className="text-right text-xs font-bold tabular-nums text-[#1F2A24]">{value}</dd>
+      <dd className="text-right text-xs font-bold tabular-nums text-text-primary">{value}</dd>
     </div>
   );
 }
@@ -331,7 +331,7 @@ export function RegisterLoanPaymentPage() {
 
   const latestPayments = loan?.payments.slice(0, 5) ?? [];
   const inputClass =
-    'h-11 w-full rounded-xl border border-primary-border bg-card px-3.5 text-sm font-semibold text-text-primary outline-none transition focus:border-primary-accent focus:ring-2 focus:ring-primary-soft';
+    'h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-3.5 text-sm font-semibold text-text-primary outline-none transition focus:border-primary-accent focus:ring-2 focus:ring-primary-soft';
 
   return (
     <main className="min-h-screen bg-page p-4 font-sans text-text-primary sm:p-5">
@@ -350,7 +350,7 @@ export function RegisterLoanPaymentPage() {
               Selecciona una deuda, confirma la aplicación y registra el pago.
             </p>
           </div>
-          <div className="inline-flex items-center gap-2 self-start rounded-full border border-primary-border bg-card px-3 py-2 text-xs font-bold text-text-secondary shadow-sm sm:self-auto">
+          <div className="inline-flex items-center gap-2 self-start rounded-full border border-primary-border bg-card px-3 py-2 text-xs font-bold text-text-secondary shadow-card sm:self-auto">
             <Clock3 className="h-3.5 w-3.5 text-primary-accent" />
             {fmtDate(new Date())}
           </div>
@@ -358,12 +358,12 @@ export function RegisterLoanPaymentPage() {
 
         <div className={`grid gap-4 ${initialLoanId ? '' : 'xl:grid-cols-[370px_minmax(0,1fr)]'}`}>
           {!initialLoanId ? (
-            <aside className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
+            <aside className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
               <div className="border-b border-border-soft p-4">
                 <label className="relative block">
                   <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
                   <input
-                    className="h-11 w-full rounded-xl border border-primary-border bg-surface-subtle pl-10 pr-10 text-sm font-semibold text-text-primary outline-none transition placeholder:text-[#9AA69F] focus:border-primary-accent focus:bg-card"
+                    className="h-11 w-full rounded-control-comfortable border border-primary-border bg-surface-subtle pl-10 pr-10 text-sm font-semibold text-text-primary outline-none transition placeholder:text-text-muted focus:border-primary-accent focus:bg-card"
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Cliente, cédula o # de préstamo"
                     value={query}
@@ -371,7 +371,7 @@ export function RegisterLoanPaymentPage() {
                   {query ? (
                     <button
                       aria-label="Limpiar búsqueda"
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-text-muted hover:bg-[#EDF4F0]"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-text-muted hover:bg-surface-subtle"
                       onClick={() => setQuery('')}
                       type="button"
                     >
@@ -381,7 +381,7 @@ export function RegisterLoanPaymentPage() {
                 </label>
               </div>
               <div className="flex items-center justify-between bg-surface-subtle px-4 py-2.5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#6B786F]">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-secondary">
                   Préstamos disponibles
                 </p>
                 <span className="text-xs font-bold tabular-nums text-primary-accent">
@@ -412,12 +412,12 @@ export function RegisterLoanPaymentPage() {
 
           <section className="min-w-0">
             {loadingLoan ? (
-              <div className="flex min-h-[560px] items-center justify-center rounded-2xl border border-border-soft bg-card text-sm font-semibold text-text-muted shadow-sm">
+              <div className="flex min-h-[560px] items-center justify-center rounded-panel border border-border-soft bg-card text-sm font-semibold text-text-muted shadow-card">
                 Cargando información del préstamo...
               </div>
             ) : !loan ? (
-              <div className="flex min-h-[560px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#CFE0D6] bg-card px-6 text-center shadow-sm">
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary-accent">
+              <div className="flex min-h-[560px] flex-col items-center justify-center rounded-panel border border-dashed border-border-soft bg-card px-6 text-center shadow-card">
+                <span className="flex h-14 w-14 items-center justify-center rounded-panel bg-primary-soft text-primary-accent">
                   <WalletCards className="h-6 w-6" />
                 </span>
                 <h2 className="mt-4 text-lg font-bold text-text-primary">Selecciona un préstamo</h2>
@@ -427,10 +427,10 @@ export function RegisterLoanPaymentPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <section className="overflow-hidden rounded-[22px] border border-[#DCE7E0] bg-card shadow-[0_14px_34px_rgba(36,75,56,0.08)]">
-                  <div className="flex flex-col justify-between gap-4 bg-[#F7FAF8] px-6 py-5 lg:flex-row lg:items-center">
+                <section className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
+                  <div className="flex flex-col justify-between gap-4 bg-surface-subtle px-6 py-5 lg:flex-row lg:items-center">
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E1F1E7] text-primary-accent">
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-panel bg-primary-soft text-primary-accent">
                         <UserRound className="h-5 w-5" />
                       </span>
                       <div className="min-w-0">
@@ -455,15 +455,15 @@ export function RegisterLoanPaymentPage() {
                       </Link>
                     </div>
                   </div>
-                  <div className="grid gap-5 border-t border-[#E5ECE8] px-6 py-5 sm:grid-cols-2 xl:grid-cols-[1.25fr_1fr_1fr_1fr]">
+                  <div className="grid gap-5 border-t border-border-soft px-6 py-5 sm:grid-cols-2 xl:grid-cols-[1.25fr_1fr_1fr_1fr]">
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-text-muted">
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">
                         A saldar hoy
                       </p>
                       <p className="mt-1.5 text-2xl font-bold tracking-[-0.03em] tabular-nums text-text-primary">
                         {fmt(payoffQuote?.totalToPay ?? totalOutstanding)}
                       </p>
-                      <p className="mt-1 text-[11px] font-medium text-text-muted">
+                      <p className="mt-1 text-xs font-medium text-text-muted">
                         Capital, interés generado y mora
                       </p>
                     </div>
@@ -484,10 +484,10 @@ export function RegisterLoanPaymentPage() {
 
                 <nav
                   aria-label="Acciones del préstamo"
-                  className="grid gap-3 rounded-2xl border border-border-soft bg-card p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-5"
+                  className="grid gap-3 rounded-panel border border-border-soft bg-card p-4 shadow-card sm:grid-cols-2 xl:grid-cols-5"
                 >
                   <button
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary-accent px-4 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-control-comfortable bg-primary-accent px-4 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={saving || amountNumber <= 0 || exceedsOutstanding || hasNoOutstanding}
                     form="loan-payment-form"
                     type="submit"
@@ -495,25 +495,25 @@ export function RegisterLoanPaymentPage() {
                     <HandCoins className="h-4 w-4" /> Procesar pago
                   </button>
                   <Link
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-text-primary px-4 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#102D20] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-control-comfortable bg-primary px-4 text-sm font-bold text-text-inverse transition hover:-translate-y-0.5 hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
                     href={`/prestamos/${loan.id}?agreement=1`}
                   >
                     <Handshake className="h-4 w-4" /> Acuerdo de pago
                   </Link>
                   <Link
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#F3F6F4] px-4 text-sm font-bold text-text-primary transition hover:bg-[#E7EFEA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-control-comfortable bg-surface-subtle px-4 text-sm font-bold text-text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
                     href={`/prestamos/${loan.id}#saldo-anticipado`}
                   >
                     <CheckCircle2 className="h-4 w-4" /> Saldar
                   </Link>
                   <Link
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#F3F6F4] px-4 text-sm font-bold text-text-primary transition hover:bg-[#E7EFEA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-control-comfortable bg-surface-subtle px-4 text-sm font-bold text-text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
                     href={`/prestamos/${loan.id}#calendario-cuotas`}
                   >
                     <ListChecks className="h-4 w-4" /> Ver cuotas
                   </Link>
                   <a
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-primary-border bg-card px-4 text-sm font-bold text-text-primary transition hover:bg-surface-muted-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent sm:col-span-2 xl:col-span-1"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-control-comfortable border border-primary-border bg-card px-4 text-sm font-bold text-text-primary transition hover:bg-surface-muted-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent sm:col-span-2 xl:col-span-1"
                     href="#recibos-pagos-cobro"
                   >
                     <ReceiptText className="h-4 w-4" /> Ver recibos
@@ -522,7 +522,7 @@ export function RegisterLoanPaymentPage() {
 
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_390px]">
                   <form
-                    className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm"
+                    className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card"
                     id="loan-payment-form"
                     onSubmit={handleSubmit}
                   >
@@ -555,10 +555,10 @@ export function RegisterLoanPaymentPage() {
                           </span>
                           <input
                             autoFocus
-                            className={`h-14 w-full rounded-xl border bg-card pl-16 pr-4 text-2xl font-bold tabular-nums text-text-primary outline-none transition focus:ring-2 focus:ring-primary-soft ${
+                            className={`h-14 w-full rounded-control-comfortable border bg-card pl-16 pr-4 text-2xl font-bold tabular-nums text-text-primary outline-none transition focus:ring-2 focus:ring-primary-soft ${
                               invalidAmount || exceedsOutstanding
-                                ? 'border-[#D99073] focus:border-[#D99073]'
-                                : 'border-[#CFE0D6] focus:border-primary-accent'
+                                ? 'border-state-danger focus:border-state-danger'
+                                : 'border-border-soft focus:border-primary-accent'
                             }`}
                             id="loan-payment-amount"
                             inputMode="decimal"
@@ -568,12 +568,12 @@ export function RegisterLoanPaymentPage() {
                           />
                         </div>
                         {exceedsOutstanding ? (
-                          <p className="mt-2 text-xs font-semibold text-[#A54827]">
+                          <p className="mt-2 text-xs font-semibold text-state-danger">
                             El monto supera la deuda programada de {fmt(totalOutstanding)}.
                           </p>
                         ) : null}
                         {hasNoOutstanding ? (
-                          <p className="mt-2 text-xs font-semibold text-[#A54827]">
+                          <p className="mt-2 text-xs font-semibold text-state-danger">
                             Este préstamo no tiene cuotas pendientes para cobrar.
                           </p>
                         ) : null}
@@ -611,9 +611,9 @@ export function RegisterLoanPaymentPage() {
                         <div className="grid grid-cols-3 gap-2">
                           {paymentMethods.map(({ label, icon: Icon }) => (
                             <button
-                              className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-2 text-xs font-bold transition ${
+                              className={`flex min-h-12 items-center justify-center gap-2 rounded-control-comfortable border px-2 text-xs font-bold transition ${
                                 paymentMethod === label
-                                  ? 'border-[#5FA37D] bg-primary-soft text-primary-accent'
+                                  ? 'border-primary-accent bg-primary-soft text-primary-accent'
                                   : 'border-primary-border bg-card text-text-secondary hover:bg-surface-subtle'
                               }`}
                               key={label}
@@ -632,7 +632,7 @@ export function RegisterLoanPaymentPage() {
                           Notas
                         </span>
                         <textarea
-                          className="h-20 w-full resize-none rounded-xl border border-primary-border bg-card px-3.5 py-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent focus:ring-2 focus:ring-primary-soft"
+                          className="h-20 w-full resize-none rounded-control-comfortable border border-primary-border bg-card px-3.5 py-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent focus:ring-2 focus:ring-primary-soft"
                           onChange={(event) => setNotes(event.target.value)}
                           placeholder="Observaciones opcionales del cobro"
                           value={notes}
@@ -640,13 +640,13 @@ export function RegisterLoanPaymentPage() {
                       </label>
 
                       {error ? (
-                        <div className="rounded-xl border border-[#F0CCBE] bg-[#FFF7F3] px-4 py-3 text-sm font-semibold text-state-danger">
+                        <div className="rounded-control-comfortable border border-state-danger-bg bg-state-danger-bg px-4 py-3 text-sm font-semibold text-state-danger">
                           {error}
                         </div>
                       ) : null}
 
                       <button
-                        className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white shadow-[0_10px_20px_rgba(40,92,67,0.2)] transition hover:bg-[#234F3A] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white shadow-action transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={
                           saving || amountNumber <= 0 || exceedsOutstanding || hasNoOutstanding
                         }
@@ -659,7 +659,7 @@ export function RegisterLoanPaymentPage() {
                   </form>
 
                   <aside className="space-y-4">
-                    <section className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
+                    <section className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
                       <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3.5">
                         <div className="flex items-center gap-2">
                           <WalletCards className="h-4 w-4 text-primary-accent" />
@@ -667,7 +667,7 @@ export function RegisterLoanPaymentPage() {
                             Estado del préstamo
                           </h2>
                         </div>
-                        <span className="text-[11px] font-bold text-primary-accent">
+                        <span className="text-xs font-bold text-primary-accent">
                           {loanSummary?.paidInstallments ?? 0}/{loan.term} cuotas pagadas
                         </span>
                       </div>
@@ -717,7 +717,7 @@ export function RegisterLoanPaymentPage() {
                       </dl>
                     </section>
 
-                    <section className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
+                    <section className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
                       <div className="flex items-center gap-2 border-b border-border-soft px-4 py-3.5">
                         <FileText className="h-4 w-4 text-primary-accent" />
                         <h2 className="text-sm font-bold text-text-primary">Aplicación del pago</h2>
@@ -741,7 +741,7 @@ export function RegisterLoanPaymentPage() {
                               </div>
                               <div className="mt-2 grid grid-cols-3 gap-2 text-right tabular-nums">
                                 <div className="text-left">
-                                  <p className="text-[10px] font-bold uppercase text-text-muted">
+                                  <p className="text-xs font-bold uppercase text-text-muted">
                                     Aplicado
                                   </p>
                                   <p className="mt-1 text-xs font-bold text-text-primary">
@@ -749,15 +749,15 @@ export function RegisterLoanPaymentPage() {
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-[10px] font-bold uppercase text-text-muted">
+                                  <p className="text-xs font-bold uppercase text-text-muted">
                                     Interés
                                   </p>
-                                  <p className="mt-1 text-xs font-bold text-[#B64A24]">
+                                  <p className="mt-1 text-xs font-bold text-state-danger">
                                     {fmt(row.interest)}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-[10px] font-bold uppercase text-text-muted">
+                                  <p className="text-xs font-bold uppercase text-text-muted">
                                     Capital
                                   </p>
                                   <p className="mt-1 text-xs font-bold text-primary-accent">
@@ -768,7 +768,7 @@ export function RegisterLoanPaymentPage() {
                             </div>
                           ))}
                           <div className="grid grid-cols-2 gap-3 bg-surface-subtle px-4 py-3 text-xs font-bold tabular-nums">
-                            <span className="text-[#B64A24]">Interés: {fmt(previewInterest)}</span>
+                            <span className="text-state-danger">Interés: {fmt(previewInterest)}</span>
                             <span className="text-right text-primary-accent">
                               Capital: {fmt(previewPrincipal)}
                             </span>
@@ -782,13 +782,13 @@ export function RegisterLoanPaymentPage() {
                     </section>
 
                     {createdPayment ? (
-                      <section className="rounded-2xl border border-[#BFDCC9] bg-[#F1F8F4] p-4 shadow-sm">
+                      <section className="rounded-panel border border-primary-border bg-primary-soft p-4 shadow-card">
                         <div className="flex items-start gap-3">
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-accent text-white">
                             <CheckCircle2 className="h-4 w-4" />
                           </span>
                           <div>
-                            <p className="text-sm font-bold text-[#21563D]">Cobro registrado</p>
+                            <p className="text-sm font-bold text-primary-accent">Cobro registrado</p>
                             <p className="mt-1 text-xl font-bold tabular-nums text-text-primary">
                               {fmt(createdPayment.amount)}
                             </p>
@@ -801,7 +801,7 @@ export function RegisterLoanPaymentPage() {
                     ) : null}
 
                     <section
-                      className="scroll-mt-5 overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm"
+                      className="scroll-mt-5 overflow-hidden rounded-panel border border-border-soft bg-card shadow-card"
                       id="recibos-pagos-cobro"
                     >
                       <div className="flex items-center gap-2 border-b border-border-soft px-4 py-3.5">
@@ -818,7 +818,7 @@ export function RegisterLoanPaymentPage() {
                               <p className="text-xs font-bold text-text-primary">
                                 {fmtDate(payment.paymentDate)}
                               </p>
-                              <p className="mt-0.5 text-[11px] font-medium text-text-muted">
+                              <p className="mt-0.5 text-xs font-medium text-text-muted">
                                 {payment.paymentMethod ?? 'Sin método'}
                               </p>
                             </div>

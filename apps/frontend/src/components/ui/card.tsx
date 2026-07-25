@@ -1,10 +1,6 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  index?: number;
-}
-
 interface CardHeaderVisualProps {
   icon?: ReactNode;
   title?: ReactNode;
@@ -15,9 +11,7 @@ interface CardHeaderVisualProps {
 
 type CardHeaderProps = Omit<HTMLAttributes<HTMLDivElement>, 'title'> & CardHeaderVisualProps;
 
-export function Card({ className, children, index: _index, ...props }: CardProps) {
-  void _index;
-
+export function Card({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={cn('rounded-panel border border-border-soft bg-card shadow-card', className)} {...props}>
       {children}

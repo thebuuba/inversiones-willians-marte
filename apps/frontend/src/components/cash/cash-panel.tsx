@@ -92,7 +92,7 @@ function ShellCard({
   return (
     <motion.section
       animate="visible"
-      className={`rounded-2xl border border-border-soft bg-card shadow-sm ${className}`}
+      className={`rounded-panel border border-border-soft bg-card shadow-card ${className}`}
       custom={index}
       initial="hidden"
       variants={fadeUp}
@@ -115,13 +115,13 @@ function Header({ onNewMovement }: { onNewMovement: () => void }) {
           <span className="h-2 w-2 rounded-full bg-primary-accent" />
           Libro diario de caja
         </span>
-        <h1 className="mt-3 text-[28px] font-bold leading-tight text-text-primary">Caja</h1>
+        <h1 className="mt-3 text-3xl font-bold leading-tight text-text-primary">Caja</h1>
         <p className="mt-1.5 text-sm text-text-secondary">
           Entradas y salidas generadas por las operaciones del negocio.
         </p>
       </div>
       <button
-        className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:-translate-y-0.5"
+        className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-white shadow-action transition hover:-translate-y-0.5"
         onClick={onNewMovement}
         type="button"
       >
@@ -160,12 +160,12 @@ function SummaryCard({
       index={index}
     >
       <div className="flex items-center gap-4">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${iconTone}`}>
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-control ${iconTone}`}>
           {icon}
         </div>
         <p className="text-xs font-bold uppercase tracking-[0.09em] text-text-secondary">{title}</p>
       </div>
-      <p className={`mt-6 text-[28px] font-bold leading-none ${value.includes('-') ? 'text-state-danger' : 'text-text-primary'}`}>
+      <p className={`mt-6 text-3xl font-bold leading-none ${value.includes('-') ? 'text-state-danger' : 'text-text-primary'}`}>
         {value}
       </p>
       <div className="mt-4 text-sm font-medium text-text-secondary">{detail}</div>
@@ -204,12 +204,12 @@ function FilterBar({
   return (
     <ShellCard className="mb-5 p-3.5" index={4}>
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="flex shrink-0 items-center gap-1 rounded-[12px] bg-surface-subtle p-1">
+        <div className="flex shrink-0 items-center gap-1 rounded-control bg-surface-subtle p-1">
           {tabs.map((tab) => (
             <button
-              className={`h-9 rounded-[10px] px-4 text-sm font-semibold transition ${
+              className={`h-9 rounded-control px-4 text-sm font-semibold transition ${
                 filter === tab.value
-                  ? 'bg-primary-soft text-text-primary shadow-sm'
+                  ? 'bg-primary-soft text-text-primary shadow-card'
                   : 'text-text-secondary hover:bg-card'
               }`}
               key={tab.value}
@@ -258,9 +258,9 @@ function FilterBar({
 function Tag({ label, tone, icon }: { label: string; tone: TagTone; icon?: string | null }) {
   const styles = {
     green: 'bg-primary-soft text-text-primary',
-    orange: 'bg-[#FFE3D2] text-state-danger',
-    blue: 'bg-[#D8E9FF] text-state-info',
-    purple: 'bg-[#E8DDF6] text-[#6F55A5]',
+    orange: 'bg-state-danger-bg text-state-danger',
+    blue: 'bg-state-info-bg text-state-info',
+    purple: 'bg-state-neutral-bg text-text-secondary',
     yellow: 'bg-state-warning-bg text-state-warning',
     gray: 'bg-surface-muted-ui text-text-secondary border border-primary-border',
   }[tone];
@@ -269,7 +269,7 @@ function Tag({ label, tone, icon }: { label: string; tone: TagTone; icon?: strin
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${styles}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${styles}`}
     >
       {Icon && <Icon className="h-3 w-3" />}
       {label}
@@ -291,7 +291,7 @@ function TransactionItem({ movement }: { movement: CashLedgerMovement }) {
     <div className="grid min-h-[76px] grid-cols-[1fr_auto] items-center gap-4 border-b border-border-soft px-5 py-3.5 last:border-b-0 hover:bg-surface-subtle">
       <div className="flex min-w-0 items-center gap-4">
         <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${isIncome ? 'bg-primary-soft text-text-primary' : 'bg-[#FFE3D2] text-state-danger'}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-control ${isIncome ? 'bg-primary-soft text-text-primary' : 'bg-state-danger-bg text-state-danger'}`}
         >
           <DirectionIcon className="h-4 w-4" />
         </div>
@@ -319,11 +319,11 @@ function TransactionItem({ movement }: { movement: CashLedgerMovement }) {
       </div>
       <div className="text-right">
         <p
-          className={`text-base font-bold tabular-nums ${!movement.affectsBalance ? 'text-[#7A6A45]' : isIncome ? 'text-text-primary' : 'text-[#A65B3D]'}`}
+          className={`text-base font-bold tabular-nums ${!movement.affectsBalance ? 'text-text-muted' : isIncome ? 'text-text-primary' : 'text-text-secondary'}`}
         >
           {formatSignedDop(movement.amount, { negative: !isIncome })}
         </p>
-        <p className="mt-1 text-xs text-[#A9B8AE]">{formatOfficeTime(movement.movementDate)}</p>
+        <p className="mt-1 text-xs text-text-muted">{formatOfficeTime(movement.movementDate)}</p>
       </div>
     </div>
   );
@@ -457,17 +457,17 @@ export function CashPanel() {
             <p className="text-sm font-bold capitalize text-text-primary">
               {formatOfficeDate(date)}
               <span className="px-2 text-text-secondary">·</span>
-              <span className="font-medium text-[#A9B8AE]">
+              <span className="font-medium text-text-muted">
                 {visibleMovements.length} movimientos
               </span>
             </p>
           </div>
           <div className="hidden items-center gap-5 text-sm font-bold sm:flex">
             <span className="text-text-primary">+{formatDop(totals.income)}</span>
-            <span className="text-[#A65B3D]">−{formatDop(totals.expense)}</span>
+            <span className="text-text-secondary">−{formatDop(totals.expense)}</span>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
+        <div className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
           {loading && (
             <p className="px-5 py-16 text-center text-sm font-medium text-text-secondary">
               Cargando movimientos...
