@@ -22,22 +22,62 @@ import {
   XAxis,
 } from 'recharts';
 import {
+  AlertTriangle,
   BriefcaseBusiness,
+  CalendarClock,
   ChevronRight,
   DollarSign,
   Plus,
-  Users,
   Wallet,
 } from 'lucide-react';
 import {
   getAudit,
   getDashboardOverview,
+  type CollectionPriority,
+  type UpcomingPayment,
 } from '@/lib/api/dashboard';
 import { formatDop } from '@/lib/currency';
 import { toDashboardAuditRow, type AuditTone } from './dashboard-audit';
 
 function formatCurrency(n: number): string {
   return formatDop(n, { decimals: 2 });
+}
+
+function getLocalDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function getDueTodayTotal(payments: UpcomingPayment[], now = new Date()): number {
+  const todayKey = getLocalDateKey(now);
+  return payments.reduce((sum, payment) => {
+    const due = new Date(payment.dueDate);
+    return getLocalDateKey(due) === todayKey ? sum + payment.amount : sum;
+  }, 0);
+}
+
+export function getAgingBuckets(priorities: CollectionPriority[]) {
+  const buckets = [
+    { label: '1-30', min: 1, max: 30, amount: 0, count: 0 },
+    { label: '31-60', min: 31, max: 60, amount: 0, count: 0 },
+    { label: '61-90', min: 61, max: 90, amount: 0, count: 0 },
+    { label: '90+', min: 91, max: Infinity, amount: 0, count: 0 },
+  ];
+
+  for (const item of priorities) {
+    const bucket = buckets.find((entry) => item.daysOverdue >= entry.min && item.daysOverdue <= entry.max);
+    if (!bucket) continue;
+    bucket.amount += item.overdueAmount;
+    bucket.count += 1;
+  }
+
+  return buckets.map((bucket) => ({
+    label: bucket.label,
+    amount: bucket.amount,
+    count: bucket.count,
+  }));
 }
 
 const today = new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -112,19 +152,21 @@ export function DashboardHome() {
   const dash = overview?.dashboard;
   const portfolio = overview?.portfolio;
   const monthlyCollections = overview?.monthlyCollections;
-  const weeklyMovement = overview?.weeklyMovement;
   const upcomingPayments = overview?.upcomingPayments;
   const collectionPriorities = overview?.collectionPriorities ?? [];
 
   const activeLoans = dash?.activeLoans ?? 0;
-  const totalClients = dash?.totalClients ?? 0;
   const collectionsToday = dash?.collectionsToday ?? 0;
   const portfolioBalance = dash?.portfolioBalance ?? 0;
+  const dueToday = getDueTodayTotal(upcomingPayments ?? []);
+  const overdueTotal = collectionPriorities.reduce((sum, item) => sum + item.overdueAmount, 0);
+  const agingBuckets = getAgingBuckets(collectionPriorities);
 
   const metricCards = [
     { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, tone: 'bg-primary-soft text-primary' },
-    { label: 'Clientes registrados', value: String(totalClients), icon: Users, tone: 'bg-state-danger-bg text-state-danger' },
     { label: 'Cobrado hoy', value: formatCurrency(collectionsToday), icon: DollarSign, tone: 'bg-state-warning-bg text-state-warning' },
+    { label: 'Por cobrar hoy', value: formatCurrency(dueToday), icon: CalendarClock, tone: 'bg-primary-soft text-primary' },
+    { label: 'Total vencido', value: formatCurrency(overdueTotal), icon: AlertTriangle, tone: 'bg-state-danger-bg text-state-danger' },
     { label: 'Saldo cartera', value: formatCurrency(portfolioBalance), icon: Wallet, tone: 'bg-state-info-bg text-state-info' },
   ];
 
@@ -168,7 +210,7 @@ export function DashboardHome() {
         </div>
       </div>
 
-      <div className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
         {metricCards.map((k) => {
           const Icon = k.icon;
           return (
@@ -249,20 +291,23 @@ export function DashboardHome() {
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
         <Card className="p-6" index={6}>
-          <SectionHeader title="Movimiento semanal" subtitle="Préstamos abiertos vs cerrados" />
+          <SectionHeader title="Mora por antigüedad" subtitle="Monto vencido por días de atraso" />
           <div className="h-[230px] min-w-0">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 720, height: 230 }}>
-              <BarChart data={weeklyMovement ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <BarChart data={agingBuckets} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid stroke="var(--border-strong)" strokeDasharray="4 6" vertical={false} />
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} dy={10} />
+                <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} dy={10} />
                 <Tooltip
                   cursor={{ fill: 'var(--surface-muted-ui)' }}
                   contentStyle={{ background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 16, color: 'var(--text-primary)' }}
                   itemStyle={{ color: 'var(--text-primary)' }}
                   labelStyle={{ color: 'var(--text-secondary)' }}
+                  formatter={(value, name, props) => [
+                    name === 'amount' ? formatCurrency(Number(value)) : value,
+                    name === 'amount' ? `${props.payload.count} préstamos` : name,
+                  ]}
                 />
-                <Bar dataKey="nuevos" fill="#7CC99B" radius={[7, 7, 0, 0]} barSize={34} animationDuration={1100} />
-                <Bar dataKey="cerrados" fill="#F7C49E" radius={[7, 7, 0, 0]} barSize={34} animationDuration={1200} />
+                <Bar dataKey="amount" fill="#F7A184" radius={[7, 7, 0, 0]} barSize={44} animationDuration={1100} />
               </BarChart>
             </ResponsiveContainer>
           </div>
