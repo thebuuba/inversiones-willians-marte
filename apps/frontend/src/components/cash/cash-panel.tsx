@@ -92,7 +92,7 @@ function ShellCard({
   return (
     <motion.section
       animate="visible"
-      className={`rounded-2xl border border-border-soft bg-white shadow-sm ${className}`}
+      className={`rounded-2xl border border-border-soft bg-card shadow-sm ${className}`}
       custom={index}
       initial="hidden"
       variants={fadeUp}
@@ -148,26 +148,26 @@ function SummaryCard({
   index: number;
 }) {
   const isBalance = variant === 'balance';
-  const tone = variant === 'expense' ? '#9F3F25' : '#2F7654';
+  const iconTone = isBalance
+    ? 'bg-card text-primary'
+    : variant === 'expense'
+      ? 'bg-state-danger-bg text-state-danger'
+      : 'bg-state-success-bg text-state-success';
 
   return (
     <ShellCard
-      className={isBalance ? 'bg-gradient-to-br from-[#E7F4EC] to-[#D2E8D9] p-5' : 'p-5'}
+      className={isBalance ? 'border-primary-border bg-primary-soft p-5' : 'p-5'}
       index={index}
     >
       <div className="flex items-center gap-4">
-        <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]"
-          style={{
-            backgroundColor: isBalance ? '#FFFFFF' : variant === 'expense' ? '#FFE3D2' : '#B8DCC5',
-            color: tone,
-          }}
-        >
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${iconTone}`}>
           {icon}
         </div>
         <p className="text-xs font-bold uppercase tracking-[0.09em] text-text-secondary">{title}</p>
       </div>
-      <p className="mt-6 text-[28px] font-bold leading-none text-text-primary">{value}</p>
+      <p className={`mt-6 text-[28px] font-bold leading-none ${value.includes('-') ? 'text-state-danger' : 'text-text-primary'}`}>
+        {value}
+      </p>
       <div className="mt-4 text-sm font-medium text-text-secondary">{detail}</div>
     </ShellCard>
   );
@@ -210,7 +210,7 @@ function FilterBar({
               className={`h-9 rounded-[10px] px-4 text-sm font-semibold transition ${
                 filter === tab.value
                   ? 'bg-primary-soft text-text-primary shadow-sm'
-                  : 'text-text-secondary hover:bg-white'
+                  : 'text-text-secondary hover:bg-card'
               }`}
               key={tab.value}
               onClick={() => onFilterChange(tab.value)}
@@ -220,7 +220,7 @@ function FilterBar({
             </button>
           ))}
         </div>
-        <label className="flex h-10 items-center gap-2 rounded-full border border-primary-border bg-white px-4 text-text-secondary">
+        <label className="flex h-10 items-center gap-2 rounded-full border border-primary-border bg-card px-4 text-text-secondary">
           <Calendar className="h-4 w-4" />
           <input
             className="bg-transparent text-sm font-semibold text-text-primary outline-none"
@@ -239,7 +239,7 @@ function FilterBar({
           />
         </label>
         <select
-          className="h-10 rounded-full border border-primary-border bg-white px-4 text-sm font-semibold text-text-primary outline-none"
+          className="h-10 rounded-full border border-primary-border bg-card px-4 text-sm font-semibold text-text-primary outline-none"
           onChange={(event) => onCategoryChange(event.target.value)}
           value={category}
         >
@@ -467,7 +467,7 @@ export function CashPanel() {
             <span className="text-[#A65B3D]">−{formatDop(totals.expense)}</span>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
           {loading && (
             <p className="px-5 py-16 text-center text-sm font-medium text-text-secondary">
               Cargando movimientos...

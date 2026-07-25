@@ -338,7 +338,7 @@ function AddInvestorForm() {
           <div className="flex flex-wrap gap-2 md:justify-end">
             {step === 1 ? (
               <>
-                <button onClick={() => router.push('/inversionistas')} className="h-12 rounded-full border border-primary-border bg-white px-5 text-base font-bold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-2">
+                <button onClick={() => router.push('/inversionistas')} className="h-12 rounded-full border border-primary-border bg-card px-5 text-base font-bold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-2">
                   <X className="h-4 w-4" />Cancelar
                 </button>
                 <button onClick={() => setStep(2)} className="h-12 rounded-full bg-primary-accent px-7 text-base font-bold text-white shadow-sm hover:bg-primary inline-flex items-center gap-2">
@@ -347,10 +347,10 @@ function AddInvestorForm() {
               </>
             ) : (
               <>
-                <button onClick={() => router.push('/inversionistas')} className="h-10 rounded-full border border-primary-border bg-white px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5">
+                <button onClick={() => router.push('/inversionistas')} className="h-10 rounded-full border border-primary-border bg-card px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5">
                   <X className="h-4 w-4" />Cancelar
                 </button>
-                <button onClick={() => setStep(1)} className="h-10 rounded-full border border-primary-border bg-white px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5">
+                <button onClick={() => setStep(1)} className="h-10 rounded-full border border-primary-border bg-card px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5">
                   <ArrowLeft className="h-4 w-4" />Atrás
                 </button>
                 {!isEditing && (

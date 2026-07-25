@@ -9,10 +9,17 @@ public final class DashboardViewModel: ObservableObject {
 
     private let accessToken: String
     private let service: DashboardService
+    private let upcomingPaymentsService: UpcomingPaymentsService?
+    @Published public private(set) var upcomingPayments: [UpcomingPayment] = []
 
-    public init(accessToken: String, service: DashboardService) {
+    public init(
+        accessToken: String,
+        service: DashboardService,
+        upcomingPaymentsService: UpcomingPaymentsService? = nil
+    ) {
         self.accessToken = accessToken
         self.service = service
+        self.upcomingPaymentsService = upcomingPaymentsService
     }
 
     public func load() async {
@@ -22,6 +29,9 @@ public final class DashboardViewModel: ObservableObject {
 
         do {
             dashboard = try await service.get(accessToken: accessToken)
+            if let upcomingPaymentsService {
+                upcomingPayments = (try? await upcomingPaymentsService.list(accessToken: accessToken)) ?? []
+            }
         } catch {
             errorMessage = "No se pudo cargar el inicio"
         }

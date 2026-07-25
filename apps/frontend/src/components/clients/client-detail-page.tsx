@@ -218,7 +218,7 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
           <DropdownMenu.Content
             align="end"
             sideOffset={4}
-            className="z-50 min-w-44 overflow-hidden rounded-2xl border border-border-soft bg-white p-1.5 shadow-lg"
+            className="z-50 min-w-44 overflow-hidden rounded-2xl border border-border-soft bg-card p-1.5 shadow-lg"
           >
             <DropdownMenu.Item asChild>
               <Link
@@ -269,7 +269,7 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
 
 function ClientLoansTab({ loans, clientName, onDeleteLoan }: { loans: LoanSummary[]; clientName: string; onDeleteLoan: (loanId: string) => void }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
       <div className="flex items-center justify-between border-b border-border-soft px-5 py-4">
         <div>
           <h3 className="text-sm font-bold text-text-primary">Préstamos del cliente</h3>
@@ -289,7 +289,7 @@ function ClientLoansTab({ loans, clientName, onDeleteLoan }: { loans: LoanSummar
       ) : (
         <div className="overflow-x-auto">
           <div
-            className={`grid min-w-[1220px] ${loanTableColumns} bg-[#fafafa] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted`}
+            className={`grid min-w-[1220px] ${loanTableColumns} bg-surface-subtle px-5 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted`}
           >
             <span>#</span>
             <span>Cuota</span>
@@ -410,7 +410,7 @@ function DocumentCard({
 
   return (
     <div
-      className="flex cursor-pointer items-center justify-between rounded-2xl border border-border-soft bg-white px-5 py-4 shadow-sm transition hover:bg-primary-soft/30"
+      className="flex cursor-pointer items-center justify-between rounded-2xl border border-border-soft bg-card px-5 py-4 shadow-sm transition hover:bg-primary-soft/30"
       onClick={() => {
         if (doc.fileUrl) void openDocument();
       }}
@@ -428,7 +428,7 @@ function DocumentCard({
               <input
                 aria-label="Nuevo nombre del documento"
                 autoFocus
-                className="h-9 min-w-0 flex-1 rounded-xl border border-primary-accent bg-white px-3 text-sm font-semibold text-text-primary outline-none ring-2 ring-[#eaf5ed]"
+                className="h-9 min-w-0 flex-1 rounded-xl border border-primary-accent bg-card px-3 text-sm font-semibold text-text-primary outline-none ring-2 ring-[#eaf5ed]"
                 disabled={savingName}
                 maxLength={160}
                 onChange={(event) => setDraftName(event.target.value)}
@@ -669,7 +669,7 @@ function UploadModal({
       onClick={closeModal}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg"
+        className="w-full max-w-md rounded-2xl bg-card p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="mb-1 text-lg font-bold text-text-primary">Subir documento</h3>
@@ -701,7 +701,7 @@ function UploadModal({
           </div>
 
           {qrDataUrl ? (
-            <div className="mt-4 flex flex-col items-center rounded-xl bg-white p-4 text-center">
+            <div className="mt-4 flex flex-col items-center rounded-xl bg-card p-4 text-center">
               <Image
                 alt="QR para capturar documento con el teléfono"
                 className="h-44 w-44"
@@ -751,7 +751,7 @@ function UploadModal({
             Nombre <span className="text-neutral-300">(opcional)</span>
           </label>
           <input
-            className="h-11 w-full rounded-xl border border-primary-border bg-white px-4 text-sm text-text-primary outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-[#eaf5ed]"
+            className="h-11 w-full rounded-xl border border-primary-border bg-card px-4 text-sm text-text-primary outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-[#eaf5ed]"
             onChange={(e) => setName(e.target.value)}
             placeholder="Nombre del documento"
             value={name}
@@ -760,7 +760,7 @@ function UploadModal({
 
         <div className="flex justify-end gap-3">
           <button
-            className="h-10 rounded-full border border-primary-border bg-white px-5 text-sm font-semibold text-text-secondary transition hover:bg-surface-subtle"
+            className="h-10 rounded-full border border-primary-border bg-card px-5 text-sm font-semibold text-text-secondary transition hover:bg-surface-subtle"
             disabled={uploading}
             onClick={closeModal}
             type="button"
@@ -898,7 +898,7 @@ function TimelineItem({ event }: { event: HistoryEvent }) {
         </span>
       </div>
 
-      <div className="rounded-2xl border border-border-soft bg-white px-5 py-3.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="rounded-2xl border border-border-soft bg-card px-5 py-3.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="mb-1.5 flex flex-wrap items-center gap-2.5">
@@ -954,7 +954,7 @@ function NoteActions({ onCancel, onSave }: { onCancel: () => void; onSave: () =>
   return (
     <div className="flex flex-col justify-end gap-2 sm:flex-row">
       <button
-        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-primary-border bg-white px-4 text-sm font-semibold text-text-secondary transition hover:bg-surface-subtle"
+        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-primary-border bg-card px-4 text-sm font-semibold text-text-secondary transition hover:bg-surface-subtle"
         onClick={onCancel}
         type="button"
       >
@@ -985,7 +985,7 @@ function NoteTextarea({
   return (
     <textarea
       autoFocus
-      className="h-[78px] w-full resize-none rounded-xl border border-primary-border bg-white px-4 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-[#eaf5ed]"
+      className="h-[78px] w-full resize-none rounded-xl border border-primary-border bg-card px-4 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-[#eaf5ed]"
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
       value={value}
@@ -1007,7 +1007,7 @@ function EditableNoteCard({
   onSave: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-primary-accent bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-primary-accent bg-card p-4 shadow-sm">
       <div className="grid grid-cols-[36px_1fr] gap-4">
         <NoteIcon />
         <div>
@@ -1034,7 +1034,7 @@ function NoteCard({
   onDelete: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl border border-border-soft bg-white px-5 py-4 shadow-sm transition hover:bg-primary-soft/30">
+    <div className="flex items-center justify-between gap-4 rounded-2xl border border-border-soft bg-card px-5 py-4 shadow-sm transition hover:bg-primary-soft/30">
       <div className="flex min-w-0 items-center gap-4">
         <NoteIcon />
         <div className="min-w-0">
@@ -1103,7 +1103,7 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
         {summary.map((s) => (
           <div
             key={s.label}
-            className="rounded-2xl border border-border-soft bg-white p-5 shadow-sm"
+            className="rounded-2xl border border-border-soft bg-card p-5 shadow-sm"
           >
             <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
               {s.label}
@@ -1114,12 +1114,12 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
       </div>
 
       {loans.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
           <div className="border-b border-border-soft px-5 py-4">
             <h3 className="text-sm font-bold text-text-primary">Detalle de préstamos</h3>
           </div>
           <div className="overflow-x-auto">
-            <div className="grid min-w-[800px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-[#fafafa] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">
+            <div className="grid min-w-[800px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-surface-subtle px-5 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">
               <span># Préstamo</span>
               <span>Capital</span>
               <span>Balance</span>
@@ -1302,7 +1302,7 @@ function ClientInfoGrid({ clientData }: { clientData: ClientDetail }) {
   const cards = buildInfoCards(clientData);
 
   return (
-    <div className="rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border border-border-soft bg-card p-6 shadow-sm">
       <h3 className="mb-5 text-base font-semibold text-text-primary">Información personal</h3>
       <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => (
@@ -1487,7 +1487,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
           Volver a clientes
         </Link>
 
-        <div className="mb-6 overflow-hidden rounded-3xl bg-white shadow-sm border border-border-soft">
+        <div className="mb-6 overflow-hidden rounded-3xl bg-card shadow-sm border border-border-soft">
           <div className="px-8 pt-6 pb-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div className="flex items-end gap-5">
@@ -1540,7 +1540,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                     <DropdownMenu.Content
                       align="end"
                       sideOffset={6}
-                      className="z-50 min-w-52 overflow-hidden rounded-2xl border border-border-soft bg-white p-1.5 shadow-lg"
+                      className="z-50 min-w-52 overflow-hidden rounded-2xl border border-border-soft bg-card p-1.5 shadow-lg"
                     >
                       <DropdownMenu.Item asChild>
                         <Link
@@ -1599,7 +1599,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
             return (
               <div
                 key={k.label}
-                className="rounded-2xl bg-white p-5 shadow-sm border border-border-soft"
+                className="rounded-2xl bg-card p-5 shadow-sm border border-border-soft"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -1618,7 +1618,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
           })}
         </div>
 
-        <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-white p-1.5 shadow-sm border border-border-soft">
+        <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-card p-1.5 shadow-sm border border-border-soft">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = activeTab === t.label;
@@ -1638,7 +1638,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                   <span
                     aria-label={`${notesCount} notas`}
                     className={`flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold ${
-                      active ? 'bg-white text-state-danger' : 'bg-[#FFE3D2] text-state-danger'
+                      active ? 'bg-card text-state-danger' : 'bg-[#FFE3D2] text-state-danger'
                     }`}
                   >
                     {notesCount}

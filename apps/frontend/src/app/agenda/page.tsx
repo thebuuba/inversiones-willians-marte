@@ -144,7 +144,7 @@ function MiniCalendar({
   }
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm border border-border-soft">
+    <div className="rounded-2xl bg-card p-5 shadow-sm border border-border-soft">
       <div className="mb-4 flex items-center justify-between">
         <span className="text-sm font-semibold text-text-primary">
           {MONTHS[month]} {year}
@@ -239,8 +239,8 @@ function NewTaskModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-md rounded-3xl bg-white shadow-xl border border-border-soft overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border-soft bg-[#fafafa] px-6 py-4">
+      <div className="w-full max-w-md rounded-3xl bg-card shadow-xl border border-border-soft overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border-soft bg-surface-subtle px-6 py-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-soft">
               <ListTodo className="h-4 w-4 text-primary-accent" />
@@ -266,7 +266,7 @@ function NewTaskModal({
                 setError('');
               }}
               placeholder="Ej: Llamar a cliente por cuota atrasada"
-              className={`h-11 w-full rounded-xl border bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent ${error ? 'border-red-400' : 'border-primary-border'}`}
+              className={`h-11 w-full rounded-xl border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent ${error ? 'border-red-400' : 'border-primary-border'}`}
               autoFocus
             />
             {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
@@ -280,7 +280,7 @@ function NewTaskModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Detalles adicionales..."
               rows={2}
-              className="w-full rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent resize-none"
+              className="w-full rounded-xl border border-primary-border bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent resize-none"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -292,7 +292,7 @@ function NewTaskModal({
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="h-11 w-full rounded-xl border border-primary-border bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
+                className="h-11 w-full rounded-xl border border-primary-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
               />
             </div>
             <div>
@@ -302,7 +302,7 @@ function NewTaskModal({
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                className="h-11 w-full rounded-xl border border-primary-border bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
+                className="h-11 w-full rounded-xl border border-primary-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
               >
                 <option value="LOW">Baja</option>
                 <option value="MEDIUM">Media</option>
@@ -318,7 +318,7 @@ function NewTaskModal({
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="h-11 w-full rounded-xl border border-primary-border bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
+              className="h-11 w-full rounded-xl border border-primary-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
             >
               {Object.entries(categoryConfig).map(([key, c]) => (
                 <option key={key} value={key}>
@@ -328,10 +328,10 @@ function NewTaskModal({
             </select>
           </div>
         </div>
-        <div className="flex items-center justify-end gap-2 border-t border-border-soft bg-[#fafafa] px-6 py-4">
+        <div className="flex items-center justify-end gap-2 border-t border-border-soft bg-surface-subtle px-6 py-4">
           <button
             onClick={onClose}
-            className="h-10 rounded-xl border border-primary-border bg-white px-5 text-sm font-semibold text-text-secondary hover:bg-surface-subtle"
+            className="h-10 rounded-xl border border-primary-border bg-card px-5 text-sm font-semibold text-text-secondary hover:bg-surface-subtle"
           >
             Cancelar
           </button>
@@ -462,7 +462,7 @@ export default function AgendaPage() {
             </MotionCard>
             <MotionCard
               index={1}
-              className="rounded-2xl bg-white p-5 shadow-sm border border-border-soft space-y-3"
+              className="rounded-2xl bg-card p-5 shadow-sm border border-border-soft space-y-3"
             >
               <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
                 Resumen de hoy
@@ -501,7 +501,7 @@ export default function AgendaPage() {
             </MotionCard>
             <MotionCard
               index={2}
-              className="rounded-2xl bg-white p-5 shadow-sm border border-border-soft"
+              className="rounded-2xl bg-card p-5 shadow-sm border border-border-soft"
             >
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
                 Próximos días
@@ -532,7 +532,7 @@ export default function AgendaPage() {
           <main className="space-y-5">
             <MotionCard
               index={3}
-              className="rounded-2xl bg-white p-5 shadow-sm border border-border-soft"
+              className="rounded-2xl bg-card p-5 shadow-sm border border-border-soft"
             >
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -570,7 +570,7 @@ export default function AgendaPage() {
 
             <MotionCard
               index={4}
-              className="overflow-hidden rounded-2xl bg-white shadow-sm border border-border-soft divide-y divide-border-soft"
+              className="overflow-hidden rounded-2xl bg-card shadow-sm border border-border-soft divide-y divide-border-soft"
             >
               {loading ? (
                 <div className="flex items-center justify-center py-20">
@@ -670,9 +670,9 @@ export default function AgendaPage() {
 
             <MotionCard
               index={5}
-              className="rounded-2xl bg-white shadow-sm border border-border-soft overflow-hidden"
+              className="rounded-2xl bg-card shadow-sm border border-border-soft overflow-hidden"
             >
-              <div className="flex items-center gap-3 border-b border-border-soft bg-[#fafafa] px-5 py-4">
+              <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#fef3c7]">
                   <Banknote className="h-4 w-4 text-state-warning" />
                 </div>
@@ -726,9 +726,9 @@ export default function AgendaPage() {
           <aside className="space-y-5">
             <MotionCard
               index={6}
-              className="rounded-2xl bg-white shadow-sm border border-border-soft overflow-hidden"
+              className="rounded-2xl bg-card shadow-sm border border-border-soft overflow-hidden"
             >
-              <div className="flex items-center gap-3 border-b border-border-soft bg-[#fafafa] px-5 py-4">
+              <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#dbeafe]">
                   <CalendarDays className="h-4 w-4 text-[#1d4ed8]" />
                 </div>
@@ -786,9 +786,9 @@ export default function AgendaPage() {
             </MotionCard>
             <MotionCard
               index={7}
-              className="rounded-2xl bg-white shadow-sm border border-border-soft overflow-hidden"
+              className="rounded-2xl bg-card shadow-sm border border-border-soft overflow-hidden"
             >
-              <div className="flex items-center gap-3 border-b border-border-soft bg-[#fafafa] px-5 py-4">
+              <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-page">
                   <ListTodo className="h-4 w-4 text-text-muted" />
                 </div>

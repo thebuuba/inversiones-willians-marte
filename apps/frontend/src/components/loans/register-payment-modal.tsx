@@ -57,12 +57,12 @@ export function RegisterPaymentModal({
     });
   }
 
-  const inputClass = 'h-11 w-full rounded-xl border border-primary-border bg-white px-4 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent';
+  const inputClass = 'h-11 w-full rounded-xl border border-primary-border bg-card px-4 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-[2px]" onClick={onClose}>
       <form
-        className="w-full max-w-[560px] rounded-2xl border border-border-soft bg-white shadow-[0_28px_80px_rgba(0,0,0,0.26)]"
+        className="w-full max-w-[560px] rounded-2xl border border-border-soft bg-card shadow-[0_28px_80px_rgba(0,0,0,0.26)]"
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
@@ -71,7 +71,7 @@ export function RegisterPaymentModal({
             <h2 className="text-xl font-bold text-text-primary">Registrar cobro</h2>
             <p className="mt-1 text-sm font-medium text-text-muted">El pago se aplicará a las cuotas pendientes del préstamo.</p>
           </div>
-          <button aria-label="Cerrar modal" className="rounded-full p-1.5 text-[#3d443f] hover:bg-white" onClick={onClose} type="button">
+          <button aria-label="Cerrar modal" className="rounded-full p-1.5 text-text-primary hover:bg-card" onClick={onClose} type="button">
             <X className="h-5 w-5" />
           </button>
         </header>
@@ -100,13 +100,13 @@ export function RegisterPaymentModal({
           </label>
           <label className="block sm:col-span-2">
             <span className="mb-2 block text-sm font-bold text-text-secondary">Notas</span>
-            <textarea className="h-24 w-full resize-none rounded-xl border border-primary-border bg-white px-4 py-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent" onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" value={notes} />
+            <textarea className="h-24 w-full resize-none rounded-xl border border-primary-border bg-card px-4 py-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent" onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" value={notes} />
           </label>
           {error ? <p className="text-sm font-medium text-state-danger sm:col-span-2">{error}</p> : null}
         </div>
 
         <footer className="flex justify-end gap-3 border-t border-border-soft px-6 py-4">
-          <button className="h-11 rounded-full border border-primary-border bg-white px-6 text-sm font-bold text-text-primary" disabled={saving} onClick={onClose} type="button">
+          <button className="h-11 rounded-full border border-primary-border bg-card px-6 text-sm font-bold text-text-primary" disabled={saving} onClick={onClose} type="button">
             Cancelar
           </button>
           <button className="h-11 rounded-full bg-primary px-6 text-sm font-bold text-white disabled:opacity-60" disabled={saving} type="submit">

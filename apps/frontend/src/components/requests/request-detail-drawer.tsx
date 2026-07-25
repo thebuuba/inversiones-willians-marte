@@ -47,7 +47,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function InfoCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-[14px] bg-white p-3.5 transition hover:-translate-y-0.5">
+    <div className="flex items-center gap-3 rounded-[14px] bg-card p-3.5 transition hover:-translate-y-0.5">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-state-neutral-bg text-text-muted">
         <Icon className="h-4 w-4" />
       </div>
@@ -415,7 +415,7 @@ export function RequestDetailDrawer({
             onClick={(e) => e.stopPropagation()}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="sticky top-0 z-10 flex items-start justify-between border-b border-primary-border bg-white px-6 py-5">
+            <div className="sticky top-0 z-10 flex items-start justify-between border-b border-primary-border bg-card px-6 py-5">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-state-neutral-bg text-sm font-bold text-text-secondary">
                   {data.firstName[0]}{data.lastName[0]}
@@ -430,7 +430,7 @@ export function RequestDetailDrawer({
               </div>
               <button
                 aria-label="Cerrar detalle"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-primary-border bg-white text-text-muted transition hover:bg-state-neutral-bg hover:text-text-secondary"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-primary-border bg-card text-text-muted transition hover:bg-state-neutral-bg hover:text-text-secondary"
                 onClick={onClose}
                 type="button"
               >
@@ -441,7 +441,7 @@ export function RequestDetailDrawer({
             <div className="flex-1 px-6 py-5 pb-32">
               <motion.div
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-[20px] border border-primary-border bg-white p-5"
+                className="rounded-[20px] border border-primary-border bg-card p-5"
                 initial={{ opacity: 0, y: 10 }}
                 transition={{ delay: 0.08 }}
               >
@@ -476,7 +476,7 @@ export function RequestDetailDrawer({
                     <FileText className="h-4 w-4" />
                     DESCRIPCIÓN
                   </h3>
-                  <div className="rounded-[16px] bg-white p-4 text-sm leading-relaxed text-text-primary">
+                  <div className="rounded-[16px] bg-card p-4 text-sm leading-relaxed text-text-primary">
                     {data.description}
                   </div>
                 </section>
@@ -494,10 +494,10 @@ export function RequestDetailDrawer({
             </div>
 
             {data.status === 'PENDING' && (
-              <div className="fixed bottom-0 right-0 w-full max-w-[540px] border-t border-primary-border bg-white px-6 py-4">
+              <div className="fixed bottom-0 right-0 w-full max-w-[540px] border-t border-primary-border bg-card px-6 py-4">
                 <div className="mb-3 grid grid-cols-2 gap-3">
                   <button
-                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-primary-border bg-white text-sm font-bold text-text-primary transition hover:bg-surface-subtle"
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-primary-border bg-card text-sm font-bold text-text-primary transition hover:bg-surface-subtle"
                     onClick={handlePrint}
                     type="button"
                   >
@@ -505,7 +505,7 @@ export function RequestDetailDrawer({
                     Imprimir
                   </button>
                   <button
-                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-primary-border bg-white text-sm font-bold text-[#0F7A3A] transition hover:bg-surface-muted-ui"
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-primary-border bg-card text-sm font-bold text-[#0F7A3A] transition hover:bg-surface-muted-ui"
                     onClick={handleWhatsApp}
                     type="button"
                   >
@@ -515,7 +515,7 @@ export function RequestDetailDrawer({
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#F7D6BD] bg-white text-sm font-bold text-state-danger transition hover:bg-[#FFF7EF]"
+                    className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-[#F7D6BD] bg-card text-sm font-bold text-state-danger transition hover:bg-[#FFF7EF]"
                     onClick={onReject}
                     type="button"
                   >

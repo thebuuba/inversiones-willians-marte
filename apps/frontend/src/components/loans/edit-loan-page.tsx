@@ -87,7 +87,7 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
   if (!loan) {
     return (
       <main className="min-h-screen bg-page p-5">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-border-soft bg-white p-6 shadow-sm">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-border-soft bg-card p-6 shadow-sm">
           <p className="text-sm font-medium text-red-600">{error ?? 'Préstamo no encontrado.'}</p>
           <Link
             className="mt-4 inline-flex text-sm font-bold text-primary-accent"
@@ -111,7 +111,7 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
           Volver al préstamo
         </Link>
 
-        <div className="rounded-3xl bg-white shadow-sm border border-border-soft">
+        <div className="rounded-3xl bg-card shadow-sm border border-border-soft">
           <div className="border-b border-border-soft px-8 py-6">
             <h1 className="text-xl font-bold text-text-primary">Editar préstamo</h1>
             <p className="mt-1 text-sm text-text-subtle">
@@ -146,7 +146,7 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent focus:ring-1 focus:ring-primary-accent"
+                className="w-full appearance-none rounded-xl border border-primary-border bg-card px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent focus:ring-1 focus:ring-primary-accent"
               >
                 {statusOptions.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -166,7 +166,7 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
                 min="0"
                 value={interestRate}
                 onChange={(e) => setInterestRate(e.target.value)}
-                className="w-full rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent focus:ring-1 focus:ring-primary-accent"
+                className="w-full rounded-xl border border-primary-border bg-card px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent focus:ring-1 focus:ring-primary-accent"
               />
               <p className="mt-1 text-xs text-text-subtle">
                 La tasa actual es {Number(loan.interestRate)}%. Cambiarla no recalcula el calendario
@@ -196,7 +196,7 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
                       Modalidad
                     </span>
                     <select
-                      className="w-full rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent"
+                      className="w-full rounded-xl border border-primary-border bg-card px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent"
                       onChange={(event) =>
                         setLateFeeMode(event.target.value as 'PER_INSTALLMENT' | 'DAILY')
                       }
@@ -211,7 +211,7 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
                       Tipo de cálculo
                     </span>
                     <select
-                      className="w-full rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent"
+                      className="w-full rounded-xl border border-primary-border bg-card px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent"
                       onChange={(event) =>
                         setLateFeeCalculation(event.target.value as 'PERCENTAGE' | 'AMOUNT')
                       }
@@ -226,7 +226,7 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
                       {lateFeeCalculation === 'PERCENTAGE' ? 'Porcentaje de mora' : 'Monto de mora'}
                     </span>
                     <input
-                      className="w-full rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent"
+                      className="w-full rounded-xl border border-primary-border bg-card px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent"
                       min="0"
                       onChange={(event) => setLateFeeValue(event.target.value)}
                       step="0.01"
@@ -239,7 +239,7 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
                       Días de gracia
                     </span>
                     <input
-                      className="w-full rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent"
+                      className="w-full rounded-xl border border-primary-border bg-card px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent"
                       min="0"
                       onChange={(event) => setLateFeeGraceDays(event.target.value)}
                       step="1"
@@ -260,14 +260,14 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Notas del préstamo..."
-                className="w-full resize-none rounded-xl border border-primary-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent focus:ring-1 focus:ring-primary-accent"
+                className="w-full resize-none rounded-xl border border-primary-border bg-card px-4 py-2.5 text-sm text-text-primary outline-none focus:border-primary-accent focus:ring-1 focus:ring-primary-accent"
               />
             </div>
           </div>
 
           <div className="flex items-center justify-end gap-3 border-t border-border-soft px-8 py-5">
             <Link
-              className="inline-flex h-10 items-center rounded-full border border-primary-border bg-white px-5 text-sm font-semibold text-text-secondary hover:bg-surface-subtle"
+              className="inline-flex h-10 items-center rounded-full border border-primary-border bg-card px-5 text-sm font-semibold text-text-secondary hover:bg-surface-subtle"
               href={`/prestamos/${loanId}`}
             >
               Cancelar

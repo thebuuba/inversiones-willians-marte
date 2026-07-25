@@ -107,7 +107,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           {label}
         </span>
         {compact && (
-          <span className="pointer-events-none absolute left-[calc(100%+10px)] z-50 -translate-x-1 rounded-[8px] bg-text-primary px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-card transition duration-100 ease-out group-hover/sidebar-item:translate-x-0 group-hover/sidebar-item:opacity-100">
+          <span className="pointer-events-none absolute left-[calc(100%+10px)] z-50 -translate-x-1 rounded-[8px] border border-border-soft bg-surface-elevated px-2.5 py-1.5 text-xs font-semibold text-text-primary opacity-0 shadow-card transition duration-100 ease-out group-hover/sidebar-item:translate-x-0 group-hover/sidebar-item:opacity-100">
             {label}
           </span>
         )}
@@ -144,7 +144,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           <Image
             alt=""
             aria-hidden="true"
-            className="h-4 w-4 opacity-80 grayscale"
+            className="sidebar-toggle-icon h-4 w-4 opacity-80 grayscale"
             height={16}
             src={collapsed ? '/icons/sidebar-derecho.png' : '/icons/sidebar-izquierdo.png'}
             width={16}

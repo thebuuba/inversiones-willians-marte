@@ -3,9 +3,24 @@ import SwiftUI
 public enum InversionesIOS {}
 
 enum AppEnvironment {
-    static let apiBaseURL = URL(
+    private static let fallbackAPIBaseURL = URL(
         string: "https://inversiones-willians-marte-api-staging.natanaelpena1202.workers.dev/api/v1"
     )!
+
+    static var apiBaseURL: URL {
+        resolveAPIBaseURL(
+            environmentValue: ProcessInfo.processInfo.environment["IWM_API_BASE_URL"],
+            bundleValue: Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String,
+            fallback: fallbackAPIBaseURL
+        )
+    }
+
+    static func resolveAPIBaseURL(environmentValue: String?, bundleValue: String?, fallback: URL) -> URL {
+        [environmentValue, bundleValue]
+            .compactMap { $0 }
+            .compactMap(URL.init(string:))
+            .first ?? fallback
+    }
 }
 
 extension Color {

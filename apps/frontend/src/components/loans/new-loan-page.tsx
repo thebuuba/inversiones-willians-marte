@@ -126,7 +126,7 @@ function SelectInput({
       {label && <span className="mb-1.5 block text-xs font-bold text-text-secondary">{label}</span>}
       <div className="relative">
         <select
-          className={`h-[42px] w-full appearance-none rounded-[8px] border bg-white px-3 pr-8 text-sm font-medium text-text-primary shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:ring-2 ${
+          className={`h-[42px] w-full appearance-none rounded-[8px] border bg-card px-3 pr-8 text-sm font-medium text-text-primary shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:ring-2 ${
             error
               ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
               : 'border-primary-border focus:border-primary focus:ring-primary-soft'
@@ -176,7 +176,7 @@ function ClientSearchCard({
   if (selectedClient && !showSearch) {
     const fullName = `${selectedClient.firstName} ${selectedClient.lastName}`;
     return (
-      <div className={`rounded-[14px] bg-white ${LOAN_CARD_SHADOW}`}>
+      <div className={`rounded-[14px] bg-card ${LOAN_CARD_SHADOW}`}>
         <div className="flex min-h-[72px] items-center gap-3 px-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[2px] border-white bg-primary-soft shadow-[0_4px_12px_rgba(40,92,67,0.1)]">
             <UserRound className="h-5 w-5 text-primary-accent" />
@@ -206,13 +206,13 @@ function ClientSearchCard({
   }
 
   return (
-    <div className={`rounded-[14px] bg-white ${LOAN_CARD_SHADOW}`}>
+    <div className={`rounded-[14px] bg-card ${LOAN_CARD_SHADOW}`}>
       <div className="px-4 py-3">
         <div className="relative mb-2">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-secondary" />
           <input
             autoFocus
-            className="h-[42px] w-full rounded-[10px] border border-primary-border bg-surface-subtle pl-9 pr-3 text-sm font-medium text-text-primary outline-none transition placeholder:text-text-secondary focus:border-primary focus:bg-white"
+            className="h-[42px] w-full rounded-[10px] border border-primary-border bg-surface-subtle pl-9 pr-3 text-sm font-medium text-text-primary outline-none transition placeholder:text-text-secondary focus:border-primary focus:bg-card"
             placeholder="Buscar cliente por nombre, cédula o teléfono…"
             type="text"
             value={query}
@@ -349,7 +349,7 @@ function ReplacementOptions({
           return (
             <button
               key={option.type}
-              className={`flex min-h-16 items-center gap-3 rounded-[14px] border bg-white px-4 text-left transition hover:-translate-y-0.5 hover:border-[#BFD8CA] ${LOAN_CARD_SHADOW} ${active ? 'border-[#8FBEA4] ring-2 ring-primary-soft' : 'border-primary-border'}`}
+              className={`flex min-h-16 items-center gap-3 rounded-[14px] border bg-card px-4 text-left transition hover:-translate-y-0.5 hover:border-[#BFD8CA] ${LOAN_CARD_SHADOW} ${active ? 'border-[#8FBEA4] ring-2 ring-primary-soft' : 'border-primary-border'}`}
               disabled={!selectedClient}
               onClick={() => (openType === option.type ? close() : open(option.type))}
               type="button"
@@ -368,7 +368,7 @@ function ReplacementOptions({
                 )}
               </span>
               <ChevronRight
-                className={`h-4 w-4 text-[#7A8C81] transition ${openType === option.type ? 'rotate-90' : ''}`}
+                className={`h-4 w-4 text-text-muted transition ${openType === option.type ? 'rotate-90' : ''}`}
               />
             </button>
           );
@@ -378,7 +378,7 @@ function ReplacementOptions({
       {openType && selectedClient && (
         <section
           aria-live="polite"
-          className={`overflow-hidden rounded-[14px] bg-white ${LOAN_CARD_SHADOW}`}
+          className={`overflow-hidden rounded-[14px] bg-card ${LOAN_CARD_SHADOW}`}
         >
           <header className="flex items-center gap-3 border-b border-primary-border bg-surface-subtle px-5 py-4">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft text-primary-accent">
@@ -440,17 +440,17 @@ function ReplacementOptions({
                         type="checkbox"
                       />
                       <span>
-                        <small className="block font-bold uppercase text-[#7A8C81]">Préstamo</small>
+                        <small className="block font-bold uppercase text-text-muted">Préstamo</small>
                         <strong className="text-text-primary">#{loan.loanNumber}</strong>
                       </span>
                       <span>
-                        <small className="block font-bold uppercase text-[#7A8C81]">Inicio</small>
+                        <small className="block font-bold uppercase text-text-muted">Inicio</small>
                         <strong className="text-text-primary">
                           {new Date(loan.startDate).toLocaleDateString('es-DO')}
                         </strong>
                       </span>
                       <span>
-                        <small className="block font-bold uppercase text-[#7A8C81]">
+                        <small className="block font-bold uppercase text-text-muted">
                           Total a saldar
                         </small>
                         <strong className="text-text-primary">
@@ -458,7 +458,7 @@ function ReplacementOptions({
                         </strong>
                       </span>
                       <span>
-                        <small className="block font-bold uppercase text-[#7A8C81]">
+                        <small className="block font-bold uppercase text-text-muted">
                           Capital restante
                         </small>
                         <strong className="text-text-primary">
@@ -466,7 +466,7 @@ function ReplacementOptions({
                         </strong>
                       </span>
                       <span>
-                        <small className="block font-bold uppercase text-[#7A8C81]">
+                        <small className="block font-bold uppercase text-text-muted">
                           {loan.interestType === 'INDEFINITE' ? 'Modalidad' : 'Cuotas restantes'}
                         </small>
                         <strong className="text-text-primary">
@@ -521,31 +521,31 @@ function LoanSummaryPanel({
         <ReceiptText className="h-3 w-3" />
         Resumen del préstamo
       </span>
-      <section className={`overflow-hidden rounded-xl bg-white ${LOAN_CARD_SHADOW}`}>
+      <section className={`overflow-hidden rounded-xl bg-card ${LOAN_CARD_SHADOW}`}>
         <div className="grid grid-cols-1 divide-y divide-primary-border md:grid-cols-3 md:divide-x md:divide-y-0">
           <div className="flex min-h-[74px] items-center justify-between gap-3 px-4 py-4">
             <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-text-secondary">
                 Capital
               </p>
-              <p className="mt-1.5 truncate text-xl font-bold leading-none text-[#111827]">
+              <p className="mt-1.5 truncate text-xl font-bold leading-none text-text-primary">
                 {formatCurrency(amount)}
               </p>
-              <p className="mt-1 text-xs font-medium text-[#6B7280]">Monto solicitado</p>
+              <p className="mt-1 text-xs font-medium text-text-secondary">Monto solicitado</p>
             </div>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F0F1F4] text-[#374151]">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F0F1F4] text-text-primary">
               <Landmark className="h-4 w-4" />
             </span>
           </div>
           <div className="flex min-h-[74px] items-center justify-between gap-3 px-4 py-4">
             <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-text-secondary">
                 Interés generado
               </p>
               <p className="mt-1.5 truncate text-xl font-bold leading-none text-[#B73B2F]">
                 {formatCurrency(interest)}
               </p>
-              <p className="mt-1 text-xs font-medium text-[#6B7280]">
+              <p className="mt-1 text-xs font-medium text-text-secondary">
                 <span className="font-bold text-[#B73B2F]">{interestPercent.toFixed(1)}%</span> del
                 capital
               </p>
@@ -556,13 +556,13 @@ function LoanSummaryPanel({
           </div>
           <div className="flex min-h-[74px] items-center justify-between gap-3 px-4 py-4">
             <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-text-secondary">
                 Total a pagar
               </p>
               <p className="mt-1.5 truncate text-xl font-bold leading-none text-primary-accent">
                 {formatCurrency(total)}
               </p>
-              <p className="mt-1 text-xs font-medium text-[#6B7280]">Capital + intereses</p>
+              <p className="mt-1 text-xs font-medium text-text-secondary">Capital + intereses</p>
             </div>
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary-soft text-primary-accent">
               <WalletCards className="h-4 w-4" />
@@ -642,7 +642,7 @@ function MainInfoCard({
       </span>
       <motion.section
         animate={{ opacity: 1, y: 0 }}
-        className={`rounded-xl bg-white p-4 pt-6 ${LOAN_CARD_SHADOW} lg:p-5 lg:pt-7`}
+        className={`rounded-xl bg-card p-4 pt-6 ${LOAN_CARD_SHADOW} lg:p-5 lg:pt-7`}
         initial={{ opacity: 0, y: 14 }}
         transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.04 }}
       >
@@ -700,7 +700,7 @@ function MainInfoCard({
                 value={firstPaymentDate}
                 onChange={onFirstPaymentDateChange}
                 invalid={!!errors?.firstPaymentDate}
-                className="h-[42px] w-full rounded-[8px] border border-primary-border bg-white px-3 text-sm font-medium text-text-primary shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
+                className="h-[42px] w-full rounded-[8px] border border-primary-border bg-card px-3 text-sm font-medium text-text-primary shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
               />
               {errors?.firstPaymentDate && (
                 <span className="mt-1 block text-xs font-medium text-red-500">
@@ -720,7 +720,7 @@ function MainInfoCard({
               Descripción / propósito
             </span>
             <textarea
-              className="h-[72px] w-full resize-none rounded-[8px] border border-primary-border bg-white px-3 py-2.5 text-sm font-medium text-text-primary shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary-soft"
+              className="h-[72px] w-full resize-none rounded-[8px] border border-primary-border bg-card px-3 py-2.5 text-sm font-medium text-text-primary shadow-[0_2px_6px_rgba(40,92,67,0.05)] outline-none transition placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary-soft"
               placeholder="Ej. Capital de trabajo para negocio familiar..."
               value={purpose}
               onChange={(e) => onPurposeChange(e.target.value)}
@@ -970,19 +970,19 @@ function NewLoanStepTwo({
         selectedType={operationType}
       />
       {operationType && (
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-primary-border bg-white p-4 text-sm md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 rounded-xl border border-primary-border bg-card p-4 text-sm md:grid-cols-3">
           <p>
-            <span className="block text-xs font-bold uppercase text-[#738096]">Operación</span>
+            <span className="block text-xs font-bold uppercase text-text-secondary">Operación</span>
             <strong>{operationType === 'REENGAGEMENT' ? 'Reenganche' : 'Refinanciamiento'}</strong>
           </p>
           <p>
-            <span className="block text-xs font-bold uppercase text-[#738096]">
+            <span className="block text-xs font-bold uppercase text-text-secondary">
               Deudas a saldar
             </span>
             <strong>{formatCurrency(settlementTotal)}</strong>
           </p>
           <p>
-            <span className="block text-xs font-bold uppercase text-[#738096]">
+            <span className="block text-xs font-bold uppercase text-text-secondary">
               Efectivo a entregar
             </span>
             <strong className="text-primary-accent">
@@ -1019,7 +1019,7 @@ function NewLoanStepTwo({
       </div>
 
       <div className="space-y-3">
-        <section className={`overflow-hidden rounded-xl bg-white ${LOAN_CARD_SHADOW}`}>
+        <section className={`overflow-hidden rounded-xl bg-card ${LOAN_CARD_SHADOW}`}>
           <button
             className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-subtle"
             onClick={() => setOpenHistoricalLoan((open) => !open)}
@@ -1083,7 +1083,7 @@ function NewLoanStepTwo({
           )}
         </section>
 
-        <section className={`overflow-hidden rounded-xl bg-white ${LOAN_CARD_SHADOW}`}>
+        <section className={`overflow-hidden rounded-xl bg-card ${LOAN_CARD_SHADOW}`}>
           <button
             className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-subtle"
             onClick={() => setOpenLateFee((open) => !open)}
@@ -1104,7 +1104,7 @@ function NewLoanStepTwo({
           </button>
           {openLateFee && (
             <div className="space-y-4 border-t border-primary-border bg-surface-subtle p-4">
-              <label className="flex items-center justify-between gap-4 rounded-xl bg-white px-4 py-3 shadow-soft">
+              <label className="flex items-center justify-between gap-4 rounded-xl bg-card px-4 py-3 shadow-soft">
                 <span>
                   <strong className="block text-sm text-text-primary">Aplicar mora</strong>
                   <small className="text-xs font-medium text-text-secondary">
@@ -1228,27 +1228,27 @@ function AmortizationRow({
   return (
     <div
       className={`grid min-w-[980px] grid-cols-[90px_1.1fr_1.2fr_1.2fr_1.2fr_1.3fr] items-center border-t px-5 py-2.5 text-sm ${
-        total ? 'bg-surface-subtle font-bold' : paid ? 'bg-primary-soft' : 'bg-white'
+        total ? 'bg-surface-subtle font-bold' : paid ? 'bg-primary-soft' : 'bg-card'
       } ${total ? 'border-[#C8D7CF]' : 'border-primary-border'}`}
     >
       <span
         className={
           total
-            ? 'text-[#374151]'
+            ? 'text-text-primary'
             : paid
               ? 'font-bold text-primary-accent'
-              : 'font-medium text-[#111827]'
+              : 'font-medium text-text-primary'
         }
       >
         {installmentLabel}
       </span>
-      <span className={total ? 'font-medium text-[#9CA3AF]' : 'font-medium text-[#374151]'}>
+      <span className={total ? 'font-medium text-[#9CA3AF]' : 'font-medium text-text-primary'}>
         {row.date ?? '—'}
       </span>
       <span className="text-right font-medium text-[#B73B2F]">{fmt(row.interest)}</span>
       <span className="text-right font-medium text-primary-accent">{fmt(row.principal)}</span>
-      <span className="text-right font-bold text-[#111827]">{fmt(row.payment)}</span>
-      <span className={`text-right font-medium ${total ? 'text-[#9CA3AF]' : 'text-[#374151]'}`}>
+      <span className="text-right font-bold text-text-primary">{fmt(row.payment)}</span>
+      <span className={`text-right font-medium ${total ? 'text-[#9CA3AF]' : 'text-text-primary'}`}>
         {fmt(row.balance)}
       </span>
     </div>
@@ -1288,7 +1288,7 @@ function AmortizationTableCard({
       </span>
       <motion.section
         animate={{ opacity: 1, y: 0 }}
-        className={`overflow-hidden rounded-xl bg-white ${LOAN_CARD_SHADOW}`}
+        className={`overflow-hidden rounded-xl bg-card ${LOAN_CARD_SHADOW}`}
         initial={{ opacity: 0, y: 14 }}
         transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
       >
@@ -1512,14 +1512,14 @@ export function NewLoanPage() {
         {loadingProducts && (
           <div className="mt-8 space-y-5">
             <div
-              className={`h-[72px] animate-pulse rounded-[14px] bg-white/70 ${LOAN_CARD_SHADOW}`}
+              className={`h-[72px] animate-pulse rounded-[14px] bg-card/70 ${LOAN_CARD_SHADOW}`}
             />
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
               <div
-                className={`h-[380px] animate-pulse rounded-xl bg-white/70 ${LOAN_CARD_SHADOW}`}
+                className={`h-[380px] animate-pulse rounded-xl bg-card/70 ${LOAN_CARD_SHADOW}`}
               />
               <div
-                className={`h-[200px] animate-pulse rounded-xl bg-white/70 ${LOAN_CARD_SHADOW}`}
+                className={`h-[200px] animate-pulse rounded-xl bg-card/70 ${LOAN_CARD_SHADOW}`}
               />
             </div>
           </div>

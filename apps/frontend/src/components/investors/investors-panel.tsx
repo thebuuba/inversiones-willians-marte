@@ -84,7 +84,7 @@ export function InvestorsPanel() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-white px-5 text-sm font-bold text-text-secondary transition-colors duration-150 hover:bg-surface-subtle hover:text-text-primary">
+            <button className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-text-secondary transition-colors duration-150 hover:bg-surface-subtle hover:text-text-primary">
               <Download className="h-4 w-4" />
               Exportar
             </button>
@@ -129,11 +129,11 @@ export function InvestorsPanel() {
         )}
 
         <PanelCard
-          className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-x-auto bg-white`}
+          className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-x-auto bg-card`}
         >
           {/* search + filters */}
-          <div className="min-w-[760px] border-b border-border-soft bg-white p-4">
-            <div className="flex h-11 items-center gap-3 rounded-xl border border-primary-border bg-surface-subtle px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-soft">
+          <div className="min-w-[760px] border-b border-border-soft bg-card p-4">
+            <div className="flex h-11 items-center gap-3 rounded-xl border border-primary-border bg-surface-subtle px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-card focus-within:ring-2 focus-within:ring-primary-soft">
               <Search className="h-4 w-4 shrink-0 text-text-secondary" />
               <input
                 className="flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/60"
@@ -149,8 +149,8 @@ export function InvestorsPanel() {
                   key={f}
                   className={`h-8 rounded-full px-3.5 text-xs font-bold transition-colors duration-150 ${
                     filter === f
-                      ? 'bg-primary text-white'
-                      : 'border border-primary-border bg-white text-primary-accent hover:bg-surface-subtle'
+                      ? 'bg-primary-accent text-text-inverse'
+                      : 'border border-primary-border bg-card text-primary-accent hover:bg-surface-subtle'
                   }`}
                   onClick={() => { setFilter(f); setPage(0); }}
                 >
@@ -161,7 +161,7 @@ export function InvestorsPanel() {
           </div>
 
           {/* table header */}
-          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center border-b border-border-soft bg-white px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
+          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center border-b border-border-soft bg-card px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
             <span>INVERSIONISTA</span>
             <span>CÓDIGO</span>
             <span>CAPITAL</span>
@@ -185,7 +185,7 @@ export function InvestorsPanel() {
               displayInvestors.map((investor) => (
                 <div
                   key={investor.id}
-                  className="group grid min-h-[64px] cursor-pointer grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center border-b border-border-soft bg-white px-6 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle"
+                  className="group grid min-h-[64px] cursor-pointer grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center border-b border-border-soft bg-card px-6 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle"
                   onClick={() => router.push(`/inversionistas/${investor.id}`)}
                 >
                   <div className="flex items-center gap-3">
@@ -228,7 +228,7 @@ export function InvestorsPanel() {
           </div>
 
           {/* footer */}
-          <div className="flex min-w-[760px] items-center justify-between border-t border-border-soft bg-white px-6 py-4">
+          <div className="flex min-w-[760px] items-center justify-between border-t border-border-soft bg-card px-6 py-4">
             <p className="text-[13px] text-text-secondary">
               {!initialLoading && (
                 <>
@@ -239,7 +239,7 @@ export function InvestorsPanel() {
             {totalPages > 1 && (
               <div className="flex items-center gap-2">
                 <button
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-white text-text-secondary transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-30"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-card text-text-secondary transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-30"
                   disabled={page === 0}
                   onClick={() => setPage((p) => p - 1)}
                   type="button"
@@ -250,7 +250,7 @@ export function InvestorsPanel() {
                   {page + 1} / {totalPages}
                 </span>
                 <button
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-white text-text-secondary transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-30"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-card text-text-secondary transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-30"
                   disabled={page >= totalPages - 1}
                   onClick={() => setPage((p) => p + 1)}
                   type="button"

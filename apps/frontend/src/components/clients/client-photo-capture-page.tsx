@@ -88,7 +88,7 @@ export function ClientPhotoCapturePage({ token }: { token: string }) {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-page px-5 py-8 text-text-primary">
-      <section className="w-full max-w-md rounded-[24px] border border-primary-border bg-white p-7 shadow-[0_12px_36px_rgba(40,92,67,0.08)]">
+      <section className="w-full max-w-md rounded-[24px] border border-primary-border bg-card p-7 shadow-[0_12px_36px_rgba(40,92,67,0.08)]">
         <div className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-primary-soft text-primary">
           {state === 'success' ? (
             <CheckCircle2 className="h-7 w-7" />

@@ -134,8 +134,8 @@ function InteractionModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 backdrop-blur-sm"
       onClick={(event) => event.target === event.currentTarget && onClose()}
     >
-      <section className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-border-soft bg-white shadow-2xl">
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border-soft bg-white px-6 py-5">
+      <section className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-border-soft bg-card shadow-2xl">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border-soft bg-card px-6 py-5">
           <div>
             <h2 className="text-lg font-bold text-text-primary">Registrar gestión de cobro</h2>
             <p className="mt-1 text-sm text-text-secondary">
@@ -158,7 +158,7 @@ function InteractionModal({
                 Canal
               </span>
               <select
-                className="h-11 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-semibold text-text-primary"
+                className="h-11 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-semibold text-text-primary"
                 onChange={(event) => setChannel(event.target.value as CollectionChannel)}
                 value={channel}
               >
@@ -174,7 +174,7 @@ function InteractionModal({
                 Resultado
               </span>
               <select
-                className="h-11 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-semibold text-text-primary"
+                className="h-11 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-semibold text-text-primary"
                 onChange={(event) => setResult(event.target.value as CollectionResult)}
                 value={result}
               >
@@ -211,7 +211,7 @@ function InteractionModal({
                   Monto prometido
                 </span>
                 <input
-                  className="h-11 w-full rounded-xl border border-amber-200 bg-white px-3 text-sm font-bold text-text-primary"
+                  className="h-11 w-full rounded-xl border border-amber-200 bg-card px-3 text-sm font-bold text-text-primary"
                   inputMode="decimal"
                   onChange={(event) => setPromiseAmount(event.target.value)}
                   placeholder="0.00"
@@ -223,7 +223,7 @@ function InteractionModal({
                   Fecha prometida
                 </span>
                 <DatePickerInput
-                  className="h-11 w-full rounded-xl border border-amber-200 bg-white px-3 text-sm font-bold text-text-primary"
+                  className="h-11 w-full rounded-xl border border-amber-200 bg-card px-3 text-sm font-bold text-text-primary"
                   onChange={setPromiseDate}
                   value={promiseDate}
                 />
@@ -237,7 +237,7 @@ function InteractionModal({
                 Próximo seguimiento
               </span>
               <DatePickerInput
-                className="h-11 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-semibold text-text-primary"
+                className="h-11 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-semibold text-text-primary"
                 onChange={setFollowUpDate}
                 value={followUpDate}
               />
@@ -247,7 +247,7 @@ function InteractionModal({
                 Hora
               </span>
               <input
-                className="h-11 w-full rounded-xl border border-primary-border bg-white px-3 text-sm font-semibold text-text-primary disabled:bg-surface-subtle"
+                className="h-11 w-full rounded-xl border border-primary-border bg-card px-3 text-sm font-semibold text-text-primary disabled:bg-surface-subtle"
                 disabled={!followUpDate}
                 onChange={(event) => setFollowUpTime(event.target.value)}
                 type="time"
@@ -314,7 +314,7 @@ export function CollectionManagementPanel({
   }, [loanId]);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border-soft bg-white shadow-sm">
+    <section className="overflow-hidden rounded-2xl border border-border-soft bg-card shadow-sm">
       <header className="flex flex-col justify-between gap-4 border-b border-border-soft px-5 py-4 sm:flex-row sm:items-center">
         <div>
           <h2 className="flex items-center gap-2 text-base font-bold text-text-primary">
@@ -327,7 +327,7 @@ export function CollectionManagementPanel({
         <div className="flex flex-wrap gap-2">
           {phone ? (
             <a
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-primary-border px-4 text-sm font-bold text-primary-accent hover:bg-[#F3F8F5]"
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-primary-border px-4 text-sm font-bold text-primary-accent hover:bg-surface-muted-ui"
               href={`tel:${phone}`}
             >
               <PhoneCall className="h-4 w-4" /> {phone}
@@ -335,7 +335,7 @@ export function CollectionManagementPanel({
           ) : null}
           {phone ? (
             <a
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-primary-border px-4 text-sm font-bold text-primary-accent hover:bg-[#F3F8F5]"
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-primary-border px-4 text-sm font-bold text-primary-accent hover:bg-surface-muted-ui"
               href={`https://wa.me/${phone.replace(/\D/g, '')}`}
               rel="noreferrer"
               target="_blank"
@@ -391,7 +391,7 @@ export function CollectionManagementPanel({
                     {labelFor(results, item.result)}
                   </span>
                 </div>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[#3F4542]">
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text-primary">
                   {item.notes}
                 </p>
               </div>
