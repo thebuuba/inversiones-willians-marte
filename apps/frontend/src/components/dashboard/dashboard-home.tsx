@@ -20,6 +20,7 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
+  YAxis,
 } from 'recharts';
 import {
   AlertTriangle,
@@ -83,10 +84,11 @@ export function getAgingBuckets(priorities: CollectionPriority[]) {
 const today = new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' });
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  ACTIVE: { label: 'Al día', color: '#7CC99B' },
+  CURRENT: { label: 'Al día', color: '#7CC99B' },
+  PENDING: { label: 'Pendientes', color: '#F3D477' },
+  LATE: { label: 'Atrasados', color: '#F3A36F' },
+  EXPIRED: { label: 'Vencidos', color: '#E67C73' },
   PAID: { label: 'Pagados', color: '#A9D9C6' },
-  OVERDUE: { label: 'Vencidos', color: '#F7C49E' },
-  RESTRUCTURED: { label: 'Reestructurados', color: '#A9D8F2' },
   WRITTEN_OFF: { label: 'Castigados', color: '#E0E0E0' },
 };
 
@@ -151,7 +153,7 @@ export function DashboardHome() {
   );
   const dash = overview?.dashboard;
   const portfolio = overview?.portfolio;
-  const monthlyCollections = overview?.monthlyCollections;
+  const dailyIncome = overview?.dailyIncome ?? [];
   const upcomingPayments = overview?.upcomingPayments;
   const collectionPriorities = overview?.collectionPriorities ?? [];
 
@@ -233,26 +235,46 @@ export function DashboardHome() {
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
         <Card className="p-6" index={4}>
-          <SectionHeader title="Cobros mensuales" subtitle="Ingresos vs proyección · últimos 9 meses" />
+          <SectionHeader
+            title="Ingresos diarios"
+            subtitle="Capital, interés y mora · últimos 30 días"
+            right={
+              <div className="hidden items-center gap-4 text-xs font-semibold text-text-secondary sm:flex">
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-primary-accent" />Capital</span>
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-state-info-dot" />Interés</span>
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-state-danger-dot" />Mora</span>
+              </div>
+            }
+          />
           <div className="h-[250px] min-w-0">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 720, height: 250 }}>
-              <AreaChart data={monthlyCollections ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <AreaChart data={dailyIncome} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="cobradoGradient" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="5%" stopColor="#7CC99B" stopOpacity={0.24} />
-                    <stop offset="95%" stopColor="#7CC99B" stopOpacity={0.02} />
+                  <linearGradient id="capitalGradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="5%" stopColor="#5A9A7A" stopOpacity={0.22} />
+                    <stop offset="95%" stopColor="#5A9A7A" stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="interestGradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="5%" stopColor="#5AAFC7" stopOpacity={0.18} />
+                    <stop offset="95%" stopColor="#5AAFC7" stopOpacity={0.01} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid stroke="var(--border-strong)" strokeDasharray="4 6" vertical={false} />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} dy={10} />
+                <XAxis dataKey="label" axisLine={false} tickLine={false} interval="preserveStartEnd" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} width={62} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} tickFormatter={(value) => Number(value).toLocaleString('es-DO', { notation: 'compact' })} />
                 <Tooltip
                   cursor={{ stroke: 'var(--border-strong)', strokeDasharray: '4 6' }}
                   contentStyle={{ background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 16, color: 'var(--text-primary)' }}
                   itemStyle={{ color: 'var(--text-primary)' }}
                   labelStyle={{ color: 'var(--text-secondary)' }}
+                  formatter={(value, name) => [
+                    formatCurrency(Number(value)),
+                    name === 'capital' ? 'Capital' : name === 'interest' ? 'Interés' : 'Mora',
+                  ]}
                 />
-                <Area type="monotone" dataKey="collected" stroke="#7CC99B" strokeWidth={3} fill="url(#cobradoGradient)" isAnimationActive animationDuration={1400} />
-                <Line type="monotone" dataKey="expected" stroke="#B8E0CF" strokeWidth={3} strokeDasharray="6 7" dot={false} isAnimationActive animationDuration={1300} />
+                <Area type="monotone" dataKey="capital" stroke="#5A9A7A" strokeWidth={3} fill="url(#capitalGradient)" dot={false} isAnimationActive animationDuration={1200} />
+                <Area type="monotone" dataKey="interest" stroke="#5AAFC7" strokeWidth={2.5} fill="url(#interestGradient)" dot={false} isAnimationActive animationDuration={1100} />
+                <Line type="monotone" dataKey="lateFee" stroke="#E67C73" strokeWidth={2.5} dot={false} isAnimationActive animationDuration={1000} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

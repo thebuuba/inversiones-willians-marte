@@ -25,6 +25,7 @@ describe('ReportsService', () => {
       'dashboard',
       'portfolioByStatus',
       'monthlyCollections',
+      'dailyIncome',
       'weeklyMovement',
       'upcomingPayments',
       'collectionPriorities',
@@ -51,6 +52,7 @@ describe('ReportsService', () => {
       dashboard: [],
       portfolio: [],
       monthlyCollections: [],
+      dailyIncome: [],
       weeklyMovement: [],
       upcomingPayments: [],
       collectionPriorities: [],
@@ -96,6 +98,45 @@ describe('ReportsService', () => {
     expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
     expect(jest.mocked(prisma.$queryRaw).mock.calls[0]).toHaveLength(2);
     expect(jest.mocked(prisma.$queryRaw).mock.calls[0][1]).toBeInstanceOf(Date);
+  });
+
+  it('groups portfolio by calculated collection status', async () => {
+    jest.mocked(prisma.$queryRaw).mockResolvedValue([
+      { status: 'CURRENT', count: 5, balance: 5000, principal: 6000 },
+      { status: 'LATE', count: 3, balance: 3000, principal: 4000 },
+    ]);
+
+    await expect(service.portfolioByStatus()).resolves.toEqual([
+      { status: 'CURRENT', count: 5, balance: 5000, principal: 6000 },
+      { status: 'LATE', count: 3, balance: 3000, principal: 4000 },
+    ]);
+
+    const queryParts = jest.mocked(prisma.$queryRaw).mock.calls[0][0] as TemplateStringsArray;
+    const queryText = Array.from(queryParts).join(' ');
+    expect(queryText).toContain('oldest_unpaid');
+    expect(queryText).toContain("ELSE 'LATE'");
+    expect(queryText).toContain('grace_days');
+  });
+
+  it('maps daily income allocations into chart values', async () => {
+    jest.mocked(prisma.$queryRaw).mockResolvedValue([
+      {
+        date: new Date('2026-06-18T00:00:00.000Z'),
+        capital: '1200.50',
+        interest: '300.25',
+        lateFee: '75',
+      },
+    ]);
+
+    await expect(service.dailyIncome()).resolves.toEqual([
+      {
+        date: '2026-06-18',
+        label: '18/06',
+        capital: 1200.5,
+        interest: 300.25,
+        lateFee: 75,
+      },
+    ]);
   });
 
   it('starts all dashboard queries before waiting for remote results', async () => {

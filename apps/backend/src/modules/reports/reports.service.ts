@@ -9,6 +9,7 @@ export class ReportsService {
       dashboard,
       portfolio,
       monthlyCollections,
+      dailyIncome,
       weeklyMovement,
       upcomingPayments,
       collectionPriorities,
@@ -16,6 +17,7 @@ export class ReportsService {
       this.dashboard(),
       this.portfolioByStatus(),
       this.monthlyCollections(),
+      this.dailyIncome(),
       this.weeklyMovement(),
       this.upcomingPayments(),
       this.collectionPriorities(),
@@ -25,6 +27,7 @@ export class ReportsService {
       dashboard,
       portfolio,
       monthlyCollections,
+      dailyIncome,
       weeklyMovement,
       upcomingPayments,
       collectionPriorities,
@@ -154,17 +157,51 @@ export class ReportsService {
   }
 
   async portfolioByStatus() {
-    const groups = await prisma.loan.groupBy({
-      by: ['status'],
-      _count: { id: true },
-      _sum: { balance: true, principal: true },
-    });
+    const groups = await prisma.$queryRaw<
+      Array<{ status: string; count: number; balance: number; principal: number }>
+    >`
+      WITH oldest_unpaid AS (
+        SELECT loan_id, MIN(due_date)::date AS due_date
+        FROM payment_schedule
+        WHERE status::text NOT IN ('PAID', 'CANCELLED')
+        GROUP BY loan_id
+      ),
+      classified AS (
+        SELECT
+          l.balance,
+          l.principal,
+          CASE
+          WHEN l.status::text = 'PAID' THEN 'PAID'
+          WHEN l.status::text = 'WRITTEN_OFF' THEN 'WRITTEN_OFF'
+          WHEN l.interest_type::text <> 'INDEFINITE'
+            AND l.balance > 0
+            AND l.end_date::date < CURRENT_DATE THEN 'EXPIRED'
+          WHEN oldest_unpaid.due_date IS NULL
+            OR oldest_unpaid.due_date > CURRENT_DATE THEN 'CURRENT'
+          WHEN oldest_unpaid.due_date >= CURRENT_DATE - (
+            COALESCE((SELECT grace_days FROM system_settings WHERE id = 1), 5)
+            * INTERVAL '1 day'
+          ) THEN 'PENDING'
+          ELSE 'LATE'
+          END AS status
+        FROM loans l
+        LEFT JOIN oldest_unpaid ON oldest_unpaid.loan_id = l.id
+      )
+      SELECT
+        status,
+        COUNT(*)::int AS count,
+        COALESCE(SUM(balance)::float8, 0) AS balance,
+        COALESCE(SUM(principal)::float8, 0) AS principal
+      FROM classified
+      GROUP BY status
+      ORDER BY status
+    `;
 
-    return groups.map((g) => ({
-      status: g.status,
-      count: g._count.id,
-      balance: Number(g._sum.balance ?? 0),
-      principal: Number(g._sum.principal ?? 0),
+    return groups.map((group) => ({
+      status: group.status,
+      count: Number(group.count),
+      balance: Number(group.balance),
+      principal: Number(group.principal),
     }));
   }
 
@@ -223,6 +260,49 @@ export class ReportsService {
       collected: Number(r.collected),
       expected: Number(r.expected),
     }));
+  }
+
+  async dailyIncome() {
+    const startDate = startOfUtcDay(new Date());
+    startDate.setUTCDate(startDate.getUTCDate() - 29);
+
+    const rows = await prisma.$queryRaw<
+      Array<{ date: Date; capital: string; interest: string; lateFee: string }>
+    >`
+      WITH days AS (
+        SELECT GENERATE_SERIES(${startDate}::date, CURRENT_DATE, '1 day')::date AS date
+      ),
+      income AS (
+        SELECT
+          p.payment_date::date AS date,
+          SUM(pa.amount) FILTER (WHERE pa.type = 'PRINCIPAL') AS capital,
+          SUM(pa.amount) FILTER (WHERE pa.type = 'INTEREST') AS interest,
+          SUM(pa.amount) FILTER (WHERE pa.type = 'PENALTY') AS late_fee
+        FROM payments p
+        JOIN payment_allocations pa ON pa.payment_id = p.id
+        WHERE p.payment_date >= ${startDate}
+        GROUP BY p.payment_date::date
+      )
+      SELECT
+        days.date,
+        COALESCE(income.capital, 0) AS capital,
+        COALESCE(income.interest, 0) AS interest,
+        COALESCE(income.late_fee, 0) AS "lateFee"
+      FROM days
+      LEFT JOIN income USING (date)
+      ORDER BY days.date
+    `;
+
+    return rows.map((row) => {
+      const date = row.date.toISOString().slice(0, 10);
+      return {
+        date,
+        label: `${date.slice(8, 10)}/${date.slice(5, 7)}`,
+        capital: Number(row.capital),
+        interest: Number(row.interest),
+        lateFee: Number(row.lateFee),
+      };
+    });
   }
 
   async weeklyMovement() {

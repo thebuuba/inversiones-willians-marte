@@ -376,16 +376,9 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
       initial="hidden"
       variants={fadeUp}
     >
-      <div className="flex items-center gap-4">
-        <div className="relative h-12 w-12 shrink-0">
-          <div className="flex h-full w-full items-center justify-center rounded-full bg-primary-soft text-primary-accent shadow-[0_6px_14px_rgba(40,92,67,0.13)]">
-            <span className="text-sm font-bold">{loan.client.charAt(0)}</span>
-          </div>
-        </div>
-        <div>
-          <p className="text-sm font-bold leading-tight text-text-primary">{loan.client}</p>
-          <p className="mt-1 text-sm font-medium text-text-secondary">{loan.detail}</p>
-        </div>
+      <div>
+        <p className="text-sm font-bold leading-tight text-text-primary">{loan.client}</p>
+        <p className="mt-1 text-sm font-medium text-text-secondary">{loan.detail}</p>
       </div>
       <LoanTypeBadge type={loan.type} />
       <div>
