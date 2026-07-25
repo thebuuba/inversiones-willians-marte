@@ -25,10 +25,11 @@ test('pwa manifest uses installable standalone settings', () => {
 test('service worker keeps api requests out of shell cache', async () => {
   const sw = await readFile(new URL('../../public/sw.js', import.meta.url), 'utf8');
 
-  assert.match(sw, /const CACHE_NAME = 'inversiones-shell-v2'/);
+  assert.match(sw, /const CACHE_NAME = 'inversiones-shell-v3'/);
   assert.match(sw, /'\/offline'/);
   assert.match(sw, /url\.pathname\.startsWith\('\/api\/'\)/);
   assert.match(sw, /url\.pathname\.startsWith\('\/_next\/'\)/);
+  assert.match(sw, /url\.pathname\.startsWith\('\/captura-'\)/);
 });
 
 test('development unregisters service workers so localhost never serves stale bundles', async () => {
@@ -40,4 +41,5 @@ test('development unregisters service workers so localhost never serves stale bu
   assert.match(register, /process\.env\.NODE_ENV !== 'production'/);
   assert.match(register, /registration\.unregister\(\)/);
   assert.match(register, /caches\.delete\(key\)/);
+  assert.match(register, /register\('\/sw\.js\?v=3'\)/);
 });

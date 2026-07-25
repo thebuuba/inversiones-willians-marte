@@ -59,7 +59,7 @@ export async function getDocumentCaptureSession(
   token: string,
 ): Promise<DocumentCaptureSessionItem> {
   const response = await fetch(`/api/document-capture/${encodeURIComponent(token)}`, {
-    signal: timeoutSignal(10_000),
+    signal: timeoutSignal(30_000),
   });
   const data = await readApiResponse<DocumentCaptureSessionItem>(response);
   if (!response.ok)

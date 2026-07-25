@@ -1,4 +1,4 @@
-const CACHE_NAME = 'inversiones-shell-v2';
+const CACHE_NAME = 'inversiones-shell-v3';
 const APP_SHELL = [
   '/',
   '/inicio',
@@ -35,6 +35,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/')) return;
   if (url.pathname.startsWith('/_next/')) return;
+  if (url.pathname.startsWith('/captura-')) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(

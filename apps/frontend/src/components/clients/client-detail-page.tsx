@@ -655,12 +655,6 @@ function UploadModal({
     }
   }
 
-  useEffect(() => {
-    if (!captureReceived) return;
-    const timeout = window.setTimeout(closeModal, 1400);
-    return () => window.clearTimeout(timeout);
-  }, [captureReceived, closeModal]);
-
   if (!open) return null;
 
   return (
@@ -712,7 +706,7 @@ function UploadModal({
               />
               <p className="mt-3 text-xs font-medium text-text-secondary">
                 {captureReceived
-                  ? 'Documento recibido. Cerrando...'
+                  ? 'Documento recibido. Puedes subir otro desde el teléfono.'
                   : 'Escanea este QR con el teléfono.'}
               </p>
               {captureLimitLabel ? (

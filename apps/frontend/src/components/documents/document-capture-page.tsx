@@ -6,7 +6,7 @@ import type { DocumentCaptureSessionItem } from '@inversiones/shared';
 import { getDocumentCaptureSession, uploadDocumentCapture } from '@/lib/api/documents';
 import { appendDocumentUploadFiles } from '@/lib/document-image-processing';
 
-type CaptureState = 'loading' | 'ready' | 'uploading' | 'success' | 'error' | 'expired';
+type CaptureState = 'ready' | 'uploading' | 'success' | 'error' | 'expired';
 
 function getResponseStatus(error: unknown) {
   return typeof error === 'object' && error !== null && 'response' in error
@@ -18,8 +18,8 @@ export function DocumentCapturePage({ token }: { token: string }) {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [session, setSession] = useState<DocumentCaptureSessionItem | null>(null);
-  const [state, setState] = useState<CaptureState>('loading');
-  const [message, setMessage] = useState('Validando enlace...');
+  const [state, setState] = useState<CaptureState>('ready');
+  const [message, setMessage] = useState('Toma una foto o selecciona el documento.');
 
   useEffect(() => {
     let active = true;
@@ -28,14 +28,14 @@ export function DocumentCapturePage({ token }: { token: string }) {
       .then((nextSession) => {
         if (!active) return;
         setSession(nextSession);
-        setState('ready');
-        setMessage('Toma una foto o selecciona el documento.');
       })
       .catch((error) => {
         if (!active) return;
         const status = getResponseStatus(error);
-        setState(status === 410 || status === 404 ? 'expired' : 'error');
-        setMessage('Este enlace ya no esta disponible.');
+        if (status === 410 || status === 404) {
+          setState('expired');
+          setMessage('Este enlace ya no esta disponible.');
+        }
       });
 
     return () => {
@@ -86,7 +86,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
         <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-panel bg-primary-soft text-primary-accent">
           {state === 'success' ? (
             <CheckCircle2 className="h-6 w-6" />
-          ) : state === 'loading' || state === 'uploading' ? (
+          ) : state === 'uploading' ? (
             <Loader2 className="h-6 w-6 animate-spin" />
           ) : state === 'expired' ? (
             <XCircle className="h-6 w-6" />
@@ -153,6 +153,15 @@ export function DocumentCapturePage({ token }: { token: string }) {
             type="button"
           >
             Subir otro documento
+          </button>
+        ) : null}
+        {state === 'error' && !session ? (
+          <button
+            className="mt-3 h-11 w-full rounded-full border border-primary-border bg-card px-5 text-sm font-semibold text-text-secondary"
+            onClick={() => window.location.reload()}
+            type="button"
+          >
+            Reintentar conexión
           </button>
         ) : null}
       </section>

@@ -4,7 +4,7 @@ import { randomBytes } from 'crypto';
 import { DocumentsService } from './documents.service';
 import { UploadedDocumentFile } from './document-processing.service';
 
-const CAPTURE_SESSION_TTL_MS = 10 * 60 * 1000;
+const CAPTURE_SESSION_TTL_MS = 30 * 60 * 1000;
 const DEFAULT_MAX_UPLOADS = 5;
 
 interface CaptureUploadInput {
