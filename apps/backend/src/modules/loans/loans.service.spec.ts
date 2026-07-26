@@ -118,9 +118,9 @@ describe('LoansService', () => {
       companyName: 'Inversiones Willians Marte',
       companyTaxId: '123',
     } as any);
-    jest.mocked(prisma.loanReceipt.create).mockImplementation(({ data }) =>
-      Promise.resolve({ id: 'receipt-1', ...data } as any),
-    );
+    jest
+      .mocked(prisma.loanReceipt.create)
+      .mockImplementation(({ data }) => Promise.resolve({ id: 'receipt-1', ...data } as any));
 
     const receipt = await service.ensureReceipt('loan-1', 'user-1');
 

@@ -362,9 +362,7 @@ export class LoansService {
           },
         });
 
-        const receipt = dto.generateReceipt
-          ? await this.createReceipt(tx, loan.id, userId)
-          : null;
+        const receipt = dto.generateReceipt ? await this.createReceipt(tx, loan.id, userId) : null;
         return { ...loan, receipt };
       },
       { isolationLevel: 'Serializable' },
