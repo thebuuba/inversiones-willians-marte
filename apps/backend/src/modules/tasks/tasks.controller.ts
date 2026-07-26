@@ -29,17 +29,21 @@ export class TasksController {
   }
 
   @Get('count')
-  count(@Query('status') status?: string) {
+  count(@CurrentUser('id') userId: string, @Query('status') status?: string) {
     const validStatuses = Object.values(TaskStatusEnum) as TaskStatus[];
     if (status && validStatuses.includes(status as TaskStatus)) {
-      return this.tasks.count(status as TaskStatus);
+      return this.tasks.count(userId, status as TaskStatus);
     }
-    return this.tasks.count();
+    return this.tasks.count(userId);
   }
 
   @Get()
-  findAll(@Query('take') take?: string, @Query('skip') skip?: string) {
-    return this.tasks.findAll(Number(take ?? 100), Number(skip ?? 0));
+  findAll(
+    @CurrentUser('id') userId: string,
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
+  ) {
+    return this.tasks.findAll(userId, Number(take ?? 100), Number(skip ?? 0));
   }
 
   @Get(':id')
@@ -48,8 +52,8 @@ export class TasksController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateTaskDto) {
-    return this.tasks.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateTaskDto, @CurrentUser('id') userId: string) {
+    return this.tasks.update(id, dto, userId);
   }
 
   @Delete(':id')

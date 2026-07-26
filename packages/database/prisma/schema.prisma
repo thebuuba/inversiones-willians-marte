@@ -132,10 +132,12 @@ model User {
   uploadedDocuments           Document[]
   documentCaptureSessions     DocumentCaptureSession[]
   clientPhotoCaptureSessions  ClientPhotoCaptureSession[]
-  tasks                       Task[]
+  tasks                       Task[]                       @relation("TaskCreatedBy")
+  assignedTasks               Task[]                       @relation("TaskAssignee")
+  notificationReads           NotificationRead[]
   portfolios                  Portfolio[]
   loanCapitalMovements        LoanCapitalMovement[]
-  generatedLoanReceipts       LoanReceipt[]                  @relation("LoanReceiptGeneratedBy")
+  generatedLoanReceipts       LoanReceipt[]                @relation("LoanReceiptGeneratedBy")
   collectionInteractions      CollectionInteraction[]      @relation("CollectionInteractionCreatedBy")
   paymentPromises             PaymentPromise[]             @relation("PaymentPromiseCreatedBy")
   cashMovements               CashMovement[]
@@ -720,21 +722,36 @@ model Task {
   category                String       @default("oficina")
   status                  TaskStatus   @default(PENDING)
   createdById             String       @map("created_by")
+  assignedToId            String       @map("assigned_to")
   clientId                Int?         @map("client_id")
   loanId                  String?      @map("loan_id")
   collectionInteractionId String?      @unique @map("collection_interaction_id")
   createdAt               DateTime     @default(now()) @map("created_at")
   updatedAt               DateTime     @updatedAt @map("updated_at")
 
-  createdBy             User                   @relation(fields: [createdById], references: [id])
+  createdBy             User                   @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  assignedTo            User                   @relation("TaskAssignee", fields: [assignedToId], references: [id])
   client                Client?                @relation(fields: [clientId], references: [id])
   loan                  Loan?                  @relation(fields: [loanId], references: [id])
   collectionInteraction CollectionInteraction? @relation(fields: [collectionInteractionId], references: [id])
 
   @@index([status(sort: Asc), priority(sort: Desc), dueDate(sort: Asc), createdAt(sort: Desc)])
+  @@index([assignedToId, status, dueDate])
   @@index([clientId, status])
   @@index([loanId, status])
   @@map("tasks")
+}
+
+model NotificationRead {
+  id     String   @id @default(uuid())
+  userId String   @map("user_id")
+  key    String
+  readAt DateTime @default(now()) @map("read_at")
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([userId, readAt])
+  @@map("notification_reads")
 }
 
 // ─── Portfolios (Carteras) ──────────────────────────────────────────────────

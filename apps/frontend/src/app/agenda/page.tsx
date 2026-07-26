@@ -21,6 +21,8 @@ import { getTasks, createTask, updateTask, deleteTask } from '@/lib/api/tasks';
 import { getCollectionPriorities, type CollectionPriority } from '@/lib/api/dashboard';
 import { InteractionModal } from '@/components/loans/collection-management-panel';
 import { getStaggerDelay } from '@/lib/animation';
+import { getUsers, type UserItem } from '@/lib/api/users';
+import { useAuth } from '@/lib/auth-context';
 import type { TaskItem, TaskPriority, TaskStatus } from '@inversiones/shared';
 
 const cardVariants: Variants = {
@@ -211,9 +213,13 @@ function MiniCalendar({
 }
 
 function NewTaskModal({
+  assignees,
+  currentUserId,
   onClose,
   onSave,
 }: {
+  assignees: UserItem[];
+  currentUserId: string;
   onClose: () => void;
   onSave: (f: {
     title: string;
@@ -221,6 +227,7 @@ function NewTaskModal({
     time: string;
     priority: TaskPriority;
     category: string;
+    assignedToId: string;
   }) => void;
 }) {
   const [title, setTitle] = useState('');
@@ -228,6 +235,7 @@ function NewTaskModal({
   const [time, setTime] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('MEDIUM');
   const [category, setCategory] = useState('oficina');
+  const [assignedToId, setAssignedToId] = useState(currentUserId);
   const [error, setError] = useState('');
 
   const handleSubmit = () => {
@@ -241,6 +249,7 @@ function NewTaskModal({
       time,
       priority,
       category,
+      assignedToId,
     });
     onClose();
   };
@@ -338,6 +347,24 @@ function NewTaskModal({
               ))}
             </select>
           </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
+              Responsable
+            </label>
+            <select
+              value={assignedToId}
+              onChange={(e) => setAssignedToId(e.target.value)}
+              className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm outline-none focus:border-primary-accent focus:ring-2 focus:ring-[#c2dfcb]/60"
+            >
+              {assignees
+                .filter((assignee) => assignee.active)
+                .map((assignee) => (
+                  <option key={assignee.id} value={assignee.id}>
+                    {assignee.id === currentUserId ? `${assignee.name} (Yo)` : assignee.name}
+                  </option>
+                ))}
+            </select>
+          </div>
         </div>
         <div className="flex items-center justify-end gap-2 border-t border-border-soft bg-surface-subtle px-6 py-4">
           <button
@@ -359,6 +386,7 @@ function NewTaskModal({
 }
 
 export default function AgendaPage() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [filter, setFilter] = useState<FilterKey>('todas');
   const [showModal, setShowModal] = useState(false);
@@ -366,6 +394,7 @@ export default function AgendaPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [priorities, setPriorities] = useState<CollectionPriority[]>([]);
   const [contactLoanId, setContactLoanId] = useState<string | null>(null);
+  const [assignees, setAssignees] = useState<UserItem[]>([]);
 
   const today = selectedDate;
   const dateStr = today.toLocaleDateString('es-DO', {
@@ -388,6 +417,9 @@ export default function AgendaPage() {
     getCollectionPriorities()
       .then(setPriorities)
       .catch(() => {});
+    getUsers()
+      .then(setAssignees)
+      .catch(() => {});
   }, [load]);
 
   const addTask = async (form: {
@@ -396,6 +428,7 @@ export default function AgendaPage() {
     time: string;
     priority: TaskPriority;
     category: string;
+    assignedToId: string;
   }) => {
     await createTask({
       title: form.title,
@@ -404,6 +437,7 @@ export default function AgendaPage() {
       time: form.time || undefined,
       priority: form.priority,
       category: form.category,
+      assignedToId: form.assignedToId,
     });
     load();
   };
@@ -468,7 +502,29 @@ export default function AgendaPage() {
             <Plus className="mr-1.5 h-4 w-4" />
             Nueva tarea
           </button>
-          {showModal && <NewTaskModal onClose={() => setShowModal(false)} onSave={addTask} />}
+          {showModal && user ? (
+            <NewTaskModal
+              assignees={
+                assignees.some((assignee) => assignee.id === user.id)
+                  ? assignees
+                  : [
+                      {
+                        id: user.id,
+                        name: user.name,
+                        username: user.username,
+                        email: user.email,
+                        role: user.role,
+                        active: true,
+                        createdAt: '',
+                      },
+                      ...assignees,
+                    ]
+              }
+              currentUserId={user.id}
+              onClose={() => setShowModal(false)}
+              onSave={addTask}
+            />
+          ) : null}
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr_300px]">
@@ -638,6 +694,11 @@ export default function AgendaPage() {
                               {task.time}
                             </span>
                           )}
+                          {task.assignedToId !== user?.id && task.assignedTo ? (
+                            <span className="rounded-full bg-state-info-bg px-2 py-0.5 text-xs font-semibold text-state-info">
+                              Para {task.assignedTo.name}
+                            </span>
+                          ) : null}
                         </div>
                         {task.description && (
                           <p className="mt-0.5 text-xs text-text-muted line-clamp-1">
