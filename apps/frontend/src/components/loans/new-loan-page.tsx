@@ -45,7 +45,14 @@ import {
 import { CarterasCard } from './carteras-card';
 import { DatePickerInput } from '@/components/ui/date-picker-input';
 import { getNextMonthIsoDate } from '@/components/ui/date-picker.helpers';
-import type { Client, LoanOperationType, LoanPayoffQuote, LoanSummary } from '@inversiones/shared';
+import type {
+  Client,
+  LoanOperationType,
+  LoanPayoffQuote,
+  LoanReceipt,
+  LoanSummary,
+} from '@inversiones/shared';
+import { LoanDisbursementReceiptModal } from './loan-disbursement-receipt-modal';
 
 const LOAN_CARD_SHADOW = 'shadow-card';
 
@@ -777,6 +784,8 @@ function NewLoanStepTwo({
   onLateFeeValueChange,
   lateFeeGraceDays,
   onLateFeeGraceDaysChange,
+  generateReceipt,
+  onGenerateReceiptChange,
 }: {
   historicalLoan: boolean;
   onHistoricalLoanChange: (value: boolean) => void;
@@ -822,6 +831,8 @@ function NewLoanStepTwo({
   onLateFeeValueChange: (value: string) => void;
   lateFeeGraceDays: string;
   onLateFeeGraceDaysChange: (value: string) => void;
+  generateReceipt: boolean;
+  onGenerateReceiptChange: (value: boolean) => void;
 }) {
   const rate = customInterestRate || '0';
   const rawRate = parseStrictNumber(rate) ?? 0;
@@ -1218,6 +1229,23 @@ function NewLoanStepTwo({
       )}
 
       {shouldShowCalculatedLoanActions(showSchedule) && (
+        <label className="flex min-h-14 cursor-pointer items-center gap-3 rounded-control-comfortable border border-primary-border bg-primary-soft px-4 py-3">
+          <input
+            checked={generateReceipt}
+            className="h-5 w-5 accent-primary"
+            onChange={(event) => onGenerateReceiptChange(event.target.checked)}
+            type="checkbox"
+          />
+          <span>
+            <span className="block text-sm font-bold text-text-primary">Generar recibo</span>
+            <span className="block text-xs font-medium text-text-secondary">
+              Abre el recibo autocopiante al guardar el préstamo.
+            </span>
+          </span>
+        </label>
+      )}
+
+      {shouldShowCalculatedLoanActions(showSchedule) && (
         <button
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control-comfortable bg-primary-accent text-sm font-bold text-white shadow-action transition hover:-translate-y-0.5 hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
           disabled={!calculationReady || !selectedClient || saving}
@@ -1414,6 +1442,9 @@ export function NewLoanPage() {
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [generateReceipt, setGenerateReceipt] = useState(true);
+  const [createdReceipt, setCreatedReceipt] = useState<LoanReceipt | null>(null);
+  const [receiptClientId, setReceiptClientId] = useState<number | null>(null);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [operationType, setOperationType] = useState<ReplacementType | null>(null);
   const [sourceLoanIds, setSourceLoanIds] = useState<string[]>([]);
@@ -1502,7 +1533,7 @@ export function NewLoanPage() {
     setSaveError('');
     try {
       const totalTerm = amortizationType === 'INDEFINITE' ? 1 : normalizeLoanTerm(term, termUnit);
-      await createLoan({
+      const created = await createLoan({
         clientId: selectedClient.id,
         productId: selectedProduct.id,
         principal,
@@ -1529,6 +1560,7 @@ export function NewLoanPage() {
         lateFeeCalculation,
         lateFeeValue: parseNumber(lateFeeValue),
         lateFeeGraceDays: Number(lateFeeGraceDays),
+        generateReceipt,
       });
       invalidateCachePrefix('loans:');
       invalidateCachePrefix('clients:');
@@ -1537,7 +1569,12 @@ export function NewLoanPage() {
       invalidateCache('monthlyCollections');
       invalidateCache('weeklyMovement');
       invalidateCache('upcomingPayments');
-      router.push(`/clientes/${selectedClient.id}?_=${Date.now()}`);
+      if (created.receipt) {
+        setReceiptClientId(selectedClient.id);
+        setCreatedReceipt(created.receipt);
+      } else {
+        router.push(`/clientes/${selectedClient.id}?_=${Date.now()}`);
+      }
     } catch {
       setSaveError('No se pudo guardar la operación. Actualiza los saldos e inténtalo de nuevo.');
     } finally {
@@ -1624,6 +1661,17 @@ export function NewLoanPage() {
             onLateFeeValueChange={setLateFeeValue}
             lateFeeGraceDays={lateFeeGraceDays}
             onLateFeeGraceDaysChange={setLateFeeGraceDays}
+            generateReceipt={generateReceipt}
+            onGenerateReceiptChange={setGenerateReceipt}
+          />
+        )}
+        {createdReceipt && (
+          <LoanDisbursementReceiptModal
+            onClose={() => {
+              setCreatedReceipt(null);
+              if (receiptClientId) router.push(`/clientes/${receiptClientId}?_=${Date.now()}`);
+            }}
+            receipt={createdReceipt}
           />
         )}
       </div>

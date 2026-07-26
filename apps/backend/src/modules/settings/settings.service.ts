@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
+import { UpdateSettingsDto } from './dto/update-settings.dto';
 
 @Injectable()
 export class SettingsService {
@@ -11,11 +12,11 @@ export class SettingsService {
     });
   }
 
-  async update(graceDays: number) {
+  async update(dto: UpdateSettingsDto) {
     return prisma.systemSettings.upsert({
       where: { id: 1 },
-      update: { graceDays },
-      create: { id: 1, graceDays },
+      update: dto,
+      create: { id: 1, ...dto },
     });
   }
 }

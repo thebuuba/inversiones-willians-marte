@@ -15,7 +15,13 @@ import {
   ReceiptText,
   WalletCards,
 } from 'lucide-react';
-import { addLoanCapital, getLoan, getPayoffQuote, type LoanDetail } from '@/lib/api/loans';
+import {
+  addLoanCapital,
+  generateLoanReceipt,
+  getLoan,
+  getPayoffQuote,
+  type LoanDetail,
+} from '@/lib/api/loans';
 import { invalidateCachePrefix } from '@/lib/use-client-cache';
 import { formatDop } from '@/lib/currency';
 import { getLoanTypeLabel } from '@/lib/loan-type';
@@ -28,6 +34,8 @@ import {
 import { DatePickerInput } from '@/components/ui/date-picker-input';
 import type { LoanPayoffQuote } from '@inversiones/shared';
 import { CollectionManagementPanel } from './collection-management-panel';
+import { LoanDisbursementReceiptModal } from './loan-disbursement-receipt-modal';
+import type { LoanReceipt } from '@inversiones/shared';
 
 const fmt = (value: number | string) => formatDop(value, { decimals: 2, space: true });
 const fmtDate = (value: string) =>
@@ -169,6 +177,9 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
   const [activeTab, setActiveTab] = useState<LoanTab>(
     searchParams.get('agreement') === '1' ? 'Cobranza' : 'Resumen',
   );
+  const [openReceipt, setOpenReceipt] = useState<LoanReceipt | null>(null);
+  const [receiptSaving, setReceiptSaving] = useState(false);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
 
   const loadLoan = useCallback(async () => {
     try {
@@ -280,6 +291,25 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
     }
   }
 
+  async function handleReceipt() {
+    if (!loan) return;
+    if (loan.receipt) {
+      setOpenReceipt(loan.receipt);
+      return;
+    }
+    setReceiptSaving(true);
+    setReceiptError(null);
+    try {
+      const receipt = await generateLoanReceipt(loan.id);
+      setLoan((current) => (current ? { ...current, receipt } : current));
+      setOpenReceipt(receipt);
+    } catch {
+      setReceiptError('No se pudo generar el recibo. Inténtalo de nuevo.');
+    } finally {
+      setReceiptSaving(false);
+    }
+  }
+
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-page text-sm font-medium text-text-muted">
@@ -338,6 +368,15 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <button
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-primary-accent transition hover:bg-primary-soft disabled:opacity-60"
+                disabled={receiptSaving}
+                onClick={handleReceipt}
+                type="button"
+              >
+                <ReceiptText className="h-4 w-4" />
+                {receiptSaving ? 'Generando...' : loan.receipt ? 'Ver recibo' : 'Generar recibo'}
+              </button>
               <Link
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-primary-accent transition hover:bg-primary-soft"
                 href={`/prestamos/${loan.id}/editar`}
@@ -355,6 +394,14 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
             </div>
           </div>
         </header>
+        {receiptError && (
+          <p
+            className="mt-4 rounded-control-comfortable border border-state-danger-bg bg-state-danger-bg px-4 py-3 text-sm font-medium text-state-danger"
+            role="alert"
+          >
+            {receiptError}
+          </p>
+        )}
 
         <section className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
           <SummaryCard
@@ -672,6 +719,12 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
           </aside> : null}
         </section>
       </div>
+      {openReceipt && (
+        <LoanDisbursementReceiptModal
+          onClose={() => setOpenReceipt(null)}
+          receipt={openReceipt}
+        />
+      )}
     </main>
   );
 }

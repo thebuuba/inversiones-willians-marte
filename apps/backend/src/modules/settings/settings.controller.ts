@@ -19,6 +19,6 @@ export class SettingsController {
   @Patch()
   @Roles('ADMIN')
   update(@Body() dto: UpdateSettingsDto) {
-    return this.settings.update(dto.graceDays);
+    return this.settings.update(dto);
   }
 }

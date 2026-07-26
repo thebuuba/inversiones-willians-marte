@@ -11,6 +11,10 @@ jest.mock('@inversiones/database', () => ({
       updateMany: jest.fn(),
     },
     loanReplacement: { createMany: jest.fn() },
+    loanReceipt: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+    },
     paymentSchedule: {
       findMany: jest.fn(),
       upsert: jest.fn(),
@@ -89,6 +93,62 @@ describe('LoansService', () => {
         }),
       }),
     );
+  });
+
+  it('creates one immutable disbursement receipt per loan', async () => {
+    jest.mocked(prisma.loanReceipt.findUnique).mockResolvedValue(null);
+    jest.mocked(prisma.loan.findUnique).mockResolvedValue({
+      id: 'loan-1',
+      loanNumber: 25,
+      principal: 50000,
+      disbursedAmount: 35000,
+      paymentFreq: 'BIWEEKLY',
+      term: 12,
+      operationType: 'REENGAGEMENT',
+      notes: 'Capital de trabajo',
+      createdAt: new Date('2026-07-26T12:00:00.000Z'),
+      client: { id: 1, firstName: 'Juan', lastName: 'Pérez', identification: '001' },
+      product: { name: 'Préstamo comercial' },
+      createdBy: { name: 'Nata' },
+      schedule: [{ dueDate: new Date('2026-08-10T00:00:00.000Z') }],
+    } as any);
+    jest.mocked(prisma.systemSettings.findUnique).mockResolvedValue({
+      id: 1,
+      graceDays: 5,
+      companyName: 'Inversiones Willians Marte',
+      companyTaxId: '123',
+    } as any);
+    jest.mocked(prisma.loanReceipt.create).mockImplementation(({ data }) =>
+      Promise.resolve({ id: 'receipt-1', ...data } as any),
+    );
+
+    const receipt = await service.ensureReceipt('loan-1', 'user-1');
+
+    expect(prisma.loanReceipt.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        loanId: 'loan-1',
+        receiptNumber: 25,
+        generatedById: 'user-1',
+        snapshot: expect.objectContaining({
+          client: expect.objectContaining({ name: 'Juan Pérez' }),
+          loan: expect.objectContaining({ principal: 50000, disbursedAmount: 35000 }),
+        }),
+      }),
+    });
+    expect(receipt).toMatchObject({ receiptNumber: 25 });
+  });
+
+  it('returns the existing receipt instead of creating a duplicate', async () => {
+    jest.mocked(prisma.loanReceipt.findUnique).mockResolvedValue({
+      id: 'receipt-1',
+      loanId: 'loan-1',
+      receiptNumber: 25,
+    } as any);
+
+    await expect(service.ensureReceipt('loan-1', 'user-1')).resolves.toMatchObject({
+      id: 'receipt-1',
+    });
+    expect(prisma.loanReceipt.create).not.toHaveBeenCalled();
   });
 
   it('repairs an active indefinite loan with no pending schedule when loading its detail', async () => {
