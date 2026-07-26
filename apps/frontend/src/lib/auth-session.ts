@@ -3,7 +3,7 @@ import { clearClientCache } from './client-cache.ts';
 export interface User {
   id: string;
   name: string;
-  username?: string | null;
+  username: string;
   email: string;
   role: string;
 }
@@ -41,14 +41,16 @@ export function parseStoredAuth(stored: string | null): StoredAuth {
 }
 
 export function getStoredAuth(): StoredAuth {
-  const persistent = typeof localStorage !== 'undefined'
-    ? parseStoredAuth(localStorage.getItem(AUTH_STORAGE_KEY))
-    : { user: null, token: null };
+  const persistent =
+    typeof localStorage !== 'undefined'
+      ? parseStoredAuth(localStorage.getItem(AUTH_STORAGE_KEY))
+      : { user: null, token: null };
   if (persistent.token) return persistent;
 
-  const session = typeof sessionStorage !== 'undefined'
-    ? parseStoredAuth(sessionStorage.getItem(AUTH_STORAGE_KEY))
-    : { user: null, token: null };
+  const session =
+    typeof sessionStorage !== 'undefined'
+      ? parseStoredAuth(sessionStorage.getItem(AUTH_STORAGE_KEY))
+      : { user: null, token: null };
 
   // Migrate sessions created before authentication became permanently persistent.
   if (session.token) saveStoredAuth(session);
@@ -71,7 +73,9 @@ function isRejectedSession(error: unknown) {
   return response?.status === 401 || response?.status === 403;
 }
 
-export async function loadStoredAuthSession(fetchProfile: () => Promise<User>): Promise<StoredAuth> {
+export async function loadStoredAuthSession(
+  fetchProfile: () => Promise<User>,
+): Promise<StoredAuth> {
   const stored = getStoredAuth();
   if (!stored.token) return stored;
 

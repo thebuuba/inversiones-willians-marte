@@ -62,7 +62,7 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should return token and user on valid credentials', async () => {
-      jest.mocked(prisma.user.findFirst).mockResolvedValue(mockUser as any);
+      jest.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
       jest.mocked(bcrypt.compare).mockResolvedValue(true as never);
 
       const dto: LoginDto = { username: 'testuser', password: 'password123' };
@@ -82,7 +82,7 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException on invalid password', async () => {
-      jest.mocked(prisma.user.findFirst).mockResolvedValue(mockUser as any);
+      jest.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
       jest.mocked(bcrypt.compare).mockResolvedValue(false as never);
 
       const dto: LoginDto = { username: 'testuser', password: 'wrong' };
@@ -90,7 +90,7 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException when user not found', async () => {
-      jest.mocked(prisma.user.findFirst).mockResolvedValue(null);
+      jest.mocked(prisma.user.findUnique).mockResolvedValue(null);
       jest.mocked(bcrypt.compare).mockResolvedValue(false as never);
 
       const dto: LoginDto = { username: 'nobody', password: 'password123' };
@@ -102,7 +102,7 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException when account is disabled', async () => {
-      jest.mocked(prisma.user.findFirst).mockResolvedValue({ ...mockUser, active: false } as any);
+      jest.mocked(prisma.user.findUnique).mockResolvedValue({ ...mockUser, active: false } as any);
       jest.mocked(bcrypt.compare).mockResolvedValue(true as never);
 
       const dto: LoginDto = { username: 'testuser', password: 'password123' };
@@ -185,7 +185,7 @@ describe('AuthService', () => {
 
   describe('register', () => {
     it('should register a new user and return session', async () => {
-      jest.mocked(prisma.user.findFirst).mockResolvedValue(null);
+      jest.mocked(prisma.user.findUnique).mockResolvedValue(null);
       jest.mocked(prisma.user.create).mockResolvedValue(mockUser as any);
 
       const dto: RegisterDto = { name: 'Test User', username: 'testuser', password: 'password123' };
@@ -200,7 +200,7 @@ describe('AuthService', () => {
     });
 
     it('should throw ConflictException when username exists', async () => {
-      jest.mocked(prisma.user.findFirst).mockResolvedValue(mockUser as any);
+      jest.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
 
       const dto: RegisterDto = { name: 'Test User', username: 'testuser', password: 'password123' };
       await expect(service.register(dto)).rejects.toThrow(ConflictException);

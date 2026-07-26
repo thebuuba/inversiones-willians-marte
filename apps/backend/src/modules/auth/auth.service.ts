@@ -12,7 +12,7 @@ const REFRESH_SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 type SessionUser = {
   id: string;
   name: string;
-  username: string | null;
+  username: string;
   email: string;
   role: string;
 };
@@ -64,11 +64,7 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const login = dto.username.trim().toLowerCase();
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [{ username: login }, { email: login }],
-      },
-    });
+    const user = await prisma.user.findUnique({ where: { username: login } });
     const valid = await bcrypt.compare(dto.password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
     if (!user || !valid) throw new UnauthorizedException('Invalid credentials');
     if (!user.active) throw new UnauthorizedException('Account is disabled');
@@ -78,11 +74,7 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const username = dto.username.trim().toLowerCase();
-    const exists = await prisma.user.findFirst({
-      where: {
-        OR: [{ username }, { email: `${username}@usuarios.local` }],
-      },
-    });
+    const exists = await prisma.user.findUnique({ where: { username } });
     if (exists) throw new ConflictException('Nombre de usuario ya registrado');
 
     const passwordHash = await bcrypt.hash(dto.password, 10);

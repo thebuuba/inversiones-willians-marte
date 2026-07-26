@@ -4,7 +4,7 @@ import type { ApiResponse } from '@inversiones/shared';
 export interface UserItem {
   id: string;
   name: string;
-  username?: string | null;
+  username: string;
   email: string;
   role: string;
   active: boolean;
@@ -13,8 +13,7 @@ export interface UserItem {
 
 export interface CreateUserInput {
   name: string;
-  username?: string;
-  email: string;
+  username: string;
   password: string;
   role: string;
 }

@@ -35,11 +35,12 @@ describe('UsersService', () => {
   });
 
   it('writes an audit event when an admin creates a user', async () => {
-    jest.mocked(prisma.user.findFirst).mockResolvedValue(null);
+    jest.mocked(prisma.user.findUnique).mockResolvedValue(null);
     jest.mocked(prisma.user.create).mockResolvedValue({
       id: 'user-2',
       name: 'Collector',
-      email: 'collector@example.com',
+      username: 'collector',
+      email: 'collector@usuarios.local',
       role: 'COLLECTOR',
       active: true,
     } as any);
@@ -47,7 +48,7 @@ describe('UsersService', () => {
     await service.create(
       {
         name: 'Collector',
-        email: 'collector@example.com',
+        username: 'collector',
         password: 'Secret123',
         role: 'COLLECTOR',
       },
@@ -66,13 +67,13 @@ describe('UsersService', () => {
     });
   });
 
-  it('normalizes email and username so the new user can log in consistently', async () => {
-    jest.mocked(prisma.user.findFirst).mockResolvedValue(null);
+  it('normalizes the username and creates its internal email', async () => {
+    jest.mocked(prisma.user.findUnique).mockResolvedValue(null);
     jest.mocked(prisma.user.create).mockResolvedValue({
       id: 'user-2',
       name: 'Collector',
       username: 'collector.one',
-      email: 'collector@example.com',
+      email: 'collector.one@usuarios.local',
       role: 'COLLECTOR',
       active: true,
     } as any);
@@ -80,21 +81,18 @@ describe('UsersService', () => {
     await service.create({
       name: 'Collector',
       username: ' Collector.One ',
-      email: ' Collector@Example.COM ',
       password: 'Secret123',
       role: 'COLLECTOR',
     });
 
-    expect(prisma.user.findFirst).toHaveBeenCalledWith({
-      where: {
-        OR: [{ email: 'collector@example.com' }, { username: 'collector.one' }],
-      },
+    expect(prisma.user.findUnique).toHaveBeenCalledWith({
+      where: { username: 'collector.one' },
     });
     expect(prisma.user.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           username: 'collector.one',
-          email: 'collector@example.com',
+          email: 'collector.one@usuarios.local',
         }),
       }),
     );

@@ -7,7 +7,7 @@ import { getJwtSecret } from '../../../config/jwt-secret';
 
 interface JwtPayload {
   sub: string;
-  username?: string | null;
+  username: string;
   email: string;
   role: string;
 }

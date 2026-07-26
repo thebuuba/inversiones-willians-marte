@@ -6,14 +6,10 @@ import { CreateUserDto } from './dto/create-user.dto';
 @Injectable()
 export class UsersService {
   async create(dto: CreateUserDto, actorUserId?: string) {
-    const email = dto.email.trim().toLowerCase();
-    const username = dto.username?.trim().toLowerCase();
-    const exists = await prisma.user.findFirst({
-      where: {
-        OR: [{ email }, ...(username ? [{ username }] : [])],
-      },
-    });
-    if (exists) throw new ConflictException('Email or username already registered');
+    const username = dto.username.trim().toLowerCase();
+    const email = `${username}@usuarios.local`;
+    const exists = await prisma.user.findUnique({ where: { username } });
+    if (exists) throw new ConflictException('Nombre de usuario ya registrado');
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
