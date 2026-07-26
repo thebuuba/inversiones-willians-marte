@@ -5,6 +5,7 @@ import type {
   CreateLoanDto,
   LoanPayoffQuote,
   UpdateLoanDto,
+  LoanReceipt,
 } from '@inversiones/shared';
 
 export interface LoanListClient {
@@ -127,6 +128,14 @@ export interface LoanDetail extends LoanListItem {
   payments: LoanDetailPayment[];
   capitalMovements?: LoanCapitalMovement[];
   lateFees?: LoanDetailLateFee[];
+  receipt?: LoanReceipt | null;
+}
+
+export interface CreatedLoan {
+  id: string;
+  clientId: number;
+  loanNumber: number;
+  receipt: LoanReceipt | null;
 }
 
 export async function getLoans(
@@ -151,9 +160,19 @@ export async function getLoan(id: string): Promise<LoanDetail> {
   return data.data as LoanDetail;
 }
 
-export async function createLoan(dto: CreateLoanDto) {
+export async function createLoan(dto: CreateLoanDto): Promise<CreatedLoan> {
   const { data } = await api.post<ApiResponse>('/loans', dto);
-  return data.data;
+  return data.data as CreatedLoan;
+}
+
+export async function getLoanReceipt(loanId: string): Promise<LoanReceipt> {
+  const { data } = await api.get<ApiResponse<LoanReceipt>>(`/loans/${loanId}/receipt`);
+  return data.data as LoanReceipt;
+}
+
+export async function generateLoanReceipt(loanId: string): Promise<LoanReceipt> {
+  const { data } = await api.post<ApiResponse<LoanReceipt>>(`/loans/${loanId}/receipt`);
+  return data.data as LoanReceipt;
 }
 
 export async function getPayoffQuote(loanId: string, payoffDate: string): Promise<LoanPayoffQuote> {

@@ -197,6 +197,49 @@ export interface CreateLoanDto {
   lateFeeCalculation?: 'PERCENTAGE' | 'AMOUNT';
   lateFeeValue?: number;
   lateFeeGraceDays?: number;
+  generateReceipt?: boolean;
+}
+
+export interface LoanReceiptSnapshot {
+  company: {
+    name: string;
+    taxId: string | null;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+  };
+  client: {
+    id: number;
+    name: string;
+    identification: string | null;
+  };
+  loan: {
+    id: string;
+    number: number;
+    product: string;
+    operationType: LoanOperationType;
+    principal: number;
+    disbursedAmount: number;
+    paymentFrequency: PaymentFrequency;
+    term: number;
+    firstPaymentDate: string | null;
+    purpose: string | null;
+    createdAt: string;
+  };
+  issuance: {
+    receiptNumber: number;
+    issuedAt: string;
+    generatedBy: string;
+  };
+}
+
+export interface LoanReceipt {
+  id: string;
+  loanId: string;
+  receiptNumber: number;
+  snapshot: LoanReceiptSnapshot;
+  generatedById: string;
+  createdAt: string;
 }
 
 export interface UpdateLoanDto {

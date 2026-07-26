@@ -107,6 +107,10 @@ export class CreateLoanDto {
   @Min(0)
   @Max(365)
   lateFeeGraceDays?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  generateReceipt?: boolean;
 }
 
 export interface AmortizationRow {

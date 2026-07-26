@@ -70,6 +70,18 @@ export class LoansController {
     return this.loans.getPayoffQuote(id, payoffDate);
   }
 
+  @Get(':id/receipt')
+  @Roles('ADMIN', 'COLLECTOR')
+  getReceipt(@Param('id') id: string) {
+    return this.loans.getReceipt(id);
+  }
+
+  @Post(':id/receipt')
+  @Roles('ADMIN', 'COLLECTOR')
+  ensureReceipt(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.loans.ensureReceipt(id, userId);
+  }
+
   @Patch(':id')
   @Roles('ADMIN', 'COLLECTOR')
   update(@Param('id') id: string, @Body() dto: UpdateLoanDto, @CurrentUser('id') userId: string) {

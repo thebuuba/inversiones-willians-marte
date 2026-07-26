@@ -186,6 +186,7 @@ function FormInput({
   multiline = false,
   prefix,
   suffix,
+  onChange,
 }: {
   label: string;
   value: string;
@@ -194,6 +195,7 @@ function FormInput({
   multiline?: boolean;
   prefix?: string;
   suffix?: string;
+  onChange?: (value: string) => void;
 }) {
   return (
     <label className={`block ${className}`}>
@@ -201,14 +203,16 @@ function FormInput({
       {multiline ? (
         <textarea
           className="h-[96px] w-full resize-none rounded-control border border-primary-border bg-card px-4 py-3 text-sm font-medium text-text-primary shadow-soft outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
-          defaultValue={value}
+          onChange={(event) => onChange?.(event.target.value)}
+          value={value}
         />
       ) : (
         <div className="flex h-11 w-full items-center rounded-control border border-primary-border bg-card px-4 text-sm font-medium text-text-primary shadow-soft transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-soft">
           {prefix && <span className="mr-3 shrink-0 text-text-secondary">{prefix}</span>}
           <input
             className="h-full min-w-0 flex-1 bg-transparent outline-none"
-            defaultValue={value}
+            onChange={(event) => onChange?.(event.target.value)}
+            value={value}
           />
           {suffix && <span className="ml-3 shrink-0 text-text-secondary">{suffix}</span>}
         </div>
@@ -271,6 +275,55 @@ function ToggleSwitch({ defaultChecked = false }: { defaultChecked?: boolean }) 
 }
 
 function CompanyInfoCard() {
+  const [company, setCompany] = useState({
+    companyName: 'Inversiones Willians Marte',
+    companyTaxId: '',
+    companyEmail: '',
+    companyPhone: '',
+    companyAddress: '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    getSettings()
+      .then((settings) =>
+        setCompany({
+          companyName: settings.companyName,
+          companyTaxId: settings.companyTaxId ?? '',
+          companyEmail: settings.companyEmail ?? '',
+          companyPhone: settings.companyPhone ?? '',
+          companyAddress: settings.companyAddress ?? '',
+        }),
+      )
+      .catch(() => undefined);
+  }, []);
+
+  function change(field: keyof typeof company) {
+    return (value: string) => {
+      setCompany((current) => ({ ...current, [field]: value }));
+      setSaved(false);
+    };
+  }
+
+  async function saveCompany() {
+    setSaving(true);
+    setSaved(false);
+    try {
+      const settings = await updateSettings(company);
+      setCompany({
+        companyName: settings.companyName,
+        companyTaxId: settings.companyTaxId ?? '',
+        companyEmail: settings.companyEmail ?? '',
+        companyPhone: settings.companyPhone ?? '',
+        companyAddress: settings.companyAddress ?? '',
+      });
+      setSaved(true);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <SectionCard className="p-6" index={2}>
       <CardTitle
@@ -282,17 +335,30 @@ function CompanyInfoCard() {
       <LogoUploader />
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-        <FormInput label="Nombre comercial" value="" />
-        <FormInput label="RNC / Identificación" value="" />
-        <FormInput label="Correo de contacto" value="" />
-        <FormInput label="Teléfono" value="" />
+        <FormInput label="Nombre comercial" onChange={change('companyName')} value={company.companyName} />
+        <FormInput label="RNC / Identificación" onChange={change('companyTaxId')} value={company.companyTaxId} />
+        <FormInput label="Correo de contacto" onChange={change('companyEmail')} value={company.companyEmail} />
+        <FormInput label="Teléfono" onChange={change('companyPhone')} value={company.companyPhone} />
         <FormInput
           className="md:col-span-2"
           helper="Aparece en facturas y contratos."
           label="Dirección"
           multiline
-          value=""
+          onChange={change('companyAddress')}
+          value={company.companyAddress}
         />
+      </div>
+      <div className="mt-5 flex items-center justify-end gap-3">
+        {saved && <span className="text-sm font-bold text-state-success">Información guardada</span>}
+        <button
+          className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary disabled:opacity-60"
+          disabled={saving || !company.companyName.trim()}
+          onClick={saveCompany}
+          type="button"
+        >
+          <Check className="h-4 w-4" />
+          {saving ? 'Guardando...' : 'Guardar empresa'}
+        </button>
       </div>
     </SectionCard>
   );

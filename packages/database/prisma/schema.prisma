@@ -135,6 +135,7 @@ model User {
   tasks                       Task[]
   portfolios                  Portfolio[]
   loanCapitalMovements        LoanCapitalMovement[]
+  generatedLoanReceipts       LoanReceipt[]                  @relation("LoanReceiptGeneratedBy")
   collectionInteractions      CollectionInteraction[]      @relation("CollectionInteractionCreatedBy")
   paymentPromises             PaymentPromise[]             @relation("PaymentPromiseCreatedBy")
   cashMovements               CashMovement[]
@@ -316,6 +317,7 @@ model Loan {
   portfolio              Portfolio?              @relation(fields: [portfolioId], references: [id])
   replacementSources     LoanReplacement[]       @relation("ReplacementLoan")
   replacementTargets     LoanReplacement[]       @relation("SourceLoan")
+  receipt                LoanReceipt?
 
   @@index([clientId, createdAt])
   @@index([status, createdAt])
@@ -337,6 +339,21 @@ model LoanReplacement {
   @@id([newLoanId, sourceLoanId])
   @@index([sourceLoanId])
   @@map("loan_replacements")
+}
+
+model LoanReceipt {
+  id            String   @id @default(uuid())
+  loanId        String   @unique @map("loan_id")
+  receiptNumber Int      @unique @map("receipt_number")
+  snapshot      Json
+  generatedById String   @map("generated_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  loan        Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  generatedBy User @relation("LoanReceiptGeneratedBy", fields: [generatedById], references: [id])
+
+  @@index([createdAt])
+  @@map("loan_receipts")
 }
 
 // ─── Payment Schedule ──────────────────────────────────────────────────────
@@ -739,9 +756,14 @@ model Portfolio {
 }
 
 model SystemSettings {
-  id        Int      @id @default(1)
-  graceDays Int      @default(5) @map("grace_days")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id             Int      @id @default(1)
+  graceDays      Int      @default(5) @map("grace_days")
+  companyName    String   @default("Inversiones Willians Marte") @map("company_name")
+  companyTaxId   String?  @map("company_tax_id")
+  companyEmail   String?  @map("company_email")
+  companyPhone   String?  @map("company_phone")
+  companyAddress String?  @map("company_address")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("system_settings")
 }

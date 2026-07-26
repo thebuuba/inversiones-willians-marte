@@ -53,6 +53,69 @@ export class LoansService {
     private payoff: LoanPayoffService,
   ) {}
 
+  private async createReceipt(tx: Prisma.TransactionClient, loanId: string, userId: string) {
+    const existing = await tx.loanReceipt.findUnique({ where: { loanId } });
+    if (existing) return existing;
+
+    const [loan, settings] = await Promise.all([
+      tx.loan.findUnique({
+        where: { id: loanId },
+        include: {
+          client: true,
+          product: true,
+          createdBy: { select: { name: true } },
+          schedule: { orderBy: { dueDate: 'asc' }, take: 1 },
+        },
+      }),
+      tx.systemSettings.findUnique({ where: { id: 1 } }),
+    ]);
+    if (!loan) throw new NotFoundException('Loan not found');
+
+    const issuedAt = new Date();
+    const snapshot = {
+      company: {
+        name: settings?.companyName ?? 'Inversiones Willians Marte',
+        taxId: settings?.companyTaxId ?? null,
+        email: settings?.companyEmail ?? null,
+        phone: settings?.companyPhone ?? null,
+        address: settings?.companyAddress ?? null,
+      },
+      client: {
+        id: loan.client.id,
+        name: `${loan.client.firstName} ${loan.client.lastName}`.trim(),
+        identification: loan.client.identification ?? null,
+      },
+      loan: {
+        id: loan.id,
+        number: loan.loanNumber,
+        product: loan.product.name,
+        operationType: loan.operationType,
+        principal: Number(loan.principal),
+        disbursedAmount: Number(loan.disbursedAmount ?? loan.principal),
+        paymentFrequency: loan.paymentFreq,
+        term: loan.term,
+        firstPaymentDate: loan.schedule[0]?.dueDate.toISOString() ?? null,
+        purpose: loan.notes ?? null,
+        createdAt: loan.createdAt.toISOString(),
+      },
+      issuance: {
+        receiptNumber: loan.loanNumber,
+        issuedAt: issuedAt.toISOString(),
+        generatedBy: loan.createdBy.name,
+      },
+    };
+
+    return tx.loanReceipt.create({
+      data: {
+        loanId,
+        receiptNumber: loan.loanNumber,
+        snapshot,
+        generatedById: userId,
+        createdAt: issuedAt,
+      },
+    });
+  }
+
   async create(dto: CreateLoanDto, userId: string) {
     return prisma.$transaction(
       async (tx) => {
@@ -299,7 +362,10 @@ export class LoansService {
           },
         });
 
-        return loan;
+        const receipt = dto.generateReceipt
+          ? await this.createReceipt(tx, loan.id, userId)
+          : null;
+        return { ...loan, receipt };
       },
       { isolationLevel: 'Serializable' },
     );
@@ -538,6 +604,7 @@ export class LoansService {
           },
           orderBy: { createdAt: 'desc' },
         },
+        receipt: true,
       },
     });
     if (!loan) throw new NotFoundException('Loan not found');
@@ -592,6 +659,18 @@ export class LoansService {
       graceDays,
       collectionStatus: getLoanCollectionStatus(loan, graceDays),
     };
+  }
+
+  async getReceipt(id: string) {
+    const receipt = await prisma.loanReceipt.findUnique({ where: { loanId: id } });
+    if (!receipt) throw new NotFoundException('Loan receipt not found');
+    return receipt;
+  }
+
+  async ensureReceipt(id: string, userId: string) {
+    return prisma.$transaction((tx) => this.createReceipt(tx, id, userId), {
+      isolationLevel: 'Serializable',
+    });
   }
 
   async addCapital(id: string, dto: AddLoanCapitalDto, userId: string) {
