@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { useEffect, useState, type FormEvent } from 'react';
-import { ArrowLeft, Banknote, Plus } from 'lucide-react';
+import { ArrowLeft, Banknote, Plus, Printer } from 'lucide-react';
 import { addInvestmentCapital, getInvestment } from '@/lib/api/investments';
 import { formatDop } from '@/lib/currency';
-import type { InvestorInvestmentDetail, InvestorInvestmentMovementItem } from '@inversiones/shared';
+import type { InvestorInvestmentDetail, InvestorInvestmentMovementItem, InvestorPaymentItem } from '@inversiones/shared';
 import { CapitalAdditionReceiptModal } from './capital-addition-receipt-modal';
+import { PaymentReceiptModal } from './payment-receipt-modal';
+import { InvestmentReceiptModal } from './investment-receipt-modal';
 
 const fmt = (n: number | string) => formatDop(n, { space: true });
 const fmtDate = (s: string | Date) =>
@@ -32,6 +34,8 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
   const [createdMovement, setCreatedMovement] = useState<InvestorInvestmentMovementItem | null>(null);
   const [previousCapital, setPreviousCapital] = useState(0);
   const [previousMonthlyPayment, setPreviousMonthlyPayment] = useState(0);
+  const [selectedPayment, setSelectedPayment] = useState<InvestorPaymentItem | null>(null);
+  const [showInvestmentReceipt, setShowInvestmentReceipt] = useState(false);
 
   useEffect(() => {
     getInvestment(investmentId)
@@ -113,6 +117,14 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
               <Link className="rounded-full bg-primary-accent px-5 py-2 text-sm font-bold text-white" href={`/inversionistas/pago?investmentId=${investment.id}`}>
                 Registrar pago
               </Link>
+              <button
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-primary-border px-5 text-sm font-bold hover:bg-primary-soft"
+                onClick={() => setShowInvestmentReceipt(true)}
+                type="button"
+              >
+                <Printer className="h-4 w-4" />
+                Recibo de inversión
+              </button>
             </div>
           </div>
 
@@ -178,12 +190,23 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
               ) : (
                 <div className="space-y-3">
                   {(investment.payments ?? []).map((payment) => (
-                    <div key={payment.id} className="flex items-center justify-between border-b border-border-soft pb-3 last:border-0">
+                    <div key={payment.id} className="flex items-center justify-between gap-3 border-b border-border-soft pb-3 last:border-0">
                       <div>
                         <p className="text-sm font-bold">Periodo {payment.periodMonth}/{payment.periodYear}</p>
                         <p className="text-xs text-text-subtle">{fmtDate(payment.paymentDate)}</p>
                       </div>
-                      <span className="text-sm font-bold text-primary-accent">{fmt(payment.amount)}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-bold text-primary-accent">{fmt(payment.amount)}</span>
+                        <button
+                          aria-label={`Ver recibo ${payment.receiptNumber}`}
+                          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-primary-border px-4 text-sm font-bold hover:bg-primary-soft"
+                          onClick={() => setSelectedPayment(payment)}
+                          type="button"
+                        >
+                          <Printer className="h-4 w-4" />
+                          Recibo
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -224,6 +247,21 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           previousCapital={previousCapital}
           previousMonthlyPayment={previousMonthlyPayment}
           onClose={() => setCreatedMovement(null)}
+        />
+      )}
+      {selectedPayment && investment.investor && (
+        <PaymentReceiptModal
+          investment={investment}
+          investor={investment.investor}
+          onClose={() => setSelectedPayment(null)}
+          payment={selectedPayment}
+        />
+      )}
+      {showInvestmentReceipt && investment.investor && (
+        <InvestmentReceiptModal
+          investment={investment}
+          investor={investment.investor}
+          onClose={() => setShowInvestmentReceipt(false)}
         />
       )}
     </>

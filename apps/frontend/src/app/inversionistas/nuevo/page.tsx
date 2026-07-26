@@ -14,6 +14,8 @@ import { DatePickerInput } from '@/components/ui/date-picker-input';
 import { getNextMonthIsoDate } from '@/components/ui/date-picker.helpers';
 import { calculateMonthlyInterest, formatDopCurrency } from '@/components/investors/investor-calculation.helpers';
 import { getApiErrorMessage, getInvestorNameValidationError } from '@/components/investors/investor-form.helpers';
+import { InvestmentReceiptModal } from '@/components/investors/investment-receipt-modal';
+import type { InvestorInvestmentSummary, InvestorItem } from '@inversiones/shared';
 
 function maskCedula(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -199,6 +201,13 @@ function AddInvestorForm() {
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(1);
   const [monthlyInterest, setMonthlyInterest] = useState<number | null>(null);
+  const [generateReceipt, setGenerateReceipt] = useState(true);
+  const [loadedInvestor, setLoadedInvestor] = useState<InvestorItem | null>(null);
+  const [createdReceipt, setCreatedReceipt] = useState<{
+    investor: InvestorItem;
+    investment: InvestorInvestmentSummary;
+    continueAdding: boolean;
+  } | null>(null);
 
   const [form, setForm] = useState({
     firstName: '', lastName: '', cedula: '', birthDate: '', nationality: '', type: 'individual',
@@ -221,6 +230,7 @@ function AddInvestorForm() {
     if (!investorToLoadId) return;
     getInvestor(investorToLoadId).then((inv) => {
       if (!inv) return;
+      setLoadedInvestor(inv);
       const [firstName = '', ...rest] = inv.name.split(' ');
       setForm((f) => ({
         ...f,
@@ -283,8 +293,9 @@ function AddInvestorForm() {
         notes: form.notes || undefined,
       };
 
+      let receiptData: typeof createdReceipt = null;
       if (isCreatingAdditionalInvestment && sourceInvestorId) {
-        await createInvestment(sourceInvestorId, {
+        const investment = await createInvestment(sourceInvestorId, {
           capital,
           monthlyPayment: calculatedMonthlyInterest ?? 0,
           rate: Number(form.rate) || 0,
@@ -292,19 +303,27 @@ function AddInvestorForm() {
           term: form.term,
           notes: form.notes || undefined,
         });
+        if (generateReceipt && loadedInvestor) {
+          receiptData = { investor: loadedInvestor, investment, continueAdding: andNew };
+        }
       } else if (isEditing && editInvestorId) {
         await updateInvestor(editInvestorId, payload);
       } else {
-        await createInvestor(payload);
+        const investor = await createInvestor(payload);
+        const investment = investor.investments?.[0];
+        if (generateReceipt && investment) {
+          receiptData = { investor, investment, continueAdding: andNew };
+        }
       }
       invalidateCache('investors');
       if (andNew) {
         setForm({ firstName: '', lastName: '', cedula: '', birthDate: '', nationality: '', type: 'individual', phone: '', phone2: '', email: '', capital: '', rate: '', frequency: 'mensual', startDate: getNextMonthIsoDate(), term: '12m', bank: '', notes: '' });
         setPhoto(null);
         setMonthlyInterest(null);
-      } else {
+      } else if (!receiptData) {
         router.push(isCreatingAdditionalInvestment && sourceInvestorId ? `/inversionistas/${sourceInvestorId}` : '/inversionistas');
       }
+      if (receiptData) setCreatedReceipt(receiptData);
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, 'Error al guardar el inversionista'));
     }
@@ -521,6 +540,25 @@ function AddInvestorForm() {
                     </Field>
                   </FormSection>
                 </MotionCard>
+
+                {!isEditing && (
+                  <MotionCard index={3} className="lg:col-span-2">
+                    <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-panel border border-border-soft bg-card px-6 py-4 shadow-card">
+                      <input
+                        checked={generateReceipt}
+                        className="h-5 w-5 accent-primary"
+                        onChange={(event) => setGenerateReceipt(event.target.checked)}
+                        type="checkbox"
+                      />
+                      <span>
+                        <span className="block text-sm font-bold text-text-primary">Generar recibo</span>
+                        <span className="block text-xs text-text-muted">
+                          Abrir el recibo de recepción de capital al guardar la inversión.
+                        </span>
+                      </span>
+                    </label>
+                  </MotionCard>
+                )}
               </div>
             </motion.div>
           )}
@@ -530,6 +568,17 @@ function AddInvestorForm() {
           <StepIndicator step={step} onStep={setStep} />
         </div>
       </div>
+      {createdReceipt && (
+        <InvestmentReceiptModal
+          investment={createdReceipt.investment}
+          investor={createdReceipt.investor}
+          onClose={() => {
+            const receipt = createdReceipt;
+            setCreatedReceipt(null);
+            if (!receipt.continueAdding) router.push(`/inversionistas/${receipt.investor.id}`);
+          }}
+        />
+      )}
     </div>
   );
 }
