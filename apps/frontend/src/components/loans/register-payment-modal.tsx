@@ -57,12 +57,12 @@ export function RegisterPaymentModal({
     });
   }
 
-  const inputClass = 'h-11 w-full rounded-xl border border-primary-border bg-card px-4 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent';
+  const inputClass = 'h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-[2px]" onClick={onClose}>
       <form
-        className="w-full max-w-[560px] rounded-2xl border border-border-soft bg-card shadow-[0_28px_80px_rgba(0,0,0,0.26)]"
+        className="w-full max-w-[560px] rounded-panel border border-border-soft bg-card shadow-[0_28px_80px_rgba(0,0,0,0.26)]"
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
@@ -100,7 +100,7 @@ export function RegisterPaymentModal({
           </label>
           <label className="block sm:col-span-2">
             <span className="mb-2 block text-sm font-bold text-text-secondary">Notas</span>
-            <textarea className="h-24 w-full resize-none rounded-xl border border-primary-border bg-card px-4 py-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent" onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" value={notes} />
+            <textarea className="h-24 w-full resize-none rounded-control-comfortable border border-primary-border bg-card px-4 py-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent" onChange={(event) => setNotes(event.target.value)} placeholder="Opcional" value={notes} />
           </label>
           {error ? <p className="text-sm font-medium text-state-danger sm:col-span-2">{error}</p> : null}
         </div>

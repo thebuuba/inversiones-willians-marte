@@ -1,20 +1,27 @@
 import { NextResponse } from 'next/server';
-
-function getBackendApiUrl() {
-  return process.env.INTERNAL_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
-}
+import { fetchBackend } from '@/lib/server/auth-session-proxy';
 
 export async function GET(_request: Request, props: { params: Promise<{ token: string }> }) {
   const { token } = await props.params;
-  const response = await fetch(`${getBackendApiUrl()}/documents/capture-sessions/${encodeURIComponent(token)}`, {
-    cache: 'no-store',
-  });
+  let response: Response;
+  try {
+    response = await fetchBackend(
+      `/documents/capture-sessions/${encodeURIComponent(token)}`,
+      { cache: 'no-store', signal: AbortSignal.timeout(15_000) },
+    );
+  } catch {
+    return NextResponse.json(
+      { success: false, error: 'El servicio de captura no está disponible.', statusCode: 502 },
+      { status: 502 },
+    );
+  }
   const body = await response.text();
 
   return new NextResponse(body, {
     status: response.status,
     headers: {
       'content-type': response.headers.get('content-type') ?? 'application/json',
+      'cache-control': 'no-store',
     },
   });
 }

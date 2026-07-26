@@ -74,7 +74,7 @@ function SettingsHeader() {
           <span className="h-2 w-2 rounded-full bg-primary-accent" />
           Sistema
         </span>
-        <h1 className="mt-3 text-[28px] font-bold leading-tight text-text-primary">Configuración</h1>
+        <h1 className="mt-3 text-3xl font-bold leading-tight text-text-primary">Configuración</h1>
         <p className="mt-1.5 text-sm font-medium text-text-secondary">
           Ajusta los parámetros de tu sistema de préstamos.
         </p>
@@ -118,7 +118,7 @@ function SettingsTabs({
         {tabs.map((tab) => (
           <button
             className={`h-11 rounded-[14px] px-5 text-sm font-bold transition ${
-              activeTab === tab ? 'bg-primary-soft text-primary shadow-sm' : 'text-text-secondary hover:bg-surface-subtle'
+              activeTab === tab ? 'bg-primary-soft text-primary shadow-card' : 'text-text-secondary hover:bg-surface-subtle'
             }`}
             key={tab}
             onClick={() => onTabChange(tab)}
@@ -636,23 +636,22 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
   );
 }
 
-const roleBadgeColors: Record<string, { bg: string; text: string }> = {
-  ADMIN: { bg: '#FFE8D8', text: '#9F3F25' },
-  COLLECTOR: { bg: '#E7F4EC', text: '#3E8A61' },
+const roleBadgeClasses: Record<string, string> = {
+  ADMIN: 'bg-state-danger-bg text-state-danger',
+  COLLECTOR: 'bg-state-success-bg text-state-success',
 };
 
-const statusStyles = {
-  Activo: { bg: '#E7F4EC', text: '#285C43', dot: '#2F7654' },
-  Inactivo: { bg: '#F0ECE5', text: '#8D7A5F', dot: '#CDBA97' },
+const statusClasses: Record<string, { container: string; dot: string }> = {
+  Activo: { container: 'bg-state-success-bg text-state-success', dot: 'bg-state-success-dot' },
+  Inactivo: { container: 'bg-state-neutral-bg text-state-neutral', dot: 'bg-state-neutral-dot' },
 } as const;
 
 function RoleBadge({ role }: { role: string }) {
-  const style = roleBadgeColors[role] ?? roleBadgeColors.ADMIN;
+  const classes = roleBadgeClasses[role] ?? roleBadgeClasses.ADMIN;
 
   return (
     <span
-      className="inline-flex min-w-max items-center rounded-full px-3 py-1 text-sm font-bold"
-      style={{ backgroundColor: style.bg, color: style.text }}
+      className={`inline-flex min-w-max items-center rounded-full px-3 py-1 text-sm font-bold ${classes}`}
     >
       {role}
     </span>
@@ -661,14 +660,13 @@ function RoleBadge({ role }: { role: string }) {
 
 function StatusBadge({ active }: { active: boolean }) {
   const status = active ? 'Activo' : 'Inactivo';
-  const style = statusStyles[status];
+  const style = statusClasses[status];
 
   return (
     <span
-      className="inline-flex min-w-[92px] items-center justify-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold"
-      style={{ backgroundColor: style.bg, color: style.text }}
+      className={`inline-flex min-w-[92px] items-center justify-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold ${style.container}`}
     >
-      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
+      <span className={`h-2 w-2 rounded-full ${style.dot}`} />
       {status}
     </span>
   );
@@ -1075,7 +1073,7 @@ function EmptySettingsTab({ tab }: { tab: string }) {
   return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-border-soft bg-card p-6 text-sm font-medium text-text-muted shadow-sm"
+      className="rounded-panel border border-border-soft bg-card p-6 text-sm font-medium text-text-muted shadow-card"
       initial={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
     >

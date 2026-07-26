@@ -25,7 +25,7 @@ import { Card as PanelCard } from '@/components/ui/card';
 import { calculateClientPageSize } from './clients-pagination';
 
 function EmptyField() {
-  return <span className="text-[13px] text-text-secondary/40">Sin registrar</span>;
+  return <span className="text-sm text-text-secondary/40">Sin registrar</span>;
 }
 
 export function ClientsPanel() {
@@ -119,7 +119,7 @@ export function ClientsPanel() {
           className={`${pageEntryHeaderClassName} flex flex-col justify-between gap-4 xl:flex-row xl:items-end`}
         >
           <div>
-            <h1 className="text-[26px] font-bold leading-tight text-text-primary">Clientes</h1>
+            <h1 className="text-3xl font-bold leading-tight text-text-primary">Clientes</h1>
             <p className="mt-1.5 text-sm text-text-secondary">
               Administra tu cartera de clientes
             </p>
@@ -154,8 +154,8 @@ export function ClientsPanel() {
                   <Icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-[13px] text-text-secondary">{stat.label}</p>
-                  <p className="mt-1 text-[22px] font-bold leading-none text-text-primary">
+                  <p className="text-sm text-text-secondary">{stat.label}</p>
+                  <p className="mt-1 text-2xl font-bold leading-none text-text-primary">
                     {initialLoading ? '...' : stat.value}
                   </p>
                 </div>
@@ -174,7 +174,7 @@ export function ClientsPanel() {
           className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-x-auto bg-card`}
         >
           <div className="min-w-[760px] border-b border-border-soft bg-card p-4">
-            <div className="flex h-11 items-center gap-3 rounded-xl border border-primary-border bg-surface-subtle px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-card focus-within:ring-2 focus-within:ring-primary-soft">
+            <div className="flex h-11 items-center gap-3 rounded-control-comfortable border border-primary-border bg-surface-subtle px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-card focus-within:ring-2 focus-within:ring-primary-soft">
               <Search className="h-4 w-4 shrink-0 text-text-secondary" />
               <input
                 className="flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/60"
@@ -183,7 +183,7 @@ export function ClientsPanel() {
               />
             </div>
           </div>
-          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center border-b border-border-soft bg-card px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
+          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center border-b border-border-soft bg-card px-6 py-3.5 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
             <span>CLIENTE</span>
             <span>CÉDULA</span>
             <span>TELÉFONO</span>
@@ -247,7 +247,7 @@ export function ClientsPanel() {
                   </span>
                   <button
                     aria-label={`Acciones de ${fullName(client)}`}
-                    className="flex h-8 w-8 items-center justify-center justify-self-end rounded-lg text-text-secondary opacity-0 transition-colors duration-150 hover:bg-state-neutral-bg hover:text-text-primary group-hover:opacity-100"
+                    className="flex h-8 w-8 items-center justify-center justify-self-end rounded-control-compact text-text-secondary opacity-0 transition-colors duration-150 hover:bg-state-neutral-bg hover:text-text-primary group-hover:opacity-100"
                     onClick={(event) => event.stopPropagation()}
                     type="button"
                   >
@@ -259,7 +259,7 @@ export function ClientsPanel() {
           </div>
 
           <div className="flex min-w-[760px] items-center justify-between border-t border-border-soft bg-card px-6 py-4">
-            <p className="text-[13px] text-text-secondary">
+            <p className="text-sm text-text-secondary">
               {!initialLoading && (
                 <>
                   Mostrando {displayClients.length} de {total} cliente{total !== 1 ? 's' : ''}

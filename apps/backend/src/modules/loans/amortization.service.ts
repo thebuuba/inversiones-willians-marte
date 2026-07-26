@@ -202,6 +202,7 @@ export class AmortizationService {
     paymentFrequency: PaymentFrequency;
     term: number;
     startDate: Date;
+    firstPaymentDate?: Date;
     customPayment?: number;
   }): AmortizationRow[] {
     const {
@@ -211,6 +212,7 @@ export class AmortizationService {
       paymentFrequency,
       term,
       startDate,
+      firstPaymentDate,
       customPayment,
     } = params;
     const schedule: AmortizationRow[] = [];
@@ -265,26 +267,29 @@ export class AmortizationService {
       );
     } else if (interestType === InterestTypeEnum.REDUCING) {
       if (periodicRate === 0) {
-        return this.calculateZeroRateSchedule({
-          principal,
-          term,
-          startDate,
-          paymentFrequency,
-        });
+        schedule.push(
+          ...this.calculateZeroRateSchedule({
+            principal,
+            term,
+            startDate,
+            paymentFrequency,
+          }),
+        );
+      } else {
+        const rawInstallment =
+          (principal * (periodicRate * Math.pow(1 + periodicRate, term))) /
+          (Math.pow(1 + periodicRate, term) - 1);
+        schedule.push(
+          ...this.calculateBalanceBasedSchedule({
+            principal,
+            periodicRate,
+            term,
+            startDate,
+            paymentFrequency,
+            rawInstallment,
+          }),
+        );
       }
-      const rawInstallment =
-        (principal * (periodicRate * Math.pow(1 + periodicRate, term))) /
-        (Math.pow(1 + periodicRate, term) - 1);
-      schedule.push(
-        ...this.calculateBalanceBasedSchedule({
-          principal,
-          periodicRate,
-          term,
-          startDate,
-          paymentFrequency,
-          rawInstallment,
-        }),
-      );
     } else if (interestType === InterestTypeEnum.COMPOUND) {
       const totalAmount = principal * Math.pow(1 + periodicRate, term);
       const rawInstallment = totalAmount / term;
@@ -344,6 +349,14 @@ export class AmortizationService {
         principalPart: 0,
         interestPart: this.roundMoney(interestAmount),
         balanceAfter: this.roundMoney(principal),
+      });
+    }
+
+    if (firstPaymentDate) {
+      let dueDate = new Date(firstPaymentDate);
+      return schedule.map((row, index) => {
+        if (index > 0) dueDate = this.addPaymentInterval(dueDate, paymentFrequency);
+        return { ...row, dueDate: new Date(dueDate) };
       });
     }
 

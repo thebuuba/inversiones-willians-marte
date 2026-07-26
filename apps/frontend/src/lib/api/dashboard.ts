@@ -36,6 +36,14 @@ export interface MonthlyCollection {
   expected: number;
 }
 
+export interface DailyIncome {
+  date: string;
+  label: string;
+  capital: number;
+  interest: number;
+  lateFee: number;
+}
+
 export interface WeeklyMovementItem {
   day: string;
   nuevos: number;
@@ -71,6 +79,7 @@ export interface DashboardOverview {
   dashboard: DashboardData;
   portfolio: PortfolioGroup[];
   monthlyCollections: MonthlyCollection[];
+  dailyIncome: DailyIncome[];
   weeklyMovement: WeeklyMovementItem[];
   upcomingPayments: UpcomingPayment[];
   collectionPriorities: CollectionPriority[];

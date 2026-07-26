@@ -48,8 +48,8 @@ export default function LoginPage() {
           <div className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-control-comfortable bg-primary-soft text-base font-bold text-primary shadow-soft">
             WM
           </div>
-          <h1 className="mt-5 text-[26px] font-bold leading-tight text-text-primary">Willians Marte</h1>
-          <p className="mt-2 text-[15px] font-medium text-text-secondary">
+          <h1 className="mt-5 text-3xl font-bold leading-tight text-text-primary">Willians Marte</h1>
+          <p className="mt-2 text-base font-medium text-text-secondary">
             Sistema de Préstamos · Ingresa tus credenciales
           </p>
         </div>
@@ -66,7 +66,7 @@ export default function LoginPage() {
 
           <div className="space-y-5">
             <div>
-              <label htmlFor="username" className="mb-2.5 block text-[14px] font-bold text-text-primary">
+              <label htmlFor="username" className="mb-2.5 block text-sm font-bold text-text-primary">
                 Nombre de usuario
               </label>
               <div className="flex h-[48px] items-center rounded-control-comfortable border border-primary-border bg-surface-subtle px-4 transition-colors focus-within:border-primary-accent focus-within:ring-2 focus-within:ring-primary-soft">
@@ -77,19 +77,19 @@ export default function LoginPage() {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="usuario"
                   required
-                  className="h-full flex-1 bg-transparent text-[15px] font-medium text-text-primary outline-none placeholder:text-text-subtle"
+                  className="h-full flex-1 bg-transparent text-base font-medium text-text-primary outline-none placeholder:text-text-subtle"
                 />
               </div>
             </div>
 
             <div>
               <div className="mb-2.5 flex items-center justify-between gap-4">
-                <label htmlFor="password" className="block text-[14px] font-bold text-text-primary">
+                <label htmlFor="password" className="block text-sm font-bold text-text-primary">
                   Contraseña
                 </label>
                 <button
                   type="button"
-                  className="text-[13px] font-medium text-primary-accent transition-colors hover:text-text-primary"
+                  className="text-sm font-medium text-primary-accent transition-colors hover:text-text-primary"
                 >
                   ¿Olvidaste tu contraseña?
                 </button>
@@ -102,7 +102,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="h-full flex-1 bg-transparent text-[15px] font-medium tracking-[0.18em] text-text-primary outline-none placeholder:text-text-subtle"
+                  className="h-full flex-1 bg-transparent text-base font-medium tracking-[0.18em] text-text-primary outline-none placeholder:text-text-subtle"
                 />
                 <button
                   type="button"
@@ -125,7 +125,7 @@ export default function LoginPage() {
           </div>
         </form>
 
-        <p className="mt-7 text-center text-[13px] font-medium text-text-secondary">
+        <p className="mt-7 text-center text-sm font-medium text-text-secondary">
           ¿Problemas para acceder?{' '}
           <button
             type="button"

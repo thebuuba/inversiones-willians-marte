@@ -110,7 +110,7 @@ export function GlobalSearch() {
                   <span className="flex shrink-0 flex-wrap justify-end gap-1">
                     {result.roles.map((role) => (
                       <span
-                        className="rounded-full bg-surface-muted-ui px-2 py-1 text-[10px] font-semibold text-text-secondary"
+                        className="rounded-full bg-surface-muted-ui px-2 py-1 text-xs font-semibold text-text-secondary"
                         key={role}
                       >
                         {roleLabels[role]}

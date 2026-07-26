@@ -23,7 +23,7 @@ function DocumentCard({ doc, onDelete }: { doc: DocumentItem; onDelete: (id: str
 
   return (
     <div className="flex items-center gap-4 rounded-panel border border-border-soft bg-card p-4 transition hover:bg-surface-subtle hover:shadow-soft">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-primary-soft text-primary-accent">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-primary-soft text-primary-accent">
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
@@ -223,7 +223,7 @@ export default function DocumentosPage() {
       >
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-secondary">ARCHIVOS</p>
-          <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-text-primary">Documentos</h1>
+          <h1 className="mt-1.5 text-3xl font-bold leading-tight text-text-primary">Documentos</h1>
           <p className="mt-1.5 text-sm text-text-secondary">Gestión documental del sistema.</p>
         </div>
         <button

@@ -20,18 +20,22 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
+  YAxis,
 } from 'recharts';
 import {
+  AlertTriangle,
   BriefcaseBusiness,
+  CalendarClock,
   ChevronRight,
   DollarSign,
   Plus,
-  Users,
   Wallet,
 } from 'lucide-react';
 import {
   getAudit,
   getDashboardOverview,
+  type CollectionPriority,
+  type UpcomingPayment,
 } from '@/lib/api/dashboard';
 import { formatDop } from '@/lib/currency';
 import { toDashboardAuditRow, type AuditTone } from './dashboard-audit';
@@ -40,13 +44,51 @@ function formatCurrency(n: number): string {
   return formatDop(n, { decimals: 2 });
 }
 
+function getLocalDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function getDueTodayTotal(payments: UpcomingPayment[], now = new Date()): number {
+  const todayKey = getLocalDateKey(now);
+  return payments.reduce((sum, payment) => {
+    const due = new Date(payment.dueDate);
+    return getLocalDateKey(due) === todayKey ? sum + payment.amount : sum;
+  }, 0);
+}
+
+export function getAgingBuckets(priorities: CollectionPriority[]) {
+  const buckets = [
+    { label: '1-30', min: 1, max: 30, amount: 0, count: 0 },
+    { label: '31-60', min: 31, max: 60, amount: 0, count: 0 },
+    { label: '61-90', min: 61, max: 90, amount: 0, count: 0 },
+    { label: '90+', min: 91, max: Infinity, amount: 0, count: 0 },
+  ];
+
+  for (const item of priorities) {
+    const bucket = buckets.find((entry) => item.daysOverdue >= entry.min && item.daysOverdue <= entry.max);
+    if (!bucket) continue;
+    bucket.amount += item.overdueAmount;
+    bucket.count += 1;
+  }
+
+  return buckets.map((bucket) => ({
+    label: bucket.label,
+    amount: bucket.amount,
+    count: bucket.count,
+  }));
+}
+
 const today = new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' });
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  ACTIVE: { label: 'Al día', color: '#7CC99B' },
+  CURRENT: { label: 'Al día', color: '#7CC99B' },
+  PENDING: { label: 'Pendientes', color: '#F3D477' },
+  LATE: { label: 'Atrasados', color: '#F3A36F' },
+  EXPIRED: { label: 'Vencidos', color: '#E67C73' },
   PAID: { label: 'Pagados', color: '#A9D9C6' },
-  OVERDUE: { label: 'Vencidos', color: '#F7C49E' },
-  RESTRUCTURED: { label: 'Reestructurados', color: '#A9D8F2' },
   WRITTEN_OFF: { label: 'Castigados', color: '#E0E0E0' },
 };
 
@@ -70,7 +112,7 @@ function Card({ children, className = '', index = 0 }: { children: ReactNode; cl
       initial="hidden"
       animate="visible"
       custom={index}
-      className={`rounded-2xl border border-border-soft bg-card shadow-sm ${className}`}
+      className={`rounded-panel border border-border-soft bg-card shadow-card ${className}`}
     >
       {children}
     </motion.section>
@@ -111,20 +153,22 @@ export function DashboardHome() {
   );
   const dash = overview?.dashboard;
   const portfolio = overview?.portfolio;
-  const monthlyCollections = overview?.monthlyCollections;
-  const weeklyMovement = overview?.weeklyMovement;
+  const dailyIncome = overview?.dailyIncome ?? [];
   const upcomingPayments = overview?.upcomingPayments;
   const collectionPriorities = overview?.collectionPriorities ?? [];
 
   const activeLoans = dash?.activeLoans ?? 0;
-  const totalClients = dash?.totalClients ?? 0;
   const collectionsToday = dash?.collectionsToday ?? 0;
   const portfolioBalance = dash?.portfolioBalance ?? 0;
+  const dueToday = getDueTodayTotal(upcomingPayments ?? []);
+  const overdueTotal = collectionPriorities.reduce((sum, item) => sum + item.overdueAmount, 0);
+  const agingBuckets = getAgingBuckets(collectionPriorities);
 
   const metricCards = [
     { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, tone: 'bg-primary-soft text-primary' },
-    { label: 'Clientes registrados', value: String(totalClients), icon: Users, tone: 'bg-state-danger-bg text-state-danger' },
     { label: 'Cobrado hoy', value: formatCurrency(collectionsToday), icon: DollarSign, tone: 'bg-state-warning-bg text-state-warning' },
+    { label: 'Por cobrar hoy', value: formatCurrency(dueToday), icon: CalendarClock, tone: 'bg-primary-soft text-primary' },
+    { label: 'Total vencido', value: formatCurrency(overdueTotal), icon: AlertTriangle, tone: 'bg-state-danger-bg text-state-danger' },
     { label: 'Saldo cartera', value: formatCurrency(portfolioBalance), icon: Wallet, tone: 'bg-state-info-bg text-state-info' },
   ];
 
@@ -149,17 +193,17 @@ export function DashboardHome() {
           <div className="mb-3 flex items-center gap-3">
 <span className="text-sm text-text-secondary">{today}</span>
           </div>
-          <h1 className="text-[28px] font-bold leading-tight text-text-primary">
+          <h1 className="text-3xl font-bold leading-tight text-text-primary">
             Hola, {user?.name ?? 'Usuario'} 👋
           </h1>
           <p className="mt-1.5 text-base text-text-secondary">Aquí tienes un resumen de tu cartera hoy.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="h-11 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-primary-accent shadow-sm">
+          <button className="h-11 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-primary-accent shadow-card">
             Ver reportes
           </button>
           <Link
-            className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)]"
+            className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-action"
             href="/prestamos/nuevo"
           >
             <Plus className="h-4 w-4" />
@@ -168,11 +212,11 @@ export function DashboardHome() {
         </div>
       </div>
 
-      <div className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
         {metricCards.map((k) => {
           const Icon = k.icon;
           return (
-            <div key={k.label} className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
+            <div key={k.label} className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
               <div className="flex items-center gap-4">
                 <div
                   className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${k.tone}`}
@@ -191,26 +235,46 @@ export function DashboardHome() {
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
         <Card className="p-6" index={4}>
-          <SectionHeader title="Cobros mensuales" subtitle="Ingresos vs proyección · últimos 9 meses" />
+          <SectionHeader
+            title="Ingresos diarios"
+            subtitle="Capital, interés y mora · últimos 30 días"
+            right={
+              <div className="hidden items-center gap-4 text-xs font-semibold text-text-secondary sm:flex">
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-primary-accent" />Capital</span>
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-state-info-dot" />Interés</span>
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-state-danger-dot" />Mora</span>
+              </div>
+            }
+          />
           <div className="h-[250px] min-w-0">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 720, height: 250 }}>
-              <AreaChart data={monthlyCollections ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <AreaChart data={dailyIncome} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="cobradoGradient" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="5%" stopColor="#7CC99B" stopOpacity={0.24} />
-                    <stop offset="95%" stopColor="#7CC99B" stopOpacity={0.02} />
+                  <linearGradient id="capitalGradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="5%" stopColor="#5A9A7A" stopOpacity={0.22} />
+                    <stop offset="95%" stopColor="#5A9A7A" stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="interestGradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="5%" stopColor="#5AAFC7" stopOpacity={0.18} />
+                    <stop offset="95%" stopColor="#5AAFC7" stopOpacity={0.01} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid stroke="var(--border-strong)" strokeDasharray="4 6" vertical={false} />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} dy={10} />
+                <XAxis dataKey="label" axisLine={false} tickLine={false} interval="preserveStartEnd" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} width={62} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} tickFormatter={(value) => Number(value).toLocaleString('es-DO', { notation: 'compact' })} />
                 <Tooltip
                   cursor={{ stroke: 'var(--border-strong)', strokeDasharray: '4 6' }}
                   contentStyle={{ background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 16, color: 'var(--text-primary)' }}
                   itemStyle={{ color: 'var(--text-primary)' }}
                   labelStyle={{ color: 'var(--text-secondary)' }}
+                  formatter={(value, name) => [
+                    formatCurrency(Number(value)),
+                    name === 'capital' ? 'Capital' : name === 'interest' ? 'Interés' : 'Mora',
+                  ]}
                 />
-                <Area type="monotone" dataKey="collected" stroke="#7CC99B" strokeWidth={3} fill="url(#cobradoGradient)" isAnimationActive animationDuration={1400} />
-                <Line type="monotone" dataKey="expected" stroke="#B8E0CF" strokeWidth={3} strokeDasharray="6 7" dot={false} isAnimationActive animationDuration={1300} />
+                <Area type="monotone" dataKey="capital" stroke="#5A9A7A" strokeWidth={3} fill="url(#capitalGradient)" dot={false} isAnimationActive animationDuration={1200} />
+                <Area type="monotone" dataKey="interest" stroke="#5AAFC7" strokeWidth={2.5} fill="url(#interestGradient)" dot={false} isAnimationActive animationDuration={1100} />
+                <Line type="monotone" dataKey="lateFee" stroke="#E67C73" strokeWidth={2.5} dot={false} isAnimationActive animationDuration={1000} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -230,7 +294,7 @@ export function DashboardHome() {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-sm text-text-secondary">Total</span>
-              <span className="text-[24px] font-bold text-text-primary">{portfolioTotal}</span>
+              <span className="text-2xl font-bold text-text-primary">{portfolioTotal}</span>
             </div>
           </div>
           <div className="mt-3 space-y-2">
@@ -249,20 +313,23 @@ export function DashboardHome() {
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
         <Card className="p-6" index={6}>
-          <SectionHeader title="Movimiento semanal" subtitle="Préstamos abiertos vs cerrados" />
+          <SectionHeader title="Mora por antigüedad" subtitle="Monto vencido por días de atraso" />
           <div className="h-[230px] min-w-0">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 720, height: 230 }}>
-              <BarChart data={weeklyMovement ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <BarChart data={agingBuckets} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid stroke="var(--border-strong)" strokeDasharray="4 6" vertical={false} />
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} dy={10} />
+                <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} dy={10} />
                 <Tooltip
                   cursor={{ fill: 'var(--surface-muted-ui)' }}
                   contentStyle={{ background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 16, color: 'var(--text-primary)' }}
                   itemStyle={{ color: 'var(--text-primary)' }}
                   labelStyle={{ color: 'var(--text-secondary)' }}
+                  formatter={(value, name, props) => [
+                    name === 'amount' ? formatCurrency(Number(value)) : value,
+                    name === 'amount' ? `${props.payload.count} préstamos` : name,
+                  ]}
                 />
-                <Bar dataKey="nuevos" fill="#7CC99B" radius={[7, 7, 0, 0]} barSize={34} animationDuration={1100} />
-                <Bar dataKey="cerrados" fill="#F7C49E" radius={[7, 7, 0, 0]} barSize={34} animationDuration={1200} />
+                <Bar dataKey="amount" fill="#F7A184" radius={[7, 7, 0, 0]} barSize={44} animationDuration={1100} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -316,7 +383,7 @@ export function DashboardHome() {
                 >
                   <span className={`h-2 w-2 rounded-full ${auditToneDots[row.tone]}`} aria-hidden="true" />
                   <div className="min-w-0">
-                    <p className="truncate text-[13px] leading-5 text-text-secondary">
+                    <p className="truncate text-sm leading-5 text-text-secondary">
                       <span className="font-bold text-text-primary">{row.actor}</span>{' '}
                       {row.action}
                     </p>
@@ -335,7 +402,7 @@ export function DashboardHome() {
                     )}
                   </div>
                   <time
-                    className="col-start-2 text-[11px] font-medium text-text-secondary sm:col-start-auto sm:row-start-1"
+                    className="col-start-2 text-xs font-medium text-text-secondary sm:col-start-auto sm:row-start-1"
                     dateTime={row.createdAt}
                   >
                     {timeAgo(row.createdAt)}
@@ -343,7 +410,7 @@ export function DashboardHome() {
                 </article>
               );
             }) : (
-              <div className="rounded-xl bg-surface-subtle px-4 py-5 text-center">
+              <div className="rounded-control-comfortable bg-surface-subtle px-4 py-5 text-center">
                 <p className="text-sm font-bold text-text-primary">
                   {user?.role === 'ADMIN' ? 'No hay actividad reciente' : 'Auditoría restringida'}
                 </p>
@@ -369,7 +436,7 @@ export function DashboardHome() {
 
               return (
                 <div key={payment.id} className={`flex items-center gap-3 rounded-[16px] border p-3 ${warm ? 'border-state-danger-dot bg-state-danger-bg' : 'border-primary-border bg-surface-muted-ui'}`}>
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-[11px] font-bold ${warm ? 'bg-state-danger text-white' : 'bg-card text-primary-accent'}`}>
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-xs font-bold ${warm ? 'bg-state-danger text-white' : 'bg-card text-primary-accent'}`}>
                     {tag}
                   </div>
                   <div className="min-w-0 flex-1">

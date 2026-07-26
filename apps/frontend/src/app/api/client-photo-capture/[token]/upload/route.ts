@@ -1,12 +1,5 @@
 import { NextResponse } from 'next/server';
-
-function getBackendApiUrl() {
-  return (
-    process.env.INTERNAL_API_URL ??
-    process.env.NEXT_PUBLIC_API_URL ??
-    'http://localhost:3000/api/v1'
-  );
-}
+import { fetchBackend } from '@/lib/server/auth-session-proxy';
 
 const MAX_CAPTURE_UPLOAD_BYTES = 5 * 1024 * 1024;
 
@@ -32,9 +25,9 @@ export async function POST(request: Request, props: { params: Promise<{ token: s
 
   let response: Response;
   try {
-    response = await fetch(
-      `${getBackendApiUrl()}/clients/photo-capture-sessions/${encodeURIComponent(token)}/upload`,
-      { method: 'POST', body: formData },
+    response = await fetchBackend(
+      `/clients/photo-capture-sessions/${encodeURIComponent(token)}/upload`,
+      { method: 'POST', body: formData, signal: AbortSignal.timeout(120_000) },
     );
   } catch {
     return NextResponse.json(

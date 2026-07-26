@@ -94,19 +94,26 @@ function tasksOn(date: Date, allTasks: TaskItem[]): number {
   return allTasks.filter((t) => isSameDay(t.dueDate, date)).length;
 }
 
-const priorityConfig: Record<string, { bg: string; text: string; dot: string }> = {
-  URGENT: { bg: '#fde4d4', text: '#9f3f25', dot: '#f97316' },
-  HIGH: { bg: '#fde4d4', text: '#9f3f25', dot: '#f97316' },
-  MEDIUM: { bg: '#fef3c7', text: '#7a5a0a', dot: '#eab308' },
-  LOW: { bg: '#eaf5ed', text: '#2f7654', dot: '#2f7654' },
+const priorityConfig: Record<string, { className: string; dot: string }> = {
+  URGENT: { className: 'bg-state-danger-bg text-state-danger', dot: 'bg-state-warning-dot' },
+  HIGH: { className: 'bg-state-danger-bg text-state-danger', dot: 'bg-state-warning-dot' },
+  MEDIUM: { className: 'bg-state-warning-bg text-state-warning', dot: 'bg-state-warning-dot' },
+  LOW: { className: 'bg-state-success-bg text-state-success', dot: 'bg-state-success-dot' },
 };
 
-const categoryConfig: Record<string, { bg: string; text: string; label: string }> = {
-  oficina: { bg: '#eaf5ed', text: '#2f7654', label: 'Oficina' },
-  prestamo: { bg: '#dbeafe', text: '#1d4ed8', label: 'Préstamo' },
-  cobro: { bg: '#fde4d4', text: '#9f3f25', label: 'Cobro' },
-  reunion: { bg: '#e9e2f5', text: '#6d28d9', label: 'Reunión' },
-  admin: { bg: '#F3F4F6', text: '#525252', label: 'Admin' },
+const priorityTextColor: Record<string, string> = {
+  URGENT: 'text-state-warning',
+  HIGH: 'text-state-warning',
+  MEDIUM: 'text-state-warning',
+  LOW: 'text-state-success',
+};
+
+const categoryConfig: Record<string, { className: string; label: string }> = {
+  oficina: { className: 'bg-state-success-bg text-state-success', label: 'Oficina' },
+  prestamo: { className: 'bg-state-info-bg text-state-info', label: 'Préstamo' },
+  cobro: { className: 'bg-state-danger-bg text-state-danger', label: 'Cobro' },
+  reunion: { className: 'bg-state-info-bg text-state-info', label: 'Reunión' },
+  admin: { className: 'bg-state-neutral-bg text-state-neutral', label: 'Admin' },
 };
 
 function MiniCalendar({
@@ -144,7 +151,7 @@ function MiniCalendar({
   }
 
   return (
-    <div className="rounded-2xl bg-card p-5 shadow-sm border border-border-soft">
+    <div className="rounded-panel bg-card p-5 shadow-card border border-border-soft">
       <div className="mb-4 flex items-center justify-between">
         <span className="text-sm font-semibold text-text-primary">
           {MONTHS[month]} {year}
@@ -152,13 +159,13 @@ function MiniCalendar({
         <div className="flex gap-1">
           <button
             onClick={prevMonth}
-            className="rounded-lg p-1 hover:bg-primary-soft text-text-muted hover:text-primary-accent"
+            className="rounded-control-compact p-1 hover:bg-primary-soft text-text-muted hover:text-primary-accent"
           >
             <ChevronRight className="h-4 w-4 rotate-180" />
           </button>
           <button
             onClick={nextMonth}
-            className="rounded-lg p-1 hover:bg-primary-soft text-text-muted hover:text-primary-accent"
+            className="rounded-control-compact p-1 hover:bg-primary-soft text-text-muted hover:text-primary-accent"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -168,7 +175,7 @@ function MiniCalendar({
         {DAYS.map((d) => (
           <div
             key={d}
-            className="pb-1 text-[10px] font-semibold uppercase tracking-wide text-text-subtle"
+            className="pb-1 text-xs font-semibold uppercase tracking-wide text-text-subtle"
           >
             {d}
           </div>
@@ -180,9 +187,9 @@ function MiniCalendar({
             <div
               key={i}
               onClick={() => day && onDateChange(new Date(year, month, day))}
-              className={`relative flex h-8 w-full items-center justify-center rounded-xl text-sm transition cursor-pointer ${
+              className={`relative flex h-8 w-full items-center justify-center rounded-control-comfortable text-sm transition cursor-pointer ${
                 sel
-                  ? 'bg-primary-accent font-bold text-white shadow-sm'
+                  ? 'bg-primary-accent font-bold text-white shadow-card'
                   : tod
                     ? 'border border-primary-accent font-bold text-primary-accent'
                     : day
@@ -239,10 +246,10 @@ function NewTaskModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-md rounded-3xl bg-card shadow-xl border border-border-soft overflow-hidden">
+      <div className="w-full max-w-md rounded-panel bg-card shadow-modal border border-border-soft overflow-hidden">
         <div className="flex items-center justify-between border-b border-border-soft bg-surface-subtle px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-soft">
+            <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-primary-soft">
               <ListTodo className="h-4 w-4 text-primary-accent" />
             </div>
             <p className="text-base font-semibold text-text-primary">Nueva tarea</p>
@@ -266,7 +273,7 @@ function NewTaskModal({
                 setError('');
               }}
               placeholder="Ej: Llamar a cliente por cuota atrasada"
-              className={`h-11 w-full rounded-xl border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent ${error ? 'border-red-400' : 'border-primary-border'}`}
+              className={`h-11 w-full rounded-control-comfortable border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent ${error ? 'border-red-400' : 'border-primary-border'}`}
               autoFocus
             />
             {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
@@ -280,7 +287,7 @@ function NewTaskModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Detalles adicionales..."
               rows={2}
-              className="w-full rounded-xl border border-primary-border bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent resize-none"
+              className="w-full rounded-control-comfortable border border-primary-border bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent resize-none"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -292,7 +299,7 @@ function NewTaskModal({
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="h-11 w-full rounded-xl border border-primary-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
+                className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
               />
             </div>
             <div>
@@ -302,7 +309,7 @@ function NewTaskModal({
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                className="h-11 w-full rounded-xl border border-primary-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
+                className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
               >
                 <option value="LOW">Baja</option>
                 <option value="MEDIUM">Media</option>
@@ -318,7 +325,7 @@ function NewTaskModal({
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="h-11 w-full rounded-xl border border-primary-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
+              className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
             >
               {Object.entries(categoryConfig).map(([key, c]) => (
                 <option key={key} value={key}>
@@ -331,13 +338,13 @@ function NewTaskModal({
         <div className="flex items-center justify-end gap-2 border-t border-border-soft bg-surface-subtle px-6 py-4">
           <button
             onClick={onClose}
-            className="h-10 rounded-xl border border-primary-border bg-card px-5 text-sm font-semibold text-text-secondary hover:bg-surface-subtle"
+            className="h-10 rounded-control-comfortable border border-primary-border bg-card px-5 text-sm font-semibold text-text-secondary hover:bg-surface-subtle"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit}
-            className="h-10 rounded-xl bg-primary-accent px-5 text-sm font-semibold text-white shadow-sm hover:bg-primary"
+            className="h-10 rounded-control-comfortable bg-primary-accent px-5 text-sm font-semibold text-white shadow-card hover:bg-primary"
           >
             Crear tarea
           </button>
@@ -447,7 +454,7 @@ export default function AgendaPage() {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="h-11 rounded-full bg-primary-accent px-6 text-white shadow-sm hover:bg-primary inline-flex items-center"
+            className="h-11 rounded-full bg-primary-accent px-6 text-white shadow-card hover:bg-primary inline-flex items-center"
           >
             <Plus className="mr-1.5 h-4 w-4" />
             Nueva tarea
@@ -462,7 +469,7 @@ export default function AgendaPage() {
             </MotionCard>
             <MotionCard
               index={1}
-              className="rounded-2xl bg-card p-5 shadow-sm border border-border-soft space-y-3"
+              className="rounded-panel bg-card p-5 shadow-card border border-border-soft space-y-3"
             >
               <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
                 Resumen de hoy
@@ -471,29 +478,28 @@ export default function AgendaPage() {
                 {
                   label: 'Tareas completadas',
                   value: `${doneCount}/${tasksForDate.length}`,
-                  color: '#2f7654',
-                  bg: '#eaf5ed',
+                  className: 'bg-state-success-bg',
+                  valueClass: 'text-state-success',
                 },
                 {
                   label: 'Pendientes',
                   value: String(pendientes.length),
-                  color: '#7a5a0a',
-                  bg: '#fef3c7',
+                  className: 'bg-state-warning-bg',
+                  valueClass: 'text-state-warning',
                 },
                 {
                   label: 'Citas del día',
                   value: String(appointments.length),
-                  color: '#1d4ed8',
-                  bg: '#dbeafe',
+                  className: 'bg-state-info-bg',
+                  valueClass: 'text-state-info',
                 },
               ].map((s) => (
                 <div
                   key={s.label}
-                  className="flex items-center justify-between rounded-xl px-3 py-2"
-                  style={{ backgroundColor: s.bg }}
+                  className={`flex items-center justify-between rounded-control-comfortable px-3 py-2 ${s.className}`}
                 >
                   <span className="text-xs font-medium text-text-secondary">{s.label}</span>
-                  <span className="text-sm font-bold" style={{ color: s.color }}>
+                  <span className={`text-sm font-bold ${s.valueClass}`}>
                     {s.value}
                   </span>
                 </div>
@@ -501,7 +507,7 @@ export default function AgendaPage() {
             </MotionCard>
             <MotionCard
               index={2}
-              className="rounded-2xl bg-card p-5 shadow-sm border border-border-soft"
+              className="rounded-panel bg-card p-5 shadow-card border border-border-soft"
             >
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
                 Próximos días
@@ -511,7 +517,7 @@ export default function AgendaPage() {
                   <button
                     key={date.toISOString()}
                     onClick={() => setSelectedDate(date)}
-                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition ${
+                    className={`flex w-full items-center justify-between rounded-control-comfortable px-3 py-2.5 transition ${
                       date.toDateString() === selectedDate.toDateString()
                         ? 'bg-primary-soft text-primary-accent'
                         : 'hover:bg-surface-subtle text-text-secondary'
@@ -532,7 +538,7 @@ export default function AgendaPage() {
           <main className="space-y-5">
             <MotionCard
               index={3}
-              className="rounded-2xl bg-card p-5 shadow-sm border border-border-soft"
+              className="rounded-panel bg-card p-5 shadow-card border border-border-soft"
             >
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -558,7 +564,7 @@ export default function AgendaPage() {
                     onClick={() => setFilter(f)}
                     className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                       filter === f
-                        ? 'bg-[#1f3b2c] text-white shadow-sm'
+                        ? 'bg-primary-hover text-white shadow-card'
                         : 'bg-primary-soft text-primary-accent hover:bg-primary-soft'
                     }`}
                   >
@@ -570,7 +576,7 @@ export default function AgendaPage() {
 
             <MotionCard
               index={4}
-              className="overflow-hidden rounded-2xl bg-card shadow-sm border border-border-soft divide-y divide-border-soft"
+              className="overflow-hidden rounded-panel bg-card shadow-card border border-border-soft divide-y divide-border-soft"
             >
               {loading ? (
                 <div className="flex items-center justify-center py-20">
@@ -578,7 +584,7 @@ export default function AgendaPage() {
                 </div>
               ) : visibleTasks.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-12 text-center">
-                  <CircleCheck className="h-10 w-10 text-[#c2dfcb]" />
+                  <CircleCheck className="h-10 w-10 text-primary-border" />
                   <p className="text-sm font-semibold text-text-secondary">¡Todo al día!</p>
                   <p className="text-xs text-text-subtle">No hay tareas en esta categoría.</p>
                 </div>
@@ -591,7 +597,7 @@ export default function AgendaPage() {
                   return (
                     <div
                       key={task.id}
-                      className={`group flex items-start gap-3 rounded-xl px-4 py-3 transition hover:bg-primary-soft/50 ${done ? 'opacity-60' : ''}`}
+                      className={`group flex items-start gap-3 rounded-control-comfortable px-4 py-3 transition hover:bg-primary-soft/50 ${done ? 'opacity-60' : ''}`}
                     >
                       <button
                         onClick={() => toggleTask(task.id)}
@@ -620,7 +626,7 @@ export default function AgendaPage() {
                             </p>
                           )}
                           {task.time && (
-                            <span className="inline-flex items-center gap-0.5 rounded-full bg-page px-2 py-0.5 text-[10px] font-semibold text-text-muted">
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-page px-2 py-0.5 text-xs font-semibold text-text-muted">
                               <Clock className="h-3 w-3" />
                               {task.time}
                             </span>
@@ -633,18 +639,15 @@ export default function AgendaPage() {
                         )}
                         <div className="mt-1.5 flex flex-wrap gap-1.5">
                           <span
-                            className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold"
-                            style={{ backgroundColor: cat.bg, color: cat.text }}
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${cat.className}`}
                           >
                             {cat.label}
                           </span>
                           <span
-                            className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold"
-                            style={{ backgroundColor: pri.bg, color: pri.text }}
+                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${pri.className}`}
                           >
                             <span
-                              className="h-1.5 w-1.5 rounded-full"
-                              style={{ backgroundColor: pri.dot }}
+                              className={`h-1.5 w-1.5 rounded-full ${pri.dot}`}
                             />
                             {task.priority === 'URGENT'
                               ? 'Urgente'
@@ -670,10 +673,10 @@ export default function AgendaPage() {
 
             <MotionCard
               index={5}
-              className="rounded-2xl bg-card shadow-sm border border-border-soft overflow-hidden"
+              className="rounded-panel bg-card shadow-card border border-border-soft overflow-hidden"
             >
               <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#fef3c7]">
+                <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-state-warning-bg">
                   <Banknote className="h-4 w-4 text-state-warning" />
                 </div>
                 <div>
@@ -696,7 +699,7 @@ export default function AgendaPage() {
                         key={t.id}
                         className="flex items-start gap-4 px-5 py-4 hover:bg-primary-soft/30 transition"
                       >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-accent text-sm font-bold text-white border-2 border-white shadow-sm">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-accent text-sm font-bold text-white border-2 border-card shadow-card">
                           {initial}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -709,7 +712,7 @@ export default function AgendaPage() {
                             {t.category} · {t.description?.slice(0, 40) ?? 'Sin detalles'}
                           </p>
                           {t.time && (
-                            <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#fef3c7] px-2.5 py-0.5 text-[10px] font-semibold text-state-warning">
+                            <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-state-warning-bg px-2.5 py-0.5 text-xs font-semibold text-state-warning">
                               <Clock className="h-3 w-3" />
                               {t.time}
                             </div>
@@ -726,11 +729,11 @@ export default function AgendaPage() {
           <aside className="space-y-5">
             <MotionCard
               index={6}
-              className="rounded-2xl bg-card shadow-sm border border-border-soft overflow-hidden"
+              className="rounded-panel bg-card shadow-card border border-border-soft overflow-hidden"
             >
               <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#dbeafe]">
-                  <CalendarDays className="h-4 w-4 text-[#1d4ed8]" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-state-info-bg">
+                  <CalendarDays className="h-4 w-4 text-state-info" />
                 </div>
                 <p className="text-sm font-semibold text-text-primary">Citas de hoy</p>
               </div>
@@ -748,21 +751,19 @@ export default function AgendaPage() {
                         className={`relative flex items-start gap-3 ${a.status === 'COMPLETED' ? 'opacity-50' : ''}`}
                       >
                         <div
-                          className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-white shadow-sm"
-                          style={{
-                            backgroundColor: a.status === 'COMPLETED' ? '#eaf5ed' : '#dbeafe',
-                            color: a.status === 'COMPLETED' ? '#2f7654' : '#1d4ed8',
-                          }}
+                          className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-card shadow-sm ${
+                            a.status === 'COMPLETED' ? 'bg-state-success-bg text-state-success' : 'bg-state-info-bg text-state-info'
+                          }`}
                         >
                           <Clock className="h-3.5 w-3.5" />
                         </div>
                         <div className="min-w-0 flex-1 pb-1">
                           <div className="flex items-center gap-2">
-                            <span className="rounded-full bg-page px-2 py-0.5 text-[10px] font-bold text-text-secondary">
+                            <span className="rounded-full bg-page px-2 py-0.5 text-xs font-bold text-text-secondary">
                               {a.time}
                             </span>
                             {a.status === 'COMPLETED' && (
-                              <span className="text-[10px] font-semibold text-primary-accent">
+                              <span className="text-xs font-semibold text-primary-accent">
                                 ✓ Hecho
                               </span>
                             )}
@@ -773,7 +774,7 @@ export default function AgendaPage() {
                             {a.title}
                           </p>
                           <div className="mt-1 flex items-center gap-1.5">
-                            <span className="text-[11px] text-text-muted">
+                            <span className="text-xs text-text-muted">
                               {categoryConfig[a.category]?.label ?? a.category}
                             </span>
                           </div>
@@ -786,10 +787,10 @@ export default function AgendaPage() {
             </MotionCard>
             <MotionCard
               index={7}
-              className="rounded-2xl bg-card shadow-sm border border-border-soft overflow-hidden"
+              className="rounded-panel bg-card shadow-card border border-border-soft overflow-hidden"
             >
               <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-page">
+                <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-page">
                   <ListTodo className="h-4 w-4 text-text-muted" />
                 </div>
                 <p className="text-sm font-semibold text-text-primary">Otras tareas del día</p>
@@ -808,12 +809,11 @@ export default function AgendaPage() {
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold text-text-primary">{t.title}</p>
                         <div className="mt-1 flex items-center gap-2">
-                          <span className="text-[10px] font-medium text-text-muted">
+                          <span className="text-xs font-medium text-text-muted">
                             {categoryConfig[t.category]?.label ?? t.category}
                           </span>
                           <span
-                            className="text-[10px] font-semibold"
-                            style={{ color: priorityConfig[t.priority]?.dot ?? '#6b7280' }}
+                            className={`text-xs font-semibold ${priorityTextColor[t.priority] ?? 'text-text-muted'}`}
                           >
                             ·{' '}
                             {t.priority === 'URGENT'

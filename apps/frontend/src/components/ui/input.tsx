@@ -28,7 +28,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={fieldId}
           className={cn(
-            'block w-full border border-primary-border bg-card font-medium text-text-primary shadow-sm outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-primary-soft',
+            'block w-full border border-primary-border bg-card font-medium text-text-primary shadow-card outline-none transition placeholder:text-text-subtle focus:border-primary-accent focus:ring-2 focus:ring-primary-soft',
             controlDensities[density],
             error && 'border-state-danger focus:border-state-danger focus:ring-state-danger-bg',
             className,

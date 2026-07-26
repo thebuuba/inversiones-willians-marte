@@ -84,7 +84,7 @@ function PanelCard({
   return (
     <motion.section
       animate="visible"
-      className={`rounded-2xl border border-border-soft bg-card shadow-sm ${className}`}
+      className={`rounded-panel border border-border-soft bg-card shadow-card ${className}`}
       custom={index}
       initial="hidden"
       variants={fadeUp}
@@ -104,7 +104,7 @@ function LoansHeader({ total, totalPrincipal }: { total: number; totalPrincipal:
     >
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-secondary">GESTIÓN</p>
-        <h1 className="mt-1.5 text-[28px] font-bold leading-tight text-text-primary">Préstamos</h1>
+        <h1 className="mt-1.5 text-3xl font-bold leading-tight text-text-primary">Préstamos</h1>
         <p className="mt-1.5 text-base font-medium text-text-muted">
           Administra los préstamos activos — {total} registrados,{' '}
           {formatDop(totalPrincipal, { space: true })} colocados.
@@ -112,7 +112,7 @@ function LoansHeader({ total, totalPrincipal }: { total: number; totalPrincipal:
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-text-primary shadow-[0_6px_14px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-md"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-text-primary shadow-[0_6px_14px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-card"
           type="button"
         >
           <Download className="h-4 w-4" />
@@ -211,7 +211,7 @@ function SummaryCard({
       </div>
       <div>
         <p className="text-sm font-bold uppercase tracking-[0.08em] text-text-muted">{label}</p>
-        <p className="mt-2 text-[26px] font-bold leading-none text-text-primary">{value}</p>
+        <p className="mt-2 text-3xl font-bold leading-none text-text-primary">{value}</p>
         <p className="mt-2 text-sm font-medium text-text-secondary">{subtext}</p>
       </div>
     </PanelCard>
@@ -376,16 +376,9 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
       initial="hidden"
       variants={fadeUp}
     >
-      <div className="flex items-center gap-4">
-        <div className="relative h-12 w-12 shrink-0">
-          <div className="flex h-full w-full items-center justify-center rounded-full bg-primary-soft text-primary-accent shadow-[0_6px_14px_rgba(40,92,67,0.13)]">
-            <span className="text-sm font-bold">{loan.client.charAt(0)}</span>
-          </div>
-        </div>
-        <div>
-          <p className="text-sm font-bold leading-tight text-text-primary">{loan.client}</p>
-          <p className="mt-1 text-sm font-medium text-text-secondary">{loan.detail}</p>
-        </div>
+      <div>
+        <p className="text-sm font-bold leading-tight text-text-primary">{loan.client}</p>
+        <p className="mt-1 text-sm font-medium text-text-secondary">{loan.detail}</p>
       </div>
       <LoanTypeBadge type={loan.type} />
       <div>
@@ -407,7 +400,7 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
           <HandCoins className="h-4 w-4" />
         </Link>
         <Link
-          className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#B8EBC9] bg-primary-soft px-4 text-sm font-bold text-primary-accent shadow-[0_5px_10px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-md"
+          className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#B8EBC9] bg-primary-soft px-4 text-sm font-bold text-primary-accent shadow-[0_5px_10px_rgba(40,92,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-card"
           href={`/prestamos/${loan.id}`}
         >
           <Eye className="h-4 w-4" />

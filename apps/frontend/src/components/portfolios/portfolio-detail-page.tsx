@@ -40,10 +40,10 @@ function groupByClient(loans: PortfolioLoan[]) {
 }
 
 const collectionStatuses = {
-  CURRENT: { label: 'Al día', color: '#2F7654', background: '#E7F4EC' },
-  PENDING: { label: 'Pendiente', color: '#374151', background: '#F1F3F2' },
-  LATE: { label: 'Atrasado', color: '#9A6A00', background: '#FFF1C7' },
-  EXPIRED: { label: 'Vencido', color: '#B73B2F', background: '#FADCCB' },
+  CURRENT: { label: 'Al día', className: 'bg-state-success-bg text-state-success', dot: 'bg-state-success-dot' },
+  PENDING: { label: 'Pendiente', className: 'bg-state-neutral-bg text-text-secondary', dot: 'bg-state-neutral-dot' },
+  LATE: { label: 'Atrasado', className: 'bg-state-warning-bg text-state-warning', dot: 'bg-state-warning-dot' },
+  EXPIRED: { label: 'Vencido', className: 'bg-state-danger-bg text-state-danger', dot: 'bg-state-danger-dot' },
 };
 
 function formatDate(value: string | null) {
@@ -82,9 +82,9 @@ export function PortfolioDetailPage({ portfolioId }: { portfolioId: string }) {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-5">
-            <div><p className="text-[11px] font-bold uppercase text-text-secondary">Clientes</p><p className="mt-0.5 text-lg font-bold">{clients.length}</p></div>
-            <div><p className="text-[11px] font-bold uppercase text-text-secondary">Préstamos</p><p className="mt-0.5 text-lg font-bold">{portfolio._count.loans}</p></div>
-            <div><p className="text-[11px] font-bold uppercase text-text-secondary">Balance</p><p className="mt-0.5 text-lg font-bold">{formatDop(portfolio.totals?.balance ?? 0, { space: true })}</p></div>
+            <div><p className="text-xs font-bold uppercase text-text-secondary">Clientes</p><p className="mt-0.5 text-lg font-bold">{clients.length}</p></div>
+            <div><p className="text-xs font-bold uppercase text-text-secondary">Préstamos</p><p className="mt-0.5 text-lg font-bold">{portfolio._count.loans}</p></div>
+            <div><p className="text-xs font-bold uppercase text-text-secondary">Balance</p><p className="mt-0.5 text-lg font-bold">{formatDop(portfolio.totals?.balance ?? 0, { space: true })}</p></div>
             <Dialog.Root>
               <Dialog.Trigger asChild>
                 <button className="inline-flex h-10 items-center gap-2 rounded-full border border-primary-border bg-primary-soft px-4 text-sm font-bold text-primary transition hover:bg-primary hover:text-white" type="button">
@@ -94,10 +94,10 @@ export function PortfolioDetailPage({ portfolioId }: { portfolioId: string }) {
               </Dialog.Trigger>
               <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-50 bg-black/30" />
-                <Dialog.Content className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-border-soft bg-card p-5 shadow-2xl">
+                <Dialog.Content className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-border-soft bg-card p-5 shadow-modal">
                   <div className="flex items-start justify-between gap-4 border-b border-border-soft pb-4">
                     <div>
-                      <span className="inline-flex rounded-full bg-primary-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-primary">Próximamente</span>
+                      <span className="inline-flex rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-primary">Próximamente</span>
                       <Dialog.Title className="mt-3 flex items-center gap-2 text-xl font-bold">
                         <Sparkles className="h-5 w-5 text-primary" />
                         Asistente de cartera
@@ -112,9 +112,9 @@ export function PortfolioDetailPage({ portfolioId }: { portfolioId: string }) {
                   </div>
 
                   <div className="mt-5 grid grid-cols-3 gap-3">
-                    <div className="rounded-panel bg-surface-subtle p-3"><p className="text-[10px] font-bold uppercase text-text-secondary">Clientes</p><p className="mt-1 text-lg font-bold">{clients.length}</p></div>
-                    <div className="rounded-panel bg-surface-subtle p-3"><p className="text-[10px] font-bold uppercase text-text-secondary">Préstamos</p><p className="mt-1 text-lg font-bold">{portfolio._count.loans}</p></div>
-                    <div className="rounded-panel bg-surface-subtle p-3"><p className="text-[10px] font-bold uppercase text-text-secondary">Balance</p><p className="mt-1 truncate text-sm font-bold">{formatDop(portfolio.totals?.balance ?? 0, { space: true })}</p></div>
+                    <div className="rounded-panel bg-surface-subtle p-3"><p className="text-xs font-bold uppercase text-text-secondary">Clientes</p><p className="mt-1 text-lg font-bold">{clients.length}</p></div>
+                    <div className="rounded-panel bg-surface-subtle p-3"><p className="text-xs font-bold uppercase text-text-secondary">Préstamos</p><p className="mt-1 text-lg font-bold">{portfolio._count.loans}</p></div>
+                    <div className="rounded-panel bg-surface-subtle p-3"><p className="text-xs font-bold uppercase text-text-secondary">Balance</p><p className="mt-1 truncate text-sm font-bold">{formatDop(portfolio.totals?.balance ?? 0, { space: true })}</p></div>
                   </div>
 
                   <div className="mt-6">
@@ -154,35 +154,34 @@ export function PortfolioDetailPage({ portfolioId }: { portfolioId: string }) {
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary"><UserRound className="h-4 w-4" /></div>
                   <div className="min-w-0">
                     <p className="flex items-center gap-1.5 truncate text-sm font-bold group-hover:text-primary">{client.name}<ArrowRight className="h-3.5 w-3.5 shrink-0" /></p>
-                    <p className="mt-0.5 truncate text-[11px] font-medium text-text-secondary">
+                    <p className="mt-0.5 truncate text-xs font-medium text-text-secondary">
                       {client.identification ?? 'Sin cédula'}
                       {client.phone ? <span className="ml-2 inline-flex items-center gap-1"><Phone className="h-3 w-3" />{client.phone}</span> : null}
                     </p>
                   </div>
                 </Link>
-                <div className="shrink-0 text-right lg:hidden"><p className="text-[10px] font-bold uppercase text-text-secondary">Balance</p><p className="text-sm font-bold">{formatDop(client.balance, { space: true })}</p></div>
+                <div className="shrink-0 text-right lg:hidden"><p className="text-xs font-bold uppercase text-text-secondary">Balance</p><p className="text-sm font-bold">{formatDop(client.balance, { space: true })}</p></div>
               </div>
 
               <div className="divide-y divide-border-soft">
                 {client.loans.map((loan) => (
                   <Link className="grid gap-2 px-4 py-3 transition hover:bg-surface-subtle sm:grid-cols-2 sm:items-center xl:grid-cols-[1.2fr_0.9fr_0.9fr_0.7fr_0.9fr]" href={`/prestamos/${loan.id}`} key={loan.id}>
-                    <div><p className="text-sm font-bold">Préstamo #{loan.loanNumber}</p><p className="mt-0.5 text-[11px] font-medium text-text-secondary">{getLoanTypeLabel(loan.interestType, loan.interestRate)}</p></div>
-                    <div><p className="text-[10px] font-bold uppercase text-text-secondary">Próximo pago</p><p className="mt-0.5 text-sm font-bold">{formatDate(loan.nextPaymentDate)}</p></div>
-                    <div><p className="text-[10px] font-bold uppercase text-text-secondary">Monto a cobrar</p><p className="mt-0.5 text-sm font-bold">{formatDop(loan.amountToCollect, { space: true })}</p></div>
+                    <div><p className="text-sm font-bold">Préstamo #{loan.loanNumber}</p><p className="mt-0.5 text-xs font-medium text-text-secondary">{getLoanTypeLabel(loan.interestType, loan.interestRate)}</p></div>
+                    <div><p className="text-xs font-bold uppercase text-text-secondary">Próximo pago</p><p className="mt-0.5 text-sm font-bold">{formatDate(loan.nextPaymentDate)}</p></div>
+                    <div><p className="text-xs font-bold uppercase text-text-secondary">Monto a cobrar</p><p className="mt-0.5 text-sm font-bold">{formatDop(loan.amountToCollect, { space: true })}</p></div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase text-text-secondary">Estado</p>
+                      <p className="text-xs font-bold uppercase text-text-secondary">Estado</p>
                       <span
-                        className="mt-0.5 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-bold"
-                        style={{ color: collectionStatuses[loan.collectionStatus].color, backgroundColor: collectionStatuses[loan.collectionStatus].background }}
+                        className={`mt-0.5 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-bold ${collectionStatuses[loan.collectionStatus].className}`}
                       >
-                        <span className="h-2 w-2 rounded-[2px]" style={{ backgroundColor: collectionStatuses[loan.collectionStatus].color }} />
+                        <span className={`h-2 w-2 rounded-[2px] ${collectionStatuses[loan.collectionStatus].dot}`} />
                         {collectionStatuses[loan.collectionStatus].label}
                       </span>
                     </div>
                     <div className="sm:text-right">
-                      <p className="text-[10px] font-bold uppercase text-text-secondary">Balance</p>
+                      <p className="text-xs font-bold uppercase text-text-secondary">Balance</p>
                       <p className="mt-0.5 inline-flex items-center gap-2 text-sm font-bold">
-                        <span className="h-3 w-3 rounded-[3px]" style={{ backgroundColor: collectionStatuses[loan.collectionStatus].color }} />
+                        <span className={`h-3 w-3 rounded-[3px] ${collectionStatuses[loan.collectionStatus].dot}`} />
                         {formatDop(loan.balance, { space: true })}
                       </p>
                     </div>

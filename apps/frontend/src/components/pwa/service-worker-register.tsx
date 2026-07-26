@@ -18,7 +18,7 @@ export function ServiceWorkerRegister() {
     }
     if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') return;
 
-    navigator.serviceWorker.register('/sw.js').catch(() => {
+    navigator.serviceWorker.register('/sw.js?v=3').catch(() => {
       /* PWA still works as a regular web app if registration fails. */
     });
   }, []);

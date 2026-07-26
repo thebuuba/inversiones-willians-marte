@@ -93,22 +93,19 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
       label: 'Capital invertido',
       value: fmt(capital),
       icon: Banknote,
-      accent: '#eaf5ed',
-      color: '#2f7654',
+      iconClass: 'bg-state-success-bg text-state-success',
     },
     {
       label: 'Total pagado',
       value: fmt(0),
       icon: CircleCheck,
-      accent: '#c2dfcb',
-      color: '#2f7654',
+      iconClass: 'bg-state-success-bg text-state-success',
     },
     {
       label: 'Tasa de retorno',
       value: `${rate}% mensual`,
       icon: TrendingUp,
-      accent: '#fef3c7',
-      color: '#7a5a0a',
+      iconClass: 'bg-state-warning-bg text-state-warning',
     },
   ];
 
@@ -162,19 +159,19 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
           Volver a inversionistas
         </Link>
 
-        <div className="mb-6 overflow-hidden rounded-3xl bg-card shadow-sm border border-border-soft">
+        <div className="mb-6 overflow-hidden rounded-panel bg-card shadow-card border border-border-soft">
           <div className="px-8 pt-6 pb-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div className="flex items-end gap-5">
                 {data.photo ? (
                   <div
                     aria-label={data.name}
-                    className="h-20 w-20 shrink-0 rounded-2xl border-4 border-white bg-cover bg-center shadow-md"
+                    className="h-20 w-20 shrink-0 rounded-panel border-4 border-card bg-cover bg-center shadow-card"
                     role="img"
                     style={{ backgroundImage: `url(${data.photo})` }}
                   />
                 ) : (
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-primary-soft shadow-md">
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-panel border-4 border-card bg-primary-soft shadow-card">
                     <TrendingUp className="h-8 w-8 text-primary-accent" />
                   </div>
                 )}
@@ -239,12 +236,11 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
             return (
               <div
                 key={k.label}
-                className="rounded-2xl bg-card p-5 shadow-sm border border-border-soft"
+                className="rounded-panel bg-card p-5 shadow-card border border-border-soft"
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-                    style={{ backgroundColor: k.accent, color: k.color }}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${k.iconClass}`}
                   >
                     <Icon className="h-5 w-5" />
                   </div>
@@ -258,14 +254,14 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
           })}
         </div>
 
-        <div className="mb-5 flex w-fit gap-1 rounded-2xl bg-card p-1.5 shadow-sm border border-border-soft">
+        <div className="mb-5 flex w-fit gap-1 rounded-panel bg-card p-1.5 shadow-card border border-border-soft">
           {TABS.map((t, i) => (
             <button
               key={t}
               onClick={() => setTab(i)}
-              className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${
+              className={`rounded-control-comfortable px-5 py-2 text-sm font-semibold transition ${
                 tab === i
-                  ? 'bg-primary-accent text-white shadow-sm'
+                  ? 'bg-primary-accent text-white shadow-card'
                   : 'text-text-muted hover:bg-primary-soft hover:text-primary-accent'
               }`}
             >
@@ -277,7 +273,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
         {tab === 0 && (
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
             <div className="space-y-5">
-              <div className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
+              <div className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <h3 className="text-base font-semibold text-text-primary">Inversiones</h3>
                   <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-accent">
@@ -285,7 +281,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                   </span>
                 </div>
                 {investments.length === 0 ? (
-                  <p className="rounded-xl border border-border-soft bg-surface-subtle p-5 text-sm text-text-subtle">
+                  <p className="rounded-control-comfortable border border-border-soft bg-surface-subtle p-5 text-sm text-text-subtle">
                     Este inversionista aun no tiene inversiones registradas.
                   </p>
                 ) : (
@@ -297,7 +293,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                       return (
                         <div
                           key={investment.id}
-                          className="rounded-xl border border-border-soft bg-surface-subtle p-4"
+                          className="rounded-control-comfortable border border-border-soft bg-surface-subtle p-4"
                         >
                           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                             <div>
@@ -306,7 +302,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                                   {investment.code}
                                 </p>
                                 <span
-                                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${investment.paymentStatus === 'OVERDUE' ? 'bg-[#fff1e8] text-state-danger' : investment.paymentStatus === 'PAID' ? 'bg-primary-soft text-primary-accent' : 'bg-[#fef3c7] text-state-warning'}`}
+                                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${investment.paymentStatus === 'OVERDUE' ? 'bg-state-danger-bg text-state-danger' : investment.paymentStatus === 'PAID' ? 'bg-primary-soft text-primary-accent' : 'bg-state-warning-bg text-state-warning'}`}
                                 >
                                   {status}
                                 </span>
@@ -366,7 +362,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
             </div>
 
             <div className="space-y-5">
-              <div className="rounded-2xl bg-card p-6 shadow-sm border border-border-soft">
+              <div className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
                 <h3 className="mb-4 text-sm font-semibold text-text-primary">
                   Condiciones pactadas
                 </h3>
@@ -385,7 +381,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                 </div>
               </div>
               {data.notes && (
-                <div className="rounded-2xl bg-primary-soft p-5 border border-[#c2dfcb]/60">
+                <div className="rounded-panel bg-primary-soft p-5 border border-border-soft">
                   <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary-accent">
                     Notas
                   </p>
@@ -397,7 +393,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
         )}
 
         {tab === 1 && (
-          <div className="overflow-hidden rounded-2xl bg-card shadow-sm border border-border-soft">
+          <div className="overflow-hidden rounded-panel bg-card shadow-card border border-border-soft">
             <div className="grid grid-cols-12 gap-4 border-b border-border-soft bg-surface-subtle px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
               <div className="col-span-1">#</div>
               <div className="col-span-2">Período</div>
@@ -428,10 +424,10 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
               documents.map((d) => (
                 <div
                   key={d.id}
-                  className="flex items-center justify-between rounded-2xl bg-card px-6 py-4 shadow-sm border border-border-soft hover:bg-primary-soft/30 transition"
+                  className="flex items-center justify-between rounded-panel bg-card px-6 py-4 shadow-card border border-border-soft hover:bg-primary-soft/30 transition"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-control-comfortable bg-primary-soft">
                       <File className="h-5 w-5 text-primary-accent" />
                     </div>
                     <div>
@@ -462,7 +458,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
             {personalFields.map((r) => (
               <div
                 key={r.label}
-                className="rounded-2xl bg-card px-6 py-4 shadow-sm border border-border-soft"
+                className="rounded-panel bg-card px-6 py-4 shadow-card border border-border-soft"
               >
                 <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
                   {r.label}

@@ -1,20 +1,13 @@
 import { NextResponse } from 'next/server';
-
-function getBackendApiUrl() {
-  return (
-    process.env.INTERNAL_API_URL ??
-    process.env.NEXT_PUBLIC_API_URL ??
-    'http://localhost:3000/api/v1'
-  );
-}
+import { fetchBackend } from '@/lib/server/auth-session-proxy';
 
 export async function GET(_request: Request, props: { params: Promise<{ token: string }> }) {
   const { token } = await props.params;
   let response: Response;
   try {
-    response = await fetch(
-      `${getBackendApiUrl()}/clients/photo-capture-sessions/${encodeURIComponent(token)}`,
-      { cache: 'no-store' },
+    response = await fetchBackend(
+      `/clients/photo-capture-sessions/${encodeURIComponent(token)}`,
+      { cache: 'no-store', signal: AbortSignal.timeout(15_000) },
     );
   } catch {
     return NextResponse.json(
@@ -25,6 +18,9 @@ export async function GET(_request: Request, props: { params: Promise<{ token: s
 
   return new NextResponse(await response.text(), {
     status: response.status,
-    headers: { 'content-type': response.headers.get('content-type') ?? 'application/json' },
+    headers: {
+      'content-type': response.headers.get('content-type') ?? 'application/json',
+      'cache-control': 'no-store',
+    },
   });
 }

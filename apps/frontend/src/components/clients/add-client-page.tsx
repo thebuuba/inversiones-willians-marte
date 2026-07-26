@@ -491,12 +491,12 @@ function ClientPhotoUploader({
           <p className="mt-3 text-xs font-medium leading-5 text-text-secondary">
             Usa un teléfono conectado a la misma red. La foto aparecerá aquí automáticamente.
           </p>
-          <p className="mt-2 break-all text-[10px] text-text-subtle">{captureUrl}</p>
+          <p className="mt-2 break-all text-xs text-text-subtle">{captureUrl}</p>
         </div>
       ) : null}
 
       {captureReceived ? (
-        <p className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
+        <p className="mt-4 flex items-center gap-2 rounded-control-comfortable border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
           <CheckCircle2 className="h-5 w-5" />
           Fotografía recibida desde el celular.
         </p>
@@ -504,7 +504,7 @@ function ClientPhotoUploader({
 
       {captureError ? (
         <p
-          className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+          className="mt-4 rounded-control-comfortable border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
           role="alert"
         >
           {captureError}
@@ -521,7 +521,7 @@ function ClientPhotoUploader({
       ) : null}
       {error ? (
         <p
-          className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+          className="mt-4 rounded-control-comfortable border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
           role="alert"
         >
           {error}

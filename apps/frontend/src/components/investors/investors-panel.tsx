@@ -78,7 +78,7 @@ export function InvestorsPanel() {
           className={`${pageEntryHeaderClassName} flex flex-col justify-between gap-4 xl:flex-row xl:items-end`}
         >
           <div>
-            <h1 className="text-[26px] font-bold leading-tight text-text-primary">Inversionistas</h1>
+            <h1 className="text-3xl font-bold leading-tight text-text-primary">Inversionistas</h1>
             <p className="mt-1.5 text-sm text-text-secondary">
               Administra tu cartera de capital — {investors.length} inversionistas registrados.
             </p>
@@ -112,8 +112,8 @@ export function InvestorsPanel() {
                   <Icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-[13px] text-text-secondary">{stat.label}</p>
-                  <p className="mt-1 text-[22px] font-bold leading-none text-text-primary">
+                  <p className="text-sm text-text-secondary">{stat.label}</p>
+                  <p className="mt-1 text-2xl font-bold leading-none text-text-primary">
                     {initialLoading ? '...' : stat.value}
                   </p>
                 </div>
@@ -123,7 +123,7 @@ export function InvestorsPanel() {
         </div>
 
         {error && (
-          <div className="rounded-[16px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-700">
+          <div className="rounded-panel border border-state-danger-dot bg-state-danger-bg px-5 py-3 text-sm font-medium text-state-danger">
             {error}
           </div>
         )}
@@ -133,7 +133,7 @@ export function InvestorsPanel() {
         >
           {/* search + filters */}
           <div className="min-w-[760px] border-b border-border-soft bg-card p-4">
-            <div className="flex h-11 items-center gap-3 rounded-xl border border-primary-border bg-surface-subtle px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-card focus-within:ring-2 focus-within:ring-primary-soft">
+            <div className="flex h-11 items-center gap-3 rounded-control-comfortable border border-primary-border bg-surface-subtle px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-card focus-within:ring-2 focus-within:ring-primary-soft">
               <Search className="h-4 w-4 shrink-0 text-text-secondary" />
               <input
                 className="flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/60"
@@ -161,7 +161,7 @@ export function InvestorsPanel() {
           </div>
 
           {/* table header */}
-          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center border-b border-border-soft bg-card px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
+          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] items-center border-b border-border-soft bg-card px-6 py-3.5 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
             <span>INVERSIONISTA</span>
             <span>CÓDIGO</span>
             <span>CAPITAL</span>
@@ -229,7 +229,7 @@ export function InvestorsPanel() {
 
           {/* footer */}
           <div className="flex min-w-[760px] items-center justify-between border-t border-border-soft bg-card px-6 py-4">
-            <p className="text-[13px] text-text-secondary">
+            <p className="text-sm text-text-secondary">
               {!initialLoading && (
                 <>
                   Mostrando {displayInvestors.length} de {filteredInvestors.length} inversionista{filteredInvestors.length !== 1 ? 's' : ''}
