@@ -52,6 +52,7 @@ export function RegisterInvestorPaymentPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [createdPayment, setCreatedPayment] = useState<InvestorPaymentItem | null>(null);
+  const [generateReceipt, setGenerateReceipt] = useState(true);
 
   function applyInvestmentPeriod(invst: InvestorInvestmentDetail) {
     if (!invst.currentPeriodMonth || !invst.currentPeriodYear) return;
@@ -152,7 +153,8 @@ export function RegisterInvestorPaymentPage() {
         reference: reference.trim() || undefined,
         notes: notes.trim() || undefined,
       });
-      setCreatedPayment(payment);
+      if (generateReceipt) setCreatedPayment(payment);
+      else router.push(`/inversionistas/${investor.id}`);
     } catch (err: unknown) {
       const msg =
         typeof err === 'object' && err !== null && 'response' in err
@@ -368,6 +370,19 @@ export function RegisterInvestorPaymentPage() {
                   </label>
 
                   {error && <p className="text-sm font-medium text-state-danger sm:col-span-2">{error}</p>}
+
+                  <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control-comfortable border border-border-soft bg-surface-subtle px-4 py-3 sm:col-span-2">
+                    <input
+                      checked={generateReceipt}
+                      className="h-5 w-5 accent-primary"
+                      onChange={(event) => setGenerateReceipt(event.target.checked)}
+                      type="checkbox"
+                    />
+                    <span>
+                      <span className="block text-sm font-bold text-text-primary">Generar recibo</span>
+                      <span className="block text-xs text-text-muted">Abrirlo para imprimir al registrar el pago.</span>
+                    </span>
+                  </label>
                 </div>
 
                 <div className="mt-6 flex justify-end gap-3 border-t border-border-soft pt-4">

@@ -1,8 +1,10 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X, Printer, Download, MessageCircle } from 'lucide-react';
 import { formatDop } from '@/lib/currency';
+import { getSettings, type SystemSettings } from '@/lib/api/settings';
+import { amountToSpanishWords } from '@/components/loans/loan-disbursement-receipt.helpers';
 import type { InvestorInvestmentSummary, InvestorItem, InvestorPaymentItem } from '@inversiones/shared';
 
 const fmt = (n: number | string) => formatDop(n);
@@ -31,6 +33,12 @@ interface PaymentReceiptModalProps {
 
 export function PaymentReceiptModal({ payment, investor, investment, onClose }: PaymentReceiptModalProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
+  const [mode, setMode] = useState<'two-part' | 'company' | 'investor'>('two-part');
+  const [company, setCompany] = useState<SystemSettings | null>(null);
+
+  useEffect(() => {
+    getSettings().then(setCompany).catch(() => undefined);
+  }, []);
 
   const padReceipt = String(payment.receiptNumber).padStart(5, '0');
   const monthLabel = MONTHS[payment.periodMonth - 1] ?? String(payment.periodMonth);
@@ -56,12 +64,12 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
       <head>
         <title>Recibo #${padReceipt}</title>
         <style>
-          @page { margin: 0; size: 80mm auto; }
+          @page { margin: 0; size: 76mm auto; }
           body {
             font-family: 'Courier New', monospace;
             font-size: 12px;
             line-height: 1.5;
-            width: 80mm;
+            width: 76mm;
             margin: 0 auto;
             padding: 10px;
             text-align: center;
@@ -98,7 +106,7 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
       filename: `${receiptFilename}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: [80, 200] as [number, number], orientation: 'portrait' as const },
+      jsPDF: { unit: 'mm', format: [76, 210] as [number, number], orientation: 'portrait' as const },
     };
 
     const worker = html2pdf().set(opt).from(content);
@@ -124,8 +132,11 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
 
   return (
     <div
+      aria-labelledby="investor-payment-receipt-title"
+      aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-[2px]"
       onClick={onClose}
+      role="dialog"
     >
       <div
         className="flex w-full max-w-[560px] flex-col overflow-hidden rounded-panel border border-border-soft bg-card shadow-modal"
@@ -133,7 +144,7 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
       >
         <header className="flex items-start justify-between gap-4 bg-surface-muted px-6 py-5">
           <div>
-            <h2 className="text-xl font-bold text-text-primary">Recibo de pago</h2>
+            <h2 className="text-xl font-bold text-text-primary" id="investor-payment-receipt-title">Recibo de pago</h2>
             <p className="mt-1 text-sm font-medium text-text-muted">
               Recibo #{padReceipt} — {investor.name}
             </p>
@@ -148,6 +159,38 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
           </button>
         </header>
 
+        <div className="border-b border-border-soft px-6 py-3">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-text-secondary">
+            Formato de salida
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {([
+              ['two-part', 'Autocopiante'],
+              ['company', 'Solo original'],
+              ['investor', 'Solo copia'],
+            ] as const).map(([value, label]) => (
+              <button
+                aria-pressed={mode === value}
+                className={`min-h-11 rounded-full px-4 text-sm font-bold transition ${
+                  mode === value
+                    ? 'bg-primary text-white'
+                    : 'border border-primary-border bg-card text-text-primary hover:bg-primary-soft'
+                }`}
+                key={value}
+                onClick={() => setMode(value)}
+                type="button"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {mode === 'two-part' && (
+            <p className="mt-2 text-xs font-medium text-text-secondary">
+              Imprime una sola vez sobre papel autocopiante de dos capas; la firma pasa a la copia.
+            </p>
+          )}
+        </div>
+
         {/* Receipt content */}
         <div className="overflow-auto px-6 py-5">
           <div
@@ -156,7 +199,7 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
               fontFamily: "'Courier New', monospace",
               fontSize: '12px',
               lineHeight: '1.5',
-              width: '80mm',
+              width: '76mm',
               margin: '0 auto',
               padding: '10px',
               textAlign: 'center',
@@ -164,14 +207,20 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
             }}
           >
             <div style={{ borderBottom: '1px dashed #000', paddingBottom: '8px', marginBottom: '8px' }}>
-              <strong style={{ fontSize: '14px' }}>INVERSIONES WILLIANS MARTE</strong><br />
-              RNC: 123-456789-0<br />
-              Tel: 809-000-0000
+              <strong style={{ fontSize: '14px' }}>
+                {(company?.companyName ?? 'Inversiones Willians Marte').toUpperCase()}
+              </strong>
+              {company?.companyTaxId && <><br />RNC: {company.companyTaxId}</>}
+              {company?.companyPhone && <><br />Tel: {company.companyPhone}</>}
+              {company?.companyAddress && <><br />{company.companyAddress}</>}
             </div>
 
             <div style={{ fontSize: '14px', marginBottom: '8px' }}>
               <strong>RECIBO DE PAGO</strong><br />
-              <span style={{ fontSize: '11px' }}>No. {padReceipt}</span>
+              <span style={{ fontSize: '11px' }}>No. {padReceipt}</span><br />
+              <strong style={{ fontSize: '10px' }}>
+                {mode === 'two-part' ? 'ORIGINAL BLANCO · COPIA AMARILLA' : mode === 'company' ? 'ORIGINAL · EMPRESA' : 'COPIA · INVERSIONISTA'}
+              </strong>
             </div>
 
             <div style={{ borderBottom: '1px dashed #000', paddingBottom: '8px', marginBottom: '8px', textAlign: 'left' }}>
@@ -188,22 +237,19 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
             <div style={{ borderBottom: '1px dashed #000', paddingBottom: '8px', marginBottom: '8px', textAlign: 'left' }}>
               <strong>Monto pagado:</strong>{' '}
               <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{fmt(Number(payment.amount))}</span><br />
+              <span style={{ fontSize: '10px' }}>{amountToSpanishWords(Number(payment.amount)).toUpperCase()}</span><br />
               <strong>Fecha:</strong> {fmtDate(payment.paymentDate)}<br />
               <strong>Método:</strong> {payment.paymentMethod ?? '—'}<br />
               <strong>Referencia:</strong> {payment.reference ?? '—'}
             </div>
 
             <div style={{ borderBottom: '1px dashed #000', paddingBottom: '8px', marginBottom: '8px' }}>
-              <strong>Firma del inversionista</strong><br />
-              <div
-                style={{
-                  border: '1px dashed #000',
-                  borderRadius: '4px',
-                  height: '60px',
-                  margin: '8px auto',
-                  maxWidth: '200px',
-                }}
-              />
+              <div style={{ border: '1px dashed #000', height: '52px', margin: '8px 0', paddingTop: '32px' }}>
+                Firma del inversionista
+              </div>
+              <div style={{ border: '1px dashed #000', height: '52px', margin: '8px 0', paddingTop: '32px' }}>
+                Firma del representante
+              </div>
             </div>
 
             <div style={{ fontSize: '10px', color: '#666' }}>
