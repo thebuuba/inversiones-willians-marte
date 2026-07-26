@@ -168,9 +168,9 @@ export function ClientsPanel() {
         )}
 
         <PanelCard
-          className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-x-auto bg-card`}
+          className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-hidden bg-card md:overflow-x-auto`}
         >
-          <div className="min-w-[760px] border-b border-border-soft bg-card p-4">
+          <div className="min-w-0 border-b border-border-soft bg-card p-4 md:min-w-[760px]">
             <div className="flex h-11 items-center gap-3 rounded-control-comfortable border border-primary-border bg-surface-subtle px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-card focus-within:ring-2 focus-within:ring-primary-soft">
               <Search className="h-4 w-4 shrink-0 text-text-secondary" />
               <input
@@ -180,14 +180,17 @@ export function ClientsPanel() {
               />
             </div>
           </div>
-          <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center border-b border-border-soft bg-card px-6 py-3.5 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
+          <div className="sticky top-0 z-10 grid min-w-0 grid-cols-[1fr_auto] items-center border-b border-border-soft bg-card px-4 py-3.5 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:min-w-[760px] md:grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] md:px-6">
             <span>CLIENTE</span>
-            <span>CÉDULA</span>
-            <span>TELÉFONO</span>
+            <span className="hidden md:block">CÉDULA</span>
+            <span className="hidden md:block">TELÉFONO</span>
             <span className="justify-self-end text-center">PRÉSTAMOS</span>
           </div>
 
-          <div ref={bodyRef} className="relative min-w-[760px] flex-1 overflow-hidden bg-card">
+          <div
+            ref={bodyRef}
+            className="relative min-w-0 flex-1 overflow-hidden bg-card md:min-w-[760px]"
+          >
             {initialLoading ? (
               <div className="flex h-full items-center justify-center text-sm font-medium text-text-secondary">
                 Cargando clientes...
@@ -202,7 +205,7 @@ export function ClientsPanel() {
               displayClients.map((client) => (
                 <div
                   key={client.id}
-                  className="group grid min-h-[64px] cursor-pointer grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] items-center border-b border-border-soft bg-card px-6 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle"
+                  className="group grid min-h-[72px] cursor-pointer grid-cols-[1fr_auto] items-center border-b border-border-soft bg-card px-4 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle md:min-h-[64px] md:grid-cols-[2.2fr_1.2fr_1.4fr_0.9fr_44px] md:px-6"
                   onClick={() => router.push(`/clientes/${client.id}`)}
                 >
                   <div className="flex items-center gap-3">
@@ -229,10 +232,10 @@ export function ClientsPanel() {
                       </p>
                     </div>
                   </div>
-                  <span className="[font-variant-numeric:tabular-nums] text-sm text-text-secondary">
+                  <span className="hidden [font-variant-numeric:tabular-nums] text-sm text-text-secondary md:block">
                     {client.identification ?? <EmptyField />}
                   </span>
-                  <span className="[font-variant-numeric:tabular-nums] text-sm text-text-secondary">
+                  <span className="hidden [font-variant-numeric:tabular-nums] text-sm text-text-secondary md:block">
                     {client.phone ?? <EmptyField />}
                   </span>
                   <span className="inline-flex h-7 w-full max-w-[96px] items-center justify-center justify-self-end rounded-control-compact border border-[#C9CFD3] bg-[#D9DEE2] px-3 text-[#34383C]">
@@ -242,7 +245,7 @@ export function ClientsPanel() {
                   </span>
                   <button
                     aria-label={`Acciones de ${fullName(client)}`}
-                    className="flex h-8 w-8 items-center justify-center justify-self-end rounded-control-compact text-text-secondary opacity-0 transition-colors duration-150 hover:bg-state-neutral-bg hover:text-text-primary group-hover:opacity-100"
+                    className="hidden h-8 w-8 items-center justify-center justify-self-end rounded-control-compact text-text-secondary opacity-0 transition-colors duration-150 hover:bg-state-neutral-bg hover:text-text-primary group-hover:opacity-100 md:flex"
                     onClick={(event) => event.stopPropagation()}
                     type="button"
                   >
@@ -253,7 +256,7 @@ export function ClientsPanel() {
             )}
           </div>
 
-          <div className="flex min-w-[760px] items-center justify-between border-t border-border-soft bg-card px-6 py-4">
+          <div className="flex min-w-0 items-center justify-between border-t border-border-soft bg-card px-4 py-4 md:min-w-[760px] md:px-6">
             <p className="text-sm text-text-secondary">
               {!initialLoading && (
                 <>
@@ -264,7 +267,7 @@ export function ClientsPanel() {
             {totalPages > 1 && (
               <div className="flex items-center gap-2">
                 <button
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-card text-text-secondary transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-30"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-primary-border bg-card text-text-secondary transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-30 md:h-9 md:w-9"
                   disabled={page === 0}
                   onClick={() => setPage((p) => p - 1)}
                   type="button"
@@ -275,7 +278,7 @@ export function ClientsPanel() {
                   {page + 1} / {totalPages}
                 </span>
                 <button
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-primary-border bg-card text-text-secondary transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-30"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-primary-border bg-card text-text-secondary transition-colors duration-150 hover:bg-surface-subtle disabled:opacity-30 md:h-9 md:w-9"
                   disabled={page >= totalPages - 1}
                   onClick={() => setPage((p) => p + 1)}
                   type="button"

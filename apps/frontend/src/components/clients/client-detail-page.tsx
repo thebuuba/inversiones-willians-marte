@@ -1650,7 +1650,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
           })}
         </div>
 
-        <div className="mb-5 flex w-fit gap-1 rounded-panel bg-card p-1.5 shadow-card border border-border-soft">
+        <div className="scrollbar-none mb-5 flex w-full gap-1 overflow-x-auto rounded-panel border border-border-soft bg-card p-1.5 shadow-card">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = activeTab === t.label;
@@ -1658,7 +1658,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
               <button
                 key={t.label}
                 onClick={() => setActiveTab(t.label)}
-                className={`flex items-center gap-2 rounded-control-comfortable px-5 py-2 text-sm font-semibold transition ${
+                className={`flex min-h-11 shrink-0 items-center gap-2 rounded-control-comfortable px-5 py-2 text-sm font-semibold transition ${
                   active
                     ? 'bg-primary-accent text-white shadow-card'
                     : 'text-text-muted hover:bg-primary-soft hover:text-primary-accent'

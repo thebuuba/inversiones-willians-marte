@@ -165,13 +165,15 @@ function MiniCalendar({
         <div className="flex gap-1">
           <button
             onClick={prevMonth}
-            className="rounded-control-compact p-1 hover:bg-primary-soft text-text-muted hover:text-primary-accent"
+            aria-label="Mes anterior"
+            className="flex h-11 w-11 items-center justify-center rounded-control-compact text-text-muted hover:bg-primary-soft hover:text-primary-accent"
           >
             <ChevronRight className="h-4 w-4 rotate-180" />
           </button>
           <button
             onClick={nextMonth}
-            className="rounded-control-compact p-1 hover:bg-primary-soft text-text-muted hover:text-primary-accent"
+            aria-label="Mes siguiente"
+            className="flex h-11 w-11 items-center justify-center rounded-control-compact text-text-muted hover:bg-primary-soft hover:text-primary-accent"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -190,10 +192,12 @@ function MiniCalendar({
           const sel = day ? isSelected(day) : false;
           const tod = day ? isToday(day) : false;
           return (
-            <div
+            <button
               key={i}
+              type="button"
+              disabled={!day}
               onClick={() => day && onDateChange(new Date(year, month, day))}
-              className={`relative flex h-8 w-full items-center justify-center rounded-control-comfortable text-sm transition cursor-pointer ${
+              className={`relative flex h-11 w-full items-center justify-center rounded-control-comfortable text-sm transition ${
                 sel
                   ? 'bg-primary-accent font-bold text-white shadow-card'
                   : tod
@@ -204,7 +208,7 @@ function MiniCalendar({
               }`}
             >
               {day}
-            </div>
+            </button>
           );
         })}
       </div>
@@ -269,7 +273,8 @@ function NewTaskModal({
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-text-subtle hover:bg-state-neutral-bg hover:text-text-secondary transition"
+            aria-label="Cerrar"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-text-subtle transition hover:bg-state-neutral-bg hover:text-text-secondary"
           >
             <X className="h-4 w-4" />
           </button>
@@ -625,7 +630,7 @@ export default function AgendaPage() {
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                    className={`min-h-11 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                       filter === f
                         ? 'bg-primary-hover text-white shadow-card'
                         : 'bg-primary-soft text-primary-accent hover:bg-primary-soft'
@@ -664,7 +669,10 @@ export default function AgendaPage() {
                     >
                       <button
                         onClick={() => toggleTask(task.id)}
-                        className="mt-0.5 shrink-0 transition"
+                        aria-label={
+                          done ? `Marcar ${task.title} como pendiente` : `Completar ${task.title}`
+                        }
+                        className="flex h-11 w-11 shrink-0 items-center justify-center transition"
                       >
                         {done ? (
                           <CircleCheck className="h-5 w-5 text-primary-accent" />
@@ -838,14 +846,14 @@ export default function AgendaPage() {
                           <>
                             <a
                               aria-label={`Llamar a ${item.clientName}`}
-                              className="flex h-8 w-8 items-center justify-center rounded-full border border-primary-border text-primary-accent hover:bg-primary-soft"
+                              className="flex h-11 w-11 items-center justify-center rounded-full border border-primary-border text-primary-accent hover:bg-primary-soft"
                               href={`tel:${item.phone}`}
                             >
                               <PhoneCall className="h-3.5 w-3.5" />
                             </a>
                             <a
                               aria-label={`WhatsApp de ${item.clientName}`}
-                              className="flex h-8 w-8 items-center justify-center rounded-full border border-primary-border text-primary-accent hover:bg-primary-soft"
+                              className="flex h-11 w-11 items-center justify-center rounded-full border border-primary-border text-primary-accent hover:bg-primary-soft"
                               href={`https://wa.me/${item.phone.replace(/\D/g, '')}`}
                               rel="noreferrer"
                               target="_blank"
@@ -855,7 +863,7 @@ export default function AgendaPage() {
                           </>
                         ) : null}
                         <button
-                          className="ml-auto h-8 rounded-full bg-primary-accent px-3 text-xs font-bold text-white hover:bg-primary"
+                          className="ml-auto h-11 rounded-full bg-primary-accent px-4 text-xs font-bold text-white hover:bg-primary"
                           onClick={() => setContactLoanId(item.loanId)}
                           type="button"
                         >

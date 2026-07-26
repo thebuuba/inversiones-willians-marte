@@ -290,3 +290,11 @@ body {
   background: var(--border-strong);
   border-radius: 999px;
 }
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

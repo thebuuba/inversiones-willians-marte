@@ -160,12 +160,16 @@ function SummaryCard({
       index={index}
     >
       <div className="flex items-center gap-4">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-control ${iconTone}`}>
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-control ${iconTone}`}
+        >
           {icon}
         </div>
         <p className="text-xs font-bold uppercase tracking-[0.09em] text-text-secondary">{title}</p>
       </div>
-      <p className={`mt-6 text-3xl font-bold leading-none ${value.includes('-') ? 'text-state-danger' : 'text-text-primary'}`}>
+      <p
+        className={`mt-6 text-3xl font-bold leading-none ${value.includes('-') ? 'text-state-danger' : 'text-text-primary'}`}
+      >
         {value}
       </p>
       <div className="mt-4 text-sm font-medium text-text-secondary">{detail}</div>
@@ -204,10 +208,10 @@ function FilterBar({
   return (
     <ShellCard className="mb-5 p-3.5" index={4}>
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="flex shrink-0 items-center gap-1 rounded-control bg-surface-subtle p-1">
+        <div className="grid shrink-0 grid-cols-2 items-center gap-1 rounded-control bg-surface-subtle p-1 sm:flex">
           {tabs.map((tab) => (
             <button
-              className={`h-9 rounded-control px-4 text-sm font-semibold transition ${
+              className={`h-11 rounded-control px-4 text-sm font-semibold transition sm:h-9 ${
                 filter === tab.value
                   ? 'bg-primary-soft text-text-primary shadow-card'
                   : 'text-text-secondary hover:bg-card'
@@ -396,7 +400,7 @@ export function CashPanel() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-page p-5 font-sans text-text-primary">
+    <div className="min-h-screen overflow-x-hidden bg-page p-4 font-sans text-text-primary sm:p-5">
       <Header onNewMovement={() => setIsModalOpen(true)} />
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-3">

@@ -52,8 +52,18 @@ function getStatusLabel(status: string) {
   return status;
 }
 
-function StatusBadge({ status, dueDate, graceDays = 5 }: { status: string; dueDate?: string; graceDays?: number }) {
-  const label = dueDate ? getScheduleDisplayStatus(status, dueDate, new Date(), graceDays) : getStatusLabel(status);
+function StatusBadge({
+  status,
+  dueDate,
+  graceDays = 5,
+}: {
+  status: string;
+  dueDate?: string;
+  graceDays?: number;
+}) {
+  const label = dueDate
+    ? getScheduleDisplayStatus(status, dueDate, new Date(), graceDays)
+    : getStatusLabel(status);
   const tone =
     label === 'Pagado' || label === 'Cancelado'
       ? 'bg-state-neutral-bg text-state-neutral'
@@ -64,7 +74,9 @@ function StatusBadge({ status, dueDate, graceDays = 5 }: { status: string; dueDa
           : 'bg-state-success-bg text-state-success';
 
   return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${tone}`}>{label}</span>
+    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${tone}`}>
+      {label}
+    </span>
   );
 }
 
@@ -101,12 +113,16 @@ function SummaryCard({
   return (
     <div className="rounded-panel border border-border-soft bg-card p-5 shadow-card">
       <div className="flex items-center gap-3">
-        <div className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-full sm:flex ${classes.icon}`}>
+        <div
+          className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-full sm:flex ${classes.icon}`}
+        >
           {icon}
         </div>
         <div className="min-w-0">
           <p className="text-xs font-medium text-text-muted">{label}</p>
-          <p className={`mt-0.5 truncate text-base font-bold tabular-nums ${classes.value}`}>{value}</p>
+          <p className={`mt-0.5 truncate text-base font-bold tabular-nums ${classes.value}`}>
+            {value}
+          </p>
         </div>
       </div>
     </div>
@@ -231,7 +247,8 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
 
   useEffect(() => {
     const hash = window.location.hash;
-    const tab = hash === '#calendario-cuotas' ? 'Cuotas' : hash === '#recibos-pagos' ? 'Pagos' : null;
+    const tab =
+      hash === '#calendario-cuotas' ? 'Cuotas' : hash === '#recibos-pagos' ? 'Pagos' : null;
     if (!tab) return;
     const timer = window.setTimeout(() => setActiveTab(tab), 0);
     return () => window.clearTimeout(timer);
@@ -364,7 +381,8 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                 {loan.client.firstName} {loan.client.lastName}
               </h1>
               <p className="mt-2 text-sm text-text-muted">
-                Préstamo #{loan.loanNumber} · {frequency} · Entregado {fmtDate(loan.startDate)} · {totals.paidInstallments}/{totals.totalInstallments} cuotas pagadas
+                Préstamo #{loan.loanNumber} · {frequency} · Entregado {fmtDate(loan.startDate)} ·{' '}
+                {totals.paidInstallments}/{totals.totalInstallments} cuotas pagadas
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -430,13 +448,16 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
           />
         </section>
 
-        <nav className="mt-6 flex w-full gap-1 overflow-x-auto rounded-panel border border-border-soft bg-card p-1.5 shadow-card sm:w-fit" aria-label="Secciones del préstamo">
+        <nav
+          className="scrollbar-none mt-6 flex w-full gap-1 overflow-x-auto rounded-panel border border-border-soft bg-card p-1.5 shadow-card sm:w-fit"
+          aria-label="Secciones del préstamo"
+        >
           {loanTabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.label;
             return (
               <button
-                className={`flex shrink-0 items-center gap-2 rounded-control-comfortable px-3 py-2 text-sm font-semibold transition sm:px-5 ${
+                className={`flex min-h-11 shrink-0 items-center gap-2 rounded-control-comfortable px-3 py-2 text-sm font-semibold transition sm:px-5 ${
                   active
                     ? 'bg-primary-accent text-white shadow-card'
                     : 'text-text-muted hover:bg-primary-soft hover:text-primary-accent'
@@ -452,41 +473,49 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
           })}
         </nav>
 
-        <section className={`mt-5 ${activeTab === 'Resumen' ? 'grid grid-cols-1 gap-5 xl:grid-cols-2' : ''}`}>
+        <section
+          className={`mt-5 ${activeTab === 'Resumen' ? 'grid grid-cols-1 gap-5 xl:grid-cols-2' : ''}`}
+        >
           <div className={activeTab === 'Resumen' ? 'contents' : 'space-y-5'}>
-            {activeTab === 'Cobranza' ? <CollectionManagementPanel
-              agreementOpen={agreementOpen}
-              altPhone={loan.client.altPhone}
-              loanId={loan.id}
-              onAgreementClose={() => setAgreementOpen(false)}
-              phone={loan.client.phone}
-            /> : null}
+            {activeTab === 'Cobranza' ? (
+              <CollectionManagementPanel
+                agreementOpen={agreementOpen}
+                altPhone={loan.client.altPhone}
+                loanId={loan.id}
+                onAgreementClose={() => setAgreementOpen(false)}
+                phone={loan.client.phone}
+              />
+            ) : null}
 
-            {activeTab === 'Resumen' ? <section className="rounded-panel border border-border-soft bg-card p-5 shadow-card xl:col-span-2">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-base font-semibold text-text-primary">
-                    {loan.interestType === 'INDEFINITE' ? 'Cobros de interés' : 'Progreso de pago'}
-                  </h2>
-                  <p className="mt-1 text-sm font-medium text-text-secondary">
-                    {loan.interestType === 'INDEFINITE'
-                      ? `${totals.paidInstallments} cobros registrados · capital activo`
-                      : `${totals.paidInstallments} de ${totals.totalInstallments} cuotas pagadas`}
-                  </p>
+            {activeTab === 'Resumen' ? (
+              <section className="rounded-panel border border-border-soft bg-card p-5 shadow-card xl:col-span-2">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-base font-semibold text-text-primary">
+                      {loan.interestType === 'INDEFINITE'
+                        ? 'Cobros de interés'
+                        : 'Progreso de pago'}
+                    </h2>
+                    <p className="mt-1 text-sm font-medium text-text-secondary">
+                      {loan.interestType === 'INDEFINITE'
+                        ? `${totals.paidInstallments} cobros registrados · capital activo`
+                        : `${totals.paidInstallments} de ${totals.totalInstallments} cuotas pagadas`}
+                    </p>
+                  </div>
+                  <span className="text-xl font-bold text-primary-accent">
+                    {loan.interestType === 'INDEFINITE' ? 'Indefinido' : `${totals.progress}%`}
+                  </span>
                 </div>
-                <span className="text-xl font-bold text-primary-accent">
-                  {loan.interestType === 'INDEFINITE' ? 'Indefinido' : `${totals.progress}%`}
-                </span>
-              </div>
-              {loan.interestType !== 'INDEFINITE' ? (
-                <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-border-soft">
-                  <div
-                    className="h-full rounded-full bg-primary-accent"
-                    style={{ width: `${totals.progress}%` }}
-                  />
-                </div>
-              ) : null}
-            </section> : null}
+                {loan.interestType !== 'INDEFINITE' ? (
+                  <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-border-soft">
+                    <div
+                      className="h-full rounded-full bg-primary-accent"
+                      style={{ width: `${totals.progress}%` }}
+                    />
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
 
             {activeTab === 'Resumen' ? (
               <div className="xl:col-span-2">
@@ -496,10 +525,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                       label="Próximo vencimiento"
                       value={nextSchedule ? fmtDate(nextSchedule.dueDate) : empty}
                     />
-                    <DataRow
-                      label="Próxima cuota"
-                      value={fmt(operational.nextSchedulePending)}
-                    />
+                    <DataRow label="Próxima cuota" value={fmt(operational.nextSchedulePending)} />
                     <DataRow label="Cuotas vencidas" value={operational.overdueInstallments} />
                     <DataRow label="Cuotas pendientes" value={operational.pendingInstallments} />
                     <DataRow
@@ -509,7 +535,11 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                     />
                     <DataRow
                       label="Último pago"
-                      value={lastPayment ? `${fmt(lastPayment.amount)} · ${fmtDate(lastPayment.paymentDate)}` : empty}
+                      value={
+                        lastPayment
+                          ? `${fmt(lastPayment.amount)} · ${fmtDate(lastPayment.paymentDate)}`
+                          : empty
+                      }
                     />
                   </div>
                 </InfoPanel>
@@ -539,191 +569,206 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
               </InfoPanel>
             ) : null}
 
-            {activeTab === 'Cuotas' ? <section
-              className="scroll-mt-5 overflow-hidden rounded-panel border border-border-soft bg-card shadow-card"
-              id="calendario-cuotas"
-            >
-              <div className="border-b border-border-soft px-5 py-4">
-                <h2 className="text-base font-semibold text-text-primary">Calendario de cuotas</h2>
-                <p className="mt-1 text-sm font-medium text-text-secondary">
-                  Detalle de vencimientos y pagos aplicados.
-                </p>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-[860px] w-full text-left">
-                  <thead className="bg-surface-subtle text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">
-                    <tr>
-                      <th className="px-5 py-3">Cuota</th>
-                      <th className="px-5 py-3">Vencimiento</th>
-                      <th className="px-5 py-3">Monto</th>
-                      <th className="px-5 py-3">Pagado</th>
-                      <th className="px-5 py-3">Pendiente</th>
-                      <th className="px-5 py-3">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loan.schedule.map((row, index) => {
-                      const amount = Number(row.amount);
-                      const paidAmount = Number(row.paidAmount ?? 0);
-                      return (
-                        <tr
-                          className="border-t border-border-soft text-sm font-medium text-text-primary"
-                          key={row.id}
-                        >
-                          <td className="px-5 py-4 font-semibold text-text-primary">#{index + 1}</td>
-                          <td className="px-5 py-4">{fmtDate(row.dueDate)}</td>
-                          <td className="px-5 py-4">{fmt(amount)}</td>
-                          <td className="px-5 py-4">{fmt(paidAmount)}</td>
-                          <td className="px-5 py-4">
-                            {fmt(getScheduleRemaining(amount, paidAmount))}
-                          </td>
-                          <td className="px-5 py-4">
-                            <StatusBadge dueDate={row.dueDate} graceDays={loan.graceDays} status={row.status} />
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </section> : null}
-
-            {activeTab === 'Pagos' ? <section
-              className="scroll-mt-5 overflow-hidden rounded-panel border border-border-soft bg-card shadow-card"
-              id="recibos-pagos"
-            >
-              <div className="border-b border-border-soft px-5 py-4">
-                <h2 className="text-base font-semibold text-text-primary">Recibos y pagos</h2>
-                <p className="mt-1 text-sm font-medium text-text-secondary">
-                  Historial de cobros registrados en este préstamo.
-                </p>
-              </div>
-              {loan.payments.length ? (
-                <div className="divide-y divide-border-soft">
-                  {loan.payments.map((payment) => (
-                    <article
-                      className="grid gap-2 px-5 py-4 sm:grid-cols-[1fr_1fr_auto] sm:items-center"
-                      key={payment.id}
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-text-primary">
-                          Recibo {payment.id.slice(0, 8).toUpperCase()}
-                        </p>
-                        <p className="mt-0.5 text-xs font-medium text-text-muted">
-                          {fmtDate(payment.paymentDate)} · {payment.paymentMethod ?? 'Sin método'}
-                        </p>
-                      </div>
-                      <p className="text-xs font-medium text-text-secondary">
-                        Recibido por {payment.receivedBy?.name ?? '—'}
-                      </p>
-                      <p className="text-base font-semibold tabular-nums text-primary-accent">
-                        {fmt(payment.amount)}
-                      </p>
-                    </article>
-                  ))}
+            {activeTab === 'Cuotas' ? (
+              <section
+                className="scroll-mt-5 overflow-hidden rounded-panel border border-border-soft bg-card shadow-card"
+                id="calendario-cuotas"
+              >
+                <div className="border-b border-border-soft px-5 py-4">
+                  <h2 className="text-base font-semibold text-text-primary">
+                    Calendario de cuotas
+                  </h2>
+                  <p className="mt-1 text-sm font-medium text-text-secondary">
+                    Detalle de vencimientos y pagos aplicados.
+                  </p>
                 </div>
-              ) : (
-                <p className="px-5 py-8 text-center text-sm font-medium text-text-muted">
-                  Todavía no hay pagos registrados.
-                </p>
-              )}
-            </section> : null}
+                <div className="overflow-x-auto">
+                  <table className="min-w-[860px] w-full text-left">
+                    <thead className="bg-surface-subtle text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">
+                      <tr>
+                        <th className="px-5 py-3">Cuota</th>
+                        <th className="px-5 py-3">Vencimiento</th>
+                        <th className="px-5 py-3">Monto</th>
+                        <th className="px-5 py-3">Pagado</th>
+                        <th className="px-5 py-3">Pendiente</th>
+                        <th className="px-5 py-3">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loan.schedule.map((row, index) => {
+                        const amount = Number(row.amount);
+                        const paidAmount = Number(row.paidAmount ?? 0);
+                        return (
+                          <tr
+                            className="border-t border-border-soft text-sm font-medium text-text-primary"
+                            key={row.id}
+                          >
+                            <td className="px-5 py-4 font-semibold text-text-primary">
+                              #{index + 1}
+                            </td>
+                            <td className="px-5 py-4">{fmtDate(row.dueDate)}</td>
+                            <td className="px-5 py-4">{fmt(amount)}</td>
+                            <td className="px-5 py-4">{fmt(paidAmount)}</td>
+                            <td className="px-5 py-4">
+                              {fmt(getScheduleRemaining(amount, paidAmount))}
+                            </td>
+                            <td className="px-5 py-4">
+                              <StatusBadge
+                                dueDate={row.dueDate}
+                                graceDays={loan.graceDays}
+                                status={row.status}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            ) : null}
+
+            {activeTab === 'Pagos' ? (
+              <section
+                className="scroll-mt-5 overflow-hidden rounded-panel border border-border-soft bg-card shadow-card"
+                id="recibos-pagos"
+              >
+                <div className="border-b border-border-soft px-5 py-4">
+                  <h2 className="text-base font-semibold text-text-primary">Recibos y pagos</h2>
+                  <p className="mt-1 text-sm font-medium text-text-secondary">
+                    Historial de cobros registrados en este préstamo.
+                  </p>
+                </div>
+                {loan.payments.length ? (
+                  <div className="divide-y divide-border-soft">
+                    {loan.payments.map((payment) => (
+                      <article
+                        className="grid gap-2 px-5 py-4 sm:grid-cols-[1fr_1fr_auto] sm:items-center"
+                        key={payment.id}
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-text-primary">
+                            Recibo {payment.id.slice(0, 8).toUpperCase()}
+                          </p>
+                          <p className="mt-0.5 text-xs font-medium text-text-muted">
+                            {fmtDate(payment.paymentDate)} · {payment.paymentMethod ?? 'Sin método'}
+                          </p>
+                        </div>
+                        <p className="text-xs font-medium text-text-secondary">
+                          Recibido por {payment.receivedBy?.name ?? '—'}
+                        </p>
+                        <p className="text-base font-semibold tabular-nums text-primary-accent">
+                          {fmt(payment.amount)}
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="px-5 py-8 text-center text-sm font-medium text-text-muted">
+                    Todavía no hay pagos registrados.
+                  </p>
+                )}
+              </section>
+            ) : null}
           </div>
 
-          {activeTab === 'Resumen' ? <aside className="contents">
-            <div className="scroll-mt-5" id="saldo-anticipado">
-              <InfoPanel icon={<CircleDollarSign className="h-5 w-5" />} title="Saldo anticipado">
-                <label className="mb-3 block">
-                  <span className="mb-2 block text-sm font-semibold text-text-secondary">
-                    Fecha de saldo
-                  </span>
-                  <DatePickerInput
-                    className="h-10 w-full rounded-control-comfortable border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
-                    onChange={setPayoffDate}
-                    value={payoffDate}
-                  />
-                </label>
-                <DataRow
-                  label="Capital pendiente"
-                  tone="text-text-primary"
-                  value={payoffQuote ? fmt(payoffQuote.capitalOutstanding) : empty}
-                />
-                <DataRow
-                  label="Interés generado"
-                  tone="text-[#B63B0B]"
-                  value={payoffQuote ? fmt(payoffQuote.earnedInterest) : empty}
-                />
-                <DataRow
-                  label="Interés futuro descontado"
-                  tone="text-primary-accent"
-                  value={payoffQuote ? fmt(payoffQuote.unearnedInterestDiscount) : empty}
-                />
-                <DataRow label="Días generados" value={payoffQuote?.daysGenerated ?? empty} />
-                <DataRow
-                  label="Interés diario"
-                  value={payoffQuote ? fmt(payoffQuote.dailyInterest) : empty}
-                />
-                <DataRow label="Mora/cargos" value={payoffQuote ? fmt(payoffQuote.fees) : empty} />
-                <DataRow
-                  label="Total para saldar"
-                  tone="text-text-primary"
-                  value={payoffQuote ? fmt(payoffQuote.totalToPay) : empty}
-                />
-              </InfoPanel>
-            </div>
-
-            {loan.interestType === 'INDEFINITE' && loan.status === 'ACTIVE' ? (
-              <InfoPanel icon={<Plus className="h-5 w-5" />} title="Agregar capital">
-                <div className="space-y-3">
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-text-secondary">Monto</span>
-                    <input
-                      className="h-10 w-full rounded-control-comfortable border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
-                      inputMode="decimal"
-                      onChange={(event) => setCapitalAmount(event.target.value)}
-                      placeholder="0.00"
-                      value={capitalAmount}
-                    />
-                  </label>
-                  <label className="block">
+          {activeTab === 'Resumen' ? (
+            <aside className="contents">
+              <div className="scroll-mt-5" id="saldo-anticipado">
+                <InfoPanel icon={<CircleDollarSign className="h-5 w-5" />} title="Saldo anticipado">
+                  <label className="mb-3 block">
                     <span className="mb-2 block text-sm font-semibold text-text-secondary">
-                      Fecha efectiva
+                      Fecha de saldo
                     </span>
                     <DatePickerInput
                       className="h-10 w-full rounded-control-comfortable border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
-                      onChange={setCapitalDate}
-                      value={capitalDate}
+                      onChange={setPayoffDate}
+                      value={payoffDate}
                     />
                   </label>
-                  <textarea
-                    className="h-20 w-full resize-none rounded-control-comfortable border border-primary-border bg-card px-3 py-2 text-sm font-medium text-text-primary outline-none"
-                    onChange={(event) => setCapitalNotes(event.target.value)}
-                    placeholder="Notas"
-                    value={capitalNotes}
+                  <DataRow
+                    label="Capital pendiente"
+                    tone="text-text-primary"
+                    value={payoffQuote ? fmt(payoffQuote.capitalOutstanding) : empty}
                   />
-                  {capitalError ? (
-                    <p className="text-sm font-semibold text-state-danger">{capitalError}</p>
-                  ) : null}
-                  <button
-                    className="h-10 w-full rounded-full bg-primary-accent text-sm font-bold text-white disabled:opacity-60"
-                    disabled={capitalSaving}
-                    onClick={handleAddCapital}
-                    type="button"
-                  >
-                    {capitalSaving ? 'Guardando...' : 'Agregar capital'}
-                  </button>
-                </div>
-              </InfoPanel>
-            ) : null}
+                  <DataRow
+                    label="Interés generado"
+                    tone="text-[#B63B0B]"
+                    value={payoffQuote ? fmt(payoffQuote.earnedInterest) : empty}
+                  />
+                  <DataRow
+                    label="Interés futuro descontado"
+                    tone="text-primary-accent"
+                    value={payoffQuote ? fmt(payoffQuote.unearnedInterestDiscount) : empty}
+                  />
+                  <DataRow label="Días generados" value={payoffQuote?.daysGenerated ?? empty} />
+                  <DataRow
+                    label="Interés diario"
+                    value={payoffQuote ? fmt(payoffQuote.dailyInterest) : empty}
+                  />
+                  <DataRow
+                    label="Mora/cargos"
+                    value={payoffQuote ? fmt(payoffQuote.fees) : empty}
+                  />
+                  <DataRow
+                    label="Total para saldar"
+                    tone="text-text-primary"
+                    value={payoffQuote ? fmt(payoffQuote.totalToPay) : empty}
+                  />
+                </InfoPanel>
+              </div>
 
-          </aside> : null}
+              {loan.interestType === 'INDEFINITE' && loan.status === 'ACTIVE' ? (
+                <InfoPanel icon={<Plus className="h-5 w-5" />} title="Agregar capital">
+                  <div className="space-y-3">
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-text-secondary">
+                        Monto
+                      </span>
+                      <input
+                        className="h-10 w-full rounded-control-comfortable border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
+                        inputMode="decimal"
+                        onChange={(event) => setCapitalAmount(event.target.value)}
+                        placeholder="0.00"
+                        value={capitalAmount}
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-text-secondary">
+                        Fecha efectiva
+                      </span>
+                      <DatePickerInput
+                        className="h-10 w-full rounded-control-comfortable border border-primary-border bg-card px-3 text-sm font-bold text-text-primary outline-none"
+                        onChange={setCapitalDate}
+                        value={capitalDate}
+                      />
+                    </label>
+                    <textarea
+                      className="h-20 w-full resize-none rounded-control-comfortable border border-primary-border bg-card px-3 py-2 text-sm font-medium text-text-primary outline-none"
+                      onChange={(event) => setCapitalNotes(event.target.value)}
+                      placeholder="Notas"
+                      value={capitalNotes}
+                    />
+                    {capitalError ? (
+                      <p className="text-sm font-semibold text-state-danger">{capitalError}</p>
+                    ) : null}
+                    <button
+                      className="h-10 w-full rounded-full bg-primary-accent text-sm font-bold text-white disabled:opacity-60"
+                      disabled={capitalSaving}
+                      onClick={handleAddCapital}
+                      type="button"
+                    >
+                      {capitalSaving ? 'Guardando...' : 'Agregar capital'}
+                    </button>
+                  </div>
+                </InfoPanel>
+              ) : null}
+            </aside>
+          ) : null}
         </section>
       </div>
       {openReceipt && (
-        <LoanDisbursementReceiptModal
-          onClose={() => setOpenReceipt(null)}
-          receipt={openReceipt}
-        />
+        <LoanDisbursementReceiptModal onClose={() => setOpenReceipt(null)} receipt={openReceipt} />
       )}
     </main>
   );

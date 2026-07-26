@@ -122,7 +122,7 @@ function SettingsTabs({
   return (
     <motion.nav
       animate="visible"
-      className="mb-6 overflow-x-auto rounded-panel border border-border-soft bg-card p-2 shadow-card"
+      className="scrollbar-none mb-6 overflow-x-auto rounded-panel border border-border-soft bg-card p-2 shadow-card"
       custom={1}
       initial="hidden"
       variants={fadeUp}
