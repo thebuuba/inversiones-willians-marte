@@ -325,24 +325,19 @@ function LoanTypeBadge({ type }: { type: string }) {
 }
 
 function LoanStatusBadge({ status }: { status: string }) {
-  const styles: Record<string, { className: string; dot: string; label: string }> = {
-    'Al día': { className: 'bg-primary-soft text-primary-accent', dot: '#7CC99B', label: 'Al día' },
-    Atrasado: { className: 'bg-[#FADCCB] text-state-danger', dot: '#FF6A00', label: 'Atrasado' },
-    Pendiente: { className: 'bg-[#F1F3F2] text-text-primary', dot: '#374151', label: 'Pendiente' },
-    Vencido: {
-      className: 'bg-state-danger-bg text-state-danger',
-      dot: '#B73B2F',
-      label: 'Vencido',
-    },
-    Pagado: { className: 'bg-[#EEF0F2] text-[#555A58]', dot: '#B9BCBE', label: 'Pagado' },
+  const styles: Record<string, { className: string; label: string }> = {
+    'Al día': { className: 'bg-[#4F956B] text-white', label: 'A tiempo' },
+    Atrasado: { className: 'bg-[#F3C34F] text-[#2F2A1E]', label: 'Atrasado' },
+    Pendiente: { className: 'bg-[#4B5054] text-white', label: 'Pendiente' },
+    Vencido: { className: 'bg-[#D87368] text-white', label: 'Vencido' },
+    Pagado: { className: 'bg-[#6E98BC] text-white', label: 'Terminado' },
   };
   const style = styles[status];
 
   return (
     <span
-      className={`inline-flex min-w-[82px] items-center justify-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold ${style.className}`}
+      className={`inline-flex min-h-7 min-w-[88px] items-center justify-center rounded-[5px] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.02em] ${style.className}`}
     >
-      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.dot }} />
       {style.label}
     </span>
   );

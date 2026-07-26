@@ -130,25 +130,19 @@ function StatusBadge({ active }: { active: boolean }) {
 }
 
 function LoanStatusBadge({ status }: { status: string }) {
-  const isPaid = status === 'A tiempo';
-  const isOverdue = status === 'Vencido';
-  const isLate = status === 'Atrasado';
+  const styles: Record<string, string> = {
+    'A tiempo': 'bg-[#4F956B] text-white',
+    Pendiente: 'bg-[#4B5054] text-white',
+    Atrasado: 'bg-[#F3C34F] text-[#2F2A1E]',
+    Vencido: 'bg-[#D87368] text-white',
+    Pagado: 'bg-[#6E98BC] text-white',
+  };
+
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
-        isPaid
-          ? 'bg-primary-soft text-primary-accent'
-          : isOverdue
-            ? 'bg-state-danger-bg text-state-danger'
-            : isLate
-              ? 'bg-state-danger-bg text-state-danger'
-              : 'bg-state-warning-bg text-state-warning'
-      }`}
+      className={`inline-flex min-h-7 min-w-[88px] items-center justify-center rounded-[5px] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.02em] ${styles[status] ?? 'bg-[#4B5054] text-white'}`}
     >
-      <span
-        className={`h-1.5 w-1.5 rounded-full ${isPaid ? 'bg-primary-accent' : isOverdue || isLate ? 'bg-state-danger-dot' : 'bg-state-warning-dot'}`}
-      />
-      {status}
+      {status === 'Pagado' ? 'Terminado' : status}
     </span>
   );
 }
