@@ -81,7 +81,10 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-page font-sans">
         <p className="text-sm font-medium text-text-subtle">Inversionista no encontrado.</p>
-        <Link className="mt-4 text-sm font-bold text-primary-accent underline" href="/inversionistas">
+        <Link
+          className="mt-4 text-sm font-bold text-primary-accent underline"
+          href="/inversionistas"
+        >
           Volver a inversionistas
         </Link>
       </div>
@@ -254,12 +257,12 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
           })}
         </div>
 
-        <div className="mb-5 flex w-fit gap-1 rounded-panel bg-card p-1.5 shadow-card border border-border-soft">
+        <div className="scrollbar-none mb-5 flex w-full gap-1 overflow-x-auto rounded-panel border border-border-soft bg-card p-1.5 shadow-card sm:w-fit">
           {TABS.map((t, i) => (
             <button
               key={t}
               onClick={() => setTab(i)}
-              className={`rounded-control-comfortable px-5 py-2 text-sm font-semibold transition ${
+              className={`min-h-11 shrink-0 rounded-control-comfortable px-5 py-2 text-sm font-semibold transition ${
                 tab === i
                   ? 'bg-primary-accent text-white shadow-card'
                   : 'text-text-muted hover:bg-primary-soft hover:text-primary-accent'

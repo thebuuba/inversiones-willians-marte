@@ -95,6 +95,7 @@ async function main() {
             category: 'oficina',
             status: 'PENDING',
             createdById: anyUser.id,
+            assignedToId: anyUser.id,
           },
           {
             title: 'Cobro a Juan Pérez - Cuota #3',
@@ -105,6 +106,7 @@ async function main() {
             category: 'cobro',
             status: 'PENDING',
             createdById: anyUser.id,
+            assignedToId: anyUser.id,
           },
           {
             title: 'Reunión con inversionista',
@@ -115,6 +117,7 @@ async function main() {
             category: 'reunion',
             status: 'PENDING',
             createdById: anyUser.id,
+            assignedToId: anyUser.id,
           },
           {
             title: 'Desembolso préstamo comercial',
@@ -125,6 +128,7 @@ async function main() {
             category: 'prestamo',
             status: 'PENDING',
             createdById: anyUser.id,
+            assignedToId: anyUser.id,
           },
           {
             title: 'Actualizar expedientes de clientes',
@@ -135,6 +139,7 @@ async function main() {
             category: 'admin',
             status: 'PENDING',
             createdById: anyUser.id,
+            assignedToId: anyUser.id,
           },
           {
             title: 'Llamar a proveedor de seguridad',
@@ -145,6 +150,7 @@ async function main() {
             category: 'oficina',
             status: 'PENDING',
             createdById: anyUser.id,
+            assignedToId: anyUser.id,
           },
           {
             title: 'Solicitud de préstamo - María Gómez',
@@ -155,6 +161,7 @@ async function main() {
             category: 'prestamo',
             status: 'PENDING',
             createdById: anyUser.id,
+            assignedToId: anyUser.id,
           },
           {
             title: 'Reporte mensual de cobros',
@@ -165,6 +172,7 @@ async function main() {
             category: 'oficina',
             status: 'COMPLETED',
             createdById: anyUser.id,
+            assignedToId: anyUser.id,
           },
           {
             title: 'Enviar estado de cuenta a cliente',
@@ -175,6 +183,7 @@ async function main() {
             category: 'admin',
             status: 'COMPLETED',
             createdById: anyUser.id,
+            assignedToId: anyUser.id,
           },
           {
             title: 'Renovación de seguro vehicular',
@@ -185,6 +194,7 @@ async function main() {
             category: 'oficina',
             status: 'PENDING',
             createdById: anyUser.id,
+            assignedToId: anyUser.id,
           },
         ],
       });

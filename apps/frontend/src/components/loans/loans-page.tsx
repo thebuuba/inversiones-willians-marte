@@ -261,7 +261,7 @@ function LoanStatusPills({
       </span>
       {statusFilters.map((status) => (
         <button
-          className={`h-9 rounded-full px-4 text-sm font-bold transition hover:-translate-y-0.5 ${
+          className={`h-11 rounded-full px-4 text-sm font-bold transition hover:-translate-y-0.5 md:h-9 ${
             activeStatus === status
               ? 'bg-primary-accent text-text-inverse shadow-action'
               : 'bg-primary-soft text-primary-accent hover:bg-surface-muted-ui'
@@ -327,10 +327,10 @@ function LoanTypeBadge({ type }: { type: string }) {
 function LoanStatusBadge({ status }: { status: string }) {
   const styles: Record<string, { className: string; label: string }> = {
     'Al día': { className: 'bg-[#4F956B] text-white', label: 'A tiempo' },
-    Atrasado: { className: 'bg-[#F3C34F] text-[#2F2A1E]', label: 'Atrasado' },
+    Atrasado: { className: 'bg-[#E7A923] text-[#2F2A1E]', label: 'Atrasado' },
     Pendiente: { className: 'bg-[#4B5054] text-white', label: 'Pendiente' },
-    Vencido: { className: 'bg-[#D87368] text-white', label: 'Vencido' },
-    Pagado: { className: 'bg-[#6E98BC] text-white', label: 'Terminado' },
+    Vencido: { className: 'bg-[#C95349] text-white', label: 'Vencido' },
+    Pagado: { className: 'bg-[#437EAF] text-white', label: 'Terminado' },
   };
   const style = styles[status];
 
@@ -366,25 +366,69 @@ function LoanRow({ loan, index }: { loan: LoanRowData; index: number }) {
   return (
     <motion.div
       animate="visible"
-      className="grid min-w-[1180px] grid-cols-[2.15fr_1.1fr_1.35fr_1.85fr_1.25fr_1.65fr] items-center border-t border-border-soft bg-card px-6 py-3.5 transition hover:bg-surface-subtle"
+      className="border-t border-border-soft bg-card px-4 py-4 transition hover:bg-surface-subtle md:grid md:min-w-[1180px] md:grid-cols-[2.15fr_1.1fr_1.35fr_1.85fr_1.25fr_1.65fr] md:items-center md:px-6 md:py-3.5"
       custom={index + 7}
       initial="hidden"
       variants={fadeUp}
     >
-      <div>
+      <div className="md:hidden">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-text-primary">{loan.client}</p>
+            <p className="mt-1 truncate text-xs font-medium text-text-secondary">{loan.detail}</p>
+          </div>
+          <LoanStatusBadge status={loan.status} />
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 rounded-control-comfortable bg-surface-subtle p-3">
+          <div>
+            <p className="text-xs font-bold uppercase text-text-muted">Monto</p>
+            <p className="mt-1 text-sm font-bold text-text-primary">
+              {formatDop(loan.amount, { space: true })}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase text-text-muted">Próximo pago</p>
+            <p className="mt-1 text-sm font-semibold text-text-primary">{loan.nextPayment}</p>
+          </div>
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <LoanTypeBadge type={loan.type} />
+          <div className="flex items-center gap-2">
+            <Link
+              aria-label={`Cobrar préstamo de ${loan.client}`}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-primary-border text-text-secondary"
+              href={`/prestamos/cobrar?loanId=${loan.id}`}
+            >
+              <HandCoins className="h-4 w-4" />
+            </Link>
+            <Link
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-soft px-4 text-sm font-bold text-primary-accent"
+              href={`/prestamos/${loan.id}`}
+            >
+              <Eye className="h-4 w-4" />
+              Ver
+            </Link>
+          </div>
+        </div>
+      </div>
+      <div className="hidden md:block">
         <p className="text-sm font-bold leading-tight text-text-primary">{loan.client}</p>
         <p className="mt-1 text-sm font-medium text-text-secondary">{loan.detail}</p>
       </div>
-      <LoanTypeBadge type={loan.type} />
-      <div>
+      <div className="hidden md:block">
+        <LoanTypeBadge type={loan.type} />
+      </div>
+      <div className="hidden md:block">
         <p className="text-sm font-bold text-text-primary">
           {formatDop(loan.amount, { space: true })}
         </p>
         <p className="mt-1 text-sm font-medium text-text-secondary">{loan.interest}</p>
       </div>
-      <ProgressCell percent={loan.percent} progress={loan.progress} />
-      <p className="text-sm font-medium text-text-primary">{loan.nextPayment}</p>
-      <div className="flex items-center justify-end gap-2.5">
+      <div className="hidden md:block">
+        <ProgressCell percent={loan.percent} progress={loan.progress} />
+      </div>
+      <p className="hidden text-sm font-medium text-text-primary md:block">{loan.nextPayment}</p>
+      <div className="hidden items-center justify-end gap-2.5 md:flex">
         <LoanStatusBadge status={loan.status} />
         <Link
           aria-label={`Cobrar préstamo de ${loan.client}`}
@@ -422,14 +466,14 @@ function Pagination({
   onNext: () => void;
 }) {
   return (
-    <div className="flex min-w-[1180px] items-center justify-between border-t border-border-soft px-6 py-4">
+    <div className="flex min-w-0 items-center justify-between border-t border-border-soft px-4 py-4 md:min-w-[1180px] md:px-6">
       <p className="text-sm font-medium text-text-secondary">
         Mostrando {count} de {total} préstamos
       </p>
       {totalPages > 1 && (
         <div className="flex items-center gap-2">
           <button
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border-soft bg-card text-text-secondary disabled:opacity-30"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-border-soft bg-card text-text-secondary disabled:opacity-30 md:h-9 md:w-9"
             disabled={page === 0}
             onClick={onPrev}
             type="button"
@@ -440,7 +484,7 @@ function Pagination({
             {page + 1} / {totalPages}
           </span>
           <button
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border-soft bg-card text-text-secondary disabled:opacity-30"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-border-soft bg-card text-text-secondary disabled:opacity-30 md:h-9 md:w-9"
             disabled={page >= totalPages - 1}
             onClick={onNext}
             type="button"
@@ -470,8 +514,8 @@ function LoansTable({
 }) {
   return (
     <PanelCard className="overflow-hidden" index={6}>
-      <div className="overflow-x-auto">
-        <div className="grid min-w-[1180px] grid-cols-[2.15fr_1.1fr_1.35fr_1.85fr_1.25fr_1.65fr] bg-surface-subtle px-6 py-3.5 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
+      <div className="overflow-hidden md:overflow-x-auto">
+        <div className="hidden min-w-[1180px] grid-cols-[2.15fr_1.1fr_1.35fr_1.85fr_1.25fr_1.65fr] bg-surface-subtle px-6 py-3.5 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:grid">
           <span>CLIENTE</span>
           <span>AMORTIZACIÓN</span>
           <span>MONTO</span>

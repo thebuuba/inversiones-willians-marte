@@ -13,10 +13,16 @@ import {
   Banknote,
   CalendarDays,
   ChevronRight,
+  MessageCircle,
+  PhoneCall,
   X,
 } from 'lucide-react';
 import { getTasks, createTask, updateTask, deleteTask } from '@/lib/api/tasks';
+import { getCollectionPriorities, type CollectionPriority } from '@/lib/api/dashboard';
+import { InteractionModal } from '@/components/loans/collection-management-panel';
 import { getStaggerDelay } from '@/lib/animation';
+import { getUsers, type UserItem } from '@/lib/api/users';
+import { useAuth } from '@/lib/auth-context';
 import type { TaskItem, TaskPriority, TaskStatus } from '@inversiones/shared';
 
 const cardVariants: Variants = {
@@ -159,13 +165,15 @@ function MiniCalendar({
         <div className="flex gap-1">
           <button
             onClick={prevMonth}
-            className="rounded-control-compact p-1 hover:bg-primary-soft text-text-muted hover:text-primary-accent"
+            aria-label="Mes anterior"
+            className="flex h-11 w-11 items-center justify-center rounded-control-compact text-text-muted hover:bg-primary-soft hover:text-primary-accent"
           >
             <ChevronRight className="h-4 w-4 rotate-180" />
           </button>
           <button
             onClick={nextMonth}
-            className="rounded-control-compact p-1 hover:bg-primary-soft text-text-muted hover:text-primary-accent"
+            aria-label="Mes siguiente"
+            className="flex h-11 w-11 items-center justify-center rounded-control-compact text-text-muted hover:bg-primary-soft hover:text-primary-accent"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -184,10 +192,12 @@ function MiniCalendar({
           const sel = day ? isSelected(day) : false;
           const tod = day ? isToday(day) : false;
           return (
-            <div
+            <button
               key={i}
+              type="button"
+              disabled={!day}
               onClick={() => day && onDateChange(new Date(year, month, day))}
-              className={`relative flex h-8 w-full items-center justify-center rounded-control-comfortable text-sm transition cursor-pointer ${
+              className={`relative flex h-11 w-full items-center justify-center rounded-control-comfortable text-sm transition ${
                 sel
                   ? 'bg-primary-accent font-bold text-white shadow-card'
                   : tod
@@ -198,7 +208,7 @@ function MiniCalendar({
               }`}
             >
               {day}
-            </div>
+            </button>
           );
         })}
       </div>
@@ -207,9 +217,13 @@ function MiniCalendar({
 }
 
 function NewTaskModal({
+  assignees,
+  currentUserId,
   onClose,
   onSave,
 }: {
+  assignees: UserItem[];
+  currentUserId: string;
   onClose: () => void;
   onSave: (f: {
     title: string;
@@ -217,6 +231,7 @@ function NewTaskModal({
     time: string;
     priority: TaskPriority;
     category: string;
+    assignedToId: string;
   }) => void;
 }) {
   const [title, setTitle] = useState('');
@@ -224,6 +239,7 @@ function NewTaskModal({
   const [time, setTime] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('MEDIUM');
   const [category, setCategory] = useState('oficina');
+  const [assignedToId, setAssignedToId] = useState(currentUserId);
   const [error, setError] = useState('');
 
   const handleSubmit = () => {
@@ -237,6 +253,7 @@ function NewTaskModal({
       time,
       priority,
       category,
+      assignedToId,
     });
     onClose();
   };
@@ -256,7 +273,8 @@ function NewTaskModal({
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-text-subtle hover:bg-state-neutral-bg hover:text-text-secondary transition"
+            aria-label="Cerrar"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-text-subtle transition hover:bg-state-neutral-bg hover:text-text-secondary"
           >
             <X className="h-4 w-4" />
           </button>
@@ -334,6 +352,24 @@ function NewTaskModal({
               ))}
             </select>
           </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
+              Responsable
+            </label>
+            <select
+              value={assignedToId}
+              onChange={(e) => setAssignedToId(e.target.value)}
+              className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm outline-none focus:border-primary-accent focus:ring-2 focus:ring-[#c2dfcb]/60"
+            >
+              {assignees
+                .filter((assignee) => assignee.active)
+                .map((assignee) => (
+                  <option key={assignee.id} value={assignee.id}>
+                    {assignee.id === currentUserId ? `${assignee.name} (Yo)` : assignee.name}
+                  </option>
+                ))}
+            </select>
+          </div>
         </div>
         <div className="flex items-center justify-end gap-2 border-t border-border-soft bg-surface-subtle px-6 py-4">
           <button
@@ -355,11 +391,15 @@ function NewTaskModal({
 }
 
 export default function AgendaPage() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [filter, setFilter] = useState<FilterKey>('todas');
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [priorities, setPriorities] = useState<CollectionPriority[]>([]);
+  const [contactLoanId, setContactLoanId] = useState<string | null>(null);
+  const [assignees, setAssignees] = useState<UserItem[]>([]);
 
   const today = selectedDate;
   const dateStr = today.toLocaleDateString('es-DO', {
@@ -379,6 +419,12 @@ export default function AgendaPage() {
 
   useEffect(() => {
     load();
+    getCollectionPriorities()
+      .then(setPriorities)
+      .catch(() => {});
+    getUsers()
+      .then(setAssignees)
+      .catch(() => {});
   }, [load]);
 
   const addTask = async (form: {
@@ -387,6 +433,7 @@ export default function AgendaPage() {
     time: string;
     priority: TaskPriority;
     category: string;
+    assignedToId: string;
   }) => {
     await createTask({
       title: form.title,
@@ -395,6 +442,7 @@ export default function AgendaPage() {
       time: form.time || undefined,
       priority: form.priority,
       category: form.category,
+      assignedToId: form.assignedToId,
     });
     load();
   };
@@ -459,7 +507,29 @@ export default function AgendaPage() {
             <Plus className="mr-1.5 h-4 w-4" />
             Nueva tarea
           </button>
-          {showModal && <NewTaskModal onClose={() => setShowModal(false)} onSave={addTask} />}
+          {showModal && user ? (
+            <NewTaskModal
+              assignees={
+                assignees.some((assignee) => assignee.id === user.id)
+                  ? assignees
+                  : [
+                      {
+                        id: user.id,
+                        name: user.name,
+                        username: user.username,
+                        email: user.email,
+                        role: user.role,
+                        active: true,
+                        createdAt: '',
+                      },
+                      ...assignees,
+                    ]
+              }
+              currentUserId={user.id}
+              onClose={() => setShowModal(false)}
+              onSave={addTask}
+            />
+          ) : null}
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr_300px]">
@@ -499,9 +569,7 @@ export default function AgendaPage() {
                   className={`flex items-center justify-between rounded-control-comfortable px-3 py-2 ${s.className}`}
                 >
                   <span className="text-xs font-medium text-text-secondary">{s.label}</span>
-                  <span className={`text-sm font-bold ${s.valueClass}`}>
-                    {s.value}
-                  </span>
+                  <span className={`text-sm font-bold ${s.valueClass}`}>{s.value}</span>
                 </div>
               ))}
             </MotionCard>
@@ -562,7 +630,7 @@ export default function AgendaPage() {
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                    className={`min-h-11 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                       filter === f
                         ? 'bg-primary-hover text-white shadow-card'
                         : 'bg-primary-soft text-primary-accent hover:bg-primary-soft'
@@ -601,7 +669,10 @@ export default function AgendaPage() {
                     >
                       <button
                         onClick={() => toggleTask(task.id)}
-                        className="mt-0.5 shrink-0 transition"
+                        aria-label={
+                          done ? `Marcar ${task.title} como pendiente` : `Completar ${task.title}`
+                        }
+                        className="flex h-11 w-11 shrink-0 items-center justify-center transition"
                       >
                         {done ? (
                           <CircleCheck className="h-5 w-5 text-primary-accent" />
@@ -631,6 +702,11 @@ export default function AgendaPage() {
                               {task.time}
                             </span>
                           )}
+                          {task.assignedToId !== user?.id && task.assignedTo ? (
+                            <span className="rounded-full bg-state-info-bg px-2 py-0.5 text-xs font-semibold text-state-info">
+                              Para {task.assignedTo.name}
+                            </span>
+                          ) : null}
                         </div>
                         {task.description && (
                           <p className="mt-0.5 text-xs text-text-muted line-clamp-1">
@@ -646,9 +722,7 @@ export default function AgendaPage() {
                           <span
                             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${pri.className}`}
                           >
-                            <span
-                              className={`h-1.5 w-1.5 rounded-full ${pri.dot}`}
-                            />
+                            <span className={`h-1.5 w-1.5 rounded-full ${pri.dot}`} />
                             {task.priority === 'URGENT'
                               ? 'Urgente'
                               : task.priority === 'HIGH'
@@ -732,6 +806,80 @@ export default function AgendaPage() {
               className="rounded-panel bg-card shadow-card border border-border-soft overflow-hidden"
             >
               <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-state-danger-bg">
+                  <PhoneCall className="h-4 w-4 text-state-danger" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">Contactos recomendados</p>
+                  <p className="text-xs text-text-muted">Ordenados por urgencia de cobro</p>
+                </div>
+              </div>
+              <div className="divide-y divide-border-soft">
+                {priorities.length === 0 ? (
+                  <div className="px-5 py-8 text-center text-xs text-text-subtle">
+                    No hay contactos urgentes
+                  </div>
+                ) : (
+                  priorities.map((item) => (
+                    <div className="px-5 py-4" key={item.loanId}>
+                      <div className="flex items-start justify-between gap-2">
+                        <Link
+                          className="text-sm font-bold text-text-primary hover:text-primary-accent"
+                          href={`/clientes/${item.clientId}`}
+                        >
+                          {item.clientName}
+                        </Link>
+                        <span className="rounded-full bg-state-danger-bg px-2 py-0.5 text-[10px] font-bold text-state-danger">
+                          {item.daysOverdue}d
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs font-semibold text-state-danger">
+                        {item.suggestedAction}
+                      </p>
+                      <p className="mt-1 text-xs text-text-muted">
+                        {item.lastContactAt
+                          ? `Último contacto: ${new Date(item.lastContactAt).toLocaleDateString('es-DO')}`
+                          : 'Sin contactos registrados'}
+                      </p>
+                      <div className="mt-3 flex items-center gap-2">
+                        {item.phone ? (
+                          <>
+                            <a
+                              aria-label={`Llamar a ${item.clientName}`}
+                              className="flex h-11 w-11 items-center justify-center rounded-full border border-primary-border text-primary-accent hover:bg-primary-soft"
+                              href={`tel:${item.phone}`}
+                            >
+                              <PhoneCall className="h-3.5 w-3.5" />
+                            </a>
+                            <a
+                              aria-label={`WhatsApp de ${item.clientName}`}
+                              className="flex h-11 w-11 items-center justify-center rounded-full border border-primary-border text-primary-accent hover:bg-primary-soft"
+                              href={`https://wa.me/${item.phone.replace(/\D/g, '')}`}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                            </a>
+                          </>
+                        ) : null}
+                        <button
+                          className="ml-auto h-11 rounded-full bg-primary-accent px-4 text-xs font-bold text-white hover:bg-primary"
+                          onClick={() => setContactLoanId(item.loanId)}
+                          type="button"
+                        >
+                          Registrar
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </MotionCard>
+            <MotionCard
+              index={7}
+              className="rounded-panel bg-card shadow-card border border-border-soft overflow-hidden"
+            >
+              <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-state-info-bg">
                   <CalendarDays className="h-4 w-4 text-state-info" />
                 </div>
@@ -752,7 +900,9 @@ export default function AgendaPage() {
                       >
                         <div
                           className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-card shadow-sm ${
-                            a.status === 'COMPLETED' ? 'bg-state-success-bg text-state-success' : 'bg-state-info-bg text-state-info'
+                            a.status === 'COMPLETED'
+                              ? 'bg-state-success-bg text-state-success'
+                              : 'bg-state-info-bg text-state-info'
                           }`}
                         >
                           <Clock className="h-3.5 w-3.5" />
@@ -834,6 +984,18 @@ export default function AgendaPage() {
           </aside>
         </div>
       </div>
+      {contactLoanId ? (
+        <InteractionModal
+          loanId={contactLoanId}
+          onClose={() => setContactLoanId(null)}
+          onSaved={() => {
+            getCollectionPriorities()
+              .then(setPriorities)
+              .catch(() => {});
+            load();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { NetworkStatusBanner } from '@/components/layout/network-status-banner';
 import { GlobalSearch } from '@/components/layout/global-search';
 import { useAuth } from '@/lib/auth-context';
+import { NotificationCenter } from '@/components/layout/notification-center';
 
 const publicRoutes = ['/login'];
 const publicRoutePrefixes = ['/captura-documento/', '/captura-foto-cliente/'];
@@ -66,7 +67,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           sidebarCollapsed ? 'left-[72px]' : 'left-[260px]'
         }`}
       >
-        <GlobalSearch />
+        <div className="flex w-full items-center gap-4">
+          <GlobalSearch />
+          <NotificationCenter />
+        </div>
       </header>
       <main
         className={`min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] transition-[margin] duration-200 ease-out lg:pt-16 ${

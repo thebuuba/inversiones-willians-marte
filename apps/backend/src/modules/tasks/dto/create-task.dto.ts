@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsDateString, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsEnum, IsUUID } from 'class-validator';
 import { TaskPriorityEnum } from '@inversiones/shared';
 import type { TaskPriority } from '@inversiones/shared';
 
@@ -25,4 +25,8 @@ export class CreateTaskDto {
   @IsOptional()
   @IsString()
   category?: string;
+
+  @IsOptional()
+  @IsUUID()
+  assignedToId?: string;
 }

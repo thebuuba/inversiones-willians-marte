@@ -549,6 +549,7 @@ export interface CreateTaskDto {
   time?: string;
   priority?: TaskPriority;
   category?: string;
+  assignedToId?: string;
 }
 
 export interface UpdateTaskDto {
@@ -559,6 +560,7 @@ export interface UpdateTaskDto {
   priority?: TaskPriority;
   category?: string;
   status?: TaskStatus;
+  assignedToId?: string;
 }
 
 export interface TaskItem {
@@ -571,9 +573,25 @@ export interface TaskItem {
   category: string;
   status: TaskStatus;
   createdById: string;
+  createdBy?: { id: string; name: string };
+  assignedToId: string;
+  assignedTo?: { id: string; name: string };
   clientId?: number | null;
   loanId?: string | null;
   collectionInteractionId?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export type NotificationKind = 'TASK' | 'COLLECTION';
+
+export interface NotificationItem {
+  key: string;
+  kind: NotificationKind;
+  title: string;
+  description: string;
+  href: string;
+  createdAt: string;
+  read: boolean;
+  priority: TaskPriority;
 }

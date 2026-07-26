@@ -414,7 +414,9 @@ function ReplacementOptions({
                 Cargando préstamos activos...
               </p>
             ) : error ? (
-              <p className="rounded-control-comfortable bg-state-danger-bg p-4 text-sm font-medium text-state-danger">{error}</p>
+              <p className="rounded-control-comfortable bg-state-danger-bg p-4 text-sm font-medium text-state-danger">
+                {error}
+              </p>
             ) : loans.length === 0 ? (
               <p className="rounded-control-comfortable bg-surface-subtle p-5 text-center text-sm font-medium text-text-secondary">
                 Este cliente no tiene préstamos activos.
@@ -447,7 +449,9 @@ function ReplacementOptions({
                         type="checkbox"
                       />
                       <span>
-                        <small className="block font-bold uppercase text-text-muted">Préstamo</small>
+                        <small className="block font-bold uppercase text-text-muted">
+                          Préstamo
+                        </small>
                         <strong className="text-text-primary">#{loan.loanNumber}</strong>
                       </span>
                       <span>
@@ -528,7 +532,9 @@ function LoanSummaryPanel({
         <ReceiptText className="h-3 w-3" />
         Resumen del préstamo
       </span>
-      <section className={`overflow-hidden rounded-control-comfortable bg-card ${LOAN_CARD_SHADOW}`}>
+      <section
+        className={`overflow-hidden rounded-control-comfortable bg-card ${LOAN_CARD_SHADOW}`}
+      >
         <div className="grid grid-cols-1 divide-y divide-primary-border md:grid-cols-3 md:divide-x md:divide-y-0">
           <div className="flex min-h-[74px] items-center justify-between gap-3 px-4 py-4">
             <div className="min-w-0">
@@ -553,8 +559,8 @@ function LoanSummaryPanel({
                 {formatCurrency(interest)}
               </p>
               <p className="mt-1 text-xs font-medium text-text-secondary">
-                <span className="font-bold text-state-danger">{interestPercent.toFixed(1)}%</span> del
-                capital
+                <span className="font-bold text-state-danger">{interestPercent.toFixed(1)}%</span>{' '}
+                del capital
               </p>
             </div>
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-state-danger-bg text-state-danger">
@@ -1046,13 +1052,17 @@ function NewLoanStepTwo({
       </div>
 
       <div className="space-y-3">
-        <section className={`overflow-hidden rounded-control-comfortable bg-card ${LOAN_CARD_SHADOW}`}>
+        <section
+          className={`overflow-visible rounded-control-comfortable bg-card ${LOAN_CARD_SHADOW}`}
+        >
           <label className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-primary-soft text-primary-accent">
               <PlayCircle className="h-4.5 w-4.5" />
             </span>
             <span className="flex-1">
-              <strong className="block text-sm font-bold text-text-primary">Fecha de entrega</strong>
+              <strong className="block text-sm font-bold text-text-primary">
+                Fecha de entrega
+              </strong>
               <small className="mt-0.5 block text-xs font-medium text-text-secondary">
                 Activa esta opción si el préstamo fue entregado anteriormente
               </small>
@@ -1074,6 +1084,7 @@ function NewLoanStepTwo({
                   value={loanStartDate}
                   onChange={onLoanStartDateChange}
                   invalid={!!errors.loanStartDate}
+                  placement="top"
                   className="h-[42px] w-full rounded-control-compact border border-primary-border bg-card px-3 text-sm font-medium text-text-primary shadow-soft outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                 />
                 {errors.loanStartDate && (
@@ -1123,7 +1134,9 @@ function NewLoanStepTwo({
           )}
         </section>
 
-        <section className={`overflow-hidden rounded-control-comfortable bg-card ${LOAN_CARD_SHADOW}`}>
+        <section
+          className={`overflow-hidden rounded-control-comfortable bg-card ${LOAN_CARD_SHADOW}`}
+        >
           <button
             className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-subtle"
             onClick={() => setOpenLateFee((open) => !open)}

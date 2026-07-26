@@ -3,12 +3,19 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
-import { getUsers, createUser, toggleActiveUser, type UserItem, type CreateUserInput } from '@/lib/api/users';
+import {
+  getUsers,
+  createUser,
+  toggleActiveUser,
+  type UserItem,
+  type CreateUserInput,
+} from '@/lib/api/users';
 import { getSettings, updateSettings } from '@/lib/api/settings';
 import { useAuth } from '@/lib/auth-context';
 import { ThemeSelector } from './theme-selector';
 import {
   Building2,
+  AtSign,
   Bell,
   Check,
   ChevronDown,
@@ -16,7 +23,6 @@ import {
   CreditCard,
   Download,
   KeyRound,
-  Mail,
   Percent,
   Plus,
   ShieldCheck,
@@ -28,7 +34,14 @@ import {
   X,
 } from 'lucide-react';
 
-const tabs = ['General', 'Préstamos', 'Usuarios y roles', 'Notificaciones', 'Seguridad', 'Integraciones'];
+const tabs = [
+  'General',
+  'Préstamos',
+  'Usuarios y roles',
+  'Notificaciones',
+  'Seguridad',
+  'Integraciones',
+];
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 16 },
@@ -109,7 +122,7 @@ function SettingsTabs({
   return (
     <motion.nav
       animate="visible"
-      className="mb-6 overflow-x-auto rounded-panel border border-border-soft bg-card p-2 shadow-card"
+      className="scrollbar-none mb-6 overflow-x-auto rounded-panel border border-border-soft bg-card p-2 shadow-card"
       custom={1}
       initial="hidden"
       variants={fadeUp}
@@ -118,7 +131,9 @@ function SettingsTabs({
         {tabs.map((tab) => (
           <button
             className={`h-11 rounded-[14px] px-5 text-sm font-bold transition ${
-              activeTab === tab ? 'bg-primary-soft text-primary shadow-card' : 'text-text-secondary hover:bg-surface-subtle'
+              activeTab === tab
+                ? 'bg-primary-soft text-primary shadow-card'
+                : 'text-text-secondary hover:bg-surface-subtle'
             }`}
             key={tab}
             onClick={() => onTabChange(tab)}
@@ -335,10 +350,26 @@ function CompanyInfoCard() {
       <LogoUploader />
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-        <FormInput label="Nombre comercial" onChange={change('companyName')} value={company.companyName} />
-        <FormInput label="RNC / Identificación" onChange={change('companyTaxId')} value={company.companyTaxId} />
-        <FormInput label="Correo de contacto" onChange={change('companyEmail')} value={company.companyEmail} />
-        <FormInput label="Teléfono" onChange={change('companyPhone')} value={company.companyPhone} />
+        <FormInput
+          label="Nombre comercial"
+          onChange={change('companyName')}
+          value={company.companyName}
+        />
+        <FormInput
+          label="RNC / Identificación"
+          onChange={change('companyTaxId')}
+          value={company.companyTaxId}
+        />
+        <FormInput
+          label="Correo de contacto"
+          onChange={change('companyEmail')}
+          value={company.companyEmail}
+        />
+        <FormInput
+          label="Teléfono"
+          onChange={change('companyPhone')}
+          value={company.companyPhone}
+        />
         <FormInput
           className="md:col-span-2"
           helper="Aparece en facturas y contratos."
@@ -349,7 +380,9 @@ function CompanyInfoCard() {
         />
       </div>
       <div className="mt-5 flex items-center justify-end gap-3">
-        {saved && <span className="text-sm font-bold text-state-success">Información guardada</span>}
+        {saved && (
+          <span className="text-sm font-bold text-state-success">Información guardada</span>
+        )}
         <button
           className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary disabled:opacity-60"
           disabled={saving || !company.companyName.trim()}
@@ -395,7 +428,9 @@ function SwitchRow({
   bordered?: boolean;
 }) {
   return (
-    <div className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-border-soft' : ''}`}>
+    <div
+      className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-border-soft' : ''}`}
+    >
       <div>
         <p className="text-base font-bold text-text-primary">{title}</p>
         <p className="mt-1 text-sm font-medium text-text-secondary">{description}</p>
@@ -411,7 +446,9 @@ function DefaultLoanParametersCard() {
   const [graceSaved, setGraceSaved] = useState(false);
 
   useEffect(() => {
-    getSettings().then((settings) => setGraceDays(settings.graceDays)).catch(() => undefined);
+    getSettings()
+      .then((settings) => setGraceDays(settings.graceDays))
+      .catch(() => undefined);
   }, []);
 
   async function saveGraceDays() {
@@ -436,7 +473,9 @@ function DefaultLoanParametersCard() {
 
       <div className="mb-6 rounded-panel border border-primary-border bg-primary-soft p-4">
         <label className="block">
-          <span className="text-sm font-bold text-text-primary">Días de gracia para pagar una cuota</span>
+          <span className="text-sm font-bold text-text-primary">
+            Días de gracia para pagar una cuota
+          </span>
           <span className="mt-1 block text-sm font-medium text-text-secondary">
             La cuota queda pendiente desde su vencimiento y pasa a atrasada al superar este plazo.
           </span>
@@ -477,16 +516,8 @@ function DefaultLoanParametersCard() {
         <FormInput label="Plazo máximo (meses)" value="" />
         <FormInput label="Monto mínimo" prefix="RD$" value="" />
         <FormInput label="Monto máximo" prefix="RD$" value="" />
-        <FormSelect
-          label="Frecuencia de pago por defecto"
-          options={[]}
-          value=""
-        />
-        <FormSelect
-          label="Método de cálculo"
-          options={[]}
-          value=""
-        />
+        <FormSelect label="Frecuencia de pago por defecto" options={[]} value="" />
+        <FormSelect label="Método de cálculo" options={[]} value="" />
       </div>
 
       <div className="mt-4">
@@ -521,7 +552,9 @@ function LoanProductsCard() {
       />
 
       <div className="space-y-4">
-        <p className="py-6 text-center text-sm font-medium text-text-secondary">No hay productos configurados</p>
+        <p className="py-6 text-center text-sm font-medium text-text-secondary">
+          No hay productos configurados
+        </p>
       </div>
 
       <button
@@ -567,8 +600,21 @@ function SettingsLoansTab() {
   );
 }
 
-function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState<CreateUserInput>({ name: '', email: '', password: '', role: 'COLLECTOR' });
+function CreateUserModal({
+  open,
+  onClose,
+  onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [form, setForm] = useState<CreateUserInput>({
+    name: '',
+    username: '',
+    password: '',
+    role: 'COLLECTOR',
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -580,7 +626,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
       await createUser(form);
       onCreated();
       onClose();
-      setForm({ name: '', email: '', password: '', role: 'COLLECTOR' });
+      setForm({ name: '', username: '', password: '', role: 'COLLECTOR' });
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { error?: string } } };
       setError(axiosErr.response?.data?.error ?? 'Error al crear usuario');
@@ -609,13 +655,19 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
           >
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-bold text-text-primary">Nuevo usuario</h2>
-              <button onClick={onClose} type="button" className="rounded-full p-1 text-text-secondary hover:bg-page">
+              <button
+                onClick={onClose}
+                type="button"
+                className="rounded-full p-1 text-text-secondary hover:bg-page"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {error && (
-              <p className="mb-4 rounded-[12px] bg-state-danger-bg p-3 text-sm text-state-danger">{error}</p>
+              <p className="mb-4 rounded-[12px] bg-state-danger-bg p-3 text-sm text-state-danger">
+                {error}
+              </p>
             )}
 
             <div className="space-y-4">
@@ -634,16 +686,17 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
               </div>
               <div>
                 <label className="mb-1 flex items-center gap-2 text-sm font-medium text-text-primary">
-                  <Mail className="h-4 w-4 text-primary-accent" />
-                  Correo electrónico
+                  <AtSign className="h-4 w-4 text-primary-accent" />
+                  Usuario para iniciar sesión
                 </label>
                 <input
                   className="h-11 w-full rounded-control border border-primary-border bg-card px-4 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="ejemplo@correo.com"
+                  autoCapitalize="none"
+                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                  pattern="[a-zA-Z0-9._-]+"
+                  placeholder="Ej: juan.perez"
                   required
-                  type="email"
-                  value={form.email}
+                  value={form.username}
                 />
               </div>
               <div>
@@ -654,8 +707,8 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
                 <input
                   className="h-11 w-full rounded-control border border-primary-border bg-card px-4 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  minLength={6}
-                  placeholder="Mínimo 6 caracteres"
+                  minLength={10}
+                  placeholder="Mínimo 10 caracteres"
                   required
                   type="password"
                   value={form.password}
@@ -687,7 +740,7 @@ function CreateUserModal({ open, onClose, onCreated }: { open: boolean; onClose:
               </button>
               <button
                 className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
-                    saving ? 'bg-text-secondary' : 'bg-primary-accent shadow-action hover:bg-primary'
+                  saving ? 'bg-text-secondary' : 'bg-primary-accent shadow-action hover:bg-primary'
                 }`}
                 disabled={saving}
                 type="submit"
@@ -748,7 +801,9 @@ function SettingsUsersRolesTab() {
     getUsers().then(setUsers);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function handleToggle(id: string) {
     await toggleActiveUser(id);
@@ -793,7 +848,9 @@ function SettingsUsersRolesTab() {
         </div>
 
         <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <p className="text-sm font-medium text-text-secondary">{users.length} miembros · {activeCount} activos</p>
+          <p className="text-sm font-medium text-text-secondary">
+            {users.length} miembros · {activeCount} activos
+          </p>
           {isAdmin && (
             <button
               className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary"
@@ -807,7 +864,9 @@ function SettingsUsersRolesTab() {
         </div>
 
         {users.length === 0 ? (
-          <p className="py-12 text-center text-sm font-medium text-text-secondary">No hay usuarios registrados</p>
+          <p className="py-12 text-center text-sm font-medium text-text-secondary">
+            No hay usuarios registrados
+          </p>
         ) : (
           <div className="overflow-hidden rounded-panel border border-border-soft">
             <div className="hidden grid-cols-[minmax(220px,1.6fr)_minmax(160px,1fr)_minmax(120px,0.9fr)_100px] bg-surface-subtle px-5 py-4 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:grid">
@@ -826,18 +885,26 @@ function SettingsUsersRolesTab() {
                     {u.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-base font-bold leading-tight text-text-primary">{u.name}</p>
-                    <p className="mt-1 truncate text-sm font-medium text-text-secondary">{u.email}</p>
+                    <p className="truncate text-base font-bold leading-tight text-text-primary">
+                      {u.name}
+                    </p>
+                    <p className="mt-1 truncate text-sm font-medium text-text-secondary">
+                      @{u.username}
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between gap-3 md:block">
-                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:hidden">Rol</span>
+                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:hidden">
+                    Rol
+                  </span>
                   <RoleBadge role={u.role} />
                 </div>
 
                 <div className="flex items-center justify-between gap-3 md:block">
-                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:hidden">Estado</span>
+                  <span className="text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:hidden">
+                    Estado
+                  </span>
                   <StatusBadge active={u.active} />
                 </div>
 
@@ -852,7 +919,11 @@ function SettingsUsersRolesTab() {
                         onClick={() => handleToggle(u.id)}
                         type="button"
                       >
-                        {u.active ? <ShieldX className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+                        {u.active ? (
+                          <ShieldX className="h-5 w-5" />
+                        ) : (
+                          <ShieldCheck className="h-5 w-5" />
+                        )}
                       </button>
                       <button
                         aria-label={`Eliminar ${u.name}`}
@@ -886,8 +957,13 @@ function SettingsUsersRolesTab() {
             >
               <div className="mb-3 flex items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: roleDot[role] ?? '#ccc' }} />
-                  <p className="truncate text-base font-bold text-text-primary">{roleLabel[role] ?? role}</p>
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: roleDot[role] ?? '#ccc' }}
+                  />
+                  <p className="truncate text-base font-bold text-text-primary">
+                    {roleLabel[role] ?? role}
+                  </p>
                 </div>
                 <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-primary-soft px-2 text-sm font-bold text-primary">
                   {count}
@@ -916,11 +992,7 @@ const internalAlerts: {
   enabled: boolean;
 }[] = [];
 
-function NotificationChannelItem({
-  channel,
-}: {
-  channel: (typeof notificationChannels)[number];
-}) {
+function NotificationChannelItem({ channel }: { channel: (typeof notificationChannels)[number] }) {
   const Icon = channel.icon;
 
   return (
@@ -966,7 +1038,9 @@ function InternalAlertItem({
   bordered?: boolean;
 }) {
   return (
-    <div className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-border-soft' : ''}`}>
+    <div
+      className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-border-soft' : ''}`}
+    >
       <div>
         <p className="text-base font-bold text-text-primary">{alert.title}</p>
         <p className="mt-1 text-sm font-medium text-text-secondary">{alert.detail}</p>
@@ -1040,7 +1114,9 @@ function SecurityOptionItem({
   bordered?: boolean;
 }) {
   return (
-    <div className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-border-soft' : ''}`}>
+    <div
+      className={`flex items-center justify-between gap-6 py-6 ${bordered ? 'border-b border-border-soft' : ''}`}
+    >
       <div>
         <p className="text-base font-bold text-text-primary">{option.title}</p>
         <p className="mt-1 text-sm font-medium text-text-secondary">{option.detail}</p>
@@ -1070,16 +1146,8 @@ function AccessAuthenticationCard() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-5 border-t border-border-soft pt-6 md:grid-cols-2">
-        <FormSelect
-          label="Longitud mínima de contraseña"
-          options={[]}
-          value=""
-        />
-        <FormSelect
-          label="Caducidad de contraseña"
-          options={[]}
-          value=""
-        />
+        <FormSelect label="Longitud mínima de contraseña" options={[]} value="" />
+        <FormSelect label="Caducidad de contraseña" options={[]} value="" />
       </div>
     </SectionCard>
   );
@@ -1094,19 +1162,13 @@ function BackupsCard() {
         title="Respaldos"
       />
 
-      <p className="py-6 text-center text-sm font-medium text-text-secondary">No hay respaldos configurados</p>
+      <p className="py-6 text-center text-sm font-medium text-text-secondary">
+        No hay respaldos configurados
+      </p>
 
       <div className="space-y-5">
-        <FormSelect
-          label="Frecuencia"
-          options={[]}
-          value=""
-        />
-        <FormSelect
-          label="Retención"
-          options={[]}
-          value=""
-        />
+        <FormSelect label="Frecuencia" options={[]} value="" />
+        <FormSelect label="Retención" options={[]} value="" />
       </div>
 
       <button
@@ -1165,9 +1227,7 @@ export function SettingsPage() {
         activeTab !== 'Préstamos' &&
         activeTab !== 'Usuarios y roles' &&
         activeTab !== 'Notificaciones' &&
-        activeTab !== 'Seguridad' && (
-        <EmptySettingsTab key={activeTab} tab={activeTab} />
-      )}
+        activeTab !== 'Seguridad' && <EmptySettingsTab key={activeTab} tab={activeTab} />}
     </main>
   );
 }

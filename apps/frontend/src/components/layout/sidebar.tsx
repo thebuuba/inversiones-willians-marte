@@ -23,6 +23,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import { navItems } from '@/components/ui/visual-system';
+import { NotificationCenter } from '@/components/layout/notification-center';
 
 const navIconMap = {
   briefcase: Briefcase,
@@ -126,7 +127,12 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
           WM
         </div>
-        <div className={cn('min-w-0 flex-1 transition-opacity duration-150', compact && 'hidden opacity-0')}>
+        <div
+          className={cn(
+            'min-w-0 flex-1 transition-opacity duration-150',
+            compact && 'hidden opacity-0',
+          )}
+        >
           <h1 className="whitespace-nowrap text-base font-bold leading-tight text-text-primary">
             Willians Marte
           </h1>
@@ -152,7 +158,10 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         </button>
       </header>
 
-      <nav className={cn('flex-1 pb-5', compact ? 'overflow-visible px-3' : 'overflow-y-auto px-4')} aria-label="Navegación principal">
+      <nav
+        className={cn('flex-1 pb-5', compact ? 'overflow-visible px-3' : 'overflow-y-auto px-4')}
+        aria-label="Navegación principal"
+      >
         {navGroups.map((group, groupIndex) => (
           <section key={group.label} className={cn(groupIndex > 0 && 'mt-6')}>
             {compact ? (
@@ -182,7 +191,9 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         ))}
       </nav>
 
-      <footer className={cn('shrink-0 border-t border-border-soft py-4', compact ? 'px-3' : 'px-4')}>
+      <footer
+        className={cn('shrink-0 border-t border-border-soft py-4', compact ? 'px-3' : 'px-4')}
+      >
         {settingsItem && (
           <NavLink
             compact={compact}
@@ -223,7 +234,12 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-text-primary text-sm font-bold text-white">
               {initial}
             </div>
-            <div className={cn('min-w-0 flex-1 transition-opacity duration-150', compact && 'hidden opacity-0')}>
+            <div
+              className={cn(
+                'min-w-0 flex-1 transition-opacity duration-150',
+                compact && 'hidden opacity-0',
+              )}
+            >
               <p className="truncate text-sm font-bold leading-tight text-text-primary">
                 {user?.name ?? 'Nata'}
               </p>
@@ -233,7 +249,10 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             </div>
             <ChevronsUpDown
               aria-hidden="true"
-              className={cn('h-4 w-4 shrink-0 text-text-secondary transition-opacity duration-150', compact && 'hidden opacity-0')}
+              className={cn(
+                'h-4 w-4 shrink-0 text-text-secondary transition-opacity duration-150',
+                compact && 'hidden opacity-0',
+              )}
               strokeWidth={2}
             />
           </button>
@@ -254,14 +273,17 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             <p className="text-xs leading-tight text-text-secondary">Sistema de Préstamos</p>
           </div>
         </div>
-        <button
-          aria-label="Abrir menú"
-          className="flex h-10 w-10 items-center justify-center rounded-[8px] text-text-secondary transition-colors duration-150 hover:bg-page hover:text-text-primary"
-          onClick={() => setMobileOpen(true)}
-          type="button"
-        >
-          <Menu className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
-        </button>
+        <div className="flex items-center gap-1">
+          <NotificationCenter />
+          <button
+            aria-label="Abrir menú"
+            className="flex h-11 w-11 items-center justify-center rounded-[8px] text-text-secondary transition-colors duration-150 hover:bg-page hover:text-text-primary"
+            onClick={() => setMobileOpen(true)}
+            type="button"
+          >
+            <Menu className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
+          </button>
+        </div>
       </div>
 
       {mobileOpen && (

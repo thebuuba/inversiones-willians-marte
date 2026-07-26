@@ -171,7 +171,7 @@ export const MovementModal = memo(function MovementModal({
       <form
         aria-labelledby="movement-modal-title"
         aria-modal="true"
-        className={`w-full max-w-[600px] overflow-hidden rounded-[16px] border border-border-soft bg-card shadow-modal transition-[opacity,transform] duration-150 ${
+        className={`max-h-[calc(100dvh-3rem)] w-full max-w-[600px] overflow-y-auto rounded-[16px] border border-border-soft bg-card shadow-modal transition-[opacity,transform] duration-150 ${
           isOpen ? 'scale-100 opacity-100' : 'scale-[0.98] opacity-0'
         }`}
         onSubmit={handleSubmit}
@@ -193,7 +193,7 @@ export const MovementModal = memo(function MovementModal({
           </div>
           <button
             aria-label="Cerrar"
-            className="flex h-9 w-9 items-center justify-center rounded-[9px] text-text-secondary transition-colors hover:bg-surface-muted-ui hover:text-text-primary"
+            className="flex h-11 w-11 items-center justify-center rounded-[9px] text-text-secondary transition-colors hover:bg-surface-muted-ui hover:text-text-primary"
             onClick={closeModal}
             type="button"
           >

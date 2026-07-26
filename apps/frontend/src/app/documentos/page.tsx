@@ -48,7 +48,8 @@ function DocumentCard({ doc, onDelete }: { doc: DocumentItem; onDelete: (id: str
         </p>
       </div>
       <button
-        className="flex h-8 w-8 items-center justify-center rounded-full text-text-secondary transition hover:bg-state-danger-bg hover:text-state-danger"
+        aria-label={`Eliminar ${doc.name}`}
+        className="flex h-11 w-11 items-center justify-center rounded-full text-text-secondary transition hover:bg-state-danger-bg hover:text-state-danger"
         onClick={() => onDelete(doc.id)}
         type="button"
       >
@@ -154,7 +155,9 @@ function UploadModal({
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-text-primary">Categoría</label>
+                <label className="mb-1 block text-sm font-medium text-text-primary">
+                  Categoría
+                </label>
                 <select
                   className="h-11 w-full rounded-control border border-primary-border bg-card px-4 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                   onChange={(e) => setCategory(e.target.value)}
@@ -222,7 +225,9 @@ export default function DocumentosPage() {
         initial={{ opacity: 0, y: 16 }}
       >
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-secondary">ARCHIVOS</p>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-secondary">
+            ARCHIVOS
+          </p>
           <h1 className="mt-1.5 text-3xl font-bold leading-tight text-text-primary">Documentos</h1>
           <p className="mt-1.5 text-sm text-text-secondary">Gestión documental del sistema.</p>
         </div>

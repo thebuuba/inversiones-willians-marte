@@ -88,6 +88,7 @@ export class CollectionInteractionsService {
             loanId: loan.id,
             collectionInteractionId: interaction.id,
             createdById: userId,
+            assignedToId: userId,
           },
         });
       }

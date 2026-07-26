@@ -21,6 +21,7 @@ interface DatePickerInputProps {
   className?: string;
   placeholder?: string;
   invalid?: boolean;
+  placement?: 'top' | 'bottom';
 }
 
 export function DatePickerInput({
@@ -30,6 +31,7 @@ export function DatePickerInput({
   className = '',
   placeholder = 'yyyy-mm-dd',
   invalid = false,
+  placement = 'bottom',
 }: DatePickerInputProps) {
   const [open, setOpen] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(() => getInitialMonth(value));
@@ -87,7 +89,11 @@ export function DatePickerInput({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-[calc(100%+6px)] z-[80] w-[292px] rounded-panel border border-border-soft bg-card p-4 text-text-secondary shadow-modal">
+        <div
+          className={`absolute left-0 z-[80] w-[292px] rounded-panel border border-border-soft bg-card p-4 text-text-secondary shadow-modal ${
+            placement === 'top' ? 'bottom-[calc(100%+6px)]' : 'top-[calc(100%+6px)]'
+          }`}
+        >
           <div className="mb-4 grid grid-cols-[32px_1fr_32px] items-center">
             <button
               type="button"

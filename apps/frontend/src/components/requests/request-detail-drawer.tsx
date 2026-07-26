@@ -26,10 +26,26 @@ interface RequestDetailDrawerProps {
 }
 
 const statusMap: Record<string, { label: string; className: string; dot: string }> = {
-  PENDING: { label: 'Pendiente', className: 'bg-state-warning-bg text-state-warning', dot: 'bg-state-warning-dot' },
-  UNDER_REVIEW: { label: 'En revisión', className: 'bg-state-info-bg text-state-info', dot: 'bg-state-info-dot' },
-  APPROVED: { label: 'Aprobada', className: 'bg-state-success-bg text-state-success', dot: 'bg-state-success-dot' },
-  REJECTED: { label: 'Rechazada', className: 'bg-state-danger-bg text-state-danger', dot: 'bg-state-danger-dot' },
+  PENDING: {
+    label: 'Pendiente',
+    className: 'bg-state-warning-bg text-state-warning',
+    dot: 'bg-state-warning-dot',
+  },
+  UNDER_REVIEW: {
+    label: 'En revisión',
+    className: 'bg-state-info-bg text-state-info',
+    dot: 'bg-state-info-dot',
+  },
+  APPROVED: {
+    label: 'Aprobada',
+    className: 'bg-state-success-bg text-state-success',
+    dot: 'bg-state-success-dot',
+  },
+  REJECTED: {
+    label: 'Rechazada',
+    className: 'bg-state-danger-bg text-state-danger',
+    dot: 'bg-state-danger-dot',
+  },
 };
 
 const printStatusColors: Record<string, { label: string; bg: string; text: string }> = {
@@ -40,16 +56,30 @@ const printStatusColors: Record<string, { label: string; bg: string; text: strin
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const style = statusMap[status] ?? { label: status, className: 'bg-state-neutral-bg text-state-neutral', dot: 'bg-state-neutral-dot' };
+  const style = statusMap[status] ?? {
+    label: status,
+    className: 'bg-state-neutral-bg text-state-neutral',
+    dot: 'bg-state-neutral-dot',
+  };
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${style.className}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${style.className}`}
+    >
       <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
       {style.label}
     </span>
   );
 }
 
-function InfoCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+function InfoCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex items-center gap-3 rounded-panel bg-card p-3.5 transition hover:-translate-y-0.5">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-state-neutral-bg text-text-muted">
@@ -95,7 +125,11 @@ export function RequestDetailDrawer({
     if (!win) return;
     const status = getPrintableStatus(data.status);
     const fullName = `${data.firstName} ${data.lastName}`;
-    const receivedDate = formatRequestDate(data.createdAt, { day: 'numeric', month: 'long', year: 'numeric' });
+    const receivedDate = formatRequestDate(data.createdAt, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
     const shortDate = formatRequestDate(data.createdAt);
     const generatedAt = new Date().toLocaleString('es-DO', {
       day: '2-digit',
@@ -388,15 +422,15 @@ export function RequestDetailDrawer({
     if (!data) return;
     const text = encodeURIComponent(
       `*Solicitud ${data.code}*\n` +
-      `*Cliente:* ${data.firstName} ${data.lastName}\n` +
-      `*Monto:* ${formatDop(data.amount)}\n` +
-      `*Cédula:* ${data.identification || '—'}\n` +
-      `*Teléfono:* ${data.phone || '—'}\n` +
-      `*Referente:* ${data.reference || '—'}\n` +
-      `*Fecha:* ${new Date(data.createdAt).toLocaleDateString('es-DO')}\n` +
-      `${data.description ? `*Descripción:* ${data.description}` : ''}\n` +
-      `*Estado:* ${data.status === 'PENDING' ? 'Pendiente' : data.status === 'APPROVED' ? 'Aprobada' : 'Rechazada'}\n` +
-      `\n— Enviado desde Inversiones Willians Marte`
+        `*Cliente:* ${data.firstName} ${data.lastName}\n` +
+        `*Monto:* ${formatDop(data.amount)}\n` +
+        `*Cédula:* ${data.identification || '—'}\n` +
+        `*Teléfono:* ${data.phone || '—'}\n` +
+        `*Referente:* ${data.reference || '—'}\n` +
+        `*Fecha:* ${new Date(data.createdAt).toLocaleDateString('es-DO')}\n` +
+        `${data.description ? `*Descripción:* ${data.description}` : ''}\n` +
+        `*Estado:* ${data.status === 'PENDING' ? 'Pendiente' : data.status === 'APPROVED' ? 'Aprobada' : 'Rechazada'}\n` +
+        `\n— Enviado desde Inversiones Willians Marte`,
     );
     window.open(`https://wa.me/?text=${text}`, '_blank');
   }
@@ -422,11 +456,14 @@ export function RequestDetailDrawer({
             <div className="sticky top-0 z-10 flex items-start justify-between border-b border-primary-border bg-card px-6 py-5">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-state-neutral-bg text-sm font-bold text-text-secondary">
-                  {data.firstName[0]}{data.lastName[0]}
+                  {data.firstName[0]}
+                  {data.lastName[0]}
                 </div>
                 <div>
                   <p className="text-xs font-bold text-text-muted">{data.code}</p>
-                  <h2 className="mt-1 text-lg font-bold leading-tight text-text-primary">{data.firstName} {data.lastName}</h2>
+                  <h2 className="mt-1 text-lg font-bold leading-tight text-text-primary">
+                    {data.firstName} {data.lastName}
+                  </h2>
                   <div className="mt-2">
                     <StatusBadge status={data.status} />
                   </div>
@@ -434,7 +471,7 @@ export function RequestDetailDrawer({
               </div>
               <button
                 aria-label="Cerrar detalle"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-primary-border bg-card text-text-muted transition hover:bg-state-neutral-bg hover:text-text-secondary"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-primary-border bg-card text-text-muted transition hover:bg-state-neutral-bg hover:text-text-secondary"
                 onClick={onClose}
                 type="button"
               >
@@ -449,28 +486,47 @@ export function RequestDetailDrawer({
                 initial={{ opacity: 0, y: 10 }}
                 transition={{ delay: 0.08 }}
               >
-                <p className="text-xs font-bold uppercase tracking-wide text-text-muted">MONTO SOLICITADO</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-text-muted">
+                  MONTO SOLICITADO
+                </p>
                 <p className="mt-3 text-[30px] font-bold leading-none text-text-primary">
                   {formatDop(data.amount)}
                 </p>
                 <p className="mt-3 text-sm text-text-muted">
-                  Recibido el {new Date(data.createdAt).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  Recibido el{' '}
+                  {new Date(data.createdAt).toLocaleDateString('es-DO', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
                 </p>
                 {data.status !== 'PENDING' && (
                   <p className="mt-1.5 text-xs font-bold text-text-muted">
                     {data.status === 'APPROVED' ? 'Aprobada' : 'Rechazada'} el{' '}
-                    {new Date(data.updatedAt).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    {new Date(data.updatedAt).toLocaleDateString('es-DO', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </p>
                 )}
               </motion.div>
 
               <section className="mt-6">
-                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-muted">DATOS DEL SOLICITANTE</h3>
+                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-muted">
+                  DATOS DEL SOLICITANTE
+                </h3>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <InfoCard icon={CreditCard} label="CÉDULA" value={data.identification ?? '—'} />
                   <InfoCard icon={Phone} label="TELÉFONO" value={data.phone ?? '—'} />
                   <InfoCard icon={User} label="REFERENTE" value={data.reference ?? '—'} />
-                  <InfoCard icon={Calendar} label="FECHA" value={new Date(data.createdAt).toLocaleDateString('es-DO')} />
+                  <InfoCard
+                    icon={Calendar}
+                    label="FECHA"
+                    value={new Date(data.createdAt).toLocaleDateString('es-DO')}
+                  />
                 </div>
               </section>
 
@@ -498,7 +554,7 @@ export function RequestDetailDrawer({
             </div>
 
             {data.status === 'PENDING' && (
-              <div className="fixed bottom-0 right-0 w-full max-w-[540px] border-t border-primary-border bg-card px-6 py-4">
+              <div className="fixed bottom-0 right-0 w-full max-w-[540px] border-t border-primary-border bg-card px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                 <div className="mb-3 grid grid-cols-2 gap-3">
                   <button
                     className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-primary-border bg-card text-sm font-bold text-text-primary transition hover:bg-surface-subtle"
