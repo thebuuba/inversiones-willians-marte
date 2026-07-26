@@ -21,6 +21,17 @@ describe('AmortizationService', () => {
   };
 
   describe('FLAT interest', () => {
+    it('uses an explicit first payment date without changing the loan start date', () => {
+      const schedule = service.calculate({
+        ...baseParams,
+        interestType: 'FLAT',
+        firstPaymentDate: new Date('2025-12-15T00:00:00.000Z'),
+      });
+
+      expect(schedule[0].dueDate.toISOString().slice(0, 10)).toBe('2025-12-15');
+      expect(schedule[1].dueDate.toISOString().slice(0, 10)).toBe('2026-01-15');
+    });
+
     it('should calculate correct flat amortization schedule', () => {
       const schedule = service.calculate({ ...baseParams, interestType: 'FLAT' });
 

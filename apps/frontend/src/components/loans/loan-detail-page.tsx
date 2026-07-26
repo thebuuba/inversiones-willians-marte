@@ -334,7 +334,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                 {loan.client.firstName} {loan.client.lastName}
               </h1>
               <p className="mt-2 text-sm text-text-muted">
-                Préstamo #{loan.loanNumber} · {frequency} · Inicio {fmtDate(loan.startDate)} · {totals.paidInstallments}/{totals.totalInstallments} cuotas pagadas
+                Préstamo #{loan.loanNumber} · {frequency} · Entregado {fmtDate(loan.startDate)} · {totals.paidInstallments}/{totals.totalInstallments} cuotas pagadas
               </p>
             </div>
             <div className="flex flex-wrap gap-2">

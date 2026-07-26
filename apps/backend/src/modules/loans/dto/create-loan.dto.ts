@@ -40,6 +40,10 @@ export class CreateLoanDto {
   startDate: string;
 
   @IsOptional()
+  @IsDateString()
+  firstPaymentDate?: string;
+
+  @IsOptional()
   @IsString()
   notes?: string;
 

@@ -733,6 +733,10 @@ function MainInfoCard({
 }
 
 function NewLoanStepTwo({
+  historicalLoan,
+  onHistoricalLoanChange,
+  loanStartDate,
+  onLoanStartDateChange,
   amount,
   term,
   onAmountChange,
@@ -774,6 +778,10 @@ function NewLoanStepTwo({
   lateFeeGraceDays,
   onLateFeeGraceDaysChange,
 }: {
+  historicalLoan: boolean;
+  onHistoricalLoanChange: (value: boolean) => void;
+  loanStartDate: string;
+  onLoanStartDateChange: (value: string) => void;
   amount: string;
   term: string;
   onAmountChange: (value: string) => void;
@@ -821,7 +829,6 @@ function NewLoanStepTwo({
   const termUnit = getTermUnitForFrequency(paymentFrequency);
 
   const [showSchedule, setShowSchedule] = useState(false);
-  const [openHistoricalLoan, setOpenHistoricalLoan] = useState(false);
   const [openLateFee, setOpenLateFee] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -852,6 +859,15 @@ function NewLoanStepTwo({
       /^\d{4}-\d{2}-\d{2}$/.test(firstPaymentDate) &&
       !Number.isNaN(new Date(`${firstPaymentDate}T00:00:00Z`).getTime());
     if (!dateValid) newErrors.firstPaymentDate = 'Selecciona una fecha válida';
+    if (
+      historicalLoan &&
+      (!/^\d{4}-\d{2}-\d{2}$/.test(loanStartDate) ||
+        Number.isNaN(new Date(`${loanStartDate}T00:00:00Z`).getTime()))
+    ) {
+      newErrors.loanStartDate = 'Selecciona una fecha válida';
+    } else if (historicalLoan && loanStartDate > firstPaymentDate) {
+      newErrors.loanStartDate = 'La entrega debe ser anterior a la primera cuota';
+    }
     const paidCount = Number(paidInstallments || 0);
     if (!Number.isInteger(paidCount) || paidCount < 0 || paidCount > summary.months) {
       newErrors.paidInstallments = `Debe ser un número entre 0 y ${summary.months}`;
@@ -935,7 +951,7 @@ function NewLoanStepTwo({
   const paidPrincipal = paidRows.reduce((sum, row) => sum + row.principal, 0);
   const paidInterest = paidRows.reduce((sum, row) => sum + row.interest, 0);
   const historicalDataValid =
-    Number.isInteger(paidCount) &&
+    (!historicalLoan || Number.isInteger(paidCount)) &&
     paidCount >= 0 &&
     paidCount <= summary.months &&
     (parseNumber(paidLateFee) === 0 || paidCount > 0);
@@ -1020,28 +1036,41 @@ function NewLoanStepTwo({
 
       <div className="space-y-3">
         <section className={`overflow-hidden rounded-control-comfortable bg-card ${LOAN_CARD_SHADOW}`}>
-          <button
-            className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-subtle"
-            onClick={() => setOpenHistoricalLoan((open) => !open)}
-            type="button"
-          >
+          <label className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-primary-soft text-primary-accent">
               <PlayCircle className="h-4.5 w-4.5" />
             </span>
             <span className="flex-1">
-              <strong className="block text-sm font-bold text-text-primary">
-                Préstamo ya iniciado
-              </strong>
+              <strong className="block text-sm font-bold text-text-primary">Fecha de entrega</strong>
               <small className="mt-0.5 block text-xs font-medium text-text-secondary">
-                Registra las cuotas cobradas antes de ingresar el préstamo
+                Activa esta opción si el préstamo fue entregado anteriormente
               </small>
             </span>
-            <ChevronDown
-              className={`h-4 w-4 text-text-secondary transition ${openHistoricalLoan ? 'rotate-180' : ''}`}
+            <input
+              checked={historicalLoan}
+              className="h-5 w-5 accent-primary-accent"
+              onChange={(event) => onHistoricalLoanChange(event.target.checked)}
+              type="checkbox"
             />
-          </button>
-          {openHistoricalLoan && (
-            <div className="grid gap-3 border-t border-primary-border bg-surface-subtle p-4 md:grid-cols-4">
+          </label>
+          {historicalLoan && (
+            <div className="grid gap-3 border-t border-primary-border bg-surface-subtle p-4 md:grid-cols-5">
+              <label>
+                <span className="mb-1.5 block text-xs font-bold text-text-secondary">
+                  Fecha de entrega
+                </span>
+                <DatePickerInput
+                  value={loanStartDate}
+                  onChange={onLoanStartDateChange}
+                  invalid={!!errors.loanStartDate}
+                  className="h-[42px] w-full rounded-control-compact border border-primary-border bg-card px-3 text-sm font-medium text-text-primary shadow-soft outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
+                />
+                {errors.loanStartDate && (
+                  <span className="mt-1 block text-xs font-medium text-state-danger">
+                    {errors.loanStartDate}
+                  </span>
+                )}
+              </label>
               <label>
                 <span className="mb-1.5 block text-xs font-bold text-text-secondary">
                   Cuotas cobradas
@@ -1380,6 +1409,8 @@ export function NewLoanPage() {
   const [customPayment, setCustomPayment] = useState('');
   const [amortizationType, setAmortizationType] = useState<AmortizationType>('SIMPLE');
   const [firstPaymentDate, setFirstPaymentDate] = useState(getDefaultFirstPaymentDate);
+  const [historicalLoan, setHistoricalLoan] = useState(false);
+  const [loanStartDate, setLoanStartDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -1421,6 +1452,15 @@ export function NewLoanPage() {
     setAmortizationType(value);
     if (value === 'INDEFINITE' && !firstPaymentDate) {
       setFirstPaymentDate(getDefaultFirstPaymentDate());
+    }
+  }
+
+  function handleHistoricalLoanChange(value: boolean) {
+    setHistoricalLoan(value);
+    if (!value) {
+      setPaidInstallments('0');
+      setPaidLateFee('0');
+      setLoanStartDate(new Date().toISOString().slice(0, 10));
     }
   }
 
@@ -1468,7 +1508,8 @@ export function NewLoanPage() {
         principal,
         interestRate: amortizationType === 'NO_INTEREST' ? 0 : (interestRate ?? undefined),
         term: totalTerm,
-        startDate: firstPaymentDate || new Date().toISOString(),
+        startDate: historicalLoan ? loanStartDate : new Date().toISOString().slice(0, 10),
+        firstPaymentDate,
         portfolioId: selectedPortfolioId ?? undefined,
         amortizationType:
           amortizationType === 'SIMPLE'
@@ -1481,8 +1522,8 @@ export function NewLoanPage() {
         notes: purpose || undefined,
         operationType: operationType ?? undefined,
         sourceLoanIds: sourceLoanIds.length ? sourceLoanIds : undefined,
-        paidInstallments: Number(paidInstallments || 0),
-        paidLateFee: parseNumber(paidLateFee),
+        paidInstallments: historicalLoan ? Number(paidInstallments || 0) : 0,
+        paidLateFee: historicalLoan ? parseNumber(paidLateFee) : 0,
         lateFeeEnabled,
         lateFeeMode,
         lateFeeCalculation,
@@ -1539,6 +1580,10 @@ export function NewLoanPage() {
 
         {!loadingProducts && (
           <NewLoanStepTwo
+            historicalLoan={historicalLoan}
+            onHistoricalLoanChange={handleHistoricalLoanChange}
+            loanStartDate={loanStartDate}
+            onLoanStartDateChange={setLoanStartDate}
             amount={amount}
             onAmountChange={setAmount}
             onSelectClient={handleSelectClient}

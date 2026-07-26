@@ -693,7 +693,7 @@ export function RegisterLoanPaymentPage() {
                           label="Total pagado"
                           value={fmt(loanSummary?.totalPaid ?? 0)}
                         />
-                        <FinancialDetail label="Fecha de inicio" value={fmtDate(loan.startDate)} />
+                        <FinancialDetail label="Fecha de entrega" value={fmtDate(loan.startDate)} />
                         <FinancialDetail
                           label="Próximo vencimiento"
                           value={nextSchedule ? fmtDate(nextSchedule.dueDate) : 'Sin pendiente'}

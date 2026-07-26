@@ -182,6 +182,7 @@ export interface CreateLoanDto {
   interestRate?: number;
   term: number;
   startDate: string;
+  firstPaymentDate?: string;
   notes?: string;
   portfolioId?: string;
   amortizationType?: InterestType;

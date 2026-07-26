@@ -125,6 +125,7 @@ export class LoansService {
           paymentFrequency,
           term: dto.term,
           startDate: new Date(dto.startDate),
+          firstPaymentDate: dto.firstPaymentDate ? new Date(dto.firstPaymentDate) : undefined,
           customPayment: dto.customPayment,
         });
         const paidInstallments = dto.paidInstallments ?? 0;
