@@ -239,7 +239,7 @@ export function ClientsPanel() {
                     {client.phone ?? <EmptyField />}
                   </span>
                   <span
-                    className="inline-flex h-7 w-full max-w-[96px] items-center justify-center justify-self-end rounded-control-compact bg-primary-border px-3 text-primary shadow-soft"
+                    className="inline-flex h-7 w-full max-w-[96px] items-center justify-center justify-self-end rounded-control-compact border border-[#C9CFD3] bg-[#D9DEE2] px-3 text-[#34383C]"
                   >
                     <span className="text-xs font-bold leading-none tabular-nums">
                       {client._count?.loans ?? 0}

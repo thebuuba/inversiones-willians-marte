@@ -133,9 +133,9 @@ function LoanStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     'A tiempo': 'bg-[#4F956B] text-white',
     Pendiente: 'bg-[#4B5054] text-white',
-    Atrasado: 'bg-[#F3C34F] text-[#2F2A1E]',
-    Vencido: 'bg-[#D87368] text-white',
-    Pagado: 'bg-[#6E98BC] text-white',
+    Atrasado: 'bg-[#E7A923] text-[#2F2A1E]',
+    Vencido: 'bg-[#C95349] text-white',
+    Pagado: 'bg-[#437EAF] text-white',
   };
 
   return (

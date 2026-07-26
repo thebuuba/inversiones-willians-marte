@@ -327,10 +327,10 @@ function LoanTypeBadge({ type }: { type: string }) {
 function LoanStatusBadge({ status }: { status: string }) {
   const styles: Record<string, { className: string; label: string }> = {
     'Al día': { className: 'bg-[#4F956B] text-white', label: 'A tiempo' },
-    Atrasado: { className: 'bg-[#F3C34F] text-[#2F2A1E]', label: 'Atrasado' },
+    Atrasado: { className: 'bg-[#E7A923] text-[#2F2A1E]', label: 'Atrasado' },
     Pendiente: { className: 'bg-[#4B5054] text-white', label: 'Pendiente' },
-    Vencido: { className: 'bg-[#D87368] text-white', label: 'Vencido' },
-    Pagado: { className: 'bg-[#6E98BC] text-white', label: 'Terminado' },
+    Vencido: { className: 'bg-[#C95349] text-white', label: 'Vencido' },
+    Pagado: { className: 'bg-[#437EAF] text-white', label: 'Terminado' },
   };
   const style = styles[status];
 
