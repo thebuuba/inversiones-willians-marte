@@ -70,7 +70,7 @@ function labelFor<T extends string>(items: Array<{ value: T; label: string }>, v
   return items.find((item) => item.value === value)?.label ?? value;
 }
 
-function InteractionModal({
+export function InteractionModal({
   initialResult,
   loanId,
   onClose,

@@ -28,6 +28,7 @@ import {
   getNextInstallmentAmount,
 } from '@/components/loans/loan-detail.helpers';
 import { deleteLoan } from '@/lib/api/loans';
+import { InteractionModal } from '@/components/loans/collection-management-panel';
 import { invalidateCachePrefix } from '@/lib/use-client-cache';
 import {
   countClientNotes,
@@ -58,6 +59,7 @@ import {
   X,
   UserRound,
   Phone,
+  PhoneCall,
   CircleCheck,
   CircleAlert,
   Loader2,
@@ -66,7 +68,13 @@ import {
   Eye,
 } from 'lucide-react';
 
-type ClientTab = 'Información' | 'Préstamos' | 'Documentos' | 'Historial' | 'Estado de Cuenta' | 'Notas';
+type ClientTab =
+  | 'Información'
+  | 'Préstamos'
+  | 'Documentos'
+  | 'Historial'
+  | 'Estado de Cuenta'
+  | 'Notas';
 
 const tabs: { label: ClientTab; icon: typeof UserRound }[] = [
   { label: 'Información', icon: UserRound },
@@ -147,9 +155,18 @@ function LoanStatusBadge({ status }: { status: string }) {
   );
 }
 
-const loanTableColumns = 'grid-cols-[70px_170px_150px_150px_minmax(220px,1.4fr)_140px_170px_100px_50px]';
+const loanTableColumns =
+  'grid-cols-[70px_170px_150px_150px_minmax(220px,1.4fr)_140px_170px_100px_50px]';
 
-function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clientName: string; onDelete: (loanId: string) => void }) {
+function LoanTableRow({
+  loan,
+  clientName,
+  onDelete,
+}: {
+  loan: LoanSummary;
+  clientName: string;
+  onDelete: (loanId: string) => void;
+}) {
   const router = useRouter();
   const statusLabel = getLoanCollectionStatus(loan);
   const frequency =
@@ -168,7 +185,10 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
   const [deletingLoan, setDeletingLoan] = useState(false);
 
   const handleDelete = async () => {
-    if (!window.confirm(`¿Eliminar préstamo #${loan.loanNumber}? Esta acción no se puede deshacer.`)) return;
+    if (
+      !window.confirm(`¿Eliminar préstamo #${loan.loanNumber}? Esta acción no se puede deshacer.`)
+    )
+      return;
     setDeletingLoan(true);
     try {
       await deleteLoan(loan.id);
@@ -261,7 +281,15 @@ function LoanTableRow({ loan, clientName, onDelete }: { loan: LoanSummary; clien
   );
 }
 
-function ClientLoansTab({ loans, clientName, onDeleteLoan }: { loans: LoanSummary[]; clientName: string; onDeleteLoan: (loanId: string) => void }) {
+function ClientLoansTab({
+  loans,
+  clientName,
+  onDeleteLoan,
+}: {
+  loans: LoanSummary[];
+  clientName: string;
+  onDeleteLoan: (loanId: string) => void;
+}) {
   return (
     <div className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
       <div className="flex items-center justify-between border-b border-border-soft px-5 py-4">
@@ -296,7 +324,12 @@ function ClientLoansTab({ loans, clientName, onDeleteLoan }: { loans: LoanSummar
             <span />
           </div>
           {loans.map((loan) => (
-            <LoanTableRow key={loan.id} clientName={clientName} loan={loan} onDelete={onDeleteLoan} />
+            <LoanTableRow
+              key={loan.id}
+              clientName={clientName}
+              loan={loan}
+              onDelete={onDeleteLoan}
+            />
           ))}
         </div>
       )}
@@ -860,14 +893,13 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
 }
 
 function historyTone(type: string) {
-  const styles: Record<string, { className: string; icon: typeof CreditCard }> =
-    {
-      Pago: { className: 'bg-primary-soft text-primary-accent', icon: CreditCard },
-      Cliente: { className: 'bg-state-info-bg text-state-info', icon: UserRound },
-      Préstamo: { className: 'bg-state-neutral-bg text-text-secondary', icon: TrendingUp },
-      Nota: { className: 'bg-state-warning-bg text-state-warning', icon: StickyNote },
-      Documento: { className: 'bg-primary-soft text-primary-accent', icon: NotebookPen },
-    };
+  const styles: Record<string, { className: string; icon: typeof CreditCard }> = {
+    Pago: { className: 'bg-primary-soft text-primary-accent', icon: CreditCard },
+    Cliente: { className: 'bg-state-info-bg text-state-info', icon: UserRound },
+    Préstamo: { className: 'bg-state-neutral-bg text-text-secondary', icon: TrendingUp },
+    Nota: { className: 'bg-state-warning-bg text-state-warning', icon: StickyNote },
+    Documento: { className: 'bg-primary-soft text-primary-accent', icon: NotebookPen },
+  };
   return styles[type] ?? styles.Nota;
 }
 
@@ -899,7 +931,9 @@ function TimelineItem({ event }: { event: HistoryEvent }) {
               )}
             </div>
             <h3 className="text-sm font-medium text-text-primary">{event.title}</h3>
-            {event.detail ? <p className="mt-1 text-xs text-text-secondary">{event.detail}</p> : null}
+            {event.detail ? (
+              <p className="mt-1 text-xs text-text-secondary">{event.detail}</p>
+            ) : null}
             <p className="mt-1 text-xs text-text-muted">{event.author}</p>
           </div>
           <time className="shrink-0 text-xs text-text-subtle">{event.date}</time>
@@ -999,9 +1033,7 @@ function EditableNoteCard({
         <div>
           <NoteTextarea onChange={onChange} placeholder="Escribe una nota..." value={value} />
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <p className="text-sm text-text-muted">
-              {note ? `${note.author} · ${note.date}` : ''}
-            </p>
+            <p className="text-sm text-text-muted">{note ? `${note.author} · ${note.date}` : ''}</p>
             <NoteActions onCancel={onCancel} onSave={onSave} />
           </div>
         </div>
@@ -1071,9 +1103,7 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
   const totalBalance = loans.reduce((s, l) => s + Number(l.balance), 0);
   const activeLoans = loans.filter((l) => l.status === 'ACTIVE');
   const paidLoans = loans.filter((l) => l.status === 'PAID');
-  const overdueLoans = activeLoans.filter(
-    (l) => l.schedule?.some((p) => p.status === 'OVERDUE'),
-  );
+  const overdueLoans = activeLoans.filter((l) => l.schedule?.some((p) => p.status === 'OVERDUE'));
 
   const summary = [
     { label: 'Préstamos activos', value: activeLoans.length, color: 'text-blue-600' },
@@ -1313,6 +1343,8 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [contactLoan, setContactLoan] = useState<LoanSummary | null>(null);
+  const [choosingContactLoan, setChoosingContactLoan] = useState(false);
   const deletingClientRef = useRef(false);
 
   const loadHistory = useCallback(() => {
@@ -1403,7 +1435,8 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   }
 
   const fullName = `${clientData.firstName} ${clientData.lastName}`;
-  const activeLoans = clientData.loans.filter((l) => l.status === 'ACTIVE').length;
+  const collectibleLoans = clientData.loans.filter((loan) => loan.status === 'ACTIVE');
+  const activeLoans = collectibleLoans.length;
   const { totalLoaned, totalPaid, totalBalance } = getClientLoanStats(clientData.loans);
   const notesCount = countClientNotes(clientData.notes);
   const firstActiveLoan = clientData.loans.find((l) => l.status === 'ACTIVE');
@@ -1416,7 +1449,10 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
 
   const handleDeleteClient = async () => {
     if (deletingClientRef.current) return;
-    if (!window.confirm('¿Estás seguro de eliminar este cliente? Esta acción no se puede deshacer.')) return;
+    if (
+      !window.confirm('¿Estás seguro de eliminar este cliente? Esta acción no se puede deshacer.')
+    )
+      return;
     deletingClientRef.current = true;
     setDeleting(true);
     try {
@@ -1534,6 +1570,21 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                         </Link>
                       </DropdownMenu.Item>
                       {firstActiveLoan && (
+                        <DropdownMenu.Item
+                          className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
+                          onSelect={() => {
+                            if (collectibleLoans.length === 1) {
+                              setContactLoan(collectibleLoans[0]);
+                            } else {
+                              setChoosingContactLoan(true);
+                            }
+                          }}
+                        >
+                          <PhoneCall className="h-4 w-4" />
+                          Contactar cliente
+                        </DropdownMenu.Item>
+                      )}
+                      {firstActiveLoan && (
                         <DropdownMenu.Item asChild>
                           <Link
                             href={`/prestamos/${firstActiveLoan.id}/editar`}
@@ -1556,7 +1607,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                       <DropdownMenu.Separator className="mx-2 my-1 border-t border-border-soft" />
                       <DropdownMenu.Item
                         disabled={deleting}
-className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-state-danger outline-none hover:bg-state-danger-bg"
+                        className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-state-danger outline-none hover:bg-state-danger-bg"
                         onSelect={(event) => {
                           event.preventDefault();
                           event.stopPropagation();
@@ -1631,7 +1682,11 @@ className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px
         </div>
 
         {activeTab === 'Préstamos' ? (
-          <ClientLoansTab clientName={fullName} loans={clientData.loans} onDeleteLoan={handleDeleteLoan} />
+          <ClientLoansTab
+            clientName={fullName}
+            loans={clientData.loans}
+            onDeleteLoan={handleDeleteLoan}
+          />
         ) : activeTab === 'Documentos' ? (
           <ClientDocumentsTab clientId={clientData.id} />
         ) : activeTab === 'Historial' ? (
@@ -1650,6 +1705,49 @@ className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px
           <ClientInfoGrid clientData={clientData} />
         ) : null}
       </div>
+      {choosingContactLoan ? (
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4 backdrop-blur-sm"
+          onClick={(event) => event.target === event.currentTarget && setChoosingContactLoan(false)}
+        >
+          <section className="w-full max-w-md rounded-panel border border-border-soft bg-card p-6 shadow-modal">
+            <h2 className="text-lg font-bold text-text-primary">Seleccionar préstamo</h2>
+            <p className="mt-1 text-sm text-text-secondary">
+              Elige la deuda relacionada con la gestión.
+            </p>
+            <div className="mt-4 space-y-2">
+              {collectibleLoans.map((loan) => (
+                <button
+                  className="flex w-full items-center justify-between rounded-control-comfortable border border-primary-border px-4 py-3 text-left text-sm font-bold text-text-primary hover:bg-primary-soft"
+                  key={loan.id}
+                  onClick={() => {
+                    setContactLoan(loan);
+                    setChoosingContactLoan(false);
+                  }}
+                  type="button"
+                >
+                  Préstamo #{loan.loanNumber}
+                  <span className="text-xs text-text-secondary">Balance {fmt(loan.balance)}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              className="mt-5 h-10 w-full rounded-full border border-primary-border text-sm font-bold text-text-secondary hover:bg-surface-subtle"
+              onClick={() => setChoosingContactLoan(false)}
+              type="button"
+            >
+              Cancelar
+            </button>
+          </section>
+        </div>
+      ) : null}
+      {contactLoan ? (
+        <InteractionModal
+          loanId={contactLoan.id}
+          onClose={() => setContactLoan(null)}
+          onSaved={() => {}}
+        />
+      ) : null}
     </div>
   );
 }

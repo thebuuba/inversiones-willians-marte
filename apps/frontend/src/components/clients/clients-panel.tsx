@@ -120,10 +120,7 @@ export function ClientsPanel() {
         >
           <div>
             <h1 className="text-3xl font-bold leading-tight text-text-primary">Clientes</h1>
-            <p className="mt-1.5 text-sm text-text-secondary">
-              Administra tu cartera de clientes
-            </p>
-
+            <p className="mt-1.5 text-sm text-text-secondary">Administra tu cartera de clientes</p>
           </div>
           <div className="flex items-center gap-3">
             <button className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-text-secondary transition-colors duration-150 hover:bg-surface-subtle hover:text-text-primary">
@@ -238,9 +235,7 @@ export function ClientsPanel() {
                   <span className="[font-variant-numeric:tabular-nums] text-sm text-text-secondary">
                     {client.phone ?? <EmptyField />}
                   </span>
-                  <span
-                    className="inline-flex h-7 w-full max-w-[96px] items-center justify-center justify-self-end rounded-control-compact border border-[#C9CFD3] bg-[#D9DEE2] px-3 text-[#34383C]"
-                  >
+                  <span className="inline-flex h-7 w-full max-w-[96px] items-center justify-center justify-self-end rounded-control-compact border border-[#C9CFD3] bg-[#D9DEE2] px-3 text-[#34383C]">
                     <span className="text-xs font-bold leading-none tabular-nums">
                       {client._count?.loans ?? 0}
                     </span>

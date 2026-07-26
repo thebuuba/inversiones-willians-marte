@@ -63,7 +63,7 @@ export interface CollectionPriority {
   loanNumber: number;
   clientId: number;
   clientName: string;
-  phone: string;
+  phone: string | null;
   balance: number;
   overdueAmount: number;
   daysOverdue: number;
@@ -93,6 +93,13 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
 export async function getDashboard(): Promise<DashboardData> {
   const { data } = await api.get<ApiResponse<DashboardData>>('/reports/dashboard');
   return data.data as DashboardData;
+}
+
+export async function getCollectionPriorities(): Promise<CollectionPriority[]> {
+  const { data } = await api.get<ApiResponse<CollectionPriority[]>>(
+    '/reports/collections/priorities',
+  );
+  return data.data ?? [];
 }
 
 export async function getPortfolio(): Promise<PortfolioGroup[]> {

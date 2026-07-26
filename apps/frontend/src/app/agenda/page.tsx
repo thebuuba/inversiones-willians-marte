@@ -13,9 +13,13 @@ import {
   Banknote,
   CalendarDays,
   ChevronRight,
+  MessageCircle,
+  PhoneCall,
   X,
 } from 'lucide-react';
 import { getTasks, createTask, updateTask, deleteTask } from '@/lib/api/tasks';
+import { getCollectionPriorities, type CollectionPriority } from '@/lib/api/dashboard';
+import { InteractionModal } from '@/components/loans/collection-management-panel';
 import { getStaggerDelay } from '@/lib/animation';
 import type { TaskItem, TaskPriority, TaskStatus } from '@inversiones/shared';
 
@@ -360,6 +364,8 @@ export default function AgendaPage() {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [priorities, setPriorities] = useState<CollectionPriority[]>([]);
+  const [contactLoanId, setContactLoanId] = useState<string | null>(null);
 
   const today = selectedDate;
   const dateStr = today.toLocaleDateString('es-DO', {
@@ -379,6 +385,9 @@ export default function AgendaPage() {
 
   useEffect(() => {
     load();
+    getCollectionPriorities()
+      .then(setPriorities)
+      .catch(() => {});
   }, [load]);
 
   const addTask = async (form: {
@@ -499,9 +508,7 @@ export default function AgendaPage() {
                   className={`flex items-center justify-between rounded-control-comfortable px-3 py-2 ${s.className}`}
                 >
                   <span className="text-xs font-medium text-text-secondary">{s.label}</span>
-                  <span className={`text-sm font-bold ${s.valueClass}`}>
-                    {s.value}
-                  </span>
+                  <span className={`text-sm font-bold ${s.valueClass}`}>{s.value}</span>
                 </div>
               ))}
             </MotionCard>
@@ -646,9 +653,7 @@ export default function AgendaPage() {
                           <span
                             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${pri.className}`}
                           >
-                            <span
-                              className={`h-1.5 w-1.5 rounded-full ${pri.dot}`}
-                            />
+                            <span className={`h-1.5 w-1.5 rounded-full ${pri.dot}`} />
                             {task.priority === 'URGENT'
                               ? 'Urgente'
                               : task.priority === 'HIGH'
@@ -732,6 +737,80 @@ export default function AgendaPage() {
               className="rounded-panel bg-card shadow-card border border-border-soft overflow-hidden"
             >
               <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-state-danger-bg">
+                  <PhoneCall className="h-4 w-4 text-state-danger" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">Contactos recomendados</p>
+                  <p className="text-xs text-text-muted">Ordenados por urgencia de cobro</p>
+                </div>
+              </div>
+              <div className="divide-y divide-border-soft">
+                {priorities.length === 0 ? (
+                  <div className="px-5 py-8 text-center text-xs text-text-subtle">
+                    No hay contactos urgentes
+                  </div>
+                ) : (
+                  priorities.map((item) => (
+                    <div className="px-5 py-4" key={item.loanId}>
+                      <div className="flex items-start justify-between gap-2">
+                        <Link
+                          className="text-sm font-bold text-text-primary hover:text-primary-accent"
+                          href={`/clientes/${item.clientId}`}
+                        >
+                          {item.clientName}
+                        </Link>
+                        <span className="rounded-full bg-state-danger-bg px-2 py-0.5 text-[10px] font-bold text-state-danger">
+                          {item.daysOverdue}d
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs font-semibold text-state-danger">
+                        {item.suggestedAction}
+                      </p>
+                      <p className="mt-1 text-xs text-text-muted">
+                        {item.lastContactAt
+                          ? `Último contacto: ${new Date(item.lastContactAt).toLocaleDateString('es-DO')}`
+                          : 'Sin contactos registrados'}
+                      </p>
+                      <div className="mt-3 flex items-center gap-2">
+                        {item.phone ? (
+                          <>
+                            <a
+                              aria-label={`Llamar a ${item.clientName}`}
+                              className="flex h-8 w-8 items-center justify-center rounded-full border border-primary-border text-primary-accent hover:bg-primary-soft"
+                              href={`tel:${item.phone}`}
+                            >
+                              <PhoneCall className="h-3.5 w-3.5" />
+                            </a>
+                            <a
+                              aria-label={`WhatsApp de ${item.clientName}`}
+                              className="flex h-8 w-8 items-center justify-center rounded-full border border-primary-border text-primary-accent hover:bg-primary-soft"
+                              href={`https://wa.me/${item.phone.replace(/\D/g, '')}`}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                            </a>
+                          </>
+                        ) : null}
+                        <button
+                          className="ml-auto h-8 rounded-full bg-primary-accent px-3 text-xs font-bold text-white hover:bg-primary"
+                          onClick={() => setContactLoanId(item.loanId)}
+                          type="button"
+                        >
+                          Registrar
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </MotionCard>
+            <MotionCard
+              index={7}
+              className="rounded-panel bg-card shadow-card border border-border-soft overflow-hidden"
+            >
+              <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-state-info-bg">
                   <CalendarDays className="h-4 w-4 text-state-info" />
                 </div>
@@ -752,7 +831,9 @@ export default function AgendaPage() {
                       >
                         <div
                           className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-card shadow-sm ${
-                            a.status === 'COMPLETED' ? 'bg-state-success-bg text-state-success' : 'bg-state-info-bg text-state-info'
+                            a.status === 'COMPLETED'
+                              ? 'bg-state-success-bg text-state-success'
+                              : 'bg-state-info-bg text-state-info'
                           }`}
                         >
                           <Clock className="h-3.5 w-3.5" />
@@ -834,6 +915,18 @@ export default function AgendaPage() {
           </aside>
         </div>
       </div>
+      {contactLoanId ? (
+        <InteractionModal
+          loanId={contactLoanId}
+          onClose={() => setContactLoanId(null)}
+          onSaved={() => {
+            getCollectionPriorities()
+              .then(setPriorities)
+              .catch(() => {});
+            load();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

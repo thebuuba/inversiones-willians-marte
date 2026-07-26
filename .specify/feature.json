@@ -1,3 +1,6 @@
 {
-  "feature_directory": "specs/001-loan-disbursement-receipt"
+  "feature_number": "002",
+  "slug": "client-contact-follow-up",
+  "spec_path": "specs/002-client-contact-follow-up/spec.md",
+  "branch": "agent/paleta-calida"
 }
