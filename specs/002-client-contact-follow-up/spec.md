@@ -9,15 +9,15 @@
 
 ### User Story 1 - Contactar desde la lista de clientes (Priority: P1)
 
-Un cobrador puede iniciar una gestión desde la fila de un cliente, elegir el préstamo activo cuando exista más de uno y registrar el canal, resultado y notas.
+Un cobrador puede iniciar una gestión directamente desde un cliente, llamar al teléfono registrado y guardar el canal, resultado, notas y próximo seguimiento sin seleccionar un préstamo.
 
 **Independent Test**: Abrir Clientes, pulsar “Contactar”, registrar una llamada y comprobar que aparece en el historial del préstamo.
 
 **Acceptance Scenarios**:
 
-1. **Given** un cliente con un préstamo activo, **When** se pulsa “Contactar”, **Then** se abre directamente el formulario de gestión para ese préstamo.
-2. **Given** un cliente con varios préstamos activos, **When** se pulsa “Contactar”, **Then** se permite elegir el préstamo antes de registrar la gestión.
-3. **Given** un cliente sin préstamos activos, **When** se intenta contactar desde esta acción, **Then** el sistema explica que no existe una deuda activa para asociar la gestión.
+1. **Given** un cliente con teléfono, **When** se pulsa “Contactar”, **Then** se muestra el número registrado con acciones para llamar y abrir WhatsApp.
+2. **Given** un cliente con uno, varios o ningún préstamo, **When** se registra el contacto, **Then** no se solicita seleccionar un préstamo.
+3. **Given** un próximo seguimiento, **When** se guarda la gestión, **Then** aparece en Agenda dentro de “Seguimientos de clientes”.
 
 ---
 
@@ -51,13 +51,13 @@ El cobrador puede ver dentro de Agenda a quién recomienda contactar el sistema 
 ### Functional Requirements
 
 - **FR-001**: El sistema MUST mostrar una acción visible “Contactar” por cliente.
-- **FR-002**: El sistema MUST asociar cada gestión de cobranza a un préstamo activo del cliente.
+- **FR-002**: El sistema MUST asociar cada contacto al cliente; el préstamo es opcional y solo se usa desde una gestión de cobro iniciada dentro del préstamo.
 - **FR-003**: El sistema MUST reutilizar el registro existente de canal, resultado, notas, promesa y próximo seguimiento.
 - **FR-004**: El sistema MUST crear tareas de Agenda para promesas y seguimientos usando el flujo transaccional existente.
 - **FR-005**: Agenda MUST mostrar las recomendaciones existentes de prioridad de cobro, incluyendo motivo, deuda vencida y último contacto.
 - **FR-006**: Agenda MUST permitir iniciar llamadas, WhatsApp y registrar una gestión desde una recomendación.
 - **FR-007**: El flujo MUST conservar validación de permisos para administradores y cobradores.
-- **FR-008**: El sistema MUST comunicar claramente cuando un cliente no posee préstamos activos.
+- **FR-008**: El sistema MUST mostrar el teléfono principal y alternativo disponibles al iniciar el contacto.
 
 ### Key Entities
 
@@ -75,6 +75,6 @@ El cobrador puede ver dentro de Agenda a quién recomienda contactar el sistema 
 
 ## Assumptions
 
-- El seguimiento solicitado es de cobranza y, por tanto, se vincula a un préstamo activo.
+- El contacto iniciado desde la ficha del cliente es general y no requiere un préstamo.
 - Agenda será el punto inicial del panel de contacto; un módulo independiente solo se justificará si el volumen futuro supera la lectura cómoda de Agenda.
 - La recomendación automática existente es suficiente para esta primera versión.

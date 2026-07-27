@@ -3,6 +3,7 @@ import {
   IsDefined,
   IsEnum,
   IsNumber,
+  IsInt,
   IsOptional,
   IsString,
   Matches,
@@ -19,8 +20,14 @@ import {
 } from '@inversiones/shared';
 
 export class CreateCollectionInteractionDto {
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  clientId?: number;
+
+  @IsOptional()
   @IsString()
-  loanId!: string;
+  loanId?: string;
 
   @IsEnum(CollectionChannelEnum)
   channel!: CollectionChannel;

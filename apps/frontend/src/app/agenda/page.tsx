@@ -10,7 +10,6 @@ import {
   CircleCheck,
   Circle,
   Clock,
-  Banknote,
   CalendarDays,
   ChevronRight,
   MessageCircle,
@@ -118,6 +117,7 @@ const categoryConfig: Record<string, { className: string; label: string }> = {
   oficina: { className: 'bg-state-success-bg text-state-success', label: 'Oficina' },
   prestamo: { className: 'bg-state-info-bg text-state-info', label: 'Préstamo' },
   cobro: { className: 'bg-state-danger-bg text-state-danger', label: 'Cobro' },
+  cliente: { className: 'bg-primary-soft text-primary-accent', label: 'Cliente' },
   reunion: { className: 'bg-state-info-bg text-state-info', label: 'Reunión' },
   admin: { className: 'bg-state-neutral-bg text-state-neutral', label: 'Admin' },
 };
@@ -398,7 +398,7 @@ export default function AgendaPage() {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [priorities, setPriorities] = useState<CollectionPriority[]>([]);
-  const [contactLoanId, setContactLoanId] = useState<string | null>(null);
+  const [contactClient, setContactClient] = useState<CollectionPriority | null>(null);
   const [assignees, setAssignees] = useState<UserItem[]>([]);
 
   const today = selectedDate;
@@ -468,6 +468,7 @@ export default function AgendaPage() {
 
   const doneCount = tasksForDate.filter((t) => t.status === 'COMPLETED').length;
   const pendientes = tasksForDate.filter((t) => t.status === 'PENDING');
+  const clientFollowUps = pendientes.filter((task) => task.category === 'cliente' && task.client);
   const appointments = tasksForDate
     .filter((t) => t.time)
     .sort((a, b) => {
@@ -751,23 +752,24 @@ export default function AgendaPage() {
             >
               <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-state-warning-bg">
-                  <Banknote className="h-4 w-4 text-state-warning" />
+                  <PhoneCall className="h-4 w-4 text-state-warning" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-text-primary">Desembolsos pendientes</p>
-                  <p className="text-xs text-text-muted">
-                    Clientes que esperan recibir su préstamo
+                  <p className="text-sm font-semibold text-text-primary">
+                    Seguimientos de clientes
                   </p>
+                  <p className="text-xs text-text-muted">Contactos programados para este día</p>
                 </div>
               </div>
               <div className="divide-y divide-border-soft">
-                {pendientes.length === 0 ? (
+                {clientFollowUps.length === 0 ? (
                   <div className="px-5 py-8 text-center text-xs text-text-subtle">
-                    Sin desembolsos pendientes
+                    Sin seguimientos de clientes
                   </div>
                 ) : (
-                  pendientes.slice(0, 5).map((t) => {
-                    const initial = t.title.charAt(0).toUpperCase();
+                  clientFollowUps.slice(0, 5).map((t) => {
+                    const clientName = `${t.client!.firstName} ${t.client!.lastName}`;
+                    const initial = t.client!.firstName.charAt(0).toUpperCase();
                     return (
                       <div
                         key={t.id}
@@ -778,12 +780,15 @@ export default function AgendaPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="truncate text-sm font-semibold text-text-primary">
-                              {t.title}
-                            </p>
+                            <Link
+                              className="truncate text-sm font-semibold text-text-primary hover:text-primary-accent"
+                              href={`/clientes/${t.clientId}`}
+                            >
+                              {clientName}
+                            </Link>
                           </div>
                           <p className="mt-0.5 text-xs text-text-muted">
-                            {t.category} · {t.description?.slice(0, 40) ?? 'Sin detalles'}
+                            {t.description?.slice(0, 60) ?? 'Sin detalles'}
                           </p>
                           {t.time && (
                             <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-state-warning-bg px-2.5 py-0.5 text-xs font-semibold text-state-warning">
@@ -791,6 +796,14 @@ export default function AgendaPage() {
                               {t.time}
                             </div>
                           )}
+                          {t.client!.phone ? (
+                            <a
+                              className="ml-2 inline-flex h-8 items-center gap-1 rounded-full border border-primary-border px-3 text-xs font-bold text-primary-accent"
+                              href={`tel:${t.client!.phone}`}
+                            >
+                              <PhoneCall className="h-3 w-3" /> {t.client!.phone}
+                            </a>
+                          ) : null}
                         </div>
                       </div>
                     );
@@ -864,7 +877,7 @@ export default function AgendaPage() {
                         ) : null}
                         <button
                           className="ml-auto h-11 rounded-full bg-primary-accent px-4 text-xs font-bold text-white hover:bg-primary"
-                          onClick={() => setContactLoanId(item.loanId)}
+                          onClick={() => setContactClient(item)}
                           type="button"
                         >
                           Registrar
@@ -984,10 +997,12 @@ export default function AgendaPage() {
           </aside>
         </div>
       </div>
-      {contactLoanId ? (
+      {contactClient ? (
         <InteractionModal
-          loanId={contactLoanId}
-          onClose={() => setContactLoanId(null)}
+          clientId={contactClient.clientId}
+          clientName={contactClient.clientName}
+          phone={contactClient.phone}
+          onClose={() => setContactClient(null)}
           onSaved={() => {
             getCollectionPriorities()
               .then(setPriorities)

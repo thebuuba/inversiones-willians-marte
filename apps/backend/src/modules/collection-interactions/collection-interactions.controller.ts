@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
@@ -19,5 +19,10 @@ export class CollectionInteractionsController {
   @Get('loan/:loanId')
   findByLoan(@Param('loanId') loanId: string) {
     return this.collectionInteractions.findByLoan(loanId);
+  }
+
+  @Get('client/:clientId')
+  findByClient(@Param('clientId', ParseIntPipe) clientId: number) {
+    return this.collectionInteractions.findByClient(clientId);
   }
 }

@@ -17,7 +17,7 @@ export interface PaymentPromiseItem {
 
 export interface CollectionInteractionItem {
   id: string;
-  loanId: string;
+  loanId: string | null;
   clientId: number;
   channel: CollectionChannel;
   result: CollectionResult;
@@ -28,6 +28,15 @@ export interface CollectionInteractionItem {
   createdBy: { id: string; name: string };
   promise: PaymentPromiseItem | null;
   followUpTask: { id: string; status: string; dueDate: string | null; time: string | null } | null;
+}
+
+export async function getClientCollectionInteractions(
+  clientId: number,
+): Promise<CollectionInteractionItem[]> {
+  const { data } = await api.get<ApiResponse<CollectionInteractionItem[]>>(
+    `/collection-interactions/client/${clientId}`,
+  );
+  return data.data ?? [];
 }
 
 export async function getLoanCollectionInteractions(

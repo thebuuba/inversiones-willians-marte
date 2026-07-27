@@ -5,6 +5,7 @@ import { CollectionInteractionsService } from './collection-interactions.service
 jest.mock('@inversiones/database', () => ({
   prisma: {
     loan: { findUnique: jest.fn() },
+    client: { findUnique: jest.fn() },
     paymentPromise: { updateMany: jest.fn() },
     collectionInteraction: { findMany: jest.fn() },
     $transaction: jest.fn(),
@@ -84,6 +85,51 @@ describe('CollectionInteractionsService', () => {
         'collector-1',
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('records a client contact without selecting a loan and schedules it in Agenda', async () => {
+    jest.mocked(prisma.client.findUnique).mockResolvedValue({
+      id: 12,
+      firstName: 'Ana',
+      lastName: 'Pérez',
+    } as never);
+    const tx = {
+      collectionInteraction: {
+        create: jest.fn().mockResolvedValue({ id: 'interaction-2' }),
+        findUnique: jest.fn().mockResolvedValue({ id: 'interaction-2' }),
+      },
+      paymentPromise: { create: jest.fn() },
+      task: { create: jest.fn() },
+      auditLog: { create: jest.fn() },
+    };
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as never));
+
+    await service.create(
+      {
+        clientId: 12,
+        channel: 'CALL',
+        result: 'CONTACTED',
+        notes: 'Pasará el lunes',
+        nextFollowUpDate: '2026-07-20',
+        nextFollowUpTime: '10:30',
+      },
+      'collector-1',
+    );
+
+    expect(tx.collectionInteraction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ clientId: 12, loanId: null }),
+    });
+    expect(tx.task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        title: 'Contactar cliente: Ana Pérez',
+        category: 'cliente',
+        clientId: 12,
+        loanId: null,
+        dueDate: new Date('2026-07-20T12:00:00.000Z'),
+        time: '10:30',
+      }),
+    });
+    expect(tx.paymentPromise.create).not.toHaveBeenCalled();
   });
 
   it('marks expired promises broken before returning the history', async () => {

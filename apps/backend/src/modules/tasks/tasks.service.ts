@@ -69,6 +69,7 @@ export class TasksService {
   private readonly taskPeople = {
     createdBy: { select: { id: true, name: true } },
     assignedTo: { select: { id: true, name: true } },
+    client: { select: { id: true, firstName: true, lastName: true, phone: true, altPhone: true } },
   } as const;
 
   private async ensureActiveAssignee(userId: string) {
