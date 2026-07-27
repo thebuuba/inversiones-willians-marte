@@ -414,7 +414,7 @@ model Payment {
 
 model CollectionInteraction {
   id               String            @id @default(uuid())
-  loanId           String            @map("loan_id")
+  loanId           String?           @map("loan_id")
   clientId         Int               @map("client_id")
   channel          CollectionChannel
   result           CollectionResult
@@ -424,7 +424,7 @@ model CollectionInteraction {
   createdById      String            @map("created_by")
   createdAt        DateTime          @default(now()) @map("created_at")
 
-  loan         Loan            @relation(fields: [loanId], references: [id])
+  loan         Loan?           @relation(fields: [loanId], references: [id], onDelete: SetNull)
   client       Client          @relation(fields: [clientId], references: [id])
   createdBy    User            @relation("CollectionInteractionCreatedBy", fields: [createdById], references: [id])
   promise      PaymentPromise?

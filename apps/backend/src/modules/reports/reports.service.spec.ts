@@ -66,12 +66,17 @@ describe('ReportsService', () => {
         id: 'loan-1',
         loanNumber: 101,
         balance: 5000,
-        client: { id: 1, firstName: 'Ana', lastName: 'Pérez', phone: '8095550101' },
+        client: {
+          id: 1,
+          firstName: 'Ana',
+          lastName: 'Pérez',
+          phone: '8095550101',
+          collectionInteractions: [{ createdAt: new Date('2026-06-03T00:00:00.000Z') }],
+        },
         schedule: [
           { dueDate: new Date('2026-05-14T00:00:00.000Z'), amount: 1000, paidAmount: 250 },
           { dueDate: new Date('2026-06-01T00:00:00.000Z'), amount: 1000, paidAmount: null },
         ],
-        collectionInteractions: [{ createdAt: new Date('2026-06-03T00:00:00.000Z') }],
         paymentPromises: [{ id: 'promise-1' }],
       },
     ] as never);

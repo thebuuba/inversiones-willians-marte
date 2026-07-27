@@ -1343,8 +1343,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [contactLoan, setContactLoan] = useState<LoanSummary | null>(null);
-  const [choosingContactLoan, setChoosingContactLoan] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   const deletingClientRef = useRef(false);
 
   const loadHistory = useCallback(() => {
@@ -1571,17 +1570,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                       </DropdownMenu.Item>
                       <DropdownMenu.Item
                         className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
-                        onSelect={() => {
-                          if (!firstActiveLoan) {
-                            window.alert('No hay un préstamo activo para asociar esta gestión.');
-                            return;
-                          }
-                          if (collectibleLoans.length === 1) {
-                            setContactLoan(collectibleLoans[0]);
-                          } else {
-                            setChoosingContactLoan(true);
-                          }
-                        }}
+                        onSelect={() => setContactOpen(true)}
                       >
                         <PhoneCall className="h-4 w-4" />
                         Contactar cliente
@@ -1707,47 +1696,16 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
           <ClientInfoGrid clientData={clientData} />
         ) : null}
       </div>
-      {choosingContactLoan ? (
-        <div
-          className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4 backdrop-blur-sm"
-          onClick={(event) => event.target === event.currentTarget && setChoosingContactLoan(false)}
-        >
-          <section className="w-full max-w-md rounded-panel border border-border-soft bg-card p-6 shadow-modal">
-            <h2 className="text-lg font-bold text-text-primary">Seleccionar préstamo</h2>
-            <p className="mt-1 text-sm text-text-secondary">
-              Elige la deuda relacionada con la gestión.
-            </p>
-            <div className="mt-4 space-y-2">
-              {collectibleLoans.map((loan) => (
-                <button
-                  className="flex w-full items-center justify-between rounded-control-comfortable border border-primary-border px-4 py-3 text-left text-sm font-bold text-text-primary hover:bg-primary-soft"
-                  key={loan.id}
-                  onClick={() => {
-                    setContactLoan(loan);
-                    setChoosingContactLoan(false);
-                  }}
-                  type="button"
-                >
-                  Préstamo #{loan.loanNumber}
-                  <span className="text-xs text-text-secondary">Balance {fmt(loan.balance)}</span>
-                </button>
-              ))}
-            </div>
-            <button
-              className="mt-5 h-10 w-full rounded-full border border-primary-border text-sm font-bold text-text-secondary hover:bg-surface-subtle"
-              onClick={() => setChoosingContactLoan(false)}
-              type="button"
-            >
-              Cancelar
-            </button>
-          </section>
-        </div>
-      ) : null}
-      {contactLoan ? (
+      {contactOpen ? (
         <InteractionModal
-          loanId={contactLoan.id}
-          onClose={() => setContactLoan(null)}
-          onSaved={() => {}}
+          altPhone={clientData.altPhone}
+          clientId={clientData.id}
+          clientName={fullName}
+          phone={clientData.phone}
+          onClose={() => setContactOpen(false)}
+          onSaved={() => {
+            setHistoryLoaded(false);
+          }}
         />
       ) : null}
     </div>

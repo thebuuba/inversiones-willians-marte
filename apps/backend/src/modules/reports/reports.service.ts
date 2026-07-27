@@ -50,7 +50,19 @@ export class ReportsService {
         id: true,
         loanNumber: true,
         balance: true,
-        client: { select: { id: true, firstName: true, lastName: true, phone: true } },
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            collectionInteractions: {
+              select: { createdAt: true },
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+            },
+          },
+        },
         schedule: {
           where: {
             dueDate: { lt: today },
@@ -58,11 +70,6 @@ export class ReportsService {
           },
           select: { dueDate: true, amount: true, paidAmount: true },
           orderBy: { dueDate: 'asc' },
-        },
-        collectionInteractions: {
-          select: { createdAt: true },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
         },
         paymentPromises: {
           where: {
@@ -80,7 +87,7 @@ export class ReportsService {
     return loans
       .map((loan) => {
         const earliestDueDate = loan.schedule[0].dueDate;
-        const lastContactAt = loan.collectionInteractions[0]?.createdAt ?? null;
+        const lastContactAt = loan.client.collectionInteractions[0]?.createdAt ?? null;
         const daysOverdue = daysBetweenUtc(earliestDueDate, today);
         const daysSinceLastContact = lastContactAt ? daysBetweenUtc(lastContactAt, today) : null;
         const priority = calculateCollectionPriority({

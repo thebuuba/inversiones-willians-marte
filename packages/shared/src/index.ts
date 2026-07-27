@@ -87,7 +87,8 @@ export type PaymentPromiseStatus =
   (typeof PaymentPromiseStatusEnum)[keyof typeof PaymentPromiseStatusEnum];
 
 export interface CreateCollectionInteractionDto {
-  loanId: string;
+  clientId?: number;
+  loanId?: string;
   channel: CollectionChannel;
   result: CollectionResult;
   notes: string;
@@ -577,6 +578,13 @@ export interface TaskItem {
   assignedToId: string;
   assignedTo?: { id: string; name: string };
   clientId?: number | null;
+  client?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    phone?: string | null;
+    altPhone?: string | null;
+  } | null;
   loanId?: string | null;
   collectionInteractionId?: string | null;
   createdAt: string;

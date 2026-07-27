@@ -71,15 +71,23 @@ function labelFor<T extends string>(items: Array<{ value: T; label: string }>, v
 }
 
 export function InteractionModal({
+  altPhone,
+  clientId,
+  clientName,
   initialResult,
   loanId,
   onClose,
   onSaved,
+  phone,
 }: {
+  altPhone?: string | null;
+  clientId?: number;
+  clientName?: string;
   initialResult?: CollectionResult;
-  loanId: string;
+  loanId?: string;
   onClose: () => void;
   onSaved: (interaction: CollectionInteractionItem) => void;
+  phone?: string | null;
 }) {
   const [channel, setChannel] = useState<CollectionChannel>('CALL');
   const [result, setResult] = useState<CollectionResult>(initialResult ?? 'CONTACTED');
@@ -99,6 +107,7 @@ export function InteractionModal({
     }
 
     const dto: CreateCollectionInteractionDto = {
+      clientId,
       loanId,
       channel,
       result,
@@ -137,9 +146,13 @@ export function InteractionModal({
       <section className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-panel border border-border-soft bg-card shadow-modal">
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border-soft bg-card px-6 py-5">
           <div>
-            <h2 className="text-lg font-bold text-text-primary">Registrar gestión de cobro</h2>
+            <h2 className="text-lg font-bold text-text-primary">
+              {clientName ? `Contactar a ${clientName}` : 'Registrar gestión de cobro'}
+            </h2>
             <p className="mt-1 text-sm text-text-secondary">
-              La gestión quedará en el historial del préstamo.
+              {clientName
+                ? 'Registra lo conversado y programa el próximo seguimiento.'
+                : 'La gestión quedará en el historial del préstamo.'}
             </p>
           </div>
           <button
@@ -152,6 +165,43 @@ export function InteractionModal({
         </header>
 
         <div className="space-y-4 p-6">
+          {clientName ? (
+            <div className="rounded-panel border border-primary-border bg-primary-soft p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-text-secondary">
+                Teléfono del cliente
+              </p>
+              {phone ? (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <a
+                    className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-accent px-4 text-sm font-bold text-white"
+                    href={`tel:${phone}`}
+                  >
+                    <PhoneCall className="h-4 w-4" /> {phone}
+                  </a>
+                  <a
+                    className="inline-flex h-11 items-center gap-2 rounded-full border border-primary-border bg-card px-4 text-sm font-bold text-primary-accent"
+                    href={`https://wa.me/${phone.replace(/\D/g, '')}`}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <MessageCircle className="h-4 w-4" /> WhatsApp
+                  </a>
+                </div>
+              ) : (
+                <p className="mt-2 text-sm font-semibold text-state-danger">
+                  Este cliente no tiene teléfono registrado.
+                </p>
+              )}
+              {altPhone ? (
+                <a
+                  className="mt-2 inline-block text-sm font-semibold text-primary-accent"
+                  href={`tel:${altPhone}`}
+                >
+                  Alternativo: {altPhone}
+                </a>
+              ) : null}
+            </div>
+          ) : null}
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-text-secondary">
@@ -178,11 +228,13 @@ export function InteractionModal({
                 onChange={(event) => setResult(event.target.value as CollectionResult)}
                 value={result}
               >
-                {results.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
-                  </option>
-                ))}
+                {results
+                  .filter((item) => loanId || item.value !== 'PAYMENT_PROMISE')
+                  .map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
               </select>
             </label>
           </div>

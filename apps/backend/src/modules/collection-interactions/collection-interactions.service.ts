@@ -30,13 +30,32 @@ function dominicanToday(): Date {
 @Injectable()
 export class CollectionInteractionsService {
   async create(dto: CreateCollectionInteractionDto, userId: string) {
-    const loan = await prisma.loan.findUnique({
-      where: { id: dto.loanId },
-      include: { client: { select: { id: true, firstName: true, lastName: true } } },
-    });
-    if (!loan) throw new NotFoundException('Loan not found');
+    if (!dto.clientId && !dto.loanId) {
+      throw new BadRequestException('A client or loan is required');
+    }
+
+    const loan = dto.loanId
+      ? await prisma.loan.findUnique({
+          where: { id: dto.loanId },
+          include: { client: { select: { id: true, firstName: true, lastName: true } } },
+        })
+      : null;
+    if (dto.loanId && !loan) throw new NotFoundException('Loan not found');
+
+    const client =
+      loan?.client ??
+      (dto.clientId
+        ? await prisma.client.findUnique({
+            where: { id: dto.clientId },
+            select: { id: true, firstName: true, lastName: true },
+          })
+        : null);
+    if (!client) throw new NotFoundException('Client not found');
 
     const hasPromise = dto.result === 'PAYMENT_PROMISE';
+    if (hasPromise && !loan) {
+      throw new BadRequestException('Payment promises require a loan');
+    }
     if (hasPromise && (!dto.promiseAmount || !dto.promiseDate)) {
       throw new BadRequestException('Payment promises require an amount and due date');
     }
@@ -50,8 +69,8 @@ export class CollectionInteractionsService {
     return prisma.$transaction(async (tx) => {
       const interaction = await tx.collectionInteraction.create({
         data: {
-          loanId: loan.id,
-          clientId: loan.clientId,
+          loanId: loan?.id ?? null,
+          clientId: client.id,
           channel: dto.channel,
           result: dto.result,
           notes,
@@ -65,8 +84,8 @@ export class CollectionInteractionsService {
         await tx.paymentPromise.create({
           data: {
             interactionId: interaction.id,
-            loanId: loan.id,
-            clientId: loan.clientId,
+            loanId: loan!.id,
+            clientId: client.id,
             amount: dto.promiseAmount!,
             dueDate: dateOnly(dto.promiseDate!),
             createdById: userId,
@@ -78,14 +97,14 @@ export class CollectionInteractionsService {
       if (taskDate) {
         await tx.task.create({
           data: {
-            title: `Seguimiento de cobro: ${loan.client.firstName} ${loan.client.lastName}`,
+            title: `${loan ? 'Seguimiento de cobro' : 'Contactar cliente'}: ${client.firstName} ${client.lastName}`,
             description: notes,
             dueDate: taskDueDate(taskDate),
             time: dto.nextFollowUpTime ?? '09:00',
             priority: hasPromise ? 'HIGH' : 'MEDIUM',
-            category: 'cobro',
-            clientId: loan.clientId,
-            loanId: loan.id,
+            category: loan ? 'cobro' : 'cliente',
+            clientId: client.id,
+            loanId: loan?.id ?? null,
             collectionInteractionId: interaction.id,
             createdById: userId,
             assignedToId: userId,
@@ -99,9 +118,9 @@ export class CollectionInteractionsService {
           action: 'COLLECTION_INTERACTION_CREATED',
           entityType: 'CollectionInteraction',
           entityId: interaction.id,
-          clientId: loan.clientId,
+          clientId: client.id,
           newValues: {
-            loanId: loan.id,
+            loanId: loan?.id ?? null,
             channel: dto.channel,
             result: dto.result,
             nextFollowUpDate: dto.nextFollowUpDate ?? null,
@@ -126,6 +145,20 @@ export class CollectionInteractionsService {
 
     return prisma.collectionInteraction.findMany({
       where: { loanId },
+      include: interactionInclude,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findByClient(clientId: number) {
+    const client = await prisma.client.findUnique({
+      where: { id: clientId },
+      select: { id: true },
+    });
+    if (!client) throw new NotFoundException('Client not found');
+
+    return prisma.collectionInteraction.findMany({
+      where: { clientId },
       include: interactionInclude,
       orderBy: { createdAt: 'desc' },
     });
