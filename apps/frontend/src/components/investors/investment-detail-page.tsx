@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState, type FormEvent } from 'react';
-import { ArrowLeft, Banknote, Plus, Printer } from 'lucide-react';
+import { ArrowLeft, Banknote, ChevronDown, Plus, Printer, X } from 'lucide-react';
 import { addInvestmentCapital, getInvestment } from '@/lib/api/investments';
 import { formatDop } from '@/lib/currency';
 import type {
@@ -42,6 +42,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
   const [previousMonthlyPayment, setPreviousMonthlyPayment] = useState(0);
   const [selectedPayment, setSelectedPayment] = useState<InvestorPaymentItem | null>(null);
   const [showInvestmentReceipt, setShowInvestmentReceipt] = useState(false);
+  const [showAddCapital, setShowAddCapital] = useState(false);
 
   useEffect(() => {
     getInvestment(investmentId)
@@ -91,6 +92,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
       setInvestment(updated);
       setAmount('');
       setNotes('');
+      setShowAddCapital(false);
     } catch {
       setError('No se pudo sumar el capital.');
     } finally {
@@ -101,7 +103,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
   return (
     <>
       <div className="min-h-screen bg-page p-5 font-sans text-text-primary">
-        <div className="mx-auto max-w-7xl">
+        <div className="w-full">
           <Link
             className="mb-6 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary-accent"
             href={investorHref}
@@ -128,20 +130,37 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
                 >
                   {status}
                 </span>
-                <Link
-                  className="rounded-full bg-primary-accent px-5 py-2 text-sm font-bold text-white"
-                  href={`/inversionistas/pago?investmentId=${investment.id}`}
-                >
-                  Registrar pago
-                </Link>
-                <button
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-primary-border px-5 text-sm font-bold hover:bg-primary-soft"
-                  onClick={() => setShowInvestmentReceipt(true)}
-                  type="button"
-                >
-                  <Printer className="h-4 w-4" />
-                  Recibo de inversión
-                </button>
+                <details className="relative">
+                  <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white">
+                    Acciones
+                    <ChevronDown className="h-4 w-4" />
+                  </summary>
+                  <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-control-comfortable border border-border-soft bg-card p-2 shadow-modal">
+                    <button
+                      className="flex min-h-11 w-full items-center gap-2 rounded-control-comfortable px-3 text-left text-sm font-semibold hover:bg-primary-soft"
+                      onClick={() => setShowAddCapital(true)}
+                      type="button"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Sumar capital
+                    </button>
+                    <Link
+                      className="flex min-h-11 items-center gap-2 rounded-control-comfortable px-3 text-sm font-semibold hover:bg-primary-soft"
+                      href={`/inversionistas/pago?investmentId=${investment.id}`}
+                    >
+                      <Banknote className="h-4 w-4" />
+                      Registrar pago
+                    </Link>
+                    <button
+                      className="flex min-h-11 w-full items-center gap-2 rounded-control-comfortable px-3 text-left text-sm font-semibold hover:bg-primary-soft"
+                      onClick={() => setShowInvestmentReceipt(true)}
+                      type="button"
+                    >
+                      <Printer className="h-4 w-4" />
+                      Recibo de inversión
+                    </button>
+                  </div>
+                </details>
               </div>
             </div>
 
@@ -155,57 +174,6 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
               />
             </div>
           </div>
-
-          <section className="mb-6 rounded-panel border border-border-soft bg-card p-6 shadow-card">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-control-comfortable bg-primary-soft">
-                <Banknote className="h-5 w-5 text-primary-accent" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold">Sumar capital</h2>
-                <p className="text-sm text-text-subtle">Aumenta esta inversion.</p>
-              </div>
-            </div>
-            <form onSubmit={handleAddCapital} className="space-y-4">
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-text-secondary">Monto</span>
-                <input
-                  className="h-11 w-full rounded-control-comfortable border border-primary-border px-4 text-sm outline-none focus:border-primary-accent"
-                  inputMode="numeric"
-                  value={amount}
-                  onChange={(event) => setAmount(event.target.value)}
-                  placeholder="100,000"
-                />
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-text-secondary">Fecha</span>
-                <input
-                  className="h-11 w-full rounded-control-comfortable border border-primary-border px-4 text-sm outline-none focus:border-primary-accent"
-                  type="date"
-                  value={movementDate}
-                  onChange={(event) => setMovementDate(event.target.value)}
-                />
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-text-secondary">Nota</span>
-                <textarea
-                  className="h-24 w-full resize-none rounded-control-comfortable border border-primary-border px-4 py-3 text-sm outline-none focus:border-primary-accent"
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  placeholder="Opcional"
-                />
-              </label>
-              {error && <p className="text-sm font-semibold text-state-danger">{error}</p>}
-              <button
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white disabled:opacity-60"
-                disabled={saving}
-                type="submit"
-              >
-                <Plus className="h-4 w-4" />
-                {saving ? 'Guardando...' : 'Sumar capital'}
-              </button>
-            </form>
-          </section>
 
           <div>
             <div className="scrollbar-none mb-5 flex w-full gap-1 overflow-x-auto rounded-panel border border-border-soft bg-card p-1.5 shadow-card sm:w-fit">
@@ -296,6 +264,77 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           </div>
         </div>
       </div>
+
+      {showAddCapital && (
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-[2px]"
+          onClick={() => setShowAddCapital(false)}
+        >
+          <section
+            className="w-full max-w-lg rounded-panel border border-border-soft bg-card p-6 shadow-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-5 flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-control-comfortable bg-primary-soft">
+                  <Banknote className="h-5 w-5 text-primary-accent" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold">Sumar capital</h2>
+                  <p className="text-sm text-text-subtle">Aumenta esta inversión.</p>
+                </div>
+              </div>
+              <button
+                aria-label="Cerrar"
+                className="rounded-full p-2 hover:bg-surface-subtle"
+                onClick={() => setShowAddCapital(false)}
+                type="button"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleAddCapital} className="space-y-4">
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-text-secondary">Monto</span>
+                <input
+                  className="h-11 w-full rounded-control-comfortable border border-primary-border px-4 text-sm outline-none focus:border-primary-accent"
+                  inputMode="numeric"
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
+                  placeholder="100,000"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-text-secondary">Fecha</span>
+                <input
+                  className="h-11 w-full rounded-control-comfortable border border-primary-border px-4 text-sm outline-none focus:border-primary-accent"
+                  type="date"
+                  value={movementDate}
+                  onChange={(event) => setMovementDate(event.target.value)}
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-text-secondary">Nota</span>
+                <textarea
+                  className="h-24 w-full resize-none rounded-control-comfortable border border-primary-border px-4 py-3 text-sm outline-none focus:border-primary-accent"
+                  value={notes}
+                  onChange={(event) => setNotes(event.target.value)}
+                  placeholder="Opcional"
+                />
+              </label>
+              {error && <p className="text-sm font-semibold text-state-danger">{error}</p>}
+              <button
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white disabled:opacity-60"
+                disabled={saving}
+                type="submit"
+              >
+                <Plus className="h-4 w-4" />
+                {saving ? 'Guardando...' : 'Sumar capital'}
+              </button>
+            </form>
+          </section>
+        </div>
+      )}
 
       {createdMovement && investment.investor && (
         <CapitalAdditionReceiptModal
