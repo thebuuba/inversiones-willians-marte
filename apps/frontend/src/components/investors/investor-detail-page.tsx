@@ -25,12 +25,20 @@ const fmt = (n: number | string) => formatDop(n, { space: true });
 const fmtDate = (s: string | Date) =>
   new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
 const paymentStatusLabel = {
-  PAID: 'Al dia',
+  PAID: 'A tiempo',
   PENDING: 'Pendiente',
-  OVERDUE: 'Atrasada',
+  OVERDUE: 'Atrasado',
 } as const;
 
-const TABS = ['Resumen', 'Historial de pagos', 'Documentos', 'Datos personales'];
+const paymentStatusClass = {
+  PAID: 'bg-[#4F956B] text-white',
+  PENDING: 'bg-[#4B5054] text-white',
+  OVERDUE: 'bg-[#E7A923] text-[#2F2A1E]',
+} as const;
+
+const investmentTableColumns = 'grid-cols-[150px_170px_170px_140px_130px_minmax(170px,1fr)]';
+
+const TABS = ['Resumen', 'Documentos', 'Datos personales'];
 
 export function InvestorDetailPage({ investorId }: { investorId: string }) {
   const [tab, setTab] = useState(0);
@@ -264,92 +272,63 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
 
         {tab === 0 && (
           <div className="space-y-5">
-            <div className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h3 className="text-base font-semibold text-text-primary">Inversiones</h3>
+            <div className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
+              <div className="flex items-center justify-between border-b border-border-soft px-5 py-4">
+                <div>
+                  <h3 className="text-sm font-bold text-text-primary">
+                    Inversiones del inversionista
+                  </h3>
+                  <p className="mt-0.5 text-xs text-text-subtle">
+                    Selecciona una fila para consultar la inversión
+                  </p>
+                </div>
                 <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-accent">
-                  {investments.length} activas/historicas
+                  {investments.length} {investments.length === 1 ? 'inversión' : 'inversiones'}
                 </span>
               </div>
               {investments.length === 0 ? (
-                <p className="rounded-control-comfortable border border-border-soft bg-surface-subtle p-5 text-sm text-text-subtle">
-                  Este inversionista aun no tiene inversiones registradas.
-                </p>
+                <div className="flex min-h-40 items-center justify-center">
+                  <p className="text-sm text-text-subtle">Sin inversiones registradas.</p>
+                </div>
               ) : (
-                <div className="space-y-3">
+                <div className="overflow-x-auto">
+                  <div
+                    className={`grid min-w-[930px] ${investmentTableColumns} bg-surface-subtle px-5 py-3 text-xs font-bold uppercase tracking-[0.08em] text-text-muted`}
+                  >
+                    <span>Código</span>
+                    <span>Interés mensual</span>
+                    <span>Próximo pago</span>
+                    <span>Estado</span>
+                    <span>Tasa</span>
+                    <span>Capital</span>
+                  </div>
                   {investments.map((investment) => {
-                    const status = investment.paymentStatus
-                      ? paymentStatusLabel[investment.paymentStatus]
-                      : 'Pendiente';
+                    const paymentStatus = investment.paymentStatus ?? 'PENDING';
                     return (
-                      <div
+                      <Link
                         key={investment.id}
-                        className="group relative rounded-control-comfortable border border-border-soft bg-surface-subtle p-4 transition hover:border-primary-border hover:bg-primary-soft/30"
+                        className={`grid min-w-[930px] ${investmentTableColumns} items-center border-t border-border-soft px-5 py-3 text-sm text-text-secondary transition hover:bg-surface-subtle`}
+                        href={`/inversiones/${investment.id}`}
                       >
-                        <Link
-                          aria-label={`Ver detalle de ${investment.code}`}
-                          className="absolute inset-0 rounded-control-comfortable"
-                          href={`/inversiones/${investment.id}`}
-                        />
-                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                          <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="text-sm font-bold text-text-primary">
-                                {investment.code}
-                              </p>
-                              <span
-                                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${investment.paymentStatus === 'OVERDUE' ? 'bg-state-danger-bg text-state-danger' : investment.paymentStatus === 'PAID' ? 'bg-primary-soft text-primary-accent' : 'bg-state-warning-bg text-state-warning'}`}
-                              >
-                                {status}
-                              </span>
-                            </div>
-                            <p className="mt-1 text-xs text-text-subtle">
-                              Inicio {investment.startDate ? fmtDate(investment.startDate) : '—'} ·
-                              Plazo {investment.term ?? 'Indefinido'}
-                            </p>
-                          </div>
-                          <div className="relative z-10 flex flex-wrap gap-2">
-                            <Link
-                              className="rounded-full border border-primary-border bg-card px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-subtle"
-                              href={`/inversiones/${investment.id}`}
-                            >
-                              Ver detalle
-                            </Link>
-                            <Link
-                              className="rounded-full bg-primary-accent px-3 py-2 text-xs font-semibold text-white hover:bg-primary"
-                              href={`/inversionistas/pago?investmentId=${investment.id}`}
-                            >
-                              Registrar pago
-                            </Link>
-                          </div>
-                        </div>
-                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
-                          <div>
-                            <p className="text-xs text-text-subtle">Capital</p>
-                            <p className="font-semibold text-text-primary">
-                              {fmt(investment.capital)}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-text-subtle">Tasa</p>
-                            <p className="font-semibold text-text-primary">
-                              {investment.rate}% mensual
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-text-subtle">Retorno mensual</p>
-                            <p className="font-semibold text-text-primary">
-                              {fmt(investment.monthlyPayment)}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-text-subtle">Proximo vencimiento</p>
-                            <p className="font-semibold text-text-primary">
-                              {investment.nextDueDate ? fmtDate(investment.nextDueDate) : '—'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                        <span className="font-semibold text-text-primary">{investment.code}</span>
+                        <span className="font-semibold tabular-nums text-text-primary">
+                          {fmt(investment.monthlyPayment)}
+                        </span>
+                        <span className="tabular-nums">
+                          {investment.nextDueDate ? fmtDate(investment.nextDueDate) : '—'}
+                        </span>
+                        <span>
+                          <span
+                            className={`inline-flex min-h-7 min-w-[88px] items-center justify-center rounded-[5px] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.02em] ${paymentStatusClass[paymentStatus]}`}
+                          >
+                            {paymentStatusLabel[paymentStatus]}
+                          </span>
+                        </span>
+                        <span>{investment.rate}% mensual</span>
+                        <span className="font-semibold tabular-nums text-text-primary">
+                          {fmt(investment.capital)}
+                        </span>
+                      </Link>
                     );
                   })}
                 </div>
@@ -367,23 +346,6 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
         )}
 
         {tab === 1 && (
-          <div className="overflow-hidden rounded-panel bg-card shadow-card border border-border-soft">
-            <div className="grid grid-cols-12 gap-4 border-b border-border-soft bg-surface-subtle px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
-              <div className="col-span-1">#</div>
-              <div className="col-span-2">Período</div>
-              <div className="col-span-2">Vencimiento</div>
-              <div className="col-span-2">Fecha pago</div>
-              <div className="col-span-2">Monto</div>
-              <div className="col-span-1">Método</div>
-              <div className="col-span-2 text-right">Estado / Acción</div>
-            </div>
-            <div className="py-12 text-center text-sm text-text-subtle">
-              No hay pagos registrados aún.
-            </div>
-          </div>
-        )}
-
-        {tab === 2 && (
           <div className="space-y-3">
             <div className="flex justify-end">
               <label className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm text-white hover:bg-primary">
@@ -427,7 +389,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
           </div>
         )}
 
-        {tab === 3 && (
+        {tab === 2 && (
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {personalFields.map((r) => (
               <div
