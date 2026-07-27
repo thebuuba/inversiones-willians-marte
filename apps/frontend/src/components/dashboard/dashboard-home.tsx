@@ -212,20 +212,20 @@ export function DashboardHome() {
         </div>
       </div>
 
-      <div className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
         {metricCards.map((k) => {
           const Icon = k.icon;
           return (
-            <div key={k.label} className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
-              <div className="flex items-center gap-4">
+            <div key={k.label} className="rounded-panel bg-card p-4 shadow-card border border-border-soft sm:p-6">
+              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 <div
-                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${k.tone}`}
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full sm:h-14 sm:w-14 ${k.tone}`}
                 >
                   <Icon className="h-6 w-6" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-text-muted">{k.label}</p>
-                  <p className="mt-1 text-xl font-bold text-text-primary">{k.value}</p>
+                  <p className="mt-1 text-xl font-bold tabular-nums text-text-primary">{k.value}</p>
                 </div>
               </div>
             </div>
