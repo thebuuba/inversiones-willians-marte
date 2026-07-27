@@ -1569,21 +1569,23 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                           Editar cliente
                         </Link>
                       </DropdownMenu.Item>
-                      {firstActiveLoan && (
-                        <DropdownMenu.Item
-                          className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
-                          onSelect={() => {
-                            if (collectibleLoans.length === 1) {
-                              setContactLoan(collectibleLoans[0]);
-                            } else {
-                              setChoosingContactLoan(true);
-                            }
-                          }}
-                        >
-                          <PhoneCall className="h-4 w-4" />
-                          Contactar cliente
-                        </DropdownMenu.Item>
-                      )}
+                      <DropdownMenu.Item
+                        className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent"
+                        onSelect={() => {
+                          if (!firstActiveLoan) {
+                            window.alert('No hay un préstamo activo para asociar esta gestión.');
+                            return;
+                          }
+                          if (collectibleLoans.length === 1) {
+                            setContactLoan(collectibleLoans[0]);
+                          } else {
+                            setChoosingContactLoan(true);
+                          }
+                        }}
+                      >
+                        <PhoneCall className="h-4 w-4" />
+                        Contactar cliente
+                      </DropdownMenu.Item>
                       {firstActiveLoan && (
                         <DropdownMenu.Item asChild>
                           <Link
