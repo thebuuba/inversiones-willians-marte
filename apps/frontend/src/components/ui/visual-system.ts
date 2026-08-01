@@ -79,6 +79,7 @@ export const navItems = [
   { href: '/prestamos', label: 'Préstamos', icon: 'landmark' },
   { href: '/solicitudes', label: 'Solicitudes', icon: 'inbox' },
   { href: '/agenda', label: 'Agenda', icon: 'calendar' },
+  { href: '/recibos', label: 'Recibos', icon: 'receipt-text' },
   { href: '/caja', label: 'Caja', icon: 'wallet' },
   { href: '/inversionistas', label: 'Inversionistas', icon: 'trending-up' },
   { href: '/documentos', label: 'Documentos', icon: 'file-text' },

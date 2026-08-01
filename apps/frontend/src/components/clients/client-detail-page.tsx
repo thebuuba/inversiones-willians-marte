@@ -21,6 +21,7 @@ import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { appendDocumentUploadFiles } from '@/lib/document-image-processing';
 import { formatDop } from '@/lib/currency';
+import { getLoanStatusBadgeClass } from '@/lib/loan-status-visuals';
 import { buildMobileCaptureUrl } from '@/lib/mobile-capture-url';
 import {
   getClientLoanStats,
@@ -138,17 +139,9 @@ function StatusBadge({ active }: { active: boolean }) {
 }
 
 function LoanStatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    'A tiempo': 'bg-[#4F956B] text-white',
-    Pendiente: 'bg-[#4B5054] text-white',
-    Atrasado: 'bg-[#E7A923] text-[#2F2A1E]',
-    Vencido: 'bg-[#C95349] text-white',
-    Pagado: 'bg-[#437EAF] text-white',
-  };
-
   return (
     <span
-      className={`inline-flex min-h-7 min-w-[88px] items-center justify-center rounded-[5px] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.02em] ${styles[status] ?? 'bg-[#4B5054] text-white'}`}
+      className={`inline-flex min-h-7 min-w-[88px] items-center justify-center rounded-[5px] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.02em] ${getLoanStatusBadgeClass(status)}`}
     >
       {status === 'Pagado' ? 'Terminado' : status}
     </span>

@@ -85,7 +85,7 @@ test('normalizes Spanish status labels to semantic tones', () => {
 test('keeps sidebar order', () => {
   assert.deepEqual(
     navItems.map((item) => item.href),
-    ['/inicio', '/clientes', '/prestamos', '/solicitudes', '/agenda', '/caja', '/inversionistas', '/documentos', '/carteras', '/configuracion'],
+    ['/inicio', '/clientes', '/prestamos', '/solicitudes', '/agenda', '/recibos', '/caja', '/inversionistas', '/documentos', '/carteras', '/configuracion'],
   );
 });
 

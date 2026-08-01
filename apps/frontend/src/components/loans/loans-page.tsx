@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { getLoans, type LoanListItem } from '@/lib/api/loans';
 import { getStaggerDelay } from '@/lib/animation';
+import { loanStatusVisuals } from '@/lib/loan-status-visuals';
 import { useClientCache } from '@/lib/use-client-cache';
 import { formatDop } from '@/lib/currency';
 import { getLoanTypeLabel } from '@/lib/loan-type';
@@ -326,11 +327,11 @@ function LoanTypeBadge({ type }: { type: string }) {
 
 function LoanStatusBadge({ status }: { status: string }) {
   const styles: Record<string, { className: string; label: string }> = {
-    'Al día': { className: 'bg-[#4F956B] text-white', label: 'A tiempo' },
-    Atrasado: { className: 'bg-[#E7A923] text-[#2F2A1E]', label: 'Atrasado' },
-    Pendiente: { className: 'bg-[#4B5054] text-white', label: 'Pendiente' },
-    Vencido: { className: 'bg-[#C95349] text-white', label: 'Vencido' },
-    Pagado: { className: 'bg-[#437EAF] text-white', label: 'Terminado' },
+    'Al día': { className: loanStatusVisuals.CURRENT.badgeClassName, label: 'A tiempo' },
+    Atrasado: { className: loanStatusVisuals.LATE.badgeClassName, label: 'Atrasado' },
+    Pendiente: { className: loanStatusVisuals.PENDING.badgeClassName, label: 'Pendiente' },
+    Vencido: { className: loanStatusVisuals.EXPIRED.badgeClassName, label: 'Vencido' },
+    Pagado: { className: loanStatusVisuals.PAID.badgeClassName, label: 'Terminado' },
   };
   const style = styles[status];
 
