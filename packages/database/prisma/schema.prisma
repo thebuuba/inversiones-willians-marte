@@ -141,6 +141,7 @@ model User {
   collectionInteractions      CollectionInteraction[]      @relation("CollectionInteractionCreatedBy")
   paymentPromises             PaymentPromise[]             @relation("PaymentPromiseCreatedBy")
   cashMovements               CashMovement[]
+  cashLedgerExclusions        CashLedgerExclusion[]
   authSessions                AuthSession[]
 
   @@index([role, active])
@@ -185,6 +186,20 @@ model CashMovement {
   @@index([movementDate(sort: Desc)])
   @@index([type, movementDate(sort: Desc)])
   @@map("cash_movements")
+}
+
+model CashLedgerExclusion {
+  id          String   @id @default(uuid())
+  sourceType  String   @map("source_type")
+  sourceId    String   @map("source_id")
+  createdById String   @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  @@unique([sourceType, sourceId])
+  @@index([createdAt(sort: Desc)])
+  @@map("cash_ledger_exclusions")
 }
 
 // ─── Clients ────────────────────────────────────────────────────────────────

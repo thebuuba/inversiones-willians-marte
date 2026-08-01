@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, prisma } from '@inversiones/database';
 import { CreateCashMovementDto } from './dto/create-cash-movement.dto';
 import { buildCashDayRange, summarizeCashMovements } from './cash-ledger.helpers';
@@ -22,6 +22,16 @@ type CashAggregateRow = {
   income: number;
   expense: number;
 };
+
+const cashSourceTypes = new Set([
+  'MANUAL',
+  'PAYMENT',
+  'LOAN',
+  'LOAN_CAPITAL',
+  'INVESTMENT',
+  'INVESTMENT_CAPITAL',
+  'INVESTOR_PAYMENT',
+]);
 
 function cashLedgerUnion() {
   return Prisma.sql`
@@ -186,6 +196,11 @@ export class CashService {
         SELECT *
         FROM (${ledger}) ledger
         WHERE ledger."movementDate" >= ${start} AND ledger."movementDate" < ${end}
+          AND NOT EXISTS (
+            SELECT 1 FROM cash_ledger_exclusions exclusion
+            WHERE exclusion.source_type = ledger."sourceType"
+              AND exclusion.source_id = ledger.id
+          )
         ORDER BY ledger."movementDate" DESC, ledger.id DESC
         LIMIT 2000
       `,
@@ -195,6 +210,11 @@ export class CashService {
           COALESCE(SUM(CASE WHEN ledger."affectsBalance" AND ledger.type = 'OUT' THEN ledger.amount ELSE 0 END), 0)::float8 AS expense
         FROM (${ledger}) ledger
         WHERE ledger."movementDate" >= ${start} AND ledger."movementDate" < ${end}
+          AND NOT EXISTS (
+            SELECT 1 FROM cash_ledger_exclusions exclusion
+            WHERE exclusion.source_type = ledger."sourceType"
+              AND exclusion.source_id = ledger.id
+          )
       `,
     ]);
 
@@ -254,6 +274,67 @@ export class CashService {
         },
       });
       return movement;
+    });
+  }
+
+  async deleteMovement(id: string, sourceTypeValue: string, userId: string) {
+    const sourceType = sourceTypeValue.trim().toUpperCase();
+    if (!cashSourceTypes.has(sourceType)) {
+      throw new BadRequestException('Tipo de movimiento de caja inválido');
+    }
+
+    return prisma.$transaction(async (tx) => {
+      if (sourceType === 'MANUAL') {
+        const movement = await tx.cashMovement.findUnique({ where: { id } });
+        if (!movement) throw new NotFoundException('Movimiento de caja no encontrado');
+
+        await tx.cashMovement.delete({ where: { id } });
+        await tx.auditLog.create({
+          data: {
+            userId,
+            action: 'CASH_MOVEMENT_DELETED',
+            entityType: 'CashMovement',
+            entityId: id,
+            oldValues: {
+              sourceType,
+              type: movement.type,
+              person: movement.person,
+              amount: Number(movement.amount),
+              movementDate: movement.movementDate.toISOString(),
+              category: movement.category,
+              affectsBalance: movement.affectsBalance,
+            },
+          },
+        });
+
+        return { id, sourceType };
+      }
+
+      const ledger = cashLedgerUnion();
+      const existing = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT ledger.id
+        FROM (${ledger}) ledger
+        WHERE ledger.id = ${id} AND ledger."sourceType" = ${sourceType}
+        LIMIT 1
+      `;
+      if (!existing[0]) throw new NotFoundException('Movimiento de caja no encontrado');
+
+      await tx.cashLedgerExclusion.upsert({
+        where: { sourceType_sourceId: { sourceType, sourceId: id } },
+        update: { createdById: userId },
+        create: { sourceType, sourceId: id, createdById: userId },
+      });
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'CASH_MOVEMENT_DELETED',
+          entityType: 'CashMovement',
+          entityId: id,
+          oldValues: { sourceType },
+        },
+      });
+
+      return { id, sourceType };
     });
   }
 }

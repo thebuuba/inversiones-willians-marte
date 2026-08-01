@@ -8,15 +8,20 @@ import {
   ArrowUpRight,
   Banknote,
   Calendar,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   Plus,
+  Printer,
   Repeat2,
   Search,
+  Trash2,
   Wallet,
 } from 'lucide-react';
 import { MovementModal, type MovementFormValues } from './movement-modal';
 import {
   createManualCashMovement,
+  deleteCashMovement,
   getCashLedger,
   type CashLedgerDay,
   type CashLedgerMovement,
@@ -24,10 +29,13 @@ import {
 import { getStaggerDelay } from '@/lib/animation';
 import { formatDop, formatSignedDop, parseCurrencyInput } from '@/lib/currency';
 import {
+  buildCashClosingPrintDocument,
   buildManualCashMovementDate,
   filterCashMovements,
+  shiftCashLedgerDate,
   type CashMovementFilter,
 } from './cash-ledger.helpers';
+import { getSettings } from '@/lib/api/settings';
 
 type TagTone = 'green' | 'orange' | 'blue' | 'purple' | 'yellow' | 'gray';
 
@@ -60,18 +68,12 @@ function formatOfficeDate(date: string) {
   }).format(new Date(`${date}T12:00:00-04:00`));
 }
 
-function formatOfficeTime(date: string) {
-  return new Intl.DateTimeFormat('es-DO', {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone: 'America/Santo_Domingo',
-  }).format(new Date(date));
-}
-
 function categoryTone(category: string): TagTone {
   const tones: Record<string, TagTone> = {
     'Pago de préstamo': 'green',
+    'Entrada manual': 'green',
     Desembolso: 'orange',
+    'Salida manual': 'orange',
     'Gasto operativo': 'blue',
     'Ingreso de inversionista': 'purple',
     'Pago a inversionista': 'yellow',
@@ -102,7 +104,7 @@ function ShellCard({
   );
 }
 
-function Header({ onNewMovement }: { onNewMovement: () => void }) {
+function Header({ onNewMovement, onPrint }: { onNewMovement: () => void; onPrint: () => void }) {
   return (
     <motion.header
       animate="visible"
@@ -120,14 +122,24 @@ function Header({ onNewMovement }: { onNewMovement: () => void }) {
           Entradas y salidas generadas por las operaciones del negocio.
         </p>
       </div>
-      <button
-        className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-white shadow-action transition hover:-translate-y-0.5"
-        onClick={onNewMovement}
-        type="button"
-      >
-        <Plus className="h-4 w-4" />
-        Movimiento manual
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-text-primary transition hover:bg-primary-soft"
+          onClick={onPrint}
+          type="button"
+        >
+          <Printer className="h-4 w-4" />
+          Imprimir cuadre
+        </button>
+        <button
+          className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-white shadow-action transition hover:-translate-y-0.5"
+          onClick={onNewMovement}
+          type="button"
+        >
+          <Plus className="h-4 w-4" />
+          Movimiento manual
+        </button>
+      </div>
     </motion.header>
   );
 }
@@ -184,6 +196,8 @@ function FilterBar({
   category,
   categories,
   onDateChange,
+  onPreviousDate,
+  onNextDate,
   onFilterChange,
   onSearchChange,
   onCategoryChange,
@@ -194,6 +208,8 @@ function FilterBar({
   category: string;
   categories: string[];
   onDateChange: (value: string) => void;
+  onPreviousDate: () => void;
+  onNextDate: () => void;
   onFilterChange: (value: CashMovementFilter) => void;
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
@@ -224,15 +240,37 @@ function FilterBar({
             </button>
           ))}
         </div>
-        <label className="flex h-10 items-center gap-2 rounded-full border border-primary-border bg-card px-4 text-text-secondary">
-          <Calendar className="h-4 w-4" />
-          <input
-            className="bg-transparent text-sm font-semibold text-text-primary outline-none"
-            onChange={(event) => onDateChange(event.target.value)}
-            type="date"
-            value={date}
-          />
-        </label>
+        <div className="flex h-10 items-center rounded-full border border-primary-border bg-card text-text-secondary">
+          <button
+            aria-label="Día anterior"
+            className="flex h-10 w-10 items-center justify-center rounded-l-full transition hover:bg-primary-soft hover:text-text-primary"
+            onClick={onPreviousDate}
+            title="Día anterior"
+            type="button"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <label className="flex h-10 items-center gap-2 border-x border-primary-border px-3">
+            <Calendar className="h-4 w-4" />
+            <input
+              className="w-[126px] bg-transparent text-sm font-semibold text-text-primary outline-none"
+              onChange={(event) => {
+                if (event.target.value) onDateChange(event.target.value);
+              }}
+              type="date"
+              value={date}
+            />
+          </label>
+          <button
+            aria-label="Día siguiente"
+            className="flex h-10 w-10 items-center justify-center rounded-r-full transition hover:bg-primary-soft hover:text-text-primary"
+            onClick={onNextDate}
+            title="Día siguiente"
+            type="button"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
         <label className="flex h-10 flex-1 items-center gap-3 rounded-full border border-primary-border bg-surface-subtle px-4 text-text-secondary xl:ml-auto xl:max-w-[340px]">
           <Search className="h-4 w-4 shrink-0" />
           <input
@@ -261,8 +299,8 @@ function FilterBar({
 
 function Tag({ label, tone, icon }: { label: string; tone: TagTone; icon?: string | null }) {
   const styles = {
-    green: 'bg-primary-soft text-text-primary',
-    orange: 'bg-state-danger-bg text-state-danger',
+    green: 'border border-[#79c99d] bg-[#dff5e7] text-[#08783f]',
+    orange: 'border border-[#f0a39b] bg-[#fde8e6] text-[#b42318]',
     blue: 'bg-state-info-bg text-state-info',
     purple: 'bg-state-neutral-bg text-text-secondary',
     yellow: 'bg-state-warning-bg text-state-warning',
@@ -281,7 +319,15 @@ function Tag({ label, tone, icon }: { label: string; tone: TagTone; icon?: strin
   );
 }
 
-function TransactionItem({ movement }: { movement: CashLedgerMovement }) {
+function TransactionItem({
+  movement,
+  deleting,
+  onDelete,
+}: {
+  movement: CashLedgerMovement;
+  deleting: boolean;
+  onDelete: (movement: CashLedgerMovement) => void;
+}) {
   const isIncome = movement.type === 'IN';
   const DirectionIcon = isIncome ? ArrowDownLeft : ArrowUpRight;
   const initials = movement.person
@@ -295,7 +341,7 @@ function TransactionItem({ movement }: { movement: CashLedgerMovement }) {
     <div className="grid min-h-[76px] grid-cols-[1fr_auto] items-center gap-4 border-b border-border-soft px-5 py-3.5 last:border-b-0 hover:bg-surface-subtle">
       <div className="flex min-w-0 items-center gap-4">
         <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-control ${isIncome ? 'bg-primary-soft text-text-primary' : 'bg-state-danger-bg text-state-danger'}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-control border ${isIncome ? 'border-[#79c99d] bg-[#dff5e7] text-[#08783f]' : 'border-[#f0a39b] bg-[#fde8e6] text-[#b42318]'}`}
         >
           <DirectionIcon className="h-4 w-4" />
         </div>
@@ -305,8 +351,6 @@ function TransactionItem({ movement }: { movement: CashLedgerMovement }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-sm font-bold text-text-primary">{movement.person}</h3>
-            <span className="text-text-secondary">·</span>
-            <span className="text-xs text-text-secondary">{movement.code}</span>
           </div>
           <p className="mt-0.5 text-xs text-text-secondary">{movement.description}</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -321,13 +365,22 @@ function TransactionItem({ movement }: { movement: CashLedgerMovement }) {
           </div>
         </div>
       </div>
-      <div className="text-right">
+      <div className="flex items-center gap-2 text-right">
         <p
-          className={`text-base font-bold tabular-nums ${!movement.affectsBalance ? 'text-text-muted' : isIncome ? 'text-text-primary' : 'text-text-secondary'}`}
+          className={`text-base font-bold tabular-nums ${!movement.affectsBalance ? 'text-text-muted' : isIncome ? 'text-[#08783f]' : 'text-[#b42318]'}`}
         >
           {formatSignedDop(movement.amount, { negative: !isIncome })}
         </p>
-        <p className="mt-1 text-xs text-text-muted">{formatOfficeTime(movement.movementDate)}</p>
+        <button
+          aria-label={`Eliminar movimiento de ${movement.person}`}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-[#b42318] transition hover:bg-[#fde8e6] disabled:cursor-wait disabled:opacity-50"
+          disabled={deleting}
+          onClick={() => onDelete(movement)}
+          title="Eliminar movimiento"
+          type="button"
+        >
+          <Trash2 className="h-[18px] w-[18px]" />
+        </button>
       </div>
     </div>
   );
@@ -342,6 +395,9 @@ export function CashPanel() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState('');
+  const [mutationError, setMutationError] = useState('');
+  const [companyName, setCompanyName] = useState('Inversiones Willians Marte');
   const requestIdRef = useRef(0);
 
   const loadLedger = useCallback(async () => {
@@ -362,6 +418,12 @@ export function CashPanel() {
     queueMicrotask(() => void loadLedger());
   }, [loadLedger]);
 
+  useEffect(() => {
+    getSettings()
+      .then((settings) => setCompanyName(settings.companyName))
+      .catch(() => undefined);
+  }, []);
+
   const categories = useMemo(
     () => Array.from(new Set(ledger.movements.map((movement) => movement.category))).sort(),
     [ledger.movements],
@@ -373,6 +435,7 @@ export function CashPanel() {
 
   const handleCreateMovement = useCallback(
     async (values: MovementFormValues) => {
+      if (!values.type) return;
       const amount = parseCurrencyInput(values.amount);
       await createManualCashMovement({
         type: values.type === 'in' ? 'IN' : 'OUT',
@@ -390,6 +453,43 @@ export function CashPanel() {
     [date, loadLedger],
   );
 
+  const handleDeleteMovement = useCallback(
+    async (movement: CashLedgerMovement) => {
+      if (
+        !window.confirm(
+          `¿Eliminar de Caja el movimiento de ${movement.person} por ${formatDop(movement.amount)}?`,
+        )
+      ) {
+        return;
+      }
+
+      setDeletingId(movement.id);
+      setMutationError('');
+      try {
+        await deleteCashMovement(movement.id, movement.sourceType);
+        await loadLedger();
+      } catch {
+        setMutationError('No se pudo eliminar el movimiento de Caja.');
+      } finally {
+        setDeletingId('');
+      }
+    },
+    [loadLedger],
+  );
+
+  function handlePrint() {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.opener = null;
+    printWindow.document.write(buildCashClosingPrintDocument({ ...ledger, date }, companyName));
+    printWindow.document.close();
+    printWindow.focus();
+    window.setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  }
+
   const { totals } = ledger;
   const balanceMovements = ledger.movements.filter((movement) => movement.affectsBalance);
   const externalIncomeCount = ledger.movements.filter(
@@ -401,7 +501,7 @@ export function CashPanel() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-page p-4 font-sans text-text-primary sm:p-5">
-      <Header onNewMovement={() => setIsModalOpen(true)} />
+      <Header onNewMovement={() => setIsModalOpen(true)} onPrint={handlePrint} />
 
       <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
         <SummaryCard
@@ -449,10 +549,18 @@ export function CashPanel() {
         filter={filter}
         onCategoryChange={setCategory}
         onDateChange={setDate}
+        onNextDate={() => setDate((current) => shiftCashLedgerDate(current, 1))}
+        onPreviousDate={() => setDate((current) => shiftCashLedgerDate(current, -1))}
         onFilterChange={setFilter}
         onSearchChange={setSearch}
         search={search}
       />
+
+      {mutationError && (
+        <p className="mb-4 rounded-control border border-state-danger/30 bg-state-danger-bg px-4 py-3 text-sm font-semibold text-state-danger">
+          {mutationError}
+        </p>
+      )}
 
       <motion.section animate="visible" initial="hidden" variants={fadeUp}>
         <div className="mb-3 flex items-center justify-between gap-4 px-1">
@@ -488,7 +596,12 @@ export function CashPanel() {
           {!loading &&
             !error &&
             visibleMovements.map((movement) => (
-              <TransactionItem key={`${movement.sourceType}-${movement.id}`} movement={movement} />
+              <TransactionItem
+                deleting={deletingId === movement.id}
+                key={`${movement.sourceType}-${movement.id}`}
+                movement={movement}
+                onDelete={handleDeleteMovement}
+              />
             ))}
         </div>
       </motion.section>
