@@ -49,3 +49,7 @@ export async function createManualCashMovement(values: CreateManualCashMovement)
   const { data } = await api.post<ApiResponse<CashLedgerMovement>>('/cash/movements', values);
   return data.data as CashLedgerMovement;
 }
+
+export async function deleteCashMovement(id: string, sourceType: string) {
+  await api.delete(`/cash/movements/${encodeURIComponent(sourceType)}/${encodeURIComponent(id)}`);
+}

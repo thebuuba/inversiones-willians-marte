@@ -11,3 +11,10 @@ test('keeps manual cash movements free of client search and category controls', 
   assert.match(source, /Dinero externo al negocio/);
   assert.match(source, /no suma ni resta en el cuadre de Caja/);
 });
+
+test('requires an explicit movement direction and formats numeric amounts', () => {
+  assert.match(source, /type: ''/);
+  assert.match(source, /Selecciona si el movimiento es una entrada o una salida/);
+  assert.match(source, /formatCurrencyInput\(event\.target\.value\)/);
+  assert.match(source, /inputMode="decimal"/);
+});

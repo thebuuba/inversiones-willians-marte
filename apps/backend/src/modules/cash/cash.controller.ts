@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { CashService } from './cash.service';
 import { CreateCashMovementDto } from './dto/create-cash-movement.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
@@ -21,5 +21,15 @@ export class CashController {
   @Roles('ADMIN', 'COLLECTOR')
   createManual(@Body() dto: CreateCashMovementDto, @CurrentUser('id') userId: string) {
     return this.cash.createManual(dto, userId);
+  }
+
+  @Delete('movements/:sourceType/:id')
+  @Roles('ADMIN', 'COLLECTOR')
+  deleteMovement(
+    @Param('sourceType') sourceType: string,
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.cash.deleteMovement(id, sourceType, userId);
   }
 }

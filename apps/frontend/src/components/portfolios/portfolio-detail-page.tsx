@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, BriefcaseBusiness, Phone, Sparkles, UserRound, X
 import { getPortfolio, type PortfolioLoan } from '@/lib/api/portfolios';
 import { formatDop } from '@/lib/currency';
 import { getLoanTypeLabel } from '@/lib/loan-type';
+import { loanStatusVisuals } from '@/lib/loan-status-visuals';
 import { useClientCache } from '@/lib/use-client-cache';
 
 interface ClientGroup {
@@ -40,10 +41,10 @@ function groupByClient(loans: PortfolioLoan[]) {
 }
 
 const collectionStatuses = {
-  CURRENT: { label: 'Al día', className: 'bg-state-success-bg text-state-success', dot: 'bg-state-success-dot' },
-  PENDING: { label: 'Pendiente', className: 'bg-state-neutral-bg text-text-secondary', dot: 'bg-state-neutral-dot' },
-  LATE: { label: 'Atrasado', className: 'bg-state-warning-bg text-state-warning', dot: 'bg-state-warning-dot' },
-  EXPIRED: { label: 'Vencido', className: 'bg-state-danger-bg text-state-danger', dot: 'bg-state-danger-dot' },
+  CURRENT: { label: 'Al día', className: loanStatusVisuals.CURRENT.badgeClassName, dot: loanStatusVisuals.CURRENT.dotClassName },
+  PENDING: { label: 'Pendiente', className: loanStatusVisuals.PENDING.badgeClassName, dot: loanStatusVisuals.PENDING.dotClassName },
+  LATE: { label: 'Atrasado', className: loanStatusVisuals.LATE.badgeClassName, dot: loanStatusVisuals.LATE.dotClassName },
+  EXPIRED: { label: 'Vencido', className: loanStatusVisuals.EXPIRED.badgeClassName, dot: loanStatusVisuals.EXPIRED.dotClassName },
 };
 
 function formatDate(value: string | null) {

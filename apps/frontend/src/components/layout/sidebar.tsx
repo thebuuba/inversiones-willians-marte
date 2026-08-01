@@ -14,6 +14,7 @@ import {
   Landmark,
   LogOut,
   Menu,
+  ReceiptText,
   Settings,
   TrendingUp,
   Users,
@@ -32,6 +33,7 @@ const navIconMap = {
   home: Home,
   inbox: Inbox,
   landmark: Landmark,
+  'receipt-text': ReceiptText,
   settings: Settings,
   'trending-up': TrendingUp,
   users: Users,
@@ -41,7 +43,7 @@ const navIconMap = {
 const navGroups = [
   { label: 'OPERACIÓN', hrefs: ['/inicio', '/clientes', '/prestamos', '/solicitudes'] },
   { label: 'FINANZAS', hrefs: ['/caja', '/inversionistas', '/carteras'] },
-  { label: 'GENERAL', hrefs: ['/agenda', '/documentos'] },
+  { label: 'GENERAL', hrefs: ['/agenda', '/recibos', '/documentos'] },
 ] as const;
 
 const settingsItem = navItems.find((item) => item.href === '/configuracion');

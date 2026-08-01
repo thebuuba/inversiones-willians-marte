@@ -25,6 +25,7 @@ import {
 import { invalidateCachePrefix } from '@/lib/use-client-cache';
 import { formatDop } from '@/lib/currency';
 import { getLoanTypeLabel } from '@/lib/loan-type';
+import { getLoanStatusBadgeClass } from '@/lib/loan-status-visuals';
 import {
   getLoanDetailTotals,
   getLoanOperationalSummary,
@@ -64,14 +65,7 @@ function StatusBadge({
   const label = dueDate
     ? getScheduleDisplayStatus(status, dueDate, new Date(), graceDays)
     : getStatusLabel(status);
-  const tone =
-    label === 'Pagado' || label === 'Cancelado'
-      ? 'bg-state-neutral-bg text-state-neutral'
-      : label === 'Vencido' || label === 'Atrasado'
-        ? 'bg-state-danger-bg text-state-danger'
-        : label === 'Pendiente' || label === 'Parcial'
-          ? 'bg-state-warning-bg text-state-warning'
-          : 'bg-state-success-bg text-state-success';
+  const tone = getLoanStatusBadgeClass(label);
 
   return (
     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${tone}`}>

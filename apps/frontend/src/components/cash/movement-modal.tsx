@@ -2,8 +2,9 @@
 
 import { memo, type FormEvent, type ReactNode, useMemo, useState } from 'react';
 import { ArrowDownLeft, ArrowUpRight, ChevronDown, Wallet, X } from 'lucide-react';
+import { formatCurrencyInput } from '@/lib/currency';
 
-type MovementType = 'in' | 'out';
+type MovementType = 'in' | 'out' | '';
 
 export interface MovementFormValues {
   type: MovementType;
@@ -23,7 +24,7 @@ interface MovementModalProps {
 const methods = ['Efectivo', 'Transferencia', 'Tarjeta'];
 
 const initialValues: MovementFormValues = {
-  type: 'in',
+  type: '',
   person: '',
   amount: '',
   method: 'Efectivo',
@@ -118,6 +119,7 @@ export const MovementModal = memo(function MovementModal({
     [values.amount],
   );
   const errors = {
+    type: submitted && values.type === '',
     person: submitted && values.person.trim().length === 0,
     amount: submitted && amountNumber <= 0,
   };
@@ -145,7 +147,7 @@ export const MovementModal = memo(function MovementModal({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitted(true);
-    if (values.person.trim().length === 0 || amountNumber <= 0) return;
+    if (!values.type || values.person.trim().length === 0 || amountNumber <= 0) return;
 
     setSaving(true);
     setSubmitError('');
@@ -202,23 +204,30 @@ export const MovementModal = memo(function MovementModal({
         </header>
 
         <div className="space-y-5 px-6 py-6">
-          <div className="flex gap-3">
-            <MovementTypeButton
-              active={values.type === 'in'}
-              icon={<ArrowDownLeft className="h-4 w-4" />}
-              label="Entrada"
-              onClick={() => updateValue('type', 'in')}
-              subtitle={values.affectsBalance ? 'Suma al cuadre' : 'Se registra sin sumar'}
-              tone="in"
-            />
-            <MovementTypeButton
-              active={values.type === 'out'}
-              icon={<ArrowUpRight className="h-4 w-4" />}
-              label="Salida"
-              onClick={() => updateValue('type', 'out')}
-              subtitle={values.affectsBalance ? 'Resta del cuadre' : 'Se registra sin restar'}
-              tone="out"
-            />
+          <div>
+            <div className="flex gap-3">
+              <MovementTypeButton
+                active={values.type === 'in'}
+                icon={<ArrowDownLeft className="h-4 w-4" />}
+                label="Entrada"
+                onClick={() => updateValue('type', 'in')}
+                subtitle={values.affectsBalance ? 'Suma al cuadre' : 'Se registra sin sumar'}
+                tone="in"
+              />
+              <MovementTypeButton
+                active={values.type === 'out'}
+                icon={<ArrowUpRight className="h-4 w-4" />}
+                label="Salida"
+                onClick={() => updateValue('type', 'out')}
+                subtitle={values.affectsBalance ? 'Resta del cuadre' : 'Se registra sin restar'}
+                tone="out"
+              />
+            </div>
+            {errors.type && (
+              <p className="mt-2 text-sm font-semibold text-state-danger">
+                Selecciona si el movimiento es una entrada o una salida.
+              </p>
+            )}
           </div>
 
           <FormField error={errors.person} label="Persona o concepto">
@@ -239,7 +248,10 @@ export const MovementModal = memo(function MovementModal({
                 <input
                   className={`${inputClass(errors.amount)} pl-12 tabular-nums`}
                   inputMode="decimal"
-                  onChange={(event) => updateValue('amount', event.target.value)}
+                  onChange={(event) =>
+                    updateValue('amount', formatCurrencyInput(event.target.value))
+                  }
+                  pattern="[0-9,]+([.][0-9]{0,2})?"
                   placeholder="0.00"
                   value={values.amount}
                 />

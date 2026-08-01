@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useClientCache } from '@/lib/use-client-cache';
 import { getStaggerDelay } from '@/lib/animation';
+import { loanStatusVisuals } from '@/lib/loan-status-visuals';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
@@ -35,6 +36,7 @@ import {
   getAudit,
   getDashboardOverview,
   type CollectionPriority,
+  type PortfolioGroup,
   type UpcomingPayment,
 } from '@/lib/api/dashboard';
 import { formatDop } from '@/lib/currency';
@@ -83,14 +85,31 @@ export function getAgingBuckets(priorities: CollectionPriority[]) {
 
 const today = new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' });
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  CURRENT: { label: 'Al día', color: '#7CC99B' },
-  PENDING: { label: 'Pendientes', color: '#F3D477' },
-  LATE: { label: 'Atrasados', color: '#F3A36F' },
-  EXPIRED: { label: 'Vencidos', color: '#E67C73' },
-  PAID: { label: 'Pagados', color: '#A9D9C6' },
-  WRITTEN_OFF: { label: 'Castigados', color: '#E0E0E0' },
+export const portfolioStatusConfig: Record<string, { label: string; color: string }> = {
+  CURRENT: { label: 'A tiempo', color: loanStatusVisuals.CURRENT.color },
+  PENDING: { label: 'Pendientes', color: loanStatusVisuals.PENDING.color },
+  LATE: { label: 'Atrasados', color: loanStatusVisuals.LATE.color },
+  EXPIRED: { label: 'Vencidos', color: loanStatusVisuals.EXPIRED.color },
+  PAID: { label: 'Pagados', color: loanStatusVisuals.PAID.color },
+  WRITTEN_OFF: { label: 'Castigados', color: loanStatusVisuals.WRITTEN_OFF.color },
 };
+
+const portfolioStatusOrder = ['CURRENT', 'PENDING', 'LATE', 'EXPIRED', 'PAID', 'WRITTEN_OFF'];
+
+export function getPortfolioStatusData(portfolio: PortfolioGroup[]) {
+  return [...portfolio]
+    .sort((a, b) => {
+      const aIndex = portfolioStatusOrder.indexOf(a.status);
+      const bIndex = portfolioStatusOrder.indexOf(b.status);
+      return (aIndex === -1 ? portfolioStatusOrder.length : aIndex)
+        - (bIndex === -1 ? portfolioStatusOrder.length : bIndex);
+    })
+    .map((group) => ({
+      name: portfolioStatusConfig[group.status]?.label ?? group.status,
+      value: group.count,
+      color: portfolioStatusConfig[group.status]?.color ?? '#ccc',
+    }));
+}
 
 const cardVariants: Variants = {
   hidden: { opacity: 0, y: 18 },
@@ -174,11 +193,7 @@ export function DashboardHome() {
 
   const portfolioSafe = portfolio ?? [];
   const portfolioPie = portfolioSafe.length > 0
-    ? portfolioSafe.map((g) => ({
-        name: statusConfig[g.status]?.label ?? g.status,
-        value: g.count,
-        color: statusConfig[g.status]?.color ?? '#ccc',
-      }))
+    ? getPortfolioStatusData(portfolioSafe)
     : [{ name: 'Sin datos', value: 1, color: '#E0E0E0' }];
 
   const portfolioTotal = portfolioPie.reduce((s, e) => s + e.value, 0);

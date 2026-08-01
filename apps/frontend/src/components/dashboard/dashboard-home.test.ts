@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getAgingBuckets, getDueTodayTotal } from './dashboard-home';
-import type { CollectionPriority, UpcomingPayment } from '@/lib/api/dashboard';
+import {
+  getAgingBuckets,
+  getDueTodayTotal,
+  getPortfolioStatusData,
+  portfolioStatusConfig,
+} from './dashboard-home';
+import type { CollectionPriority, PortfolioGroup, UpcomingPayment } from '@/lib/api/dashboard';
 
 test('sums only payments due today', () => {
   const payments = [
@@ -27,4 +32,34 @@ test('groups overdue priorities by age', () => {
     { label: '61-90', amount: 300, count: 1 },
     { label: '90+', amount: 400, count: 1 },
   ]);
+});
+
+test('uses the same collection status colors as the loans panel', () => {
+  assert.deepEqual(
+    Object.fromEntries(
+      Object.entries(portfolioStatusConfig).map(([status, config]) => [status, config.color]),
+    ),
+    {
+      CURRENT: '#7CC99B',
+      PENDING: '#B5BBB8',
+      LATE: '#F3D477',
+      EXPIRED: '#E67C73',
+      PAID: '#8EB8D8',
+      WRITTEN_OFF: '#D1D5D3',
+    },
+  );
+});
+
+test('orders portfolio status from healthy to most overdue', () => {
+  const groups = [
+    { status: 'EXPIRED', count: 4 },
+    { status: 'LATE', count: 3 },
+    { status: 'CURRENT', count: 1 },
+    { status: 'PENDING', count: 2 },
+  ] as PortfolioGroup[];
+
+  assert.deepEqual(
+    getPortfolioStatusData(groups).map(({ name }) => name),
+    ['A tiempo', 'Pendientes', 'Atrasados', 'Vencidos'],
+  );
 });
