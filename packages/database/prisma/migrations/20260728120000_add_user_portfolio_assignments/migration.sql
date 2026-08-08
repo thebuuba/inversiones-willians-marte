@@ -14,3 +14,20 @@ ALTER TABLE "user_portfolios" ADD CONSTRAINT "user_portfolios_user_id_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "user_portfolios" ADD CONSTRAINT "user_portfolios_portfolio_id_fkey" FOREIGN KEY ("portfolio_id") REFERENCES "portfolios"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "user_portfolios" ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+    REVOKE ALL ON TABLE "user_portfolios" FROM anon;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+    REVOKE ALL ON TABLE "user_portfolios" FROM authenticated;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_backend') THEN
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE "user_portfolios" TO app_backend;
+    CREATE POLICY app_backend_full_access ON "user_portfolios"
+      TO app_backend USING (true) WITH CHECK (true);
+  END IF;
+END $$;
