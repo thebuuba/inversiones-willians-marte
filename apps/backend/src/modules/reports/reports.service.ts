@@ -59,7 +59,6 @@ export class ReportsService {
           take: 24,
         },
       },
-      take: 500,
     });
     const urgencyOrder = { OVERDUE: 0, PENDING: 1, UPCOMING: 2 } as const;
 

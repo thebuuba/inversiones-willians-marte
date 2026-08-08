@@ -104,6 +104,16 @@ describe('ReportsService', () => {
     await expect(service.investmentPriorities()).resolves.toHaveLength(5);
   });
 
+  it('ranks every active investment before limiting the priority result', async () => {
+    jest.mocked(prisma.investorInvestment.findMany).mockResolvedValue([] as never);
+
+    await service.investmentPriorities();
+
+    expect(jest.mocked(prisma.investorInvestment.findMany).mock.calls[0][0]).not.toHaveProperty(
+      'take',
+    );
+  });
+
   it('ranks overdue loans by explainable collection priority', async () => {
     jest.useFakeTimers().setSystemTime(new Date('2026-06-18T12:00:00.000Z'));
     jest.mocked(prisma.loan.findMany).mockResolvedValue([
