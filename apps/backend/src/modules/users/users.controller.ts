@@ -1,6 +1,7 @@
-import { Controller, Post, Get, Param, UseGuards, Body } from '@nestjs/common';
+import { Controller, Post, Get, Put, Param, UseGuards, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserPortfoliosDto } from './dto/update-user-portfolios.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards';
 import { CurrentUser, Roles } from '../../common/decorators';
@@ -32,5 +33,21 @@ export class UsersController {
   @Roles('ADMIN')
   toggleActive(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.users.toggleActive(id, userId);
+  }
+
+  @Get(':id/portfolio-assignments')
+  @Roles('ADMIN')
+  getPortfolioAssignments(@Param('id') id: string) {
+    return this.users.getPortfolioAssignments(id);
+  }
+
+  @Put(':id/portfolio-assignments')
+  @Roles('ADMIN')
+  updatePortfolioAssignments(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserPortfoliosDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.users.updatePortfolioAssignments(id, dto.portfolioIds, userId);
   }
 }
