@@ -1,12 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   getAgingBuckets,
   getDueTodayTotal,
+  getInvestmentDueLabel,
   getPortfolioStatusData,
   portfolioStatusConfig,
 } from './dashboard-home';
-import type { CollectionPriority, PortfolioGroup, UpcomingPayment } from '@/lib/api/dashboard';
+import type {
+  CollectionPriority,
+  InvestmentPriority,
+  PortfolioGroup,
+  UpcomingPayment,
+} from '@/lib/api/dashboard';
 
 test('sums only payments due today', () => {
   const payments = [
@@ -62,4 +69,21 @@ test('orders portfolio status from healthy to most overdue', () => {
     getPortfolioStatusData(groups).map(({ name }) => name),
     ['A tiempo', 'Pendientes', 'Atrasados', 'Vencidos'],
   );
+});
+
+test('describes investment payment urgency in calendar days', () => {
+  const priority = (paymentStatus: InvestmentPriority['paymentStatus'], daysUntilDue: number) =>
+    ({ paymentStatus, daysUntilDue }) as InvestmentPriority;
+
+  assert.equal(getInvestmentDueLabel(priority('UPCOMING', 5)), 'En 5 días');
+  assert.equal(getInvestmentDueLabel(priority('PENDING', 0)), 'Vence hoy');
+  assert.equal(getInvestmentDueLabel(priority('PENDING', -3)), 'Pendiente hace 3 días');
+  assert.equal(getInvestmentDueLabel(priority('OVERDUE', -6)), '6 días de atraso');
+});
+
+test('links every investment priority row to its investment detail', () => {
+  const source = readFileSync(new URL('./dashboard-home.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /title="Orden de pagos de inversiones"/);
+  assert.match(source, /href={`\/inversiones\/\$\{item\.investmentId\}`}/);
 });

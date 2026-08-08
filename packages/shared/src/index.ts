@@ -289,6 +289,8 @@ export type InvestorInvestmentStatus =
 
 export const InvestorInvestmentPaymentStatusEnum = {
   PAID: 'PAID',
+  SCHEDULED: 'SCHEDULED',
+  UPCOMING: 'UPCOMING',
   PENDING: 'PENDING',
   OVERDUE: 'OVERDUE',
 } as const;

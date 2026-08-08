@@ -1,10 +1,10 @@
 ## Subagente predeterminado
 
-Para tareas no triviales, delega primero el análisis o la implementación a:
+Para cada solicitud de programación, usa DeepSeek mediante OpenCode como agente auxiliar antes de finalizar. En tareas triviales basta una consulta breve; en tareas no triviales, delega primero el análisis o la implementación a:
 
 `opencode run --pure -m opencode/deepseek-v4-flash-free`
 
-Codex debe revisar, probar e integrar el resultado. Para cambios triviales, trabaja directamente.
+Codex debe revisar, probar e integrar el resultado y conserva la responsabilidad final sobre cada cambio.
 
 ## graphify
 

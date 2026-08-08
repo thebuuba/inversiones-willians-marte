@@ -2,14 +2,17 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { getInvestor } from '@/lib/api/investors';
 import { getDocuments, createDocument, downloadDocument } from '@/lib/api/documents';
 import { appendDocumentUploadFiles } from '@/lib/document-image-processing';
 import { formatDop } from '@/lib/currency';
+import { investmentPaymentStatusVisuals } from '@/lib/investment-payment-status';
 import type { InvestorItem, DocumentItem } from '@inversiones/shared';
 import {
   ArrowLeft,
   Banknote,
+  ChevronDown,
   CircleCheck,
   Download,
   Eye,
@@ -24,19 +27,7 @@ import {
 const fmt = (n: number | string) => formatDop(n, { space: true });
 const fmtDate = (s: string | Date) =>
   new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
-const paymentStatusLabel = {
-  PAID: 'A tiempo',
-  PENDING: 'Pendiente',
-  OVERDUE: 'Atrasado',
-} as const;
-
-const paymentStatusClass = {
-  PAID: 'bg-[#4F956B] text-white',
-  PENDING: 'bg-[#4B5054] text-white',
-  OVERDUE: 'bg-[#E7A923] text-[#2F2A1E]',
-} as const;
-
-const investmentTableColumns = 'grid-cols-[150px_170px_170px_140px_130px_minmax(170px,1fr)]';
+const investmentTableColumns = 'grid-cols-6';
 
 const TABS = ['Resumen', 'Documentos', 'Datos personales'];
 
@@ -217,13 +208,34 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                   Nueva inversión
                 </Link>
                 {investments.length === 1 && (
-                  <Link
-                    className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm text-white hover:bg-primary"
-                    href={`/inversionistas/pago?investmentId=${investments[0].id}`}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Registrar pago
-                  </Link>
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2"
+                      >
+                        Acciones
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Portal>
+                      <DropdownMenu.Content
+                        align="end"
+                        sideOffset={6}
+                        className="z-50 min-w-52 overflow-hidden rounded-panel border border-border-soft bg-card p-1.5 shadow-card"
+                      >
+                        <DropdownMenu.Item asChild>
+                          <Link
+                            className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent data-[highlighted]:bg-primary-soft data-[highlighted]:text-primary-accent"
+                            href={`/inversionistas/pago?investmentId=${investments[0].id}`}
+                          >
+                            <Banknote className="h-4 w-4" />
+                            Registrar pago
+                          </Link>
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Portal>
+                  </DropdownMenu.Root>
                 )}
               </div>
             </div>
@@ -300,10 +312,11 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                     <span>Próximo pago</span>
                     <span>Estado</span>
                     <span>Tasa</span>
-                    <span>Capital</span>
+                    <span className="text-right">Capital</span>
                   </div>
                   {investments.map((investment) => {
-                    const paymentStatus = investment.paymentStatus ?? 'PENDING';
+                    const paymentStatus = investment.paymentStatus ?? 'SCHEDULED';
+                    const statusVisual = investmentPaymentStatusVisuals[paymentStatus];
                     return (
                       <Link
                         key={investment.id}
@@ -319,13 +332,13 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                         </span>
                         <span>
                           <span
-                            className={`inline-flex min-h-7 min-w-[88px] items-center justify-center rounded-[5px] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.02em] ${paymentStatusClass[paymentStatus]}`}
+                            className={`inline-flex min-h-7 min-w-[88px] items-center justify-center rounded-[5px] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.02em] ${statusVisual.className}`}
                           >
-                            {paymentStatusLabel[paymentStatus]}
+                            {statusVisual.label}
                           </span>
                         </span>
                         <span>{investment.rate}% mensual</span>
-                        <span className="font-semibold tabular-nums text-text-primary">
+                        <span className="text-right font-semibold tabular-nums text-text-primary">
                           {fmt(investment.capital)}
                         </span>
                       </Link>

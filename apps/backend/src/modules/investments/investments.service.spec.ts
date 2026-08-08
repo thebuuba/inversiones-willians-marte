@@ -67,14 +67,14 @@ describe('InvestmentsService', () => {
     expect(status.nextDueDate?.toISOString().slice(0, 10)).toBe('2026-08-03');
   });
 
-  it('marks the current period as pending before the monthly due date', () => {
+  it('keeps the current period scheduled before the five-day payment window', () => {
     const status = service.getCurrentPeriodStatus(
       '2026-07-20',
       [],
       new Date('2026-08-12T12:00:00.000Z'),
     );
 
-    expect(status.paymentStatus).toBe('PENDING');
+    expect(status.paymentStatus).toBe('SCHEDULED');
     expect(status.nextDueDate?.toISOString().slice(0, 10)).toBe('2026-08-20');
   });
 

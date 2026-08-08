@@ -1,20 +1,18 @@
 'use client';
 
 import { useEffect, useSyncExternalStore } from 'react';
-import { Monitor, Moon, Sun } from 'lucide-react';
-import { resolveTheme, themes, type ThemePreference } from '@/lib/theme';
+import { Moon, Sun } from 'lucide-react';
+import { parseThemePreference, type ThemePreference } from '@/lib/theme';
 
 const options = [
   { value: 'light', label: 'Claro', icon: Sun },
   { value: 'dark', label: 'Oscuro', icon: Moon },
-  { value: 'system', label: 'Sistema', icon: Monitor },
 ] as const;
 
 const themeChangeEvent = 'themechange';
 
 function getThemePreference(): ThemePreference {
-  const stored = localStorage.getItem('theme');
-  return themes.includes(stored as ThemePreference) ? (stored as ThemePreference) : 'system';
+  return parseThemePreference(localStorage.getItem('theme'));
 }
 
 function subscribeToTheme(onChange: () => void) {
@@ -27,16 +25,10 @@ function subscribeToTheme(onChange: () => void) {
 }
 
 export function ThemeSelector() {
-  const theme = useSyncExternalStore<ThemePreference>(subscribeToTheme, getThemePreference, () => 'system');
+  const theme = useSyncExternalStore<ThemePreference>(subscribeToTheme, getThemePreference, () => 'light');
 
   useEffect(() => {
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const applyTheme = () =>
-      (document.documentElement.dataset.theme = resolveTheme(theme, media.matches));
-
-    applyTheme();
-    media.addEventListener('change', applyTheme);
-    return () => media.removeEventListener('change', applyTheme);
+    document.documentElement.dataset.theme = theme;
   }, [theme]);
 
   function selectTheme(preference: ThemePreference) {
@@ -53,7 +45,7 @@ export function ThemeSelector() {
         </p>
       </div>
 
-      <div aria-label="Tema visual" className="grid grid-cols-3 gap-2" role="radiogroup">
+      <div aria-label="Tema visual" className="grid grid-cols-2 gap-2" role="radiogroup">
         {options.map(({ value, label, icon: Icon }) => {
           const selected = theme === value;
           return (

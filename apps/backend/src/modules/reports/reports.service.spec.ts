@@ -10,6 +10,7 @@ jest.mock('@inversiones/database', () => ({
     client: { count: jest.fn() },
     loan: { aggregate: jest.fn(), count: jest.fn(), findMany: jest.fn() },
     payment: { aggregate: jest.fn(), groupBy: jest.fn() },
+    investorInvestment: { findMany: jest.fn() },
     user: { count: jest.fn(), findMany: jest.fn() },
   },
   Prisma: {
@@ -37,6 +38,7 @@ describe('ReportsService', () => {
       'weeklyMovement',
       'upcomingPayments',
       'collectionPriorities',
+      'investmentPriorities',
     ] as const;
     const resolvers = new Map<string, (value: never) => void>();
 
@@ -64,7 +66,42 @@ describe('ReportsService', () => {
       weeklyMovement: [],
       upcomingPayments: [],
       collectionPriorities: [],
+      investmentPriorities: [],
     });
+  });
+
+  it('ranks investments by overdue, pending, and upcoming urgency', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-08-20T12:00:00.000Z'));
+    jest
+      .mocked(prisma.investorInvestment.findMany)
+      .mockResolvedValue([
+        investmentPriorityFixture('upcoming', 24),
+        investmentPriorityFixture('scheduled', 30),
+        investmentPriorityFixture('pending', 18),
+        investmentPriorityFixture('overdue', 10),
+      ] as never);
+
+    const priorities = await service.investmentPriorities();
+
+    expect(priorities.map((item) => item.investmentId)).toEqual(['overdue', 'pending', 'upcoming']);
+    expect(priorities.map((item) => item.paymentStatus)).toEqual([
+      'OVERDUE',
+      'PENDING',
+      'UPCOMING',
+    ]);
+  });
+
+  it('limits investment payment priorities to five rows', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-08-20T12:00:00.000Z'));
+    jest
+      .mocked(prisma.investorInvestment.findMany)
+      .mockResolvedValue(
+        Array.from({ length: 7 }, (_, index) =>
+          investmentPriorityFixture(`pending-${index}`, 20),
+        ) as never,
+      );
+
+    await expect(service.investmentPriorities()).resolves.toHaveLength(5);
   });
 
   it('ranks overdue loans by explainable collection priority', async () => {
@@ -242,3 +279,14 @@ describe('ReportsService', () => {
     expect(queryText).not.toContain('TO_CHAR');
   });
 });
+
+function investmentPriorityFixture(id: string, dueDay: number) {
+  return {
+    id,
+    code: `INV-${id}`,
+    monthlyPayment: 3000,
+    startDate: new Date(Date.UTC(2026, 0, dueDay)),
+    investor: { id: `investor-${id}`, name: `Inversionista ${id}` },
+    payments: [],
+  };
+}
