@@ -47,14 +47,26 @@ describe('Cloudflare worker environment', () => {
       DATABASE_URL: 'postgresql://local/database',
       JWT_SECRET: 'worker-secret',
       FRONTEND_URL: 'https://staging.example.com',
+      NODE_ENV: 'production',
     });
 
     expect(process.env).toMatchObject({
       CLOUDFLARE_WORKER: 'true',
+      NODE_ENV: 'production',
       DATABASE_URL: 'postgresql://local/database',
       JWT_SECRET: 'worker-secret',
       FRONTEND_URL: 'https://staging.example.com',
     });
+  });
+
+  it('defaults to production when NODE_ENV is not provided', () => {
+    applyWorkerEnvironment({
+      DOCUMENTS_BUCKET: documentsBucket,
+      DATABASE_URL: 'postgresql://local/database',
+      JWT_SECRET: 'worker-secret',
+    });
+
+    expect(process.env.NODE_ENV).toBe('production');
   });
 
   it('fails closed when the JWT secret is missing', () => {

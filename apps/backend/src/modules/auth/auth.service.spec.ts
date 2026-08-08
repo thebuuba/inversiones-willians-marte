@@ -151,6 +151,22 @@ describe('AuthService', () => {
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
 
+    it('rejects refresh sessions inactive for more than 7 days', async () => {
+      jest.mocked(prisma.authSession.findUnique).mockResolvedValue({
+        id: 'session-1',
+        userId: mockUser.id,
+        familyId: '11111111-1111-4111-8111-111111111111',
+        tokenHash: 'old-hash',
+        expiresAt: new Date(Date.now() + 60_000),
+        revokedAt: null,
+        lastUsedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+        user: mockUser,
+      } as any);
+
+      await expect(service.refresh('e'.repeat(43))).rejects.toThrow(UnauthorizedException);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
     it('rejects a token that loses the rotation race', async () => {
       jest.mocked(prisma.authSession.findUnique).mockResolvedValue({
         id: 'session-1',

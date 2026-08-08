@@ -8,6 +8,7 @@ import { RegisterDto } from './dto/register.dto';
 
 const DUMMY_PASSWORD_HASH = '$2b$10$nS.iLnLwknJ.BwkYYIUrSepvR0dQ668/wJ92x.uuzyhmDqITylCf.';
 const REFRESH_SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
+const REFRESH_INACTIVITY_LIMIT_MS = 7 * 24 * 60 * 60 * 1000;
 
 type SessionUser = {
   id: string;
@@ -109,8 +110,18 @@ export class AuthService {
       },
     });
     const now = new Date();
+    if (!session) throw new UnauthorizedException('Session expired');
 
-    if (!session || session.revokedAt || session.expiresAt <= now || !session.user.active) {
+    const lastUsedAt = session.lastUsedAt ?? session.createdAt;
+    const inactiveSinceRefresh =
+      lastUsedAt && now.getTime() - lastUsedAt.getTime() > REFRESH_INACTIVITY_LIMIT_MS;
+
+    if (
+      session.revokedAt ||
+      session.expiresAt <= now ||
+      !session.user.active ||
+      inactiveSinceRefresh
+    ) {
       throw new UnauthorizedException('Session expired');
     }
 
