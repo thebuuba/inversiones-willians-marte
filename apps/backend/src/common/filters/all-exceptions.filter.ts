@@ -30,7 +30,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       status = exception.getStatus();
       const res = exception.getResponse();
       message = typeof res === 'string' ? res : getHttpExceptionMessage(res, message);
-    } else if (exception instanceof Error && process.env.NODE_ENV !== 'production') {
+    } else if (exception instanceof Error && !isProductionEnvironment()) {
       message = exception.message;
     }
 
@@ -59,4 +59,8 @@ function getHttpExceptionMessage(response: object, fallback: string): string {
       return message.filter((item) => typeof item === 'string').join(', ');
   }
   return fallback;
+}
+
+function isProductionEnvironment() {
+  return process.env.NODE_ENV === 'production' || process.env.CLOUDFLARE_WORKER === 'true';
 }

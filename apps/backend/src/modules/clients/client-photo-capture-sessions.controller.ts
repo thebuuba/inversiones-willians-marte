@@ -19,6 +19,7 @@ import {
 } from '../documents/document-upload-validation';
 import { ClientPhotoCaptureSessionsService } from './client-photo-capture-sessions.service';
 import { CreateClientPhotoCaptureSessionDto } from './dto/create-client-photo-capture-session.dto';
+import { resolvePortfolioScope, type ScopeUser } from '../../common/portfolio-scope';
 
 const MAX_CLIENT_PHOTO_UPLOAD_BYTES = 5 * 1024 * 1024;
 const ALLOWED_PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -30,8 +31,9 @@ export class ClientPhotoCaptureSessionsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'COLLECTOR')
-  create(@Body() dto: CreateClientPhotoCaptureSessionDto, @CurrentUser('id') userId: string) {
-    return this.captureSessions.create(dto.clientId, userId);
+  async create(@Body() dto: CreateClientPhotoCaptureSessionDto, @CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.captureSessions.create(dto.clientId, user.id, scope);
   }
 
   @Get(':token/status')

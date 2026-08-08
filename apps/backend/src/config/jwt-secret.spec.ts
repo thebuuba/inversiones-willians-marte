@@ -39,4 +39,17 @@ describe('getJwtSecret', () => {
 
     expect(() => getJwtSecret(config)).toThrow('JWT_SECRET is required in production');
   });
+
+  it('falls back to the dev secret only in explicit development or test environments', () => {
+    process.env.NODE_ENV = 'development';
+    const config = { get: jest.fn().mockReturnValue(undefined) };
+
+    expect(getJwtSecret(config)).toBe('inversiones-willians-marte-dev-secret');
+  });
+
+  it('fails closed when NODE_ENV is unset and JWT_SECRET is missing', () => {
+    const config = { get: jest.fn().mockReturnValue(undefined) };
+
+    expect(() => getJwtSecret(config)).toThrow('JWT_SECRET is required in production');
+  });
 });

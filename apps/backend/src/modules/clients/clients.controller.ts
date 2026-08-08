@@ -16,6 +16,7 @@ import { UpdateClientDto } from './dto/update-client.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
+import { resolvePortfolioScope, type ScopeUser } from '../../common/portfolio-scope';
 
 @Controller('clients')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -30,12 +31,15 @@ export class ClientsController {
 
   @Get()
   @Roles('ADMIN', 'COLLECTOR')
-  findAll(
+  async findAll(
+    @CurrentUser() user: ScopeUser,
     @Query('search') search?: string,
     @Query('take') take?: string,
     @Query('skip') skip?: string,
   ) {
+    const scope = await resolvePortfolioScope(user);
     return this.clients.findAll(
+      scope,
       search,
       take ? parseInt(take, 10) : 50,
       skip ? parseInt(skip, 10) : 0,
@@ -44,29 +48,33 @@ export class ClientsController {
 
   @Get('basic/:id')
   @Roles('ADMIN', 'COLLECTOR')
-  findBasic(@Param('id', ParseIntPipe) id: number) {
-    return this.clients.findBasic(id);
+  async findBasic(@CurrentUser() user: ScopeUser, @Param('id', ParseIntPipe) id: number) {
+    const scope = await resolvePortfolioScope(user);
+    return this.clients.findBasic(scope, id);
   }
 
   @Get(':id')
   @Roles('ADMIN', 'COLLECTOR')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.clients.findOne(id);
+  async findOne(@CurrentUser() user: ScopeUser, @Param('id', ParseIntPipe) id: number) {
+    const scope = await resolvePortfolioScope(user);
+    return this.clients.findOne(scope, id);
   }
 
   @Patch(':id')
   @Roles('ADMIN', 'COLLECTOR')
-  update(
+  async update(
+    @CurrentUser() user: ScopeUser,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateClientDto,
-    @CurrentUser('id') userId: string,
   ) {
-    return this.clients.update(id, dto, userId);
+    const scope = await resolvePortfolioScope(user);
+    return this.clients.update(scope, id, dto, user.id);
   }
 
   @Delete(':id')
   @Roles('ADMIN')
-  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') userId: string) {
-    return this.clients.remove(id, userId);
+  async remove(@CurrentUser() user: ScopeUser, @Param('id', ParseIntPipe) id: number) {
+    const scope = await resolvePortfolioScope(user);
+    return this.clients.remove(scope, id, user.id);
   }
 }

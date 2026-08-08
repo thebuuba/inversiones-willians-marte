@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { prisma } from '@inversiones/database';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -116,5 +121,66 @@ export class UsersService {
     }
 
     return updated;
+  }
+
+  async getPortfolioAssignments(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const assignments = await prisma.userPortfolio.findMany({
+      where: { userId },
+      select: { portfolioId: true },
+    });
+
+    return { portfolioIds: assignments.map((assignment) => assignment.portfolioId) };
+  }
+
+  async updatePortfolioAssignments(userId: string, portfolioIds: string[], actorUserId?: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    if (user.role === 'ADMIN') {
+      throw new BadRequestException('Los administradores no necesitan carteras asignadas');
+    }
+
+    const uniqueIds = [...new Set(portfolioIds)];
+    const previous = await prisma.userPortfolio.findMany({
+      where: { userId },
+      select: { portfolioId: true },
+    });
+    if (uniqueIds.length > 0) {
+      const portfolios = await prisma.portfolio.findMany({
+        where: { id: { in: uniqueIds } },
+        select: { id: true },
+      });
+      if (portfolios.length !== uniqueIds.length) {
+        throw new NotFoundException('Alguna cartera no existe');
+      }
+    }
+
+    await prisma.$transaction([
+      prisma.userPortfolio.deleteMany({ where: { userId } }),
+      ...(uniqueIds.length > 0
+        ? [
+            prisma.userPortfolio.createMany({
+              data: uniqueIds.map((portfolioId) => ({ userId, portfolioId })),
+            }),
+          ]
+        : []),
+    ]);
+
+    if (actorUserId) {
+      await prisma.auditLog.create({
+        data: {
+          userId: actorUserId,
+          action: 'PORTFOLIO_ASSIGNMENTS_UPDATED',
+          entityType: 'User',
+          entityId: userId,
+          oldValues: { portfolioIds: previous.map((assignment) => assignment.portfolioId) },
+          newValues: { portfolioIds: uniqueIds },
+        },
+      });
+    }
+
+    return { portfolioIds: uniqueIds };
   }
 }

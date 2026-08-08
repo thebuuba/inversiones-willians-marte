@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { randomBytes } from 'crypto';
+import { assertClientAccess, type PortfolioScope } from '../../common/portfolio-scope';
 
 const CAPTURE_SESSION_TTL_MS = 10 * 60 * 1000;
 const MAX_PHOTO_DATA_LENGTH = 1_500_000;
@@ -17,8 +18,9 @@ interface CapturedPhotoInput {
 
 @Injectable()
 export class ClientPhotoCaptureSessionsService {
-  async create(clientId: number | undefined, createdById: string) {
+  async create(clientId: number | undefined, createdById: string, scope: PortfolioScope) {
     if (clientId) {
+      await assertClientAccess(scope, clientId);
       const client = await prisma.client.findUnique({
         where: { id: clientId },
         select: { id: true },

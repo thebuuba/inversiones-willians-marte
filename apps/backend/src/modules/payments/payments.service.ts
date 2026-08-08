@@ -5,10 +5,12 @@ import { centsToDecimal, moneyToCents } from '../../common/money';
 import { addPaymentInterval, calculateIndefiniteInterest } from '../loans/indefinite-loan';
 import type { PaymentFrequency } from '@inversiones/shared';
 import { syncLoanLateFees } from '../loans/late-fee';
+import { assertLoanAccess, type PortfolioScope } from '../../common/portfolio-scope';
 
 @Injectable()
 export class PaymentsService {
-  async create(dto: CreatePaymentDto, userId: string) {
+  async create(scope: PortfolioScope, dto: CreatePaymentDto, userId: string) {
+    await assertLoanAccess(scope, dto.loanId);
     await syncLoanLateFees(dto.loanId, new Date(dto.paymentDate));
     return prisma.$transaction(
       async (tx) => {
@@ -229,7 +231,8 @@ export class PaymentsService {
     );
   }
 
-  async findByLoan(loanId: string) {
+  async findByLoan(scope: PortfolioScope, loanId: string) {
+    await assertLoanAccess(scope, loanId);
     return prisma.payment.findMany({
       where: { loanId },
       include: {

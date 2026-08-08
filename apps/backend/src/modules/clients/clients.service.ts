@@ -1,10 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { prisma } from '@inversiones/database';
+import { prisma, Prisma } from '@inversiones/database';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { AuditService } from '../audit/audit.service';
 import { formatPersonName } from '../../common/text/name-case';
 import { normalizePagination } from '../../common/pagination';
+import {
+  assertClientAccess,
+  clientWhereVisible,
+  type PortfolioScope,
+} from '../../common/portfolio-scope';
 
 type ClientLoanRow = {
   id: string;
@@ -62,9 +67,9 @@ export class ClientsService {
     });
   }
 
-  async findAll(search?: string, take = 50, skip = 0) {
+  async findAll(scope: PortfolioScope, search?: string, take = 50, skip = 0) {
     const pagination = normalizePagination(take, skip);
-    const where = search
+    const searchWhere = search
       ? {
           OR: [
             { firstName: { contains: search, mode: 'insensitive' as const } },
@@ -74,19 +79,24 @@ export class ClientsService {
           ],
         }
       : {};
+    const scopeWhere = clientWhereVisible(scope);
 
-    const fullWhere = { ...where, active: true };
     const recentThreshold = new Date(Date.now() - 30 * 86400000);
+
+    const where = {
+      active: true,
+      AND: [...(scopeWhere ? [scopeWhere] : []), ...(searchWhere ? [searchWhere] : [])],
+    };
 
     const [data, total, activeTotal, withoutLoans, recent] = await Promise.all([
       prisma.client.findMany({
-        where: fullWhere,
+        where,
         include: { _count: { select: { loans: true } } },
         orderBy: { createdAt: 'desc' },
         take: pagination.take,
         skip: pagination.skip,
       }),
-      prisma.client.count({ where: fullWhere }),
+      prisma.client.count({ where }),
       prisma.client.count({ where: { active: true } }),
       prisma.client.count({ where: { active: true, loans: { none: {} } } }),
       prisma.client.count({ where: { active: true, createdAt: { gte: recentThreshold } } }),
@@ -104,7 +114,8 @@ export class ClientsService {
     };
   }
 
-  async findBasic(id: number) {
+  async findBasic(scope: PortfolioScope, id: number) {
+    await assertClientAccess(scope, id);
     const client = await prisma.client.findUnique({
       where: { id },
       select: {
@@ -120,7 +131,8 @@ export class ClientsService {
     return formatClientNames(client);
   }
 
-  async findOne(id: number) {
+  async findOne(scope: PortfolioScope, id: number) {
+    await assertClientAccess(scope, id);
     const [client, loans] = await Promise.all([
       prisma.client.findUnique({ where: { id } }),
       prisma.$queryRaw<ClientLoanRow[]>`
@@ -164,6 +176,7 @@ export class ClientsService {
         LEFT JOIN payments p ON p.loan_id = l.id
         LEFT JOIN payment_schedule ps ON ps.loan_id = l.id
         WHERE l.client_id = ${id}
+        ${scope.isAdmin ? Prisma.empty : Prisma.sql`AND (${loanScopeSql(scope)})`}
         GROUP BY l.id, lp.id, pf.id
         ORDER BY l.created_at DESC
       `,
@@ -208,8 +221,9 @@ export class ClientsService {
     };
   }
 
-  async update(id: number, dto: UpdateClientDto, userId?: string) {
-    const previous = await this.findOne(id);
+  async update(scope: PortfolioScope, id: number, dto: UpdateClientDto, userId?: string) {
+    await assertClientAccess(scope, id);
+    const previous = await this.findOne(scope, id);
     const data = { ...dto };
     if (dto.firstName !== undefined) data.firstName = formatPersonName(dto.firstName);
     if (dto.lastName !== undefined) data.lastName = formatPersonName(dto.lastName);
@@ -298,7 +312,8 @@ export class ClientsService {
     }
   }
 
-  async remove(id: number, userId?: string) {
+  async remove(scope: PortfolioScope, id: number, userId?: string) {
+    await assertClientAccess(scope, id);
     const updated = await prisma.client.update({ where: { id }, data: { active: false } });
 
     if (userId) {
@@ -331,4 +346,11 @@ function isClientNote(value: unknown): value is ClientNote {
   return (
     (typeof note.id === 'string' || typeof note.id === 'number') && typeof note.text === 'string'
   );
+}
+
+function loanScopeSql(scope: PortfolioScope) {
+  if (scope.portfolioIds.length > 0) {
+    return Prisma.sql`(l.portfolio_id IN (${Prisma.join(scope.portfolioIds)}) OR l.created_by = ${scope.userId})`;
+  }
+  return Prisma.sql`l.created_by = ${scope.userId}`;
 }

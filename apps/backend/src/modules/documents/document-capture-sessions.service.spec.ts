@@ -2,6 +2,9 @@ import { GoneException, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { DocumentCaptureSessionsService } from './document-capture-sessions.service';
 import { DocumentsService } from './documents.service';
+import type { PortfolioScope } from '../../common/portfolio-scope';
+
+const adminScope: PortfolioScope = { userId: 'admin', isAdmin: true, portfolioIds: [] };
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -13,6 +16,9 @@ jest.mock('@inversiones/database', () => ({
       fields: {
         maxUploads: 'maxUploads',
       },
+    },
+    user: {
+      findUnique: jest.fn().mockResolvedValue({ role: 'ADMIN' }),
     },
   },
 }));
@@ -35,7 +41,7 @@ describe('DocumentCaptureSessionsService', () => {
       client: { firstName: 'Juan', lastName: 'Perez' },
     } as any);
 
-    await expect(service.create(8, 'user-1')).resolves.toEqual({
+    await expect(service.create(8, 'user-1', adminScope)).resolves.toEqual({
       token: 'capture-token',
       clientId: 8,
       clientName: 'Juan Perez',

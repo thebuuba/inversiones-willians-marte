@@ -3,6 +3,12 @@ import { prisma } from '@inversiones/database';
 import { FileStorageService } from '../../common/storage/file-storage.service';
 import { AuditService } from '../audit/audit.service';
 import {
+  assertClientAccess,
+  assertLoanAccess,
+  clientWhereVisible,
+  type PortfolioScope,
+} from '../../common/portfolio-scope';
+import {
   DocumentProcessingResult,
   DocumentProcessingService,
   UploadedDocumentFile,
@@ -30,7 +36,9 @@ export class DocumentsService {
     private storage: FileStorageService,
   ) {}
 
-  async create(dto: CreateDocumentInput, userId: string) {
+  async create(scope: PortfolioScope, dto: CreateDocumentInput, userId: string) {
+    if (dto.loanId) await assertLoanAccess(scope, dto.loanId);
+    if (dto.clientId && !dto.loanId) await assertClientAccess(scope, dto.clientId);
     const processing = dto.uploadedFile
       ? await this.documentProcessing.analyze(dto.uploadedFile)
       : this.defaultProcessing(dto.fileUrl);
@@ -86,10 +94,23 @@ export class DocumentsService {
     };
   }
 
-  async findAll(clientId?: number, investorId?: string, take = 100, skip = 0) {
+  async findAll(
+    scope: PortfolioScope,
+    clientId?: number,
+    investorId?: string,
+    take = 100,
+    skip = 0,
+  ) {
     const where: Record<string, unknown> = {};
     if (clientId) where.clientId = clientId;
     if (investorId) where.investorId = investorId;
+    if (!scope.isAdmin) {
+      const clientScope = clientWhereVisible(scope);
+      where.OR = [
+        { investorId: { not: null } },
+        ...(clientScope ? [{ client: { is: clientScope } }] : []),
+      ];
+    }
     return prisma.document.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -98,7 +119,8 @@ export class DocumentsService {
     });
   }
 
-  async updateName(id: string, name: string, userId: string) {
+  async updateName(scope: PortfolioScope, id: string, name: string, userId: string) {
+    await this.assertDocumentAccess(scope, id);
     const document = await prisma.document.findUnique({ where: { id } });
     if (!document) throw new NotFoundException('Document not found');
 
@@ -123,7 +145,8 @@ export class DocumentsService {
     return updated;
   }
 
-  async getFileForDownload(id: string, preferProcessed = false) {
+  async getFileForDownload(scope: PortfolioScope, id: string, preferProcessed = false) {
+    await this.assertDocumentAccess(scope, id);
     const document = await prisma.document.findUnique({ where: { id } });
     if (!document?.fileUrl) throw new NotFoundException('Document file not found');
 
@@ -148,7 +171,8 @@ export class DocumentsService {
     throw new NotFoundException('Document file not found');
   }
 
-  async remove(id: string, userId: string) {
+  async remove(scope: PortfolioScope, id: string, userId: string) {
+    await this.assertDocumentAccess(scope, id);
     const document = await prisma.document.findUnique({ where: { id } });
     if (!document) throw new NotFoundException('Document not found');
 
@@ -167,6 +191,18 @@ export class DocumentsService {
         action: 'DOCUMENT_DELETED',
         newValues: { name: document.name },
       });
+    }
+  }
+
+  private async assertDocumentAccess(scope: PortfolioScope, id: string) {
+    const document = await prisma.document.findUnique({
+      where: { id },
+      select: { id: true, clientId: true },
+    });
+    if (!document) throw new NotFoundException('Document not found');
+    if (scope.isAdmin) return;
+    if (document.clientId !== null) {
+      await assertClientAccess(scope, document.clientId);
     }
   }
 

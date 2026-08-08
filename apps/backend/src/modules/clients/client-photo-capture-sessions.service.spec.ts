@@ -1,5 +1,8 @@
 import { prisma } from '@inversiones/database';
 import { ClientPhotoCaptureSessionsService } from './client-photo-capture-sessions.service';
+import type { PortfolioScope } from '../../common/portfolio-scope';
+
+const adminScope: PortfolioScope = { userId: 'admin', isAdmin: true, portfolioIds: [] };
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -30,7 +33,7 @@ describe('ClientPhotoCaptureSessionsService', () => {
       client: null,
     } as never);
 
-    await expect(service.create(undefined, 'user-1')).resolves.toMatchObject({
+    await expect(service.create(undefined, 'user-1', adminScope)).resolves.toMatchObject({
       token: 'photo-token',
       clientName: 'Nuevo cliente',
       photoReady: false,

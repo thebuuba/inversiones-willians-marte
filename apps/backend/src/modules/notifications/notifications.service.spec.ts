@@ -5,6 +5,7 @@ jest.mock('@inversiones/database', () => ({
   prisma: {
     task: { findMany: jest.fn() },
     notificationRead: { findMany: jest.fn() },
+    userPortfolio: { findMany: jest.fn().mockResolvedValue([]) },
   },
 }));
 
@@ -38,7 +39,10 @@ describe('NotificationsService', () => {
       ]),
     };
 
-    const items = await new NotificationsService(reports as any).findAll('collector-1');
+    const items = await new NotificationsService(reports as any).findAll({
+      id: 'collector-1',
+      role: 'COLLECTOR',
+    });
 
     expect(prisma.task.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

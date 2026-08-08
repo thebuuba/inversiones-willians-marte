@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentsService } from './payments.service';
 import { prisma } from '@inversiones/database';
+import type { PortfolioScope } from '../../common/portfolio-scope';
+
+const adminScope: PortfolioScope = { userId: 'admin', isAdmin: true, portfolioIds: [] };
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -76,6 +79,7 @@ describe('PaymentsService', () => {
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
     await service.create(
+      adminScope,
       {
         loanId: 'loan-1',
         clientId: 1,
@@ -144,6 +148,7 @@ describe('PaymentsService', () => {
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
     await service.create(
+      adminScope,
       {
         loanId: 'loan-1',
         clientId: 1,
@@ -198,7 +203,11 @@ describe('PaymentsService', () => {
     };
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
-    await service.create({ loanId: 'loan-1', clientId: 1, amount: 110, paymentDate }, 'user-1');
+    await service.create(
+      adminScope,
+      { loanId: 'loan-1', clientId: 1, amount: 110, paymentDate },
+      'user-1',
+    );
 
     expect(paymentCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -270,6 +279,7 @@ describe('PaymentsService', () => {
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
     await service.create(
+      adminScope,
       {
         loanId: 'loan-1',
         clientId: 1,
@@ -352,7 +362,11 @@ describe('PaymentsService', () => {
     };
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
-    await service.create({ loanId: 'loan-1', clientId: 1, amount: 600, paymentDate }, 'user-1');
+    await service.create(
+      adminScope,
+      { loanId: 'loan-1', clientId: 1, amount: 600, paymentDate },
+      'user-1',
+    );
 
     expect(tx.paymentSchedule.upsert).toHaveBeenCalledTimes(2);
     expect(createdSchedules.map((item) => item.dueDate)).toEqual([
@@ -366,7 +380,11 @@ describe('PaymentsService', () => {
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
     await expect(
-      service.create({ loanId: 'loan-1', clientId: 999, amount: 100, paymentDate }, 'user-1'),
+      service.create(
+        adminScope,
+        { loanId: 'loan-1', clientId: 999, amount: 100, paymentDate },
+        'user-1',
+      ),
     ).rejects.toThrow('Payment client does not match the loan client');
   });
 
@@ -404,7 +422,11 @@ describe('PaymentsService', () => {
     };
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
-    await service.create({ loanId: 'loan-1', clientId: 1, amount: 100, paymentDate }, 'user-1');
+    await service.create(
+      adminScope,
+      { loanId: 'loan-1', clientId: 1, amount: 100, paymentDate },
+      'user-1',
+    );
 
     expect(promiseUpdate).toHaveBeenCalledWith({
       where: { id: 'promise-1' },
@@ -421,7 +443,11 @@ describe('PaymentsService', () => {
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
     await expect(
-      service.create({ loanId: 'loan-1', clientId: 1, amount: 101, paymentDate }, 'user-1'),
+      service.create(
+        adminScope,
+        { loanId: 'loan-1', clientId: 1, amount: 101, paymentDate },
+        'user-1',
+      ),
     ).rejects.toThrow('Payment exceeds the outstanding scheduled balance');
   });
 
@@ -454,7 +480,11 @@ describe('PaymentsService', () => {
     };
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
-    await service.create({ loanId: 'loan-1', clientId: 1, amount: 90, paymentDate }, 'user-1');
+    await service.create(
+      adminScope,
+      { loanId: 'loan-1', clientId: 1, amount: 90, paymentDate },
+      'user-1',
+    );
 
     expect(paymentCreate).toHaveBeenCalledWith(
       expect.objectContaining({
