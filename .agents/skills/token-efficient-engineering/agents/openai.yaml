@@ -1,0 +1,4 @@
+interface:
+  display_name: "Token-Efficient Engineering"
+  short_description: "Reduce context and tool calls during coding"
+  default_prompt: "Use $token-efficient-engineering to solve this task with minimal context and tool usage."

@@ -1,19 +1,14 @@
-export const themes = ['light', 'dark', 'system'] as const;
+export const themes = ['light', 'dark'] as const;
 
 export type ThemePreference = (typeof themes)[number];
-export type ResolvedTheme = Exclude<ThemePreference, 'system'>;
 
-export function resolveTheme(preference: ThemePreference, systemIsDark: boolean): ResolvedTheme {
-  return preference === 'system' ? (systemIsDark ? 'dark' : 'light') : preference;
+export function parseThemePreference(stored: string | null): ThemePreference {
+  return stored === 'dark' ? 'dark' : 'light';
 }
 
 export const themeScript = `
 (() => {
-  const stored = localStorage.getItem('theme');
-  const preference = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
-  const theme = preference === 'system'
-    ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-    : preference;
+  const theme = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
   document.documentElement.dataset.theme = theme;
 })();
 `;

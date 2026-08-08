@@ -36,10 +36,12 @@ import {
   getAudit,
   getDashboardOverview,
   type CollectionPriority,
+  type InvestmentPriority,
   type PortfolioGroup,
   type UpcomingPayment,
 } from '@/lib/api/dashboard';
 import { formatDop } from '@/lib/currency';
+import { investmentPaymentStatusVisuals } from '@/lib/investment-payment-status';
 import { toDashboardAuditRow, type AuditTone } from './dashboard-audit';
 
 function formatCurrency(n: number): string {
@@ -81,6 +83,18 @@ export function getAgingBuckets(priorities: CollectionPriority[]) {
     amount: bucket.amount,
     count: bucket.count,
   }));
+}
+
+export function getInvestmentDueLabel(item: InvestmentPriority): string {
+  if (item.paymentStatus === 'UPCOMING') {
+    return item.daysUntilDue === 1 ? 'En 1 día' : `En ${item.daysUntilDue} días`;
+  }
+  if (item.daysUntilDue === 0) return 'Vence hoy';
+  const elapsedDays = Math.abs(item.daysUntilDue);
+  if (item.paymentStatus === 'PENDING') {
+    return elapsedDays === 1 ? 'Pendiente hace 1 día' : `Pendiente hace ${elapsedDays} días`;
+  }
+  return elapsedDays === 1 ? '1 día de atraso' : `${elapsedDays} días de atraso`;
 }
 
 const today = new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -175,6 +189,7 @@ export function DashboardHome() {
   const dailyIncome = overview?.dailyIncome ?? [];
   const upcomingPayments = overview?.upcomingPayments;
   const collectionPriorities = overview?.collectionPriorities ?? [];
+  const investmentPriorities = overview?.investmentPriorities ?? [];
 
   const activeLoans = dash?.activeLoans ?? 0;
   const collectionsToday = dash?.collectionsToday ?? 0;
@@ -466,6 +481,72 @@ export function DashboardHome() {
           </div>
         </Card>
       </div>
+
+      <Card className="mt-5 p-6" index={10}>
+        <SectionHeader
+          title="Orden de pagos de inversiones"
+          subtitle="Inversiones que requieren atención, ordenadas por urgencia"
+          right={
+            <span className="rounded-full bg-state-info-bg px-2.5 py-1 text-sm font-bold text-state-info">
+              {investmentPriorities.length}
+            </span>
+          }
+        />
+        <div className="divide-y divide-border-soft">
+          {investmentPriorities.length === 0 ? (
+            <p className="py-8 text-center text-sm text-text-secondary">
+              No hay pagos de inversiones próximos o vencidos
+            </p>
+          ) : (
+            investmentPriorities.map((item) => {
+              const statusVisual = investmentPaymentStatusVisuals[item.paymentStatus];
+              return (
+                <Link
+                  key={item.investmentId}
+                  className="group grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-3 transition-colors hover:bg-surface-subtle focus-visible:rounded-control-comfortable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent sm:grid-cols-[minmax(0,1.4fr)_minmax(150px,0.8fr)_auto_auto_auto] sm:px-3"
+                  href={`/inversiones/${item.investmentId}`}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-text-primary">
+                      {item.investmentCode}
+                    </p>
+                    <p className="mt-0.5 truncate text-xs text-text-secondary">
+                      {item.investorName}
+                    </p>
+                  </div>
+                  <div className="hidden min-w-0 sm:block">
+                    <p className="text-xs font-semibold text-text-secondary">
+                      {new Date(item.dueDate).toLocaleDateString('es-DO', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </p>
+                    <p className="mt-0.5 text-xs font-bold text-text-primary">
+                      {getInvestmentDueLabel(item)}
+                    </p>
+                  </div>
+                  <span className="hidden shrink-0 text-sm font-bold tabular-nums text-text-primary md:block">
+                    {formatCurrency(item.amount)}
+                  </span>
+                  <span
+                    className={`inline-flex min-h-7 min-w-[88px] items-center justify-center rounded-[5px] px-2.5 py-1 text-[11px] font-bold uppercase ${statusVisual.className}`}
+                  >
+                    {statusVisual.label}
+                  </span>
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="hidden h-4 w-4 shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5 sm:block"
+                  />
+                  <p className="col-span-2 text-xs font-semibold text-text-secondary sm:hidden">
+                    {getInvestmentDueLabel(item)} · {formatCurrency(item.amount)}
+                  </p>
+                </Link>
+              );
+            })
+          )}
+        </div>
+      </Card>
 
     </div>
   );

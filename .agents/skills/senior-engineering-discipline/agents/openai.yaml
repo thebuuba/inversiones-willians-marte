@@ -1,0 +1,4 @@
+interface:
+  display_name: "Senior Engineering Discipline"
+  short_description: "Apply senior judgment to production code"
+  default_prompt: "Use $senior-engineering-discipline to implement this change with production-grade judgment."

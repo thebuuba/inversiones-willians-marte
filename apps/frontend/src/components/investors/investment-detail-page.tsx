@@ -5,6 +5,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowLeft, Banknote, ChevronDown, Plus, Printer, X } from 'lucide-react';
 import { addInvestmentCapital, getInvestment } from '@/lib/api/investments';
 import { formatDop } from '@/lib/currency';
+import { investmentPaymentStatusVisuals } from '@/lib/investment-payment-status';
 import type {
   InvestorInvestmentDetail,
   InvestorInvestmentMovementItem,
@@ -17,12 +18,6 @@ import { InvestmentReceiptModal } from './investment-receipt-modal';
 const fmt = (n: number | string) => formatDop(n, { space: true });
 const fmtDate = (s: string | Date) =>
   new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
-
-const statusLabels = {
-  PAID: 'Al dia',
-  PENDING: 'Pendiente',
-  OVERDUE: 'Atrasada',
-} as const;
 
 const TABS = ['Historial de pagos', 'Movimientos de capital'];
 
@@ -68,7 +63,8 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
   }
 
   const investorHref = `/inversionistas/${investment.investorId}`;
-  const status = investment.paymentStatus ? statusLabels[investment.paymentStatus] : 'Pendiente';
+  const statusVisual =
+    investmentPaymentStatusVisuals[investment.paymentStatus ?? 'SCHEDULED'];
 
   async function handleAddCapital(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -126,9 +122,9 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
               </div>
               <div className="flex flex-wrap gap-2">
                 <span
-                  className={`rounded-full px-3 py-2 text-sm font-bold ${investment.paymentStatus === 'OVERDUE' ? 'bg-state-danger-bg text-state-danger' : investment.paymentStatus === 'PAID' ? 'bg-primary-soft text-primary-accent' : 'bg-state-warning-bg text-state-warning'}`}
+                  className={`rounded-full px-3 py-2 text-sm font-bold ${statusVisual.className}`}
                 >
-                  {status}
+                  {statusVisual.label}
                 </span>
                 <details className="relative">
                   <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white">
