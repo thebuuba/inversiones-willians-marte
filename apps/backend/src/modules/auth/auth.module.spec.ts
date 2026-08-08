@@ -7,6 +7,6 @@ describe('AuthModule', () => {
       get: jest.fn().mockReturnValue('test-secret'),
     } as unknown as ConfigService);
 
-    expect(options.signOptions).toEqual({ expiresIn: '15m' });
+    expect(options.signOptions).toEqual({ expiresIn: '15m', algorithm: 'HS256' });
   });
 });

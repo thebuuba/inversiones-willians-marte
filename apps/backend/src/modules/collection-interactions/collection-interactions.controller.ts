@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, ParseIntPipe, Post, UseGuards } from '@ne
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
+import { resolvePortfolioScope, type ScopeUser } from '../../common/portfolio-scope';
 import { CollectionInteractionsService } from './collection-interactions.service';
 import { CreateCollectionInteractionDto } from './dto/create-collection-interaction.dto';
 
@@ -12,17 +13,23 @@ export class CollectionInteractionsController {
   constructor(private collectionInteractions: CollectionInteractionsService) {}
 
   @Post()
-  create(@Body() dto: CreateCollectionInteractionDto, @CurrentUser('id') userId: string) {
-    return this.collectionInteractions.create(dto, userId);
+  async create(@Body() dto: CreateCollectionInteractionDto, @CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.collectionInteractions.create(scope, dto, user.id);
   }
 
   @Get('loan/:loanId')
-  findByLoan(@Param('loanId') loanId: string) {
-    return this.collectionInteractions.findByLoan(loanId);
+  async findByLoan(@CurrentUser() user: ScopeUser, @Param('loanId') loanId: string) {
+    const scope = await resolvePortfolioScope(user);
+    return this.collectionInteractions.findByLoan(scope, loanId);
   }
 
   @Get('client/:clientId')
-  findByClient(@Param('clientId', ParseIntPipe) clientId: number) {
-    return this.collectionInteractions.findByClient(clientId);
+  async findByClient(
+    @CurrentUser() user: ScopeUser,
+    @Param('clientId', ParseIntPipe) clientId: number,
+  ) {
+    const scope = await resolvePortfolioScope(user);
+    return this.collectionInteractions.findByClient(scope, clientId);
   }
 }

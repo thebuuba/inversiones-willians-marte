@@ -1,10 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { prisma } from '@inversiones/database';
+import { prisma, Prisma } from '@inversiones/database';
 import { calculateCollectionPriority } from './collection-priority';
+import {
+  clientWhereVisible,
+  loanWhereVisible,
+  type PortfolioScope,
+} from '../../common/portfolio-scope';
 
 @Injectable()
 export class ReportsService {
-  async overview() {
+  async overview(scope: PortfolioScope) {
     const [
       dashboard,
       portfolio,
@@ -14,13 +19,13 @@ export class ReportsService {
       upcomingPayments,
       collectionPriorities,
     ] = await Promise.all([
-      this.dashboard(),
-      this.portfolioByStatus(),
-      this.monthlyCollections(),
-      this.dailyIncome(),
-      this.weeklyMovement(),
-      this.upcomingPayments(),
-      this.collectionPriorities(),
+      this.dashboard(scope),
+      this.portfolioByStatus(scope),
+      this.monthlyCollections(scope),
+      this.dailyIncome(scope),
+      this.weeklyMovement(scope),
+      this.upcomingPayments(scope),
+      this.collectionPriorities(scope),
     ]);
 
     return {
@@ -34,11 +39,13 @@ export class ReportsService {
     };
   }
 
-  async collectionPriorities() {
+  async collectionPriorities(scope: PortfolioScope) {
     const today = startOfUtcDay(new Date());
+    const loanScopeWhere = loanWhereVisible(scope);
     const loans = await prisma.loan.findMany({
       where: {
         status: 'ACTIVE',
+        ...(loanScopeWhere ?? {}),
         schedule: {
           some: {
             dueDate: { lt: today },
@@ -119,32 +126,37 @@ export class ReportsService {
       .slice(0, 5);
   }
 
-  async dashboard() {
+  async dashboard(scope: PortfolioScope) {
     const todayStart = startOfUtcDay(new Date());
     const tomorrowStart = new Date(todayStart);
     tomorrowStart.setUTCDate(tomorrowStart.getUTCDate() + 1);
 
+    const loanScopeWhere = loanWhereVisible(scope);
+    const clientScopeWhere = clientWhereVisible(scope);
+
     const [activeLoans, totalClients, paymentsToday, portfolioStats, overdueLoans] =
       await Promise.all([
-        prisma.loan.count({ where: { status: 'ACTIVE' } }),
-        prisma.client.count({ where: { active: true } }),
+        prisma.loan.count({ where: { status: 'ACTIVE', ...(loanScopeWhere ?? {}) } }),
+        prisma.client.count({ where: { active: true, ...(clientScopeWhere ?? {}) } }),
         prisma.payment.aggregate({
           where: {
             paymentDate: {
               gte: todayStart,
               lt: tomorrowStart,
             },
+            ...(loanScopeWhere ? { loan: { is: loanScopeWhere } } : {}),
           },
           _sum: { amount: true },
         }),
         prisma.loan.aggregate({
-          where: { status: 'ACTIVE' },
+          where: { status: 'ACTIVE', ...(loanScopeWhere ?? {}) },
           _sum: { balance: true, principal: true },
           _count: true,
         }),
         prisma.loan.count({
           where: {
             status: 'ACTIVE',
+            ...(loanScopeWhere ?? {}),
             schedule: {
               some: {
                 status: 'OVERDUE',
@@ -163,7 +175,7 @@ export class ReportsService {
     };
   }
 
-  async portfolioByStatus() {
+  async portfolioByStatus(scope: PortfolioScope) {
     const groups = await prisma.$queryRaw<
       Array<{ status: string; count: number; balance: number; principal: number }>
     >`
@@ -193,6 +205,7 @@ export class ReportsService {
           END AS status
         FROM loans l
         LEFT JOIN oldest_unpaid ON oldest_unpaid.loan_id = l.id
+        ${scope.isAdmin ? Prisma.empty : Prisma.sql`WHERE ${loanScopeSql(scope)}`}
       )
       SELECT
         status,
@@ -212,9 +225,14 @@ export class ReportsService {
     }));
   }
 
-  async collectorPerformance() {
+  async collectorPerformance(scope: PortfolioScope) {
+    const isSelf = !scope.isAdmin;
     const collectors = await prisma.user.findMany({
-      where: { role: 'COLLECTOR', active: true },
+      where: {
+        role: 'COLLECTOR',
+        active: true,
+        ...(isSelf ? { id: scope.userId } : {}),
+      },
       select: {
         id: true,
         name: true,
@@ -243,7 +261,7 @@ export class ReportsService {
     }));
   }
 
-  async monthlyCollections() {
+  async monthlyCollections(scope: PortfolioScope) {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
@@ -255,9 +273,11 @@ export class ReportsService {
         COALESCE(SUM(p.amount) FILTER (WHERE p.id IS NOT NULL), 0) AS collected,
         COALESCE(SUM(ps.amount), 0) AS expected
       FROM payment_schedule ps
+      JOIN loans l ON l.id = ps.loan_id
       LEFT JOIN payment_allocations pa ON pa.schedule_id = ps.id
       LEFT JOIN payments p ON p.id = pa.payment_id
       WHERE ps.due_date >= ${sixMonthsAgo}
+      ${scope.isAdmin ? Prisma.empty : Prisma.sql`AND ${loanScopeSql(scope)}`}
       GROUP BY DATE_TRUNC('month', ps.due_date)
       ORDER BY month ASC
     `;
@@ -269,7 +289,7 @@ export class ReportsService {
     }));
   }
 
-  async dailyIncome() {
+  async dailyIncome(scope: PortfolioScope) {
     const startDate = startOfUtcDay(new Date());
     startDate.setUTCDate(startDate.getUTCDate() - 29);
 
@@ -286,8 +306,10 @@ export class ReportsService {
           SUM(pa.amount) FILTER (WHERE pa.type = 'INTEREST') AS interest,
           SUM(pa.amount) FILTER (WHERE pa.type = 'PENALTY') AS late_fee
         FROM payments p
+        JOIN loans l ON l.id = p.loan_id
         JOIN payment_allocations pa ON pa.payment_id = p.id
         WHERE p.payment_date >= ${startDate}
+        ${scope.isAdmin ? Prisma.empty : Prisma.sql`AND ${loanScopeSql(scope)}`}
         GROUP BY p.payment_date::date
       )
       SELECT
@@ -312,7 +334,7 @@ export class ReportsService {
     });
   }
 
-  async weeklyMovement() {
+  async weeklyMovement(scope: PortfolioScope) {
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
     weekStart.setHours(0, 0, 0, 0);
@@ -326,16 +348,18 @@ export class ReportsService {
       ),
       new_loans AS (
         SELECT EXTRACT(ISODOW FROM start_date)::int AS dow, COUNT(*) AS count
-        FROM loans
-        WHERE start_date >= ${weekStart} AND start_date <= ${weekEnd}
-        GROUP BY EXTRACT(ISODOW FROM start_date)::int
+        FROM loans l
+        WHERE l.start_date >= ${weekStart} AND l.start_date <= ${weekEnd}
+        ${scope.isAdmin ? Prisma.empty : Prisma.sql`AND ${loanScopeSql(scope)}`}
+        GROUP BY EXTRACT(ISODOW FROM l.start_date)::int
       ),
       closed_loans AS (
         SELECT EXTRACT(ISODOW FROM end_date)::int AS dow, COUNT(*) AS count
-        FROM loans
-        WHERE status = 'PAID' AND end_date IS NOT NULL
-          AND end_date >= ${weekStart} AND end_date <= ${weekEnd}
-        GROUP BY EXTRACT(ISODOW FROM end_date)::int
+        FROM loans l
+        WHERE l.status = 'PAID' AND l.end_date IS NOT NULL
+          AND l.end_date >= ${weekStart} AND l.end_date <= ${weekEnd}
+        ${scope.isAdmin ? Prisma.empty : Prisma.sql`AND ${loanScopeSql(scope)}`}
+        GROUP BY EXTRACT(ISODOW FROM l.end_date)::int
       )
       SELECT
         d.day,
@@ -354,16 +378,18 @@ export class ReportsService {
     }));
   }
 
-  async upcomingPayments(daysAhead = 7) {
+  async upcomingPayments(scope: PortfolioScope, daysAhead = 7) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const future = new Date(today);
     future.setDate(future.getDate() + daysAhead);
 
+    const loanScopeWhere = loanWhereVisible(scope);
     const schedules = await prisma.paymentSchedule.findMany({
       where: {
         dueDate: { gte: today, lte: future },
         status: { in: ['PENDING', 'PARTIAL'] },
+        ...(loanScopeWhere ? { loan: { is: loanScopeWhere } } : {}),
       },
       select: {
         id: true,
@@ -400,4 +426,11 @@ function daysBetweenUtc(from: Date, to: Date) {
     0,
     Math.floor((startOfUtcDay(to).getTime() - startOfUtcDay(from).getTime()) / 86_400_000),
   );
+}
+
+function loanScopeSql(scope: PortfolioScope) {
+  if (scope.portfolioIds.length > 0) {
+    return Prisma.sql`(l.portfolio_id IN (${Prisma.join(scope.portfolioIds)}) OR l.created_by = ${scope.userId})`;
+  }
+  return Prisma.sql`(l.created_by = ${scope.userId})`;
 }

@@ -10,7 +10,7 @@ import { getJwtSecret } from '../../config/jwt-secret';
 export function getAuthJwtOptions(config: ConfigService): JwtModuleOptions {
   return {
     secret: getJwtSecret(config),
-    signOptions: { expiresIn: '15m' },
+    signOptions: { expiresIn: '15m', algorithm: 'HS256' },
   };
 }
 

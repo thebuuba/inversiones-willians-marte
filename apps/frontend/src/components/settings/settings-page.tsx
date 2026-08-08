@@ -7,9 +7,12 @@ import {
   getUsers,
   createUser,
   toggleActiveUser,
+  getUserPortfolioAssignments,
+  updateUserPortfolioAssignments,
   type UserItem,
   type CreateUserInput,
 } from '@/lib/api/users';
+import { getPortfolios, type PortfolioItem } from '@/lib/api/portfolios';
 import { getSettings, updateSettings } from '@/lib/api/settings';
 import { useAuth } from '@/lib/auth-context';
 import { ThemeSelector } from './theme-selector';
@@ -22,6 +25,7 @@ import {
   Cloud,
   CreditCard,
   Download,
+  FolderKanban,
   KeyRound,
   Percent,
   Plus,
@@ -755,6 +759,182 @@ function CreateUserModal({
   );
 }
 
+function UserPortfoliosModal({
+  user,
+  onClose,
+  onSaved,
+}: {
+  user: UserItem;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [portfolios, setPortfolios] = useState<PortfolioItem[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([getPortfolios(), getUserPortfolioAssignments(user.id)])
+      .then(([all, assignments]) => {
+        if (!active) return;
+        setPortfolios(all);
+        setSelected(new Set(assignments));
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setError('No se pudieron cargar las carteras');
+        setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user.id]);
+
+  function toggle(portfolioId: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(portfolioId)) {
+        next.delete(portfolioId);
+      } else {
+        next.add(portfolioId);
+      }
+      return next;
+    });
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setError('');
+    try {
+      await updateUserPortfolioAssignments(user.id, Array.from(selected));
+      onSaved();
+      onClose();
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } };
+      setError(axiosErr.response?.data?.error ?? 'Error al guardar carteras');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        animate={{ opacity: 1 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }}
+      >
+        <motion.div
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="flex max-h-[85vh] w-full max-w-md flex-col rounded-panel border border-border-soft bg-card p-6 shadow-modal"
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        >
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-text-primary">Carteras de {user.name}</h2>
+            <button
+              className="rounded-full p-1 text-text-secondary hover:bg-page"
+              onClick={onClose}
+              type="button"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <p className="mb-4 text-sm font-medium text-text-secondary">
+            El cobrador solo verá los préstamos, clientes y reportes de estas carteras.
+          </p>
+
+          {error && (
+            <p className="mb-4 rounded-[12px] bg-state-danger-bg p-3 text-sm text-state-danger">
+              {error}
+            </p>
+          )}
+
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            {loading ? (
+              <p className="py-8 text-center text-sm font-medium text-text-secondary">
+                Cargando carteras...
+              </p>
+            ) : portfolios.length === 0 ? (
+              <p className="py-8 text-center text-sm font-medium text-text-secondary">
+                No hay carteras creadas
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {portfolios.map((portfolio) => {
+                  const checked = selected.has(portfolio.id);
+                  return (
+                    <button
+                      className={`flex w-full items-center gap-3 rounded-control border px-4 py-3 text-left transition ${
+                        checked
+                          ? 'border-primary bg-primary-soft'
+                          : 'border-primary-border bg-card hover:bg-surface-subtle'
+                      }`}
+                      key={portfolio.id}
+                      onClick={() => toggle(portfolio.id)}
+                      type="button"
+                    >
+                      <span
+                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border"
+                        style={{
+                          backgroundColor: checked ? portfolio.color : 'transparent',
+                          borderColor: checked ? portfolio.color : 'currentColor',
+                        }}
+                      >
+                        {checked && <Check className="h-3.5 w-3.5 text-white" />}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-bold text-text-primary">
+                          {portfolio.name}
+                        </span>
+                        {portfolio.description && (
+                          <span className="mt-0.5 block truncate text-xs font-medium text-text-secondary">
+                            {portfolio.description}
+                          </span>
+                        )}
+                      </span>
+                      <span className="shrink-0 text-xs font-bold text-text-secondary">
+                        {portfolio._count.loans} préstamos
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 flex gap-3">
+            <button
+              className="flex-1 rounded-full bg-page py-2.5 text-sm font-bold text-text-secondary transition hover:bg-primary-soft"
+              onClick={onClose}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
+                saving || loading
+                  ? 'bg-text-secondary'
+                  : 'bg-primary-accent shadow-action hover:bg-primary'
+              }`}
+              disabled={saving || loading}
+              onClick={handleSave}
+              type="button"
+            >
+              {saving ? 'Guardando...' : 'Guardar carteras'}
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 const roleBadgeClasses: Record<string, string> = {
   ADMIN: 'bg-state-danger-bg text-state-danger',
   COLLECTOR: 'bg-state-success-bg text-state-success',
@@ -794,11 +974,20 @@ function StatusBadge({ active }: { active: boolean }) {
 function SettingsUsersRolesTab() {
   const { user } = useAuth();
   const [users, setUsers] = useState<UserItem[]>([]);
+  const [assignments, setAssignments] = useState<Record<string, string[]>>({});
   const [showCreate, setShowCreate] = useState(false);
+  const [portfoliosFor, setPortfoliosFor] = useState<UserItem | null>(null);
   const isAdmin = user?.role === 'ADMIN';
 
   function load() {
-    getUsers().then(setUsers);
+    getUsers().then((loadedUsers) => {
+      setUsers(loadedUsers);
+      Promise.all(
+        loadedUsers.map(async (u) => [u.id, await getUserPortfolioAssignments(u.id)] as const),
+      )
+        .then((pairs) => setAssignments(Object.fromEntries(pairs)))
+        .catch(() => setAssignments({}));
+    });
   }
 
   useEffect(() => {
@@ -837,6 +1026,13 @@ function SettingsUsersRolesTab() {
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
     >
       <CreateUserModal open={showCreate} onClose={() => setShowCreate(false)} onCreated={load} />
+      {portfoliosFor && (
+        <UserPortfoliosModal
+          onClose={() => setPortfoliosFor(null)}
+          onSaved={load}
+          user={portfoliosFor}
+        />
+      )}
 
       <SectionCard className="p-6 lg:p-7" index={2}>
         <div className="mb-8 flex flex-col justify-between gap-5 xl:flex-row xl:items-start">
@@ -906,11 +1102,27 @@ function SettingsUsersRolesTab() {
                     Estado
                   </span>
                   <StatusBadge active={u.active} />
+                  {isAdmin && u.role === 'COLLECTOR' && (
+                    <span className="mt-1 block text-xs font-medium text-text-secondary">
+                      {(assignments[u.id] ?? []).length} carteras
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-end gap-4 text-text-secondary">
                   {isAdmin && (
                     <>
+                      {u.role === 'COLLECTOR' && (
+                        <button
+                          aria-label={`Asignar carteras a ${u.name}`}
+                          className="rounded-full p-1.5 transition hover:bg-primary-soft hover:text-primary"
+                          onClick={() => setPortfoliosFor(u)}
+                          title="Asignar carteras"
+                          type="button"
+                        >
+                          <FolderKanban className="h-5 w-5" />
+                        </button>
+                      )}
                       <button
                         aria-label={`${u.active ? 'Desactivar' : 'Activar'} ${u.name}`}
                         className={`rounded-full p-1.5 transition hover:bg-primary-soft ${

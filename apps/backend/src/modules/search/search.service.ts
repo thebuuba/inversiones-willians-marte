@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import type { GlobalSearchResult, GlobalSearchRole } from '@inversiones/shared';
+import {
+  clientWhereVisible,
+  loanWhereVisible,
+  type PortfolioScope,
+} from '../../common/portfolio-scope';
 
 const RESULT_LIMIT = 5;
 
@@ -15,7 +20,7 @@ function appendRole(roles: GlobalSearchRole[], role: GlobalSearchRole, condition
 
 @Injectable()
 export class SearchService {
-  async search(query: string): Promise<GlobalSearchResult[]> {
+  async search(scope: PortfolioScope, query: string): Promise<GlobalSearchResult[]> {
     const loanNumber = loanNumberFrom(query);
     const personSearch = [
       { firstName: { contains: query, mode: 'insensitive' as const } },
@@ -23,10 +28,15 @@ export class SearchService {
       { identification: { contains: query } },
       { phone: { contains: query } },
     ];
+    const loanScopeWhere = loanWhereVisible(scope);
+    const clientScopeWhere = clientWhereVisible(scope);
 
     const [clients, loans, investors] = await Promise.all([
       prisma.client.findMany({
-        where: { active: true, OR: personSearch },
+        where: {
+          active: true,
+          AND: [...(clientScopeWhere ? [clientScopeWhere] : []), { OR: personSearch }],
+        },
         select: {
           id: true,
           firstName: true,
@@ -40,9 +50,14 @@ export class SearchService {
       }),
       prisma.loan.findMany({
         where: {
-          OR: [
-            ...(loanNumber === undefined ? [] : [{ loanNumber }]),
-            { client: { OR: personSearch } },
+          AND: [
+            ...(loanScopeWhere ? [loanScopeWhere] : []),
+            {
+              OR: [
+                ...(loanNumber === undefined ? [] : [{ loanNumber }]),
+                { client: { OR: personSearch } },
+              ],
+            },
           ],
         },
         select: {

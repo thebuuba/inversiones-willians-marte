@@ -1,6 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { CollectionInteractionsService } from './collection-interactions.service';
+import type { PortfolioScope } from '../../common/portfolio-scope';
+
+const adminScope: PortfolioScope = { userId: 'admin', isAdmin: true, portfolioIds: [] };
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -39,6 +42,7 @@ describe('CollectionInteractionsService', () => {
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as never));
 
     await service.create(
+      adminScope,
       {
         loanId: 'loan-1',
         channel: 'CALL',
@@ -76,6 +80,7 @@ describe('CollectionInteractionsService', () => {
   it('rejects incomplete promise details', async () => {
     await expect(
       service.create(
+        adminScope,
         {
           loanId: 'loan-1',
           channel: 'CALL',
@@ -105,6 +110,7 @@ describe('CollectionInteractionsService', () => {
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as never));
 
     await service.create(
+      adminScope,
       {
         clientId: 12,
         channel: 'CALL',
@@ -136,7 +142,7 @@ describe('CollectionInteractionsService', () => {
     jest.mocked(prisma.loan.findUnique).mockResolvedValue({ id: 'loan-1' } as never);
     jest.mocked(prisma.collectionInteraction.findMany).mockResolvedValue([]);
 
-    await service.findByLoan('loan-1');
+    await service.findByLoan(adminScope, 'loan-1');
 
     expect(prisma.paymentPromise.updateMany).toHaveBeenCalledWith({
       where: expect.objectContaining({

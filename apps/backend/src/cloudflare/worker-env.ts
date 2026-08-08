@@ -26,6 +26,7 @@ export function applyWorkerEnvironment(env: CloudflareWorkerEnv) {
     throw new Error('Configure the DOCUMENTS_BUCKET R2 binding');
   }
   process.env.CLOUDFLARE_WORKER = 'true';
+  process.env.NODE_ENV = env.NODE_ENV ?? 'production';
   process.env.DATABASE_URL = resolveWorkerDatabaseUrl(env);
   if (!env.JWT_SECRET?.trim()) throw new Error('Configure the JWT_SECRET Worker secret');
   process.env.JWT_SECRET = env.JWT_SECRET.trim();

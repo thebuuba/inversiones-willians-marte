@@ -1,4 +1,13 @@
-import { IsString, IsNumber, IsOptional, Min, MinLength, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  Min,
+  MinLength,
+  IsDateString,
+  MaxLength,
+  Matches,
+} from 'class-validator';
 
 export class CreateInvestorDto {
   @IsString()
@@ -35,6 +44,10 @@ export class CreateInvestorDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(1_500_000)
+  @Matches(/^(?:|data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=\s]+)$/, {
+    message: 'La fotografía debe ser una imagen JPG, PNG o WebP válida',
+  })
   photo?: string;
 
   @IsNumber()

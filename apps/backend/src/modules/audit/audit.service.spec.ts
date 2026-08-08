@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuditService } from './audit.service';
 import { prisma } from '@inversiones/database';
+import type { PortfolioScope } from '../../common/portfolio-scope';
+
+const adminScope: PortfolioScope = { userId: 'admin', isAdmin: true, portfolioIds: [] };
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -83,7 +86,7 @@ describe('AuditService', () => {
       },
     ] as any);
 
-    const result = await service.findClientHistory(7);
+    const result = await service.findClientHistory(adminScope, 7);
 
     expect(result.map((event) => event.id)).toEqual([
       'audit:audit-1',

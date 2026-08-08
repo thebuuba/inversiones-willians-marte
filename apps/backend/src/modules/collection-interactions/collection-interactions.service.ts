@@ -1,6 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { CreateCollectionInteractionDto } from './dto/create-collection-interaction.dto';
+import {
+  assertClientAccess,
+  assertLoanAccess,
+  type PortfolioScope,
+} from '../../common/portfolio-scope';
 
 const interactionInclude = {
   createdBy: { select: { id: true, name: true } },
@@ -29,9 +34,15 @@ function dominicanToday(): Date {
 
 @Injectable()
 export class CollectionInteractionsService {
-  async create(dto: CreateCollectionInteractionDto, userId: string) {
+  async create(scope: PortfolioScope, dto: CreateCollectionInteractionDto, userId: string) {
     if (!dto.clientId && !dto.loanId) {
       throw new BadRequestException('A client or loan is required');
+    }
+
+    if (dto.loanId) {
+      await assertLoanAccess(scope, dto.loanId);
+    } else if (dto.clientId) {
+      await assertClientAccess(scope, dto.clientId);
     }
 
     const loan = dto.loanId
@@ -137,7 +148,8 @@ export class CollectionInteractionsService {
     });
   }
 
-  async findByLoan(loanId: string) {
+  async findByLoan(scope: PortfolioScope, loanId: string) {
+    await assertLoanAccess(scope, loanId);
     const loan = await prisma.loan.findUnique({ where: { id: loanId }, select: { id: true } });
     if (!loan) throw new NotFoundException('Loan not found');
 
@@ -150,7 +162,8 @@ export class CollectionInteractionsService {
     });
   }
 
-  async findByClient(clientId: number) {
+  async findByClient(scope: PortfolioScope, clientId: number) {
+    await assertClientAccess(scope, clientId);
     const client = await prisma.client.findUnique({
       where: { id: clientId },
       select: { id: true },

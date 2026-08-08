@@ -32,3 +32,21 @@ export async function toggleActiveUser(id: string): Promise<UserItem> {
   const { data } = await api.post<ApiResponse<UserItem>>(`/users/${id}/toggle-active`);
   return data.data as UserItem;
 }
+
+export async function getUserPortfolioAssignments(userId: string): Promise<string[]> {
+  const { data } = await api.get<ApiResponse<{ portfolioIds: string[] }>>(
+    `/users/${userId}/portfolio-assignments`,
+  );
+  return data.data?.portfolioIds ?? [];
+}
+
+export async function updateUserPortfolioAssignments(
+  userId: string,
+  portfolioIds: string[],
+): Promise<string[]> {
+  const { data } = await api.put<ApiResponse<{ portfolioIds: string[] }>>(
+    `/users/${userId}/portfolio-assignments`,
+    { portfolioIds },
+  );
+  return data.data?.portfolioIds ?? [];
+}

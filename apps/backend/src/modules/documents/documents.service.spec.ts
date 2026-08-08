@@ -5,6 +5,9 @@ import { DocumentProcessingService } from './document-processing.service';
 import { AuditService } from '../audit/audit.service';
 import { prisma } from '@inversiones/database';
 import { FileStorageService } from '../../common/storage/file-storage.service';
+import type { PortfolioScope } from '../../common/portfolio-scope';
+
+const adminScope: PortfolioScope = { userId: 'admin', isAdmin: true, portfolioIds: [] };
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -49,6 +52,7 @@ describe('DocumentsService', () => {
     jest.mocked(prisma.document.create).mockResolvedValue({ id: 'doc-1' } as any);
 
     await service.create(
+      adminScope,
       {
         name: 'Cedula',
         category: 'general',
@@ -97,6 +101,7 @@ describe('DocumentsService', () => {
     jest.mocked(prisma.document.create).mockResolvedValue({ id: 'doc-stored' } as any);
 
     await service.create(
+      adminScope,
       {
         name: 'Cédula',
         category: 'general',
@@ -143,6 +148,7 @@ describe('DocumentsService', () => {
 
     await expect(
       service.create(
+        adminScope,
         {
           name: 'Cédula',
           category: 'general',
@@ -172,7 +178,7 @@ describe('DocumentsService', () => {
       .mockResolvedValue({ id: 'doc-1', clientId: 7, name: 'Cédula' } as any);
     jest.mocked(prisma.document.delete).mockResolvedValue({ id: 'doc-1' } as any);
 
-    await service.remove('doc-1', 'user-1');
+    await service.remove(adminScope, 'doc-1', 'user-1');
 
     expect(audit.log).toHaveBeenCalledWith({
       userId: 'user-1',
@@ -197,7 +203,7 @@ describe('DocumentsService', () => {
     } as any);
     jest.mocked(prisma.document.delete).mockResolvedValue({ id: 'doc-files' } as any);
 
-    await service.remove('doc-files', 'user-1');
+    await service.remove(adminScope, 'doc-files', 'user-1');
     expect(storage.delete).toHaveBeenCalledWith([originalName, processedName]);
   });
 
@@ -214,7 +220,7 @@ describe('DocumentsService', () => {
     } as any);
 
     await expect(
-      service.updateName('doc-1', '  Cédula frontal  ', 'user-1'),
+      service.updateName(adminScope, 'doc-1', '  Cédula frontal  ', 'user-1'),
     ).resolves.toMatchObject({
       name: 'Cédula frontal',
     });
@@ -245,7 +251,7 @@ describe('DocumentsService', () => {
     };
     jest.mocked(prisma.document.findMany).mockResolvedValue([document] as any);
 
-    await expect(service.findAll(7)).resolves.toEqual([document]);
+    await expect(service.findAll(adminScope, 7)).resolves.toEqual([document]);
 
     expect(documentProcessing.analyze).not.toHaveBeenCalled();
     expect(prisma.document.update).not.toHaveBeenCalled();
@@ -261,7 +267,7 @@ describe('DocumentsService', () => {
     } as any);
     storage.get.mockResolvedValue(Buffer.from('receipt'));
 
-    await expect(service.getFileForDownload('doc-1')).resolves.toMatchObject({
+    await expect(service.getFileForDownload(adminScope, 'doc-1')).resolves.toMatchObject({
       filename: 'Receipt',
       mimeType: 'application/pdf',
       contents: Buffer.from('receipt'),
@@ -280,7 +286,9 @@ describe('DocumentsService', () => {
     } as any);
     storage.get.mockResolvedValueOnce(null).mockResolvedValueOnce(Buffer.from('original'));
 
-    await expect(service.getFileForDownload('doc-fallback', true)).resolves.toMatchObject({
+    await expect(
+      service.getFileForDownload(adminScope, 'doc-fallback', true),
+    ).resolves.toMatchObject({
       contents: Buffer.from('original'),
       mimeType: 'image/jpeg',
     });
@@ -296,7 +304,7 @@ describe('DocumentsService', () => {
     } as any);
     storage.get.mockResolvedValue(null);
 
-    await expect(service.getFileForDownload('doc-missing-file', true)).rejects.toThrow(
+    await expect(service.getFileForDownload(adminScope, 'doc-missing-file', true)).rejects.toThrow(
       NotFoundException,
     );
   });
@@ -304,7 +312,9 @@ describe('DocumentsService', () => {
   it('throws NotFoundException when deleting a missing document', async () => {
     jest.mocked(prisma.document.findUnique).mockResolvedValue(null);
 
-    await expect(service.remove('missing-doc', 'user-1')).rejects.toThrow(NotFoundException);
+    await expect(service.remove(adminScope, 'missing-doc', 'user-1')).rejects.toThrow(
+      NotFoundException,
+    );
 
     expect(prisma.document.delete).not.toHaveBeenCalled();
   });

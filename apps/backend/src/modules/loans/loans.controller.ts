@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators';
+import { resolvePortfolioScope, type ScopeUser } from '../../common/portfolio-scope';
 
 @Controller('loans')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -32,14 +33,17 @@ export class LoansController {
 
   @Get()
   @Roles('ADMIN', 'COLLECTOR')
-  findAll(
+  async findAll(
+    @CurrentUser() user: ScopeUser,
     @Query('status') status?: string,
     @Query('search') search?: string,
     @Query('take') take?: string,
     @Query('skip') skip?: string,
     @Query('sort') sort?: string,
   ) {
+    const scope = await resolvePortfolioScope(user);
     return this.loans.findAll(
+      scope,
       status,
       search,
       take ? parseInt(take, 10) : 50,
@@ -50,54 +54,70 @@ export class LoansController {
 
   @Get(':id')
   @Roles('ADMIN', 'COLLECTOR')
-  findOne(@Param('id') id: string) {
-    return this.loans.findOne(id);
+  async findOne(@CurrentUser() user: ScopeUser, @Param('id') id: string) {
+    const scope = await resolvePortfolioScope(user);
+    return this.loans.findOne(scope, id);
   }
 
   @Post(':id/capital-additions')
   @Roles('ADMIN', 'COLLECTOR')
-  addCapital(
+  async addCapital(
+    @CurrentUser() user: ScopeUser,
     @Param('id') id: string,
     @Body() dto: AddLoanCapitalDto,
-    @CurrentUser('id') userId: string,
   ) {
-    return this.loans.addCapital(id, dto, userId);
+    const scope = await resolvePortfolioScope(user);
+    return this.loans.addCapital(scope, id, dto, user.id);
   }
 
   @Get(':id/payoff-quote')
   @Roles('ADMIN', 'COLLECTOR')
-  getPayoffQuote(@Param('id') id: string, @Query('payoffDate') payoffDate: string) {
-    return this.loans.getPayoffQuote(id, payoffDate);
+  async getPayoffQuote(
+    @CurrentUser() user: ScopeUser,
+    @Param('id') id: string,
+    @Query('payoffDate') payoffDate: string,
+  ) {
+    const scope = await resolvePortfolioScope(user);
+    return this.loans.getPayoffQuote(scope, id, payoffDate);
   }
 
   @Get(':id/receipt')
   @Roles('ADMIN', 'COLLECTOR')
-  getReceipt(@Param('id') id: string) {
-    return this.loans.getReceipt(id);
+  async getReceipt(@CurrentUser() user: ScopeUser, @Param('id') id: string) {
+    const scope = await resolvePortfolioScope(user);
+    return this.loans.getReceipt(scope, id);
   }
 
   @Post(':id/receipt')
   @Roles('ADMIN', 'COLLECTOR')
-  ensureReceipt(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    return this.loans.ensureReceipt(id, userId);
+  async ensureReceipt(@CurrentUser() user: ScopeUser, @Param('id') id: string) {
+    const scope = await resolvePortfolioScope(user);
+    return this.loans.ensureReceipt(scope, id, user.id);
   }
 
   @Patch(':id')
   @Roles('ADMIN', 'COLLECTOR')
-  update(@Param('id') id: string, @Body() dto: UpdateLoanDto, @CurrentUser('id') userId: string) {
-    return this.loans.update(id, dto, userId);
+  async update(
+    @CurrentUser() user: ScopeUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateLoanDto,
+  ) {
+    const scope = await resolvePortfolioScope(user);
+    return this.loans.update(scope, id, dto, user.id);
   }
 
   @Delete(':id')
   @HttpCode(204)
   @Roles('ADMIN', 'COLLECTOR')
-  async remove(@Param('id') id: string) {
-    await this.loans.remove(id);
+  async remove(@CurrentUser() user: ScopeUser, @Param('id') id: string) {
+    const scope = await resolvePortfolioScope(user);
+    await this.loans.remove(scope, id);
   }
 
   @Get(':id/summary')
   @Roles('ADMIN', 'COLLECTOR')
-  getSummary(@Param('id') id: string) {
-    return this.loans.getSummary(id);
+  async getSummary(@CurrentUser() user: ScopeUser, @Param('id') id: string) {
+    const scope = await resolvePortfolioScope(user);
+    return this.loans.getSummary(scope, id);
   }
 }

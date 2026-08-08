@@ -3,6 +3,11 @@ import { prisma } from '@inversiones/database';
 import { randomBytes } from 'crypto';
 import { DocumentsService } from './documents.service';
 import { UploadedDocumentFile } from './document-processing.service';
+import {
+  assertClientAccess,
+  resolvePortfolioScope,
+  type PortfolioScope,
+} from '../../common/portfolio-scope';
 
 const CAPTURE_SESSION_TTL_MS = 30 * 60 * 1000;
 const DEFAULT_MAX_UPLOADS = 5;
@@ -19,7 +24,8 @@ interface CaptureUploadInput {
 export class DocumentCaptureSessionsService {
   constructor(private documents: DocumentsService) {}
 
-  async create(clientId: number, createdById: string) {
+  async create(clientId: number, createdById: string, scope: PortfolioScope) {
+    await assertClientAccess(scope, clientId);
     const session = await prisma.documentCaptureSession.create({
       data: {
         token: this.generateToken(),
@@ -63,8 +69,18 @@ export class DocumentCaptureSessionsService {
     });
     if (!session) throw new NotFoundException('Capture session not found');
 
+    const creator = await prisma.user.findUnique({
+      where: { id: session.createdById },
+      select: { role: true },
+    });
+    const scope = await resolvePortfolioScope({
+      id: session.createdById,
+      role: creator?.role ?? 'COLLECTOR',
+    });
+
     try {
       return await this.documents.create(
+        scope,
         {
           name: input.name,
           category: 'general',

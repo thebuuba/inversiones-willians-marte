@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { normalizePagination } from '../../common/pagination';
+import { resolvePortfolioScope, type ScopeUser } from '../../common/portfolio-scope';
 
 @Controller('portfolios')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -19,20 +20,27 @@ export class PortfoliosController {
 
   @Get()
   @Roles('ADMIN', 'COLLECTOR')
-  findAll(@Query('take') take?: string, @Query('skip') skip?: string) {
+  async findAll(
+    @CurrentUser() user: ScopeUser,
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
+  ) {
+    const scope = await resolvePortfolioScope(user);
     const pagination = normalizePagination(Number(take ?? 100), Number(skip ?? 0), 100);
-    return this.portfolios.findAll(pagination.take, pagination.skip);
+    return this.portfolios.findAll(scope, pagination.take, pagination.skip);
   }
 
   @Get(':id')
   @Roles('ADMIN', 'COLLECTOR')
-  findOne(@Param('id') id: string) {
-    return this.portfolios.findOne(id);
+  async findOne(@CurrentUser() user: ScopeUser, @Param('id') id: string) {
+    const scope = await resolvePortfolioScope(user);
+    return this.portfolios.findOne(scope, id);
   }
 
   @Delete(':id')
   @Roles('ADMIN')
-  remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    return this.portfolios.remove(id, userId);
+  async remove(@Param('id') id: string, @CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.portfolios.remove(scope, id, user.id);
   }
 }

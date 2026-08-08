@@ -21,6 +21,7 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
+import { resolvePortfolioScope, type ScopeUser } from '../../common/portfolio-scope';
 import { DOCUMENT_UPLOAD_LIMITS } from './document-upload-options';
 import { assertAllowedUploadedFile, type MemoryUploadedFile } from './document-upload-validation';
 import { normalizePagination } from '../../common/pagination';
@@ -68,11 +69,11 @@ export class DocumentsController {
       },
     ),
   )
-  create(
+  async create(
     @UploadedFiles()
     files: { file?: MemoryUploadedFile[]; processedFile?: MemoryUploadedFile[] },
     @Body() dto: CreateDocumentDto,
-    @CurrentUser('id') userId: string,
+    @CurrentUser() user: ScopeUser,
   ) {
     const file = files?.file?.[0];
     const processedFile = files?.processedFile?.[0];
@@ -88,7 +89,9 @@ export class DocumentsController {
     const processedStorageKey = processedFile
       ? createDocumentStorageKey(processedFile.originalname)
       : undefined;
+    const scope = await resolvePortfolioScope(user);
     return this.documents.create(
+      scope,
       {
         name: dto.name || file.originalname,
         category: dto.category || 'general',
@@ -114,20 +117,23 @@ export class DocumentsController {
               : undefined,
         },
       },
-      userId,
+      user.id,
     );
   }
 
   @Get()
   @Roles('ADMIN', 'COLLECTOR')
-  findAll(
+  async findAll(
+    @CurrentUser() user: ScopeUser,
     @Query('clientId') clientId?: string,
     @Query('investorId') investorId?: string,
     @Query('take') take?: string,
     @Query('skip') skip?: string,
   ) {
+    const scope = await resolvePortfolioScope(user);
     const pagination = normalizePagination(Number(take ?? 100), Number(skip ?? 0), 100);
     return this.documents.findAll(
+      scope,
       clientId ? Number(clientId) : undefined,
       investorId,
       pagination.take,
@@ -138,36 +144,40 @@ export class DocumentsController {
   @Get(':id/file')
   @Roles('ADMIN', 'COLLECTOR')
   async download(
+    @CurrentUser() user: ScopeUser,
     @Param('id') id: string,
     @Query('disposition') disposition: string | undefined,
     @Query('variant') variant: string | undefined,
     @Res() res: Response,
   ) {
-    const file = await this.documents.getFileForDownload(id, variant === 'processed');
+    const scope = await resolvePortfolioScope(user);
+    const file = await this.documents.getFileForDownload(scope, id, variant === 'processed');
+    const isInlineSafeType =
+      file.mimeType.startsWith('image/') || file.mimeType === 'application/pdf';
+    const inline = disposition === 'inline' && isInlineSafeType;
     res.type(file.mimeType);
     res.setHeader(
       'Content-Disposition',
-      `${disposition === 'inline' ? 'inline' : 'attachment'}; filename="${encodeURIComponent(file.filename)}"`,
+      `${inline ? 'inline' : 'attachment'}; filename="${encodeURIComponent(file.filename)}"`,
     );
-    if (disposition === 'inline') {
-      return res.send(file.contents);
-    }
     return res.send(file.contents);
   }
 
   @Patch(':id')
   @Roles('ADMIN', 'COLLECTOR')
-  update(
+  async update(
+    @CurrentUser() user: ScopeUser,
     @Param('id') id: string,
     @Body() dto: UpdateDocumentDto,
-    @CurrentUser('id') userId: string,
   ) {
-    return this.documents.updateName(id, dto.name, userId);
+    const scope = await resolvePortfolioScope(user);
+    return this.documents.updateName(scope, id, dto.name, user.id);
   }
 
   @Delete(':id')
   @Roles('ADMIN')
-  remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    return this.documents.remove(id, userId);
+  async remove(@CurrentUser() user: ScopeUser, @Param('id') id: string) {
+    const scope = await resolvePortfolioScope(user);
+    return this.documents.remove(scope, id, user.id);
   }
 }

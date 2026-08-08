@@ -44,9 +44,12 @@ export class TasksService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId?: string) {
     const task = await prisma.task.findUnique({ where: { id } });
     if (!task) throw new NotFoundException('Task not found');
+    if (userId && task.assignedToId !== userId && task.createdById !== userId) {
+      throw new ForbiddenException('You cannot view this task');
+    }
     return task;
   }
 
