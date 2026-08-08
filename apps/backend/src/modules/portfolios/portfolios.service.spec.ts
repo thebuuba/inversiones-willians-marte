@@ -1,5 +1,8 @@
 import { prisma } from '@inversiones/database';
 import { PortfoliosService } from './portfolios.service';
+import type { PortfolioScope } from '../../common/portfolio-scope';
+
+const adminScope: PortfolioScope = { userId: 'admin', isAdmin: true, portfolioIds: [] };
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -41,7 +44,7 @@ describe('PortfoliosService', () => {
     } as any);
     jest.mocked(prisma.portfolio.delete).mockResolvedValue({ id: 'portfolio-1' } as any);
 
-    await service.remove('portfolio-1', 'admin-1');
+    await service.remove(adminScope, 'portfolio-1', 'admin-1');
 
     expect(prisma.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -86,7 +89,7 @@ describe('PortfoliosService', () => {
       ],
     } as any);
 
-    const portfolio = await service.findOne('portfolio-1');
+    const portfolio = await service.findOne(adminScope, 'portfolio-1');
 
     expect(portfolio.loans[0]).toEqual(
       expect.objectContaining({

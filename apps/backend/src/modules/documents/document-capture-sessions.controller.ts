@@ -13,6 +13,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
+import { resolvePortfolioScope, type ScopeUser } from '../../common/portfolio-scope';
 import { CreateDocumentCaptureSessionDto } from './dto/create-document-capture-session.dto';
 import { DocumentCaptureSessionsService } from './document-capture-sessions.service';
 import { CAPTURE_UPLOAD_LIMITS } from './document-upload-options';
@@ -37,8 +38,9 @@ export class DocumentCaptureSessionsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'COLLECTOR')
-  create(@Body() dto: CreateDocumentCaptureSessionDto, @CurrentUser('id') userId: string) {
-    return this.captureSessions.create(dto.clientId, userId);
+  async create(@Body() dto: CreateDocumentCaptureSessionDto, @CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.captureSessions.create(dto.clientId, user.id, scope);
   }
 
   @Get(':token')

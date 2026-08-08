@@ -4,6 +4,7 @@ import { RolesGuard } from '../../common/guards';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { MarkNotificationsReadDto } from './dto/mark-notifications-read.dto';
 import { NotificationsService } from './notifications.service';
+import type { ScopeUser } from '../../common/portfolio-scope';
 
 @Controller('notifications')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -12,8 +13,8 @@ export class NotificationsController {
   constructor(private readonly notifications: NotificationsService) {}
 
   @Get()
-  findAll(@CurrentUser('id') userId: string) {
-    return this.notifications.findAll(userId);
+  findAll(@CurrentUser() user: ScopeUser) {
+    return this.notifications.findAll(user);
   }
 
   @Post('read')

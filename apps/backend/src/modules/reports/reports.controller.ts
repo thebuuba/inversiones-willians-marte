@@ -1,8 +1,9 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
-import { Roles } from '../../common/decorators';
+import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
+import { resolvePortfolioScope, type ScopeUser } from '../../common/portfolio-scope';
 
 @Controller('reports')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -11,49 +12,57 @@ export class ReportsController {
 
   @Get('overview')
   @Roles('ADMIN', 'COLLECTOR')
-  overview() {
-    return this.reports.overview();
+  async overview(@CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.reports.overview(scope);
   }
 
   @Get('dashboard')
   @Roles('ADMIN', 'COLLECTOR')
-  dashboard() {
-    return this.reports.dashboard();
+  async dashboard(@CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.reports.dashboard(scope);
   }
 
   @Get('collections/priorities')
   @Roles('ADMIN', 'COLLECTOR')
-  collectionPriorities() {
-    return this.reports.collectionPriorities();
+  async collectionPriorities(@CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.reports.collectionPriorities(scope);
   }
 
   @Get('portfolio')
   @Roles('ADMIN', 'COLLECTOR')
-  portfolio() {
-    return this.reports.portfolioByStatus();
+  async portfolio(@CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.reports.portfolioByStatus(scope);
   }
 
   @Get('collectors')
   @Roles('ADMIN', 'COLLECTOR')
-  collectors() {
-    return this.reports.collectorPerformance();
+  async collectors(@CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.reports.collectorPerformance(scope);
   }
 
   @Get('collections/monthly')
   @Roles('ADMIN', 'COLLECTOR')
-  monthlyCollections() {
-    return this.reports.monthlyCollections();
+  async monthlyCollections(@CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.reports.monthlyCollections(scope);
   }
 
   @Get('movement/weekly')
   @Roles('ADMIN', 'COLLECTOR')
-  weeklyMovement() {
-    return this.reports.weeklyMovement();
+  async weeklyMovement(@CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.reports.weeklyMovement(scope);
   }
 
   @Get('payments/upcoming')
   @Roles('ADMIN', 'COLLECTOR')
-  upcomingPayments() {
-    return this.reports.upcomingPayments();
+  async upcomingPayments(@CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.reports.upcomingPayments(scope);
   }
 }

@@ -5,6 +5,9 @@ import { prisma } from '@inversiones/database';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { AuditService } from '../audit/audit.service';
+import type { PortfolioScope } from '../../common/portfolio-scope';
+
+const adminScope: PortfolioScope = { userId: 'admin', isAdmin: true, portfolioIds: [] };
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -16,6 +19,10 @@ jest.mock('@inversiones/database', () => ({
       count: jest.fn(),
     },
     $queryRaw: jest.fn(),
+  },
+  Prisma: {
+    empty: '',
+    sql: (strings: TemplateStringsArray, ...values: unknown[]) => ({ strings, values }),
   },
 }));
 
@@ -68,7 +75,7 @@ describe('ClientsService', () => {
         .mockResolvedValue([{ ...mockClient, firstName: 'alexauris', lastName: 'diaz' }] as any);
       jest.mocked(prisma.client.count).mockResolvedValue(1);
 
-      const result = await service.findAll();
+      const result = await service.findAll(adminScope);
       expect(result.data).toHaveLength(1);
       expect(result.data[0]).toEqual(
         expect.objectContaining({ firstName: 'Alexauris', lastName: 'Diaz' }),
@@ -77,7 +84,7 @@ describe('ClientsService', () => {
       expect(result.stats).toEqual({ total: 1, active: 1, withoutLoans: 1, recent: 1 });
       expect(prisma.client.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { active: true },
+          where: expect.objectContaining({ active: true }),
         }),
       );
     });
@@ -86,7 +93,7 @@ describe('ClientsService', () => {
       jest.mocked(prisma.client.findMany).mockResolvedValue([mockClient] as any);
       jest.mocked(prisma.client.count).mockResolvedValue(1);
 
-      const result = await service.findAll('Juan');
+      const result = await service.findAll(adminScope, 'Juan');
       expect(result.data).toHaveLength(1);
       expect(result.total).toBe(1);
       expect(prisma.client.count).toHaveBeenCalledWith({ where: { active: true } });
@@ -96,7 +103,7 @@ describe('ClientsService', () => {
       jest.mocked(prisma.client.findMany).mockResolvedValue([]);
       jest.mocked(prisma.client.count).mockResolvedValue(0);
 
-      await service.findAll(undefined, Number.NaN, Number.NaN);
+      await service.findAll(adminScope, undefined, Number.NaN, Number.NaN);
 
       expect(prisma.client.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ take: 50, skip: 0 }),
@@ -110,7 +117,7 @@ describe('ClientsService', () => {
         .mocked(prisma.client.findUnique)
         .mockResolvedValue({ ...mockClient, firstName: 'maria', lastName: 'jacquez' } as any);
 
-      const result = await service.findOne(1);
+      const result = await service.findOne(adminScope, 1);
       expect(result).toBeDefined();
       expect(result).toEqual(expect.objectContaining({ firstName: 'Maria', lastName: 'Jacquez' }));
       expect(result.loans).toEqual([]);
@@ -123,7 +130,7 @@ describe('ClientsService', () => {
     it('should throw NotFoundException when client not found', async () => {
       jest.mocked(prisma.client.findUnique).mockResolvedValue(null);
 
-      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
+      await expect(service.findOne(adminScope, 999)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -133,7 +140,7 @@ describe('ClientsService', () => {
         .mocked(prisma.client.findUnique)
         .mockResolvedValue({ ...mockClient, firstName: 'maria', lastName: 'jacquez' } as any);
 
-      await expect(service.findBasic(1)).resolves.toEqual(
+      await expect(service.findBasic(adminScope, 1)).resolves.toEqual(
         expect.objectContaining({ firstName: 'Maria', lastName: 'Jacquez' }),
       );
     });
@@ -147,7 +154,7 @@ describe('ClientsService', () => {
         .mockResolvedValue({ ...mockClient, phone: '809-555-0202' } as any);
 
       const dto: UpdateClientDto = { phone: '809-555-0202' };
-      const result = await service.update(1, dto);
+      const result = await service.update(adminScope, 1, dto);
       expect(result.phone).toBe('809-555-0202');
     });
 
@@ -155,7 +162,7 @@ describe('ClientsService', () => {
       jest.mocked(prisma.client.findUnique).mockResolvedValue(mockClient as any);
       jest.mocked(prisma.client.update).mockResolvedValue(mockClient as any);
 
-      await service.update(1, { firstName: 'roberto', lastName: 'lopez' });
+      await service.update(adminScope, 1, { firstName: 'roberto', lastName: 'lopez' });
 
       expect(prisma.client.update).toHaveBeenCalledWith({
         where: { id: 1 },
@@ -179,7 +186,7 @@ describe('ClientsService', () => {
         .mocked(prisma.client.update)
         .mockResolvedValue({ ...mockClient, phone: '809-555-0202', notes: nextNotes } as any);
 
-      await service.update(1, { phone: '809-555-0202', notes: nextNotes }, 'user-1');
+      await service.update(adminScope, 1, { phone: '809-555-0202', notes: nextNotes }, 'user-1');
 
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -206,7 +213,7 @@ describe('ClientsService', () => {
     it('should soft-delete a client', async () => {
       jest.mocked(prisma.client.update).mockResolvedValue({ ...mockClient, active: false } as any);
 
-      const result = await service.remove(1, 'user-1');
+      const result = await service.remove(adminScope, 1, 'user-1');
       expect(result.active).toBe(false);
       expect(audit.log).toHaveBeenCalledWith({
         userId: 'user-1',

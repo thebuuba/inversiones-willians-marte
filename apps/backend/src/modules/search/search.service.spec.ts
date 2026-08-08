@@ -1,4 +1,7 @@
 import { prisma } from '@inversiones/database';
+import type { PortfolioScope } from '../../common/portfolio-scope';
+
+const adminScope: PortfolioScope = { userId: 'admin', isAdmin: true, portfolioIds: [] };
 import { SearchService } from './search.service';
 
 jest.mock('@inversiones/database', () => ({
@@ -28,7 +31,7 @@ describe('SearchService', () => {
       },
     ] as never);
 
-    const results = await new SearchService().search('Ana');
+    const results = await new SearchService().search(adminScope, 'Ana');
 
     expect(results).toEqual([
       expect.objectContaining({

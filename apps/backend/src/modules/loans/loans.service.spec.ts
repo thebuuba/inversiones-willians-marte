@@ -1,5 +1,8 @@
 import { LoansService } from './loans.service';
 import { prisma } from '@inversiones/database';
+import type { PortfolioScope } from '../../common/portfolio-scope';
+
+const adminScope: PortfolioScope = { userId: 'admin', isAdmin: true, portfolioIds: [] };
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -73,7 +76,7 @@ describe('LoansService', () => {
       payments: [{ amount: 300 }],
     } as any);
 
-    await expect(service.getSummary('loan-1')).resolves.toMatchObject({
+    await expect(service.getSummary(adminScope, 'loan-1')).resolves.toMatchObject({
       totalPaid: 300,
       balance: 700,
       remaining: 700,
@@ -84,7 +87,7 @@ describe('LoansService', () => {
   it('loads existing late fees in loan detail', async () => {
     jest.mocked(prisma.loan.findUnique).mockResolvedValue({ id: 'loan-1' } as any);
 
-    await service.findOne('loan-1');
+    await service.findOne(adminScope, 'loan-1');
 
     expect(prisma.loan.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -120,9 +123,10 @@ describe('LoansService', () => {
     } as any);
     jest
       .mocked(prisma.loanReceipt.create)
-      .mockImplementation(({ data }) => Promise.resolve({ id: 'receipt-1', ...data } as any));
+      .mockImplementation((({ data }: { data: Record<string, unknown> }) =>
+        Promise.resolve({ id: 'receipt-1', ...data })) as never);
 
-    const receipt = await service.ensureReceipt('loan-1', 'user-1');
+    const receipt = await service.ensureReceipt(adminScope, 'loan-1', 'user-1');
 
     expect(prisma.loanReceipt.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -145,7 +149,7 @@ describe('LoansService', () => {
       receiptNumber: 25,
     } as any);
 
-    await expect(service.ensureReceipt('loan-1', 'user-1')).resolves.toMatchObject({
+    await expect(service.ensureReceipt(adminScope, 'loan-1', 'user-1')).resolves.toMatchObject({
       id: 'receipt-1',
     });
     expect(prisma.loanReceipt.create).not.toHaveBeenCalled();
@@ -175,7 +179,7 @@ describe('LoansService', () => {
       status: 'PENDING',
     } as any);
 
-    const result = await service.findOne('loan-1');
+    const result = await service.findOne(adminScope, 'loan-1');
 
     expect(prisma.paymentSchedule.upsert).toHaveBeenCalledWith({
       where: {
@@ -561,7 +565,12 @@ describe('LoansService', () => {
     };
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as any));
 
-    await service.addCapital('loan-1', { amount: 500, effectiveDate: '2026-07-13' }, 'user-1');
+    await service.addCapital(
+      adminScope,
+      'loan-1',
+      { amount: 500, effectiveDate: '2026-07-13' },
+      'user-1',
+    );
 
     expect(tx.loan.findUnique).toHaveBeenCalledWith({
       where: { id: 'loan-1' },

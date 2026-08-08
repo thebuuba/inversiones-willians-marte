@@ -2,12 +2,18 @@ import {
   Injectable,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, RequestStatus, prisma } from '@inversiones/database';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { formatPersonName } from '../../common/text/name-case';
 import { normalizePagination } from '../../common/pagination';
+import {
+  assertClientAccess,
+  clientWhereVisible,
+  type PortfolioScope,
+} from '../../common/portfolio-scope';
 
 const requestInclude = {
   createdBy: { select: { name: true } },
@@ -18,13 +24,28 @@ type LoanRequestDetail = Prisma.LoanRequestGetPayload<{ include: typeof requestI
 
 @Injectable()
 export class RequestsService {
-  async create(dto: CreateRequestDto, userId: string): Promise<LoanRequestDetail> {
+  async create(
+    scope: PortfolioScope,
+    dto: CreateRequestDto,
+    userId: string,
+  ): Promise<LoanRequestDetail> {
+    if (dto.clientId) await assertClientAccess(scope, dto.clientId);
     return await this.createWithRetry(dto, userId, 1);
   }
 
-  async findAll(take = 100, skip = 0) {
+  async findAll(scope: PortfolioScope, take = 100, skip = 0) {
     const pagination = normalizePagination(take, skip, 100);
+    const clientScope = clientWhereVisible(scope);
+    const where = scope.isAdmin
+      ? {}
+      : {
+          OR: [
+            { createdById: scope.userId },
+            ...(clientScope ? [{ client: { is: clientScope } }] : []),
+          ],
+        };
     return prisma.loanRequest.findMany({
+      where,
       include: {
         createdBy: { select: { name: true } },
         client: { select: { id: true, firstName: true, lastName: true } },
@@ -35,7 +56,8 @@ export class RequestsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(scope: PortfolioScope, id: string) {
+    await this.assertRequestAccess(scope, id);
     const request = await prisma.loanRequest.findUnique({
       where: { id },
       include: {
@@ -47,18 +69,42 @@ export class RequestsService {
     return request;
   }
 
-  async count(status?: string) {
+  async count(scope: PortfolioScope, status?: string) {
     const where: Prisma.LoanRequestWhereInput = {};
     if (isRequestStatus(status)) where.status = status;
+    if (!scope.isAdmin) {
+      const clientScope = clientWhereVisible(scope);
+      where.OR = [
+        { createdById: scope.userId },
+        ...(clientScope ? [{ client: { is: clientScope } }] : []),
+      ];
+    }
     return prisma.loanRequest.count({ where });
   }
 
-  async approve(id: string, userId: string) {
+  async approve(scope: PortfolioScope, id: string, userId: string) {
+    await this.assertRequestAccess(scope, id);
     return this.changePendingStatus(id, 'APPROVED', userId);
   }
 
-  async reject(id: string, userId: string) {
+  async reject(scope: PortfolioScope, id: string, userId: string) {
+    await this.assertRequestAccess(scope, id);
     return this.changePendingStatus(id, 'REJECTED', userId);
+  }
+
+  private async assertRequestAccess(scope: PortfolioScope, id: string) {
+    if (scope.isAdmin) return;
+    const request = await prisma.loanRequest.findUnique({
+      where: { id },
+      select: { id: true, createdById: true, clientId: true },
+    });
+    if (!request) throw new NotFoundException('Request not found');
+    if (request.createdById === scope.userId) return;
+    if (request.clientId !== null) {
+      await assertClientAccess(scope, request.clientId);
+      return;
+    }
+    throw new ForbiddenException('You cannot access this request');
   }
 
   private async createWithRetry(

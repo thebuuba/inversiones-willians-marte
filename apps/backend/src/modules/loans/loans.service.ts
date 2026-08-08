@@ -14,6 +14,7 @@ import { moneyToCents } from '../../common/money';
 import { getLoanCollectionStatus } from '../../common/loan-collection-status';
 import { UpdateLoanDto } from './dto/update-loan.dto';
 import { syncLoanLateFees } from './late-fee';
+import { assertLoanAccess, type PortfolioScope } from '../../common/portfolio-scope';
 
 type LoanListRow = {
   id: string;
@@ -369,9 +370,24 @@ export class LoansService {
     );
   }
 
-  async findAll(status?: string, search?: string, take = 50, skip = 0, sort?: string) {
+  async findAll(
+    scope: PortfolioScope,
+    status?: string,
+    search?: string,
+    take = 50,
+    skip = 0,
+    sort?: string,
+  ) {
     const { take: pageSize, skip: offset } = normalizePagination(take, skip);
     const filters: Prisma.Sql[] = [];
+
+    if (!scope.isAdmin) {
+      const portfolioCondition =
+        scope.portfolioIds.length > 0
+          ? Prisma.sql`l.portfolio_id IN (${Prisma.join(scope.portfolioIds)})`
+          : Prisma.sql`FALSE`;
+      filters.push(Prisma.sql`(${portfolioCondition} OR l.created_by = ${scope.userId})`);
+    }
 
     const oldestUnpaidDue = Prisma.sql`(
       SELECT MIN(ps.due_date)::date
@@ -417,7 +433,7 @@ export class LoansService {
       filters.push(Prisma.sql`l.status::text = ${status}`);
     }
     if (search) {
-      const pattern = `%${search}%`;
+      const pattern = `%${escapeLikePattern(search.trim().slice(0, 200))}%`;
       filters.push(Prisma.sql`(
         c.first_name ILIKE ${pattern}
         OR c.last_name ILIKE ${pattern}
@@ -572,7 +588,8 @@ export class LoansService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(scope: PortfolioScope, id: string) {
+    await assertLoanAccess(scope, id);
     await syncLoanLateFees(id);
     const loan = await prisma.loan.findUnique({
       where: { id },
@@ -659,19 +676,22 @@ export class LoansService {
     };
   }
 
-  async getReceipt(id: string) {
+  async getReceipt(scope: PortfolioScope, id: string) {
+    await assertLoanAccess(scope, id);
     const receipt = await prisma.loanReceipt.findUnique({ where: { loanId: id } });
     if (!receipt) throw new NotFoundException('Loan receipt not found');
     return receipt;
   }
 
-  async ensureReceipt(id: string, userId: string) {
+  async ensureReceipt(scope: PortfolioScope, id: string, userId: string) {
+    await assertLoanAccess(scope, id);
     return prisma.$transaction((tx) => this.createReceipt(tx, id, userId), {
       isolationLevel: 'Serializable',
     });
   }
 
-  async addCapital(id: string, dto: AddLoanCapitalDto, userId: string) {
+  async addCapital(scope: PortfolioScope, id: string, dto: AddLoanCapitalDto, userId: string) {
+    await assertLoanAccess(scope, id);
     return prisma.$transaction(async (tx) => {
       const loan = await tx.loan.findUnique({
         where: { id },
@@ -778,7 +798,8 @@ export class LoansService {
     });
   }
 
-  async update(id: string, dto: UpdateLoanDto, userId?: string) {
+  async update(scope: PortfolioScope, id: string, dto: UpdateLoanDto, userId?: string) {
+    await assertLoanAccess(scope, id);
     const loan = await prisma.loan.findUnique({ where: { id } });
     if (!loan) throw new NotFoundException('Loan not found');
 
@@ -833,7 +854,8 @@ export class LoansService {
     return updated;
   }
 
-  async getPayoffQuote(id: string, payoffDate: string) {
+  async getPayoffQuote(scope: PortfolioScope, id: string, payoffDate: string) {
+    await assertLoanAccess(scope, id);
     const normalizedDate = new Date(`${payoffDate}T00:00:00.000Z`);
     if (Number.isNaN(normalizedDate.getTime()))
       throw new BadRequestException('Invalid payoff date');
@@ -860,7 +882,8 @@ export class LoansService {
     return this.payoff.quote(loan, normalizedDate);
   }
 
-  async remove(id: string) {
+  async remove(scope: PortfolioScope, id: string) {
+    await assertLoanAccess(scope, id);
     const loan = await prisma.loan.findUnique({ where: { id } });
     if (!loan) throw new NotFoundException('Loan not found');
 
@@ -884,8 +907,8 @@ export class LoansService {
     return { deleted: true };
   }
 
-  async getSummary(id: string) {
-    const loan = await this.findOne(id);
+  async getSummary(scope: PortfolioScope, id: string) {
+    const loan = await this.findOne(scope, id);
 
     const totalPaid = loan.payments.reduce((sum, p) => sum + Number(p.amount), 0);
     const paidInstallments = loan.schedule.filter((s) => s.status === 'PAID').length;
@@ -905,4 +928,8 @@ export class LoansService {
       progress: Math.round((totalPaid / Number(loan.totalAmount)) * 100),
     };
   }
+}
+
+function escapeLikePattern(value: string) {
+  return value.replace(/[\\%_]/g, '\\$&');
 }

@@ -1,5 +1,8 @@
 import { ReportsService } from './reports.service';
 import { prisma } from '@inversiones/database';
+import type { PortfolioScope } from '../../common/portfolio-scope';
+
+const adminScope: PortfolioScope = { userId: 'admin', isAdmin: true, portfolioIds: [] };
 
 jest.mock('@inversiones/database', () => ({
   prisma: {
@@ -8,6 +11,11 @@ jest.mock('@inversiones/database', () => ({
     loan: { aggregate: jest.fn(), count: jest.fn(), findMany: jest.fn() },
     payment: { aggregate: jest.fn(), groupBy: jest.fn() },
     user: { count: jest.fn(), findMany: jest.fn() },
+  },
+  Prisma: {
+    empty: '',
+    sql: (strings: TemplateStringsArray, ...values: unknown[]) => ({ strings, values }),
+    join: (values: unknown[]) => values.join(', '),
   },
 }));
 
@@ -40,7 +48,7 @@ describe('ReportsService', () => {
         );
     }
 
-    const result = service.overview();
+    const result = service.overview(adminScope);
     await Promise.resolve();
 
     for (const method of methods) {
@@ -81,7 +89,7 @@ describe('ReportsService', () => {
       },
     ] as never);
 
-    await expect(service.collectionPriorities()).resolves.toEqual([
+    await expect(service.collectionPriorities(adminScope)).resolves.toEqual([
       expect.objectContaining({
         loanId: 'loan-1',
         loanNumber: 101,
@@ -98,10 +106,10 @@ describe('ReportsService', () => {
   it('binds the six-month cutoff in the monthly collections query', async () => {
     jest.mocked(prisma.$queryRaw).mockResolvedValue([]);
 
-    await service.monthlyCollections();
+    await service.monthlyCollections(adminScope);
 
     expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
-    expect(jest.mocked(prisma.$queryRaw).mock.calls[0]).toHaveLength(2);
+    expect(jest.mocked(prisma.$queryRaw).mock.calls[0]).toHaveLength(3);
     expect(jest.mocked(prisma.$queryRaw).mock.calls[0][1]).toBeInstanceOf(Date);
   });
 
@@ -111,7 +119,7 @@ describe('ReportsService', () => {
       { status: 'LATE', count: 3, balance: 3000, principal: 4000 },
     ]);
 
-    await expect(service.portfolioByStatus()).resolves.toEqual([
+    await expect(service.portfolioByStatus(adminScope)).resolves.toEqual([
       { status: 'CURRENT', count: 5, balance: 5000, principal: 6000 },
       { status: 'LATE', count: 3, balance: 3000, principal: 4000 },
     ]);
@@ -133,7 +141,7 @@ describe('ReportsService', () => {
       },
     ]);
 
-    await expect(service.dailyIncome()).resolves.toEqual([
+    await expect(service.dailyIncome(adminScope)).resolves.toEqual([
       {
         date: '2026-06-18',
         label: '18/06',
@@ -160,7 +168,7 @@ describe('ReportsService', () => {
       .mocked(prisma.loan.aggregate)
       .mockResolvedValue({ _sum: { balance: 0, principal: 0 }, _count: 0 } as never);
 
-    const result = service.dashboard();
+    const result = service.dashboard(adminScope);
     await Promise.resolve();
 
     expect(prisma.loan.count).toHaveBeenCalledTimes(2);
@@ -180,7 +188,7 @@ describe('ReportsService', () => {
       .mocked(prisma.loan.aggregate)
       .mockResolvedValue({ _sum: { balance: 0, principal: 0 }, _count: 0 } as never);
 
-    await service.dashboard();
+    await service.dashboard(adminScope);
 
     expect(prisma.payment.aggregate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -204,7 +212,7 @@ describe('ReportsService', () => {
       { receivedById: 'collector-2', _sum: { amount: 400 } },
     ] as never);
 
-    await expect(service.collectorPerformance()).resolves.toEqual([
+    await expect(service.collectorPerformance(adminScope)).resolves.toEqual([
       { id: 'collector-1', name: 'Ana', paymentsCount: 3, totalCollected: 1500 },
       { id: 'collector-2', name: 'Luis', paymentsCount: 1, totalCollected: 400 },
     ]);
@@ -216,7 +224,7 @@ describe('ReportsService', () => {
   it('skips payment aggregation when there are no active collectors', async () => {
     jest.mocked(prisma.user.findMany).mockResolvedValue([] as never);
 
-    await expect(service.collectorPerformance()).resolves.toEqual([]);
+    await expect(service.collectorPerformance(adminScope)).resolves.toEqual([]);
 
     expect(prisma.payment.groupBy).not.toHaveBeenCalled();
   });
@@ -224,7 +232,7 @@ describe('ReportsService', () => {
   it('aggregates weekly movement without per-day lateral scans', async () => {
     jest.mocked(prisma.$queryRaw).mockResolvedValue([]);
 
-    await service.weeklyMovement();
+    await service.weeklyMovement(adminScope);
 
     const queryParts = jest.mocked(prisma.$queryRaw).mock.calls[0][0] as TemplateStringsArray;
     const queryText = Array.from(queryParts).join(' ');

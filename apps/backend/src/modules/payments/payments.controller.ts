@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators';
+import { resolvePortfolioScope, type ScopeUser } from '../../common/portfolio-scope';
 
 @Controller('payments')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -13,13 +14,15 @@ export class PaymentsController {
 
   @Post()
   @Roles('ADMIN', 'COLLECTOR')
-  create(@Body() dto: CreatePaymentDto, @CurrentUser('id') userId: string) {
-    return this.payments.create(dto, userId);
+  async create(@Body() dto: CreatePaymentDto, @CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    return this.payments.create(scope, dto, user.id);
   }
 
   @Get('loan/:loanId')
   @Roles('ADMIN', 'COLLECTOR')
-  findByLoan(@Param('loanId') loanId: string) {
-    return this.payments.findByLoan(loanId);
+  async findByLoan(@CurrentUser() user: ScopeUser, @Param('loanId') loanId: string) {
+    const scope = await resolvePortfolioScope(user);
+    return this.payments.findByLoan(scope, loanId);
   }
 }

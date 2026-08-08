@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, prisma } from '@inversiones/database';
+import { assertClientAccess, type PortfolioScope } from '../../common/portfolio-scope';
 
 export interface HistoryEvent {
   id: string;
@@ -96,7 +97,8 @@ export class AuditService {
     });
   }
 
-  async findClientHistory(clientId: number): Promise<HistoryEvent[]> {
+  async findClientHistory(scope: PortfolioScope, clientId: number): Promise<HistoryEvent[]> {
+    await assertClientAccess(scope, clientId);
     const [client, audits] = await Promise.all([
       prisma.client.findUnique({
         where: { id: clientId },

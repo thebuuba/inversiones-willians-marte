@@ -143,6 +143,7 @@ model User {
   cashMovements               CashMovement[]
   cashLedgerExclusions        CashLedgerExclusion[]
   authSessions                AuthSession[]
+  portfolioAssignments        UserPortfolio[]
 
   @@index([role, active])
   @@map("users")
@@ -782,9 +783,23 @@ model Portfolio {
 
   createdBy User   @relation(fields: [createdById], references: [id])
   loans     Loan[]
+  assignments UserPortfolio[]
 
   @@index([createdAt])
   @@map("portfolios")
+}
+
+model UserPortfolio {
+  userId      String   @map("user_id")
+  portfolioId String   @map("portfolio_id")
+  assignedAt  DateTime @default(now()) @map("assigned_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@id([userId, portfolioId])
+  @@index([portfolioId])
+  @@map("user_portfolios")
 }
 
 model SystemSettings {

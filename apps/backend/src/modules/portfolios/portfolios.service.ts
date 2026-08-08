@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { prisma } from '@inversiones/database';
 import { CreatePortfolioDto } from './dto/create-portfolio.dto';
 import { getLoanCollectionStatus, isPastGracePeriod } from '../../common/loan-collection-status';
+import type { PortfolioScope } from '../../common/portfolio-scope';
 
 @Injectable()
 export class PortfoliosService {
@@ -108,10 +109,11 @@ export class PortfoliosService {
     });
   }
 
-  async findAll(take = 100, skip = 0) {
+  async findAll(scope: PortfolioScope, take = 100, skip = 0) {
     const [settings, portfolios] = await Promise.all([
       prisma.systemSettings.findUnique({ where: { id: 1 } }),
       prisma.portfolio.findMany({
+        where: this.scopeWhere(scope),
         include: {
           _count: { select: { loans: true } },
           loans: {
@@ -161,7 +163,8 @@ export class PortfoliosService {
     return portfolios.map((portfolio) => this.mapPortfolio(portfolio, settings?.graceDays ?? 5));
   }
 
-  async findOne(id: string) {
+  async findOne(scope: PortfolioScope, id: string) {
+    await this.assertPortfolioAccess(scope, id);
     const [settings, portfolio] = await Promise.all([
       prisma.systemSettings.findUnique({ where: { id: 1 } }),
       prisma.portfolio.findUnique({
@@ -212,8 +215,9 @@ export class PortfoliosService {
     return this.mapPortfolio(portfolio, settings?.graceDays ?? 5);
   }
 
-  async remove(id: string, userId?: string) {
-    const portfolio = await this.findOne(id);
+  async remove(scope: PortfolioScope, id: string, userId?: string) {
+    await this.assertPortfolioAccess(scope, id);
+    const portfolio = await this.findOne(scope, id);
     await prisma.portfolio.delete({ where: { id } });
 
     if (userId) {
@@ -227,5 +231,28 @@ export class PortfoliosService {
         },
       });
     }
+  }
+
+  private scopeWhere(scope: PortfolioScope) {
+    if (scope.isAdmin) return {};
+    return {
+      OR: [{ assignments: { some: { userId: scope.userId } } }, { createdById: scope.userId }],
+    };
+  }
+
+  private async assertPortfolioAccess(scope: PortfolioScope, id: string) {
+    if (scope.isAdmin) return;
+    const portfolio = await prisma.portfolio.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        createdById: true,
+        assignments: { select: { userId: true } },
+      },
+    });
+    if (!portfolio) throw new NotFoundException('Portfolio not found');
+    if (portfolio.createdById === scope.userId) return;
+    if (portfolio.assignments.some((assignment) => assignment.userId === scope.userId)) return;
+    throw new ForbiddenException('You cannot access this portfolio');
   }
 }
