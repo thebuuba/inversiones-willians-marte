@@ -37,8 +37,8 @@ function buildCsp(nonce: string) {
   ].join('; ');
 }
 
-export function proxy(request: NextRequest) {
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+export function middleware(request: NextRequest) {
+  const nonce = btoa(crypto.randomUUID());
   const csp = buildCsp(nonce);
 
   const requestHeaders = new Headers(request.headers);
