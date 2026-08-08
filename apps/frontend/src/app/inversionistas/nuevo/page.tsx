@@ -155,7 +155,9 @@ function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onP
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
     const compressed = await compressImage(file, 800, 0.7);
-    onPhotoChange(URL.createObjectURL(compressed));
+    const reader = new FileReader();
+    reader.onload = () => onPhotoChange(String(reader.result));
+    reader.readAsDataURL(compressed);
   };
 
   return (

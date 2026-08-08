@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { headers } from 'next/headers';
 import { AuthProvider } from '@/lib/auth-context';
 import { AppShell } from '@/components/layout/app-shell';
 import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register';
@@ -36,11 +37,13 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
+
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-screen bg-surface">
         <AuthProvider>
