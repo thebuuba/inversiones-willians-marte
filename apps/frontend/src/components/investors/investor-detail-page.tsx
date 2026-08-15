@@ -27,8 +27,7 @@ import {
 const fmt = (n: number | string) => formatDop(n, { space: true });
 const fmtDate = (s: string | Date) =>
   new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
-const investmentTableColumns =
-  'grid-cols-[minmax(130px,0.9fr)_minmax(165px,1.1fr)_minmax(185px,1.2fr)_minmax(165px,1.1fr)_minmax(130px,0.9fr)_minmax(130px,0.9fr)] gap-4 justify-items-center text-center';
+const investmentTableColumns = 'grid-cols-6 gap-6';
 
 const TABS = ['Resumen', 'Documentos', 'Datos personales'];
 

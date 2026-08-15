@@ -5,18 +5,19 @@ import test from 'node:test';
 const source = readFileSync(new URL('./investor-detail-page.tsx', import.meta.url), 'utf8');
 
 test('places capital immediately before monthly interest', () => {
-  assert.match(
-    source,
-    /grid-cols-\[minmax\(130px,0\.9fr\).*gap-4 justify-items-center text-center/,
-  );
-  const capitalHeader = source.indexOf('<span>Capital</span>');
-  const monthlyInterestHeader = source.indexOf('<span>Interés mensual</span>');
+  assert.match(source, /const investmentTableColumns = 'grid-cols-6 gap-6'/);
+  const capitalHeader = source.indexOf('>Capital</span>');
+  const monthlyInterestHeader = source.indexOf('>Interés mensual</span>');
   const capitalValue = source.indexOf('{fmt(investment.capital)}');
   const monthlyInterestValue = source.indexOf('{fmt(investment.monthlyPayment)}');
   assert.ok(capitalHeader >= 0 && capitalHeader < monthlyInterestHeader);
   assert.ok(capitalValue >= 0 && capitalValue < monthlyInterestValue);
   assert.match(source, /className="overflow-x-auto"/);
   assert.match(source, /min-w-\[1000px\]/);
+  assert.doesNotMatch(
+    source,
+    /justify-items-center|text-right|<span className="text-center">Estado/,
+  );
 });
 
 test('uses an actions menu instead of a direct register-payment button', () => {

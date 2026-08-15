@@ -11,3 +11,9 @@ test('uses responsive pagination and leaves phone content scrollable', () => {
   assert.match(source, /md:overflow-hidden/);
   assert.doesNotMatch(source, /const PAGE_SIZE = 8/);
 });
+
+test('uses the full table width without adding a row navigation arrow', () => {
+  assert.match(source, /md:grid-cols-\[2fr_1\.1fr_1\.2fr_0\.7fr_0\.85fr\]/);
+  assert.match(source, /justify-self-end">ESTADO/);
+  assert.doesNotMatch(source, /group-hover:translate-x-0\.5/);
+});

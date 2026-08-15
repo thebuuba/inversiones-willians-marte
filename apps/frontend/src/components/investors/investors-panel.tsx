@@ -213,12 +213,12 @@ export function InvestorsPanel() {
           </div>
 
           {/* table header */}
-          <div className="sticky top-0 z-10 grid min-w-0 grid-cols-[1fr_auto] items-center border-b border-border-soft bg-card px-4 py-3.5 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:min-w-[760px] md:grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] md:px-6">
+          <div className="sticky top-0 z-10 grid min-w-0 grid-cols-[1fr_auto] items-center border-b border-border-soft bg-card px-4 py-3.5 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:min-w-[760px] md:grid-cols-[2fr_1.1fr_1.2fr_0.7fr_0.85fr] md:px-6">
             <span>INVERSIONISTA</span>
             <span className="hidden md:block">CÓDIGO</span>
             <span className="hidden md:block">CAPITAL</span>
             <span className="hidden md:block">TASA</span>
-            <span>ESTADO</span>
+            <span className="justify-self-end">ESTADO</span>
           </div>
 
           {/* body */}
@@ -240,7 +240,7 @@ export function InvestorsPanel() {
               displayInvestors.map((investor) => (
                 <div
                   key={investor.id}
-                  className="group grid min-h-[72px] cursor-pointer grid-cols-[1fr_auto] items-center border-b border-border-soft bg-card px-4 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle md:min-h-[64px] md:grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] md:px-6"
+                  className="group grid min-h-[72px] cursor-pointer grid-cols-[1fr_auto] items-center border-b border-border-soft bg-card px-4 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle md:min-h-[64px] md:grid-cols-[2fr_1.1fr_1.2fr_0.7fr_0.85fr] md:px-6"
                   onClick={() => router.push(`/inversionistas/${investor.id}`)}
                 >
                   <div className="flex items-center gap-3">
@@ -276,7 +276,7 @@ export function InvestorsPanel() {
                   <span className="hidden [font-variant-numeric:tabular-nums] text-sm text-text-secondary md:block">
                     {investor.rate}%
                   </span>
-                  <span>
+                  <span className="justify-self-end">
                     <Badge
                       className="min-w-[76px] justify-center py-1.5"
                       dot

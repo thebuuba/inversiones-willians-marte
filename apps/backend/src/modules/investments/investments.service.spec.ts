@@ -31,16 +31,17 @@ describe('InvestmentsService', () => {
     expect(service.calculateMonthlyPayment(100000, 3)).toBe(3000);
   });
 
-  it('marks the current period as paid when a payment exists', () => {
+  it('advances to the next period when a payment exists', () => {
     const status = service.getCurrentPeriodStatus(
       '2026-07-03',
       [{ periodMonth: 8, periodYear: 2026 }],
       new Date('2026-08-12T12:00:00.000Z'),
     );
 
-    expect(status.paymentStatus).toBe('PAID');
-    expect(status.currentPeriodMonth).toBe(8);
+    expect(status.paymentStatus).toBe('SCHEDULED');
+    expect(status.currentPeriodMonth).toBe(9);
     expect(status.currentPeriodYear).toBe(2026);
+    expect(status.nextDueDate?.toISOString().slice(0, 10)).toBe('2026-09-03');
   });
 
   it('uses the first investment period when the investment starts in the future', () => {
@@ -50,10 +51,10 @@ describe('InvestmentsService', () => {
       new Date('2026-06-12T12:00:00.000Z'),
     );
 
-    expect(status.paymentStatus).toBe('PAID');
-    expect(status.currentPeriodMonth).toBe(7);
+    expect(status.paymentStatus).toBe('SCHEDULED');
+    expect(status.currentPeriodMonth).toBe(8);
     expect(status.currentPeriodYear).toBe(2026);
-    expect(status.nextDueDate?.toISOString().slice(0, 10)).toBe('2026-07-09');
+    expect(status.nextDueDate?.toISOString().slice(0, 10)).toBe('2026-08-09');
   });
 
   it('marks the current period as overdue after the start-day due date passes', () => {

@@ -5,7 +5,7 @@ export const investmentPaymentStatusVisuals: Record<
   InvestorInvestmentPaymentStatus,
   { label: string; className: string }
 > = {
-  PAID: { label: 'Pagado', className: loanStatusVisuals.PAID.badgeClassName },
+  PAID: { label: 'A tiempo', className: loanStatusVisuals.CURRENT.badgeClassName },
   SCHEDULED: {
     label: 'A tiempo',
     className: loanStatusVisuals.CURRENT.badgeClassName,

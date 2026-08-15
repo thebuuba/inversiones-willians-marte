@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent, Fragment } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, TrendingUp, CheckCircle2, Clock } from 'lucide-react';
+import { ArrowLeft, TrendingUp, CheckCircle2, Clock, Eye, ReceiptText } from 'lucide-react';
 import { getInvestor } from '@/lib/api/investors';
 import { getInvestment } from '@/lib/api/investments';
 import { createInvestorPayment, checkInvestorPaymentPeriod, getInvestmentPayments } from '@/lib/api/investor-payments';
@@ -43,16 +43,15 @@ export function RegisterInvestorPaymentPage() {
   const [periodMonth, setPeriodMonth] = useState(currentMonth);
   const [periodYear, setPeriodYear] = useState(currentYear);
   const [amount, setAmount] = useState('');
-  const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [paymentDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [paymentMethod, setPaymentMethod] = useState(METHODS[0]);
-  const [reference, setReference] = useState('');
-  const [notes, setNotes] = useState('');
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [createdPayment, setCreatedPayment] = useState<InvestorPaymentItem | null>(null);
-  const [generateReceipt, setGenerateReceipt] = useState(true);
+  const [receiptToView, setReceiptToView] = useState<InvestorPaymentItem | null>(null);
+  const [receiptsOpen, setReceiptsOpen] = useState(false);
 
   function applyInvestmentPeriod(invst: InvestorInvestmentDetail) {
     if (!invst.currentPeriodMonth || !invst.currentPeriodYear) return;
@@ -131,7 +130,6 @@ export function RegisterInvestorPaymentPage() {
 
   const amountNumber = Number(amount.replace(/[,.]/g, ''));
   const invalidAmount = submitted && (!Number.isFinite(amountNumber) || amountNumber <= 0);
-  const invalidDate = submitted && !paymentDate;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -150,11 +148,8 @@ export function RegisterInvestorPaymentPage() {
         periodYear,
         paymentDate,
         paymentMethod,
-        reference: reference.trim() || undefined,
-        notes: notes.trim() || undefined,
       });
-      if (generateReceipt) setCreatedPayment(payment);
-      else router.push(`/inversionistas/${investor.id}`);
+      setCreatedPayment(payment);
     } catch (err: unknown) {
       const msg =
         typeof err === 'object' && err !== null && 'response' in err
@@ -169,7 +164,7 @@ export function RegisterInvestorPaymentPage() {
   return (
     <>
     <div className="min-h-screen bg-page p-5 font-sans">
-      <div className="mx-auto max-w-7xl">
+      <div className="w-full">
         <Link
           className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-primary-accent hover:text-primary-accent"
           href={`/inversionistas/${investor.id}`}
@@ -178,24 +173,22 @@ export function RegisterInvestorPaymentPage() {
           Volver a inversionista
         </Link>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[400px_1fr]">
-          {/* Left column: Investor info */}
-          <div className="space-y-5">
-            <div className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
-              <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-panel bg-primary-soft">
-                  <TrendingUp className="h-7 w-7 text-primary-accent" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-text-primary">{investor.name}</h2>
-                  <p className="text-sm text-text-muted">{investment.code}</p>
-                  <span className="mt-1 inline-block rounded-full bg-primary-soft px-3 py-0.5 text-xs font-semibold text-primary-accent">
-                    {investor.status === 'ACTIVE' ? 'Activo' : investor.status === 'PAUSED' ? 'Pausado' : 'Retirado'}
-                  </span>
-                </div>
-              </div>
-            </div>
+        <div className="mb-6 flex w-full items-center gap-3 rounded-panel border border-border-soft bg-card px-4 py-3 shadow-card">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control-comfortable bg-primary-soft">
+            <TrendingUp className="h-5 w-5 text-primary-accent" />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1">
+            <h2 className="text-base font-bold text-text-primary">{investor.name}</h2>
+            <p className="text-sm text-text-muted">{investment.code}</p>
+            <span className="rounded-full bg-primary-soft px-3 py-0.5 text-xs font-semibold text-primary-accent">
+              {investor.status === 'ACTIVE' ? 'Activo' : investor.status === 'PAUSED' ? 'Pausado' : 'Retirado'}
+            </span>
+          </div>
+        </div>
 
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[400px_1fr]">
+          {/* Left column: Financial information */}
+          <div>
             <div className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
               <h3 className="mb-4 text-sm font-semibold text-text-primary">Información financiera</h3>
               <div className="space-y-3">
@@ -232,82 +225,17 @@ export function RegisterInvestorPaymentPage() {
               </div>
             </div>
 
-            <div className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
-              <h3 className="mb-4 text-sm font-semibold text-text-primary">Últimos pagos</h3>
-              {payments.length === 0 ? (
-                <p className="text-sm text-text-subtle">No hay pagos registrados aún.</p>
-              ) : (
-                <div className="space-y-3">
-                  {payments.slice(0, 5).map((p) => (
-                    <div key={p.id} className="flex items-center justify-between border-b border-border-soft pb-2 last:border-0">
-                      <div>
-                        <p className="text-sm font-medium text-text-primary">
-                          {MONTHS[p.periodMonth - 1]} {p.periodYear}
-                        </p>
-                        <p className="text-xs text-text-subtle">{fmtDate(p.paymentDate)}</p>
-                      </div>
-                      <span className="text-sm font-bold text-primary-accent">{fmt(Number(p.amount))}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Right column: Payment form */}
-          <div className="rounded-panel bg-card p-6 shadow-card border border-border-soft">
+          <div className="rounded-panel border border-border-soft bg-card p-6 shadow-card">
             <h2 className="mb-1 text-xl font-bold text-text-primary">Registrar pago de interés</h2>
             <p className="mb-6 text-sm text-text-muted">
               Registra el pago mensual correspondiente al período seleccionado.
             </p>
 
-            {periodPaid && (
-              <div className="rounded-control-comfortable bg-primary-soft p-5 border border-border-soft">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary-accent" />
-                  <p className="font-semibold text-primary-accent">Este período ya tiene pagos</p>
-                </div>
-                <p className="mt-2 text-sm text-text-secondary">
-                  Ya existe un pago de <strong>{fmt(Number(periodPaid.amount))}</strong> para{' '}
-                  {MONTHS[periodMonth - 1]} {periodYear}, registrado el {fmtDate(periodPaid.paymentDate)}.
-                  Puedes registrar otro pago o complemento para este mismo período.
-                </p>
-                {periodPaid.paymentMethod && (
-                  <p className="mt-1 text-sm text-text-muted">Método: {periodPaid.paymentMethod}</p>
-                )}
-              </div>
-            )}
-
-            <form className={periodPaid ? 'mt-5' : undefined} onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-bold text-text-secondary">Período</span>
-                    <div className="grid grid-cols-2 gap-2">
-                      <select
-                        className={inputClass}
-                        value={periodMonth}
-                        onChange={(e) => setPeriodMonth(Number(e.target.value))}
-                      >
-                        {MONTHS.map((m, i) => (
-                          <option key={i + 1} value={i + 1}>
-                            {m}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        className={inputClass}
-                        value={periodYear}
-                        onChange={(e) => setPeriodYear(Number(e.target.value))}
-                      >
-                        {Array.from({ length: 5 }, (_, i) => currentYear - 2 + i).map((y) => (
-                          <option key={y} value={y}>
-                            {y}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </label>
-
+            <form onSubmit={handleSubmit}>
+                <div className="grid grid-cols-1 gap-4">
                   <label className="block">
                     <span className="mb-2 block text-sm font-bold text-text-secondary">Monto</span>
                     <div className="relative">
@@ -326,16 +254,6 @@ export function RegisterInvestorPaymentPage() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-2 block text-sm font-bold text-text-secondary">Fecha del pago</span>
-                    <input
-                      className={`${inputClass} ${invalidDate ? 'border-state-danger-dot' : ''}`}
-                      type="date"
-                      value={paymentDate}
-                      onChange={(e) => setPaymentDate(e.target.value)}
-                    />
-                  </label>
-
-                  <label className="block">
                     <span className="mb-2 block text-sm font-bold text-text-secondary">Método de pago</span>
                     <select
                       className={inputClass}
@@ -348,41 +266,8 @@ export function RegisterInvestorPaymentPage() {
                     </select>
                   </label>
 
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-bold text-text-secondary">Referencia</span>
-                    <input
-                      className={inputClass}
-                      type="text"
-                      value={reference}
-                      onChange={(e) => setReference(e.target.value)}
-                      placeholder="Opcional"
-                    />
-                  </label>
-
-                  <label className="block sm:col-span-2">
-                    <span className="mb-2 block text-sm font-bold text-text-secondary">Notas</span>
-                    <textarea
-                      className="h-24 w-full resize-none rounded-control-comfortable border border-primary-border bg-card px-4 py-3 text-sm font-medium text-text-primary outline-none transition focus:border-primary-accent"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Opcional"
-                    />
-                  </label>
-
                   {error && <p className="text-sm font-medium text-state-danger sm:col-span-2">{error}</p>}
 
-                  <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control-comfortable border border-border-soft bg-surface-subtle px-4 py-3 sm:col-span-2">
-                    <input
-                      checked={generateReceipt}
-                      className="h-5 w-5 accent-primary"
-                      onChange={(event) => setGenerateReceipt(event.target.checked)}
-                      type="checkbox"
-                    />
-                    <span>
-                      <span className="block text-sm font-bold text-text-primary">Generar recibo</span>
-                      <span className="block text-xs text-text-muted">Abrirlo para imprimir al registrar el pago.</span>
-                    </span>
-                  </label>
                 </div>
 
                 <div className="mt-6 flex justify-end gap-3 border-t border-border-soft pt-4">
@@ -403,6 +288,92 @@ export function RegisterInvestorPaymentPage() {
             </form>
           </div>
         </div>
+
+        <div className="mt-6 overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
+          <div className="flex px-4 sm:px-6" role="tablist" aria-label="Recibos de la inversión">
+            <button
+              aria-selected={receiptsOpen}
+              className={`min-h-14 border-b-2 px-4 text-sm font-bold transition ${
+                receiptsOpen
+                  ? 'border-primary-accent text-primary-accent'
+                  : 'border-transparent text-text-secondary hover:text-primary-accent'
+              }`}
+              onClick={() => setReceiptsOpen(true)}
+              role="tab"
+              type="button"
+            >
+              Recibos
+            </button>
+          </div>
+
+          {receiptsOpen && (
+              <div className="min-h-[420px]" role="tabpanel">
+                <div className="flex flex-col gap-3 border-b border-border-soft px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-text-primary">Recibos de pagos</h2>
+                    <p className="mt-1 text-sm text-text-muted">
+                      Todos los comprobantes registrados para esta inversión.
+                    </p>
+                  </div>
+                  <span className="w-fit rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-accent">
+                    {payments.length} {payments.length === 1 ? 'recibo' : 'recibos'}
+                  </span>
+                </div>
+
+                {payments.length === 0 ? (
+                  <div className="flex min-h-72 flex-col items-center justify-center px-6 py-10 text-center">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-primary-accent">
+                      <ReceiptText className="h-6 w-6" />
+                    </span>
+                    <h3 className="mt-4 text-base font-bold text-text-primary">No hay recibos todavía</h3>
+                    <p className="mt-1 text-sm text-text-secondary">
+                      Los recibos aparecerán aquí cuando se registre el primer pago.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border-soft">
+                    {payments.map((payment) => (
+                      <div
+                        className="grid gap-4 px-6 py-4 sm:grid-cols-[1.2fr_1fr_auto_auto] sm:items-center"
+                        key={payment.id}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control-comfortable bg-primary-soft text-primary-accent">
+                            <ReceiptText className="h-5 w-5" />
+                          </span>
+                          <div>
+                            <p className="text-sm font-bold text-text-primary">
+                              Recibo #{String(payment.receiptNumber).padStart(5, '0')}
+                            </p>
+                            <p className="mt-0.5 text-xs text-text-secondary">
+                              {MONTHS[payment.periodMonth - 1]} {payment.periodYear}
+                            </p>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-text-primary">{fmtDate(payment.paymentDate)}</p>
+                          <p className="mt-0.5 text-xs text-text-secondary">
+                            {payment.paymentMethod ?? 'Método no indicado'}
+                          </p>
+                        </div>
+                        <span className="text-sm font-bold tabular-nums text-text-primary">
+                          {fmt(Number(payment.amount))}
+                        </span>
+                        <button
+                          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-primary-border px-4 text-sm font-bold text-primary-accent transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
+                          onClick={() => setReceiptToView(payment)}
+                          type="button"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Ver recibo
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+          )}
+        </div>
       </div>
     </div>
 
@@ -412,6 +383,15 @@ export function RegisterInvestorPaymentPage() {
           investor={investor}
           investment={investment}
           onClose={() => router.push(`/inversionistas/${investor.id}`)}
+        />
+      )}
+
+      {receiptToView && investor && (
+        <PaymentReceiptModal
+          payment={receiptToView}
+          investor={investor}
+          investment={investment}
+          onClose={() => setReceiptToView(null)}
         />
       )}
     </>

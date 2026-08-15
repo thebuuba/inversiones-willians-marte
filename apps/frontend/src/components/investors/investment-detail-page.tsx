@@ -42,7 +42,7 @@ type InvestmentHistoryEvent = {
 };
 
 export function InvestmentDetailPage({ investmentId }: { investmentId: string }) {
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState<number | null>(null);
   const [investment, setInvestment] = useState<InvestorInvestmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [amount, setAmount] = useState('');
@@ -159,12 +159,12 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           <header className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
             <div className="flex flex-col gap-5 p-5 sm:p-7 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm font-semibold text-primary-accent">
+                <h1 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
                   {investment.investor?.name}
-                </p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-                  {investment.code}
                 </h1>
+                <p className="mt-1 text-base font-semibold tracking-wide text-primary-accent">
+                  {investment.code}
+                </p>
                 <p className="mt-2 text-sm text-text-muted">
                   Inicio {investment.startDate ? fmtDate(investment.startDate) : '—'} · Plazo{' '}
                   {investment.term ?? 'Indefinido'}
@@ -210,7 +210,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
               </div>
             </div>
 
-            <div className="grid grid-cols-1 border-t border-border-soft bg-surface-subtle sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 border-t border-border-soft bg-page p-4 sm:grid-cols-2 lg:grid-cols-4">
               <Summary label="Capital" value={fmt(investment.capital)} />
               <Summary label="Tasa" value={`${investment.rate}% mensual`} />
               <Summary label="Retorno mensual" value={fmt(investment.monthlyPayment)} />
@@ -460,7 +460,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
 
 function Summary({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border-b border-border-soft p-5 last:border-b-0 sm:[&:nth-child(odd)]:border-r sm:[&:nth-child(3)]:border-b-0 sm:[&:nth-child(4)]:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0">
+    <div className="rounded-control-comfortable border border-border-soft bg-card p-5 shadow-soft">
       <p className="text-xs font-medium text-text-subtle">{label}</p>
       <p className="mt-1.5 text-lg font-bold tabular-nums text-text-primary">{value}</p>
     </div>

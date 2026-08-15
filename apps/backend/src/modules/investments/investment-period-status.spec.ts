@@ -14,14 +14,32 @@ describe('getInvestmentPeriodStatus', () => {
     expect(getInvestmentPeriodStatus(startDate, [], new Date(today)).paymentStatus).toBe(expected);
   });
 
-  it('keeps the current period paid when its payment exists', () => {
-    expect(
-      getInvestmentPeriodStatus(
-        startDate,
-        [{ periodMonth: 8, periodYear: 2026 }],
-        new Date('2026-08-26T12:00:00.000Z'),
-      ).paymentStatus,
-    ).toBe('PAID');
+  it('advances to the next month and stays scheduled after the current payment', () => {
+    const status = getInvestmentPeriodStatus(
+      startDate,
+      [{ periodMonth: 8, periodYear: 2026 }],
+      new Date('2026-08-20T12:00:00.000Z'),
+    );
+
+    expect(status.paymentStatus).toBe('SCHEDULED');
+    expect(status.currentPeriodMonth).toBe(9);
+    expect(status.currentPeriodYear).toBe(2026);
+    expect(status.nextDueDate?.toISOString().slice(0, 10)).toBe('2026-09-20');
+  });
+
+  it('skips consecutive paid periods', () => {
+    const status = getInvestmentPeriodStatus(
+      startDate,
+      [
+        { periodMonth: 8, periodYear: 2026 },
+        { periodMonth: 9, periodYear: 2026 },
+      ],
+      new Date('2026-08-20T12:00:00.000Z'),
+    );
+
+    expect(status.paymentStatus).toBe('SCHEDULED');
+    expect(status.currentPeriodMonth).toBe(10);
+    expect(status.nextDueDate?.toISOString().slice(0, 10)).toBe('2026-10-20');
   });
 
   it('clamps monthly due dates to the final day of shorter months', () => {

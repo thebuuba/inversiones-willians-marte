@@ -12,23 +12,17 @@ export function getInvestmentPeriodStatus(
   payments: Array<{ periodMonth: number; periodYear: number }> = [],
   today = new Date(),
 ): InvestmentPeriodStatus {
-  const targetPeriod = getTargetPeriod(startDate, today);
-  const paid = payments.some(
-    (payment) =>
-      payment.periodMonth === targetPeriod.month && payment.periodYear === targetPeriod.year,
+  let targetPeriod = getTargetPeriod(startDate, today);
+  const paidPeriods = new Set(
+    payments.map((payment) => `${payment.periodYear}-${payment.periodMonth}`),
   );
+  while (paidPeriods.has(`${targetPeriod.year}-${targetPeriod.month}`)) {
+    targetPeriod = nextPeriod(targetPeriod);
+  }
   const nextDueDate = startDate
     ? dueDateForPeriod(new Date(startDate), targetPeriod.year, targetPeriod.month)
     : null;
 
-  if (paid) {
-    return {
-      currentPeriodMonth: targetPeriod.month,
-      currentPeriodYear: targetPeriod.year,
-      nextDueDate,
-      paymentStatus: 'PAID',
-    };
-  }
   if (!nextDueDate) {
     return {
       currentPeriodMonth: targetPeriod.month,
@@ -51,6 +45,12 @@ export function getInvestmentPeriodStatus(
     nextDueDate,
     paymentStatus,
   };
+}
+
+function nextPeriod(period: { month: number; year: number }) {
+  return period.month === 12
+    ? { month: 1, year: period.year + 1 }
+    : { month: period.month + 1, year: period.year };
 }
 
 function getTargetPeriod(startDate: Date | string | null | undefined, today: Date) {

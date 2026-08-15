@@ -5,6 +5,7 @@ import { loanStatusVisuals } from './loan-status-visuals';
 
 test('uses the matching loan visuals for every investment payment state', () => {
   assert.equal(investmentPaymentStatusVisuals.SCHEDULED.label, 'A tiempo');
+  assert.equal(investmentPaymentStatusVisuals.PAID.label, 'A tiempo');
   assert.equal(investmentPaymentStatusVisuals.UPCOMING.label, 'Próximo');
   assert.equal(
     investmentPaymentStatusVisuals.SCHEDULED.className,
@@ -24,6 +25,6 @@ test('uses the matching loan visuals for every investment payment state', () => 
   );
   assert.equal(
     investmentPaymentStatusVisuals.PAID.className,
-    loanStatusVisuals.PAID.badgeClassName,
+    loanStatusVisuals.CURRENT.badgeClassName,
   );
 });
