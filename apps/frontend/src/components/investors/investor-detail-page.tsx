@@ -27,7 +27,8 @@ import {
 const fmt = (n: number | string) => formatDop(n, { space: true });
 const fmtDate = (s: string | Date) =>
   new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
-const investmentTableColumns = 'grid-cols-6';
+const investmentTableColumns =
+  'grid-cols-[minmax(130px,0.9fr)_minmax(165px,1.1fr)_minmax(185px,1.2fr)_minmax(165px,1.1fr)_minmax(130px,0.9fr)_minmax(130px,0.9fr)] gap-4 justify-items-center text-center';
 
 const TABS = ['Resumen', 'Documentos', 'Datos personales'];
 
@@ -196,47 +197,57 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 pb-1">
-                <button className="inline-flex h-10 items-center gap-1.5 rounded-full border border-primary-border bg-card px-5 text-sm text-text-secondary hover:bg-surface-subtle">
-                  <Download className="h-4 w-4" />
-                  Exportar
-                </button>
-                <Link
-                  className="inline-flex h-10 items-center gap-1.5 rounded-full border border-primary-accent bg-card px-5 text-sm text-primary-accent hover:bg-primary-soft"
-                  href={`/inversionistas/nuevo?sourceInvestorId=${investorId}`}
-                >
-                  <Plus className="h-4 w-4" />
-                  Nueva inversión
-                </Link>
-                {investments.length === 1 && (
-                  <DropdownMenu.Root>
-                    <DropdownMenu.Trigger asChild>
-                      <button
-                        type="button"
-                        className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2"
-                      >
-                        Acciones
-                        <ChevronDown className="h-4 w-4" />
-                      </button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Portal>
-                      <DropdownMenu.Content
-                        align="end"
-                        sideOffset={6}
-                        className="z-50 min-w-52 overflow-hidden rounded-panel border border-border-soft bg-card p-1.5 shadow-card"
-                      >
-                        <DropdownMenu.Item asChild>
-                          <Link
-                            className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent data-[highlighted]:bg-primary-soft data-[highlighted]:text-primary-accent"
-                            href={`/inversionistas/pago?investmentId=${investments[0].id}`}
-                          >
-                            <Banknote className="h-4 w-4" />
-                            Registrar pago
-                          </Link>
-                        </DropdownMenu.Item>
-                      </DropdownMenu.Content>
-                    </DropdownMenu.Portal>
-                  </DropdownMenu.Root>
-                )}
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2"
+                    >
+                      Acciones
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      align="end"
+                      sideOffset={6}
+                      className="z-50 min-w-56 overflow-hidden rounded-panel border border-border-soft bg-card p-1.5 shadow-card"
+                    >
+                      <DropdownMenu.Item asChild>
+                        <button
+                          className="flex w-full cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-left text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent data-[highlighted]:bg-primary-soft data-[highlighted]:text-primary-accent"
+                          type="button"
+                        >
+                          <Download className="h-4 w-4" />
+                          Exportar
+                        </button>
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item asChild>
+                        <Link
+                          className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent data-[highlighted]:bg-primary-soft data-[highlighted]:text-primary-accent"
+                          href={`/inversionistas/nuevo?sourceInvestorId=${investorId}`}
+                        >
+                          <Plus className="h-4 w-4" />
+                          Nueva inversión
+                        </Link>
+                      </DropdownMenu.Item>
+                      {investments.length === 1 && (
+                        <>
+                          <DropdownMenu.Separator className="my-1 h-px bg-border-soft" />
+                          <DropdownMenu.Item asChild>
+                            <Link
+                              className="flex cursor-pointer items-center gap-3 rounded-control-comfortable px-4 py-2.5 text-sm text-text-secondary outline-none hover:bg-primary-soft hover:text-primary-accent data-[highlighted]:bg-primary-soft data-[highlighted]:text-primary-accent"
+                              href={`/inversionistas/pago?investmentId=${investments[0].id}`}
+                            >
+                              <Banknote className="h-4 w-4" />
+                              Registrar pago
+                            </Link>
+                          </DropdownMenu.Item>
+                        </>
+                      )}
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
               </div>
             </div>
           </div>
@@ -305,14 +316,14 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
               ) : (
                 <div className="overflow-x-auto">
                   <div
-                    className={`grid min-w-[930px] ${investmentTableColumns} bg-surface-subtle px-5 py-3 text-xs font-bold uppercase tracking-[0.08em] text-text-muted`}
+                    className={`grid min-w-[1000px] ${investmentTableColumns} items-center bg-surface-subtle px-6 py-3.5 text-xs font-bold uppercase tracking-[0.08em] text-text-muted`}
                   >
                     <span>Código</span>
+                    <span>Capital</span>
                     <span>Interés mensual</span>
                     <span>Próximo pago</span>
                     <span>Estado</span>
                     <span>Tasa</span>
-                    <span className="text-right">Capital</span>
                   </div>
                   {investments.map((investment) => {
                     const paymentStatus = investment.paymentStatus ?? 'SCHEDULED';
@@ -320,10 +331,15 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                     return (
                       <Link
                         key={investment.id}
-                        className={`grid min-w-[930px] ${investmentTableColumns} items-center border-t border-border-soft px-5 py-3 text-sm text-text-secondary transition hover:bg-surface-subtle`}
+                        className={`grid min-h-16 min-w-[1000px] ${investmentTableColumns} items-center border-t border-border-soft px-6 py-3 text-sm text-text-secondary transition hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-accent`}
                         href={`/inversiones/${investment.id}`}
                       >
-                        <span className="font-semibold text-text-primary">{investment.code}</span>
+                        <span className="font-semibold tabular-nums text-text-primary">
+                          {investment.code}
+                        </span>
+                        <span className="font-semibold tabular-nums text-text-primary">
+                          {fmt(investment.capital)}
+                        </span>
                         <span className="font-semibold tabular-nums text-text-primary">
                           {fmt(investment.monthlyPayment)}
                         </span>
@@ -337,10 +353,7 @@ export function InvestorDetailPage({ investorId }: { investorId: string }) {
                             {statusVisual.label}
                           </span>
                         </span>
-                        <span>{investment.rate}% mensual</span>
-                        <span className="text-right font-semibold tabular-nums text-text-primary">
-                          {fmt(investment.capital)}
-                        </span>
+                        <span className="tabular-nums">{investment.rate}% mensual</span>
                       </Link>
                     );
                   })}

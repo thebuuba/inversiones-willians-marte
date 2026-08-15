@@ -32,7 +32,7 @@ export function ClientsPanel() {
   const router = useRouter();
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
-  const [pageSize, setPageSize] = useState(8);
+  const [pageSize, setPageSize] = useState(5);
   const bodyRef = useRef<HTMLDivElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -41,7 +41,7 @@ export function ClientsPanel() {
     if (!container) return;
 
     const observer = new ResizeObserver(([entry]) => {
-      const fits = calculateClientPageSize(entry.contentRect.height);
+      const fits = calculateClientPageSize(entry.contentRect.height, window.innerWidth);
       setPageSize((prev) => {
         if (prev !== fits) setPage(0);
         return fits;
@@ -113,8 +113,8 @@ export function ClientsPanel() {
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-page p-5 font-sans text-text-primary">
-      <div className="flex w-full flex-1 flex-col gap-5">
+    <div className="flex min-h-[calc(100dvh-4rem-env(safe-area-inset-top))] flex-col bg-page p-4 font-sans text-text-primary md:h-[calc(100dvh-4rem-env(safe-area-inset-top))] md:min-h-0 md:overflow-hidden md:p-5">
+      <div className="flex w-full flex-col gap-5 md:min-h-0 md:flex-1">
         <header
           className={`${pageEntryHeaderClassName} flex flex-col justify-between gap-4 xl:flex-row xl:items-end`}
         >
@@ -168,7 +168,7 @@ export function ClientsPanel() {
         )}
 
         <PanelCard
-          className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-hidden bg-card md:overflow-x-auto`}
+          className={`${pageEntryTableClassName} flex flex-col overflow-hidden bg-card md:min-h-0 md:flex-1 md:overflow-x-auto`}
         >
           <div className="min-w-0 border-b border-border-soft bg-card p-4 md:min-w-[760px]">
             <div className="flex h-11 items-center gap-3 rounded-control-comfortable border border-primary-border bg-surface-subtle px-4 transition-colors duration-150 focus-within:border-primary-border focus-within:bg-card focus-within:ring-2 focus-within:ring-primary-soft">
@@ -189,7 +189,7 @@ export function ClientsPanel() {
 
           <div
             ref={bodyRef}
-            className="relative min-w-0 flex-1 overflow-hidden bg-card md:min-w-[760px]"
+            className="relative min-w-0 bg-card md:min-w-[760px] md:flex-1 md:overflow-hidden"
           >
             {initialLoading ? (
               <div className="flex h-full items-center justify-center text-sm font-medium text-text-secondary">

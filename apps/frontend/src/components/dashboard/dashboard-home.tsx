@@ -72,7 +72,9 @@ export function getAgingBuckets(priorities: CollectionPriority[]) {
   ];
 
   for (const item of priorities) {
-    const bucket = buckets.find((entry) => item.daysOverdue >= entry.min && item.daysOverdue <= entry.max);
+    const bucket = buckets.find(
+      (entry) => item.daysOverdue >= entry.min && item.daysOverdue <= entry.max,
+    );
     if (!bucket) continue;
     bucket.amount += item.overdueAmount;
     bucket.count += 1;
@@ -97,7 +99,11 @@ export function getInvestmentDueLabel(item: InvestmentPriority): string {
   return elapsedDays === 1 ? '1 día de atraso' : `${elapsedDays} días de atraso`;
 }
 
-const today = new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' });
+const today = new Date().toLocaleDateString('es-DO', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+});
 
 export const portfolioStatusConfig: Record<string, { label: string; color: string }> = {
   CURRENT: { label: 'A tiempo', color: loanStatusVisuals.CURRENT.color },
@@ -115,8 +121,10 @@ export function getPortfolioStatusData(portfolio: PortfolioGroup[]) {
     .sort((a, b) => {
       const aIndex = portfolioStatusOrder.indexOf(a.status);
       const bIndex = portfolioStatusOrder.indexOf(b.status);
-      return (aIndex === -1 ? portfolioStatusOrder.length : aIndex)
-        - (bIndex === -1 ? portfolioStatusOrder.length : bIndex);
+      return (
+        (aIndex === -1 ? portfolioStatusOrder.length : aIndex) -
+        (bIndex === -1 ? portfolioStatusOrder.length : bIndex)
+      );
     })
     .map((group) => ({
       name: portfolioStatusConfig[group.status]?.label ?? group.status,
@@ -138,7 +146,15 @@ async function getEmptyAudit() {
   return [];
 }
 
-function Card({ children, className = '', index = 0 }: { children: ReactNode; className?: string; index?: number }) {
+function Card({
+  children,
+  className = '',
+  index = 0,
+}: {
+  children: ReactNode;
+  className?: string;
+  index?: number;
+}) {
   return (
     <motion.section
       variants={cardVariants}
@@ -174,11 +190,7 @@ function SectionHeader({
 
 export function DashboardHome() {
   const { user } = useAuth();
-  const { data: overview } = useClientCache(
-    'dashboard-overview',
-    getDashboardOverview,
-    60_000,
-  );
+  const { data: overview } = useClientCache('dashboard-overview', getDashboardOverview, 60_000);
   const { data: audit } = useClientCache(
     user?.role === 'ADMIN' ? 'audit' : 'audit-unavailable',
     user?.role === 'ADMIN' ? getAudit : getEmptyAudit,
@@ -199,17 +211,43 @@ export function DashboardHome() {
   const agingBuckets = getAgingBuckets(collectionPriorities);
 
   const metricCards = [
-    { label: 'Préstamos activos', value: String(activeLoans), icon: BriefcaseBusiness, tone: 'bg-primary-soft text-primary' },
-    { label: 'Cobrado hoy', value: formatCurrency(collectionsToday), icon: DollarSign, tone: 'bg-state-warning-bg text-state-warning' },
-    { label: 'Por cobrar hoy', value: formatCurrency(dueToday), icon: CalendarClock, tone: 'bg-primary-soft text-primary' },
-    { label: 'Total vencido', value: formatCurrency(overdueTotal), icon: AlertTriangle, tone: 'bg-state-danger-bg text-state-danger' },
-    { label: 'Saldo cartera', value: formatCurrency(portfolioBalance), icon: Wallet, tone: 'bg-state-info-bg text-state-info' },
+    {
+      label: 'Préstamos activos',
+      value: String(activeLoans),
+      icon: BriefcaseBusiness,
+      tone: 'bg-primary-soft text-primary',
+    },
+    {
+      label: 'Cobrado hoy',
+      value: formatCurrency(collectionsToday),
+      icon: DollarSign,
+      tone: 'bg-state-warning-bg text-state-warning',
+    },
+    {
+      label: 'Por cobrar hoy',
+      value: formatCurrency(dueToday),
+      icon: CalendarClock,
+      tone: 'bg-primary-soft text-primary',
+    },
+    {
+      label: 'Total vencido',
+      value: formatCurrency(overdueTotal),
+      icon: AlertTriangle,
+      tone: 'bg-state-danger-bg text-state-danger',
+    },
+    {
+      label: 'Saldo cartera',
+      value: formatCurrency(portfolioBalance),
+      icon: Wallet,
+      tone: 'bg-state-info-bg text-state-info',
+    },
   ];
 
   const portfolioSafe = portfolio ?? [];
-  const portfolioPie = portfolioSafe.length > 0
-    ? getPortfolioStatusData(portfolioSafe)
-    : [{ name: 'Sin datos', value: 1, color: '#E0E0E0' }];
+  const portfolioPie =
+    portfolioSafe.length > 0
+      ? getPortfolioStatusData(portfolioSafe)
+      : [{ name: 'Sin datos', value: 1, color: '#E0E0E0' }];
 
   const portfolioTotal = portfolioPie.reduce((s, e) => s + e.value, 0);
 
@@ -221,12 +259,14 @@ export function DashboardHome() {
       <div className="mb-5 flex flex-col items-start justify-between gap-4 2xl:flex-row 2xl:items-end">
         <div>
           <div className="mb-3 flex items-center gap-3">
-<span className="text-sm text-text-secondary">{today}</span>
+            <span className="text-sm text-text-secondary">{today}</span>
           </div>
           <h1 className="text-3xl font-bold leading-tight text-text-primary">
             Hola, {user?.name ?? 'Usuario'} 👋
           </h1>
-          <p className="mt-1.5 text-base text-text-secondary">Aquí tienes un resumen de tu cartera hoy.</p>
+          <p className="mt-1.5 text-base text-text-secondary">
+            Aquí tienes un resumen de tu cartera hoy.
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <button className="h-11 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-primary-accent shadow-card">
@@ -246,7 +286,10 @@ export function DashboardHome() {
         {metricCards.map((k) => {
           const Icon = k.icon;
           return (
-            <div key={k.label} className="rounded-panel bg-card p-4 shadow-card border border-border-soft sm:p-6">
+            <div
+              key={k.label}
+              className="rounded-panel bg-card p-4 shadow-card border border-border-soft sm:p-6"
+            >
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 <div
                   className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full sm:h-14 sm:w-14 ${k.tone}`}
@@ -270,14 +313,29 @@ export function DashboardHome() {
             subtitle="Capital, interés y mora · últimos 30 días"
             right={
               <div className="hidden items-center gap-4 text-xs font-semibold text-text-secondary sm:flex">
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-primary-accent" />Capital</span>
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-state-info-dot" />Interés</span>
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-state-danger-dot" />Mora</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-primary-accent" />
+                  Capital
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-state-info-dot" />
+                  Interés
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-state-danger-dot" />
+                  Mora
+                </span>
               </div>
             }
           />
           <div className="h-[250px] min-w-0">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 720, height: 250 }}>
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              minWidth={0}
+              minHeight={0}
+              initialDimension={{ width: 720, height: 250 }}
+            >
               <AreaChart data={dailyIncome} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="capitalGradient" x1="0" x2="0" y1="0" y2="1">
@@ -289,12 +347,36 @@ export function DashboardHome() {
                     <stop offset="95%" stopColor="#5AAFC7" stopOpacity={0.01} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid stroke="var(--border-strong)" strokeDasharray="4 6" vertical={false} />
-                <XAxis dataKey="label" axisLine={false} tickLine={false} interval="preserveStartEnd" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} width={62} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} tickFormatter={(value) => Number(value).toLocaleString('es-DO', { notation: 'compact' })} />
+                <CartesianGrid
+                  stroke="var(--border-strong)"
+                  strokeDasharray="4 6"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="label"
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  width={62}
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                  tickFormatter={(value) =>
+                    Number(value).toLocaleString('es-DO', { notation: 'compact' })
+                  }
+                />
                 <Tooltip
                   cursor={{ stroke: 'var(--border-strong)', strokeDasharray: '4 6' }}
-                  contentStyle={{ background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 16, color: 'var(--text-primary)' }}
+                  contentStyle={{
+                    background: 'var(--surface-elevated)',
+                    border: '1px solid var(--border-strong)',
+                    borderRadius: 16,
+                    color: 'var(--text-primary)',
+                  }}
                   itemStyle={{ color: 'var(--text-primary)' }}
                   labelStyle={{ color: 'var(--text-secondary)' }}
                   formatter={(value, name) => [
@@ -302,9 +384,35 @@ export function DashboardHome() {
                     name === 'capital' ? 'Capital' : name === 'interest' ? 'Interés' : 'Mora',
                   ]}
                 />
-                <Area type="monotone" dataKey="capital" stroke="#5A9A7A" strokeWidth={3} fill="url(#capitalGradient)" dot={false} isAnimationActive animationDuration={1200} />
-                <Area type="monotone" dataKey="interest" stroke="#5AAFC7" strokeWidth={2.5} fill="url(#interestGradient)" dot={false} isAnimationActive animationDuration={1100} />
-                <Line type="monotone" dataKey="lateFee" stroke="#E67C73" strokeWidth={2.5} dot={false} isAnimationActive animationDuration={1000} />
+                <Area
+                  type="monotone"
+                  dataKey="capital"
+                  stroke="#5A9A7A"
+                  strokeWidth={3}
+                  fill="url(#capitalGradient)"
+                  dot={false}
+                  isAnimationActive
+                  animationDuration={1200}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="interest"
+                  stroke="#5AAFC7"
+                  strokeWidth={2.5}
+                  fill="url(#interestGradient)"
+                  dot={false}
+                  isAnimationActive
+                  animationDuration={1100}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="lateFee"
+                  stroke="#E67C73"
+                  strokeWidth={2.5}
+                  dot={false}
+                  isAnimationActive
+                  animationDuration={1000}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -313,11 +421,32 @@ export function DashboardHome() {
         <Card className="p-6" index={5}>
           <SectionHeader title="Estado de cartera" subtitle="Distribución por estatus" />
           <div className="relative mx-auto h-[184px] min-w-0 max-w-[196px]">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 196, height: 184 }}>
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              minWidth={0}
+              minHeight={0}
+              initialDimension={{ width: 196, height: 184 }}
+            >
               <PieChart>
-                <Pie data={portfolioPie} dataKey="value" innerRadius={50} outerRadius={80} paddingAngle={2} startAngle={0} endAngle={360} isAnimationActive animationDuration={1200}>
+                <Pie
+                  data={portfolioPie}
+                  dataKey="value"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={2}
+                  startAngle={0}
+                  endAngle={360}
+                  isAnimationActive
+                  animationDuration={1200}
+                >
                   {portfolioPie.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} stroke="var(--card)" strokeWidth={4} />
+                    <Cell
+                      key={entry.name}
+                      fill={entry.color}
+                      stroke="var(--card)"
+                      strokeWidth={4}
+                    />
                   ))}
                 </Pie>
               </PieChart>
@@ -329,9 +458,15 @@ export function DashboardHome() {
           </div>
           <div className="mt-3 space-y-2">
             {portfolioPie.map((entry) => (
-              <div key={entry.name} className="flex items-center justify-between text-sm font-semibold text-primary-accent">
+              <div
+                key={entry.name}
+                className="flex items-center justify-between text-sm font-semibold text-primary-accent"
+              >
                 <span className="flex items-center gap-2.5">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: entry.color }}
+                  />
                   {entry.name}
                 </span>
                 <span className="font-bold text-text-primary">{entry.value}</span>
@@ -345,13 +480,34 @@ export function DashboardHome() {
         <Card className="p-6" index={6}>
           <SectionHeader title="Mora por antigüedad" subtitle="Monto vencido por días de atraso" />
           <div className="h-[230px] min-w-0">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 720, height: 230 }}>
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              minWidth={0}
+              minHeight={0}
+              initialDimension={{ width: 720, height: 230 }}
+            >
               <BarChart data={agingBuckets} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke="var(--border-strong)" strokeDasharray="4 6" vertical={false} />
-                <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} dy={10} />
+                <CartesianGrid
+                  stroke="var(--border-strong)"
+                  strokeDasharray="4 6"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="label"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 13 }}
+                  dy={10}
+                />
                 <Tooltip
                   cursor={{ fill: 'var(--surface-muted-ui)' }}
-                  contentStyle={{ background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 16, color: 'var(--text-primary)' }}
+                  contentStyle={{
+                    background: 'var(--surface-elevated)',
+                    border: '1px solid var(--border-strong)',
+                    borderRadius: 16,
+                    color: 'var(--text-primary)',
+                  }}
                   itemStyle={{ color: 'var(--text-primary)' }}
                   labelStyle={{ color: 'var(--text-secondary)' }}
                   formatter={(value, name, props) => [
@@ -359,7 +515,13 @@ export function DashboardHome() {
                     name === 'amount' ? `${props.payload.count} préstamos` : name,
                   ]}
                 />
-                <Bar dataKey="amount" fill="#F7A184" radius={[7, 7, 0, 0]} barSize={44} animationDuration={1100} />
+                <Bar
+                  dataKey="amount"
+                  fill="#F7A184"
+                  radius={[7, 7, 0, 0]}
+                  barSize={44}
+                  animationDuration={1100}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -369,31 +531,51 @@ export function DashboardHome() {
           <SectionHeader
             title="Cobros prioritarios"
             subtitle="Casos ordenados por urgencia"
-            right={<span className="rounded-full bg-state-danger-bg px-2.5 py-1 text-sm font-bold text-state-danger">{collectionPriorities.length}</span>}
+            right={
+              <span className="rounded-full bg-state-danger-bg px-2.5 py-1 text-sm font-bold text-state-danger">
+                {collectionPriorities.length}
+              </span>
+            }
           />
           <div className="divide-y divide-border-soft">
             {collectionPriorities.length === 0 ? (
-              <p className="py-8 text-center text-sm text-text-secondary">No hay préstamos vencidos</p>
-            ) : collectionPriorities.slice(0, 4).map((item) => (
-              <Link
-                key={item.loanId}
-                className="group flex items-center gap-3 py-3 first:pt-0 last:pb-0"
-                href={`/prestamos/${item.loanId}`}
-              >
-                <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${priorityDots[item.level]}`} aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="truncate text-sm font-bold text-text-primary">{item.clientName}</p>
-                    <span className="shrink-0 text-xs font-bold text-state-danger">{formatCurrency(item.overdueAmount)}</span>
+              <p className="py-8 text-center text-sm text-text-secondary">
+                No hay préstamos vencidos
+              </p>
+            ) : (
+              collectionPriorities.slice(0, 4).map((item) => (
+                <Link
+                  key={item.loanId}
+                  className="group flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+                  href={`/prestamos/${item.loanId}`}
+                >
+                  <span
+                    className={`h-2.5 w-2.5 shrink-0 rounded-full ${priorityDots[item.level]}`}
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="truncate text-sm font-bold text-text-primary">
+                        {item.clientName}
+                      </p>
+                      <span className="shrink-0 text-xs font-bold text-state-danger">
+                        {formatCurrency(item.overdueAmount)}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 truncate text-xs text-text-secondary">
+                      Préstamo #{item.loanNumber} · {item.reasons[0]}
+                    </p>
+                    <p className="mt-1 truncate text-xs font-semibold text-primary-accent">
+                      {item.suggestedAction}
+                    </p>
                   </div>
-                  <p className="mt-0.5 truncate text-xs text-text-secondary">
-                    Préstamo #{item.loanNumber} · {item.reasons[0]}
-                  </p>
-                  <p className="mt-1 truncate text-xs font-semibold text-primary-accent">{item.suggestedAction}</p>
-                </div>
-                <ChevronRight className="h-4 w-4 shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-              </Link>
-            ))}
+                  <ChevronRight
+                    className="h-4 w-4 shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5"
+                    aria-hidden="true"
+                  />
+                </Link>
+              ))
+            )}
           </div>
         </Card>
       </div>
@@ -405,41 +587,48 @@ export function DashboardHome() {
             <p className="mt-0.5 text-xs text-text-secondary">Últimos movimientos del sistema</p>
           </div>
           <div className="divide-y divide-border-soft">
-            {auditRows.length > 0 ? auditRows.map((row, index) => {
-              return (
-                <article
-                  key={row.id ?? `audit-${index}`}
-                  className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2.5 gap-y-1 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]"
-                >
-                  <span className={`h-2 w-2 rounded-full ${auditToneDots[row.tone]}`} aria-hidden="true" />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm leading-5 text-text-secondary">
-                      <span className="font-bold text-text-primary">{row.actor}</span>{' '}
-                      {row.action}
-                    </p>
-                  </div>
-                  <div className="col-start-2 min-w-0 sm:col-start-2">
-                    {row.loanHref ? (
-                      <Link
-                        className="inline-flex max-w-full items-center gap-1 text-xs font-bold text-primary-accent transition hover:text-primary focus-visible:rounded-sm"
-                        href={row.loanHref}
-                      >
-                        <span className="truncate">{row.reference}</span>
-                        <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                      </Link>
-                    ) : (
-                      <span className="block truncate text-xs font-medium text-text-secondary">{row.reference}</span>
-                    )}
-                  </div>
-                  <time
-                    className="col-start-2 text-xs font-medium text-text-secondary sm:col-start-auto sm:row-start-1"
-                    dateTime={row.createdAt}
+            {auditRows.length > 0 ? (
+              auditRows.map((row, index) => {
+                return (
+                  <article
+                    key={row.id ?? `audit-${index}`}
+                    className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2.5 gap-y-1 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]"
                   >
-                    {timeAgo(row.createdAt)}
-                  </time>
-                </article>
-              );
-            }) : (
+                    <span
+                      className={`h-2 w-2 rounded-full ${auditToneDots[row.tone]}`}
+                      aria-hidden="true"
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm leading-5 text-text-secondary">
+                        <span className="font-bold text-text-primary">{row.actor}</span>{' '}
+                        {row.action}
+                      </p>
+                    </div>
+                    <div className="col-start-2 min-w-0 sm:col-start-2">
+                      {row.loanHref ? (
+                        <Link
+                          className="inline-flex max-w-full items-center gap-1 text-xs font-bold text-primary-accent transition hover:text-primary focus-visible:rounded-sm"
+                          href={row.loanHref}
+                        >
+                          <span className="truncate">{row.reference}</span>
+                          <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        </Link>
+                      ) : (
+                        <span className="block truncate text-xs font-medium text-text-secondary">
+                          {row.reference}
+                        </span>
+                      )}
+                    </div>
+                    <time
+                      className="col-start-2 text-xs font-medium text-text-secondary sm:col-start-auto sm:row-start-1"
+                      dateTime={row.createdAt}
+                    >
+                      {timeAgo(row.createdAt)}
+                    </time>
+                  </article>
+                );
+              })
+            ) : (
               <div className="rounded-control-comfortable bg-surface-subtle px-4 py-5 text-center">
                 <p className="text-sm font-bold text-text-primary">
                   {user?.role === 'ADMIN' ? 'No hay actividad reciente' : 'Auditoría restringida'}
@@ -454,30 +643,54 @@ export function DashboardHome() {
           <div className="space-y-3">
             {(upcomingPayments ?? []).length === 0 ? (
               <p className="py-6 text-center text-sm text-text-secondary">No hay cobros próximos</p>
-            ) : (upcomingPayments ?? []).map((payment) => {
-              const due = new Date(payment.dueDate);
-              const today2 = new Date();
-              today2.setHours(0, 0, 0, 0);
-              const diffDays = Math.floor((due.getTime() - today2.getTime()) / 86400000);
-              let tag = due.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' });
-              let warm = false;
-              if (diffDays === 0) { tag = 'HOY'; warm = true; }
-              else if (diffDays === 1) { tag = 'MAÑ'; warm = true; }
+            ) : (
+              (upcomingPayments ?? []).map((payment) => {
+                const due = new Date(payment.dueDate);
+                const today2 = new Date();
+                today2.setHours(0, 0, 0, 0);
+                const diffDays = Math.floor((due.getTime() - today2.getTime()) / 86400000);
+                let tag = due.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' });
+                let warm = false;
+                if (diffDays === 0) {
+                  tag = 'HOY';
+                  warm = true;
+                } else if (diffDays === 1) {
+                  tag = 'MAÑ';
+                  warm = true;
+                }
 
-              return (
-                <div key={payment.id} className={`flex items-center gap-3 rounded-[16px] border p-3 ${warm ? 'border-state-danger-dot bg-state-danger-bg' : 'border-primary-border bg-surface-muted-ui'}`}>
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-xs font-bold ${warm ? 'bg-state-danger text-white' : 'bg-card text-primary-accent'}`}>
-                    {tag}
+                return (
+                  <div
+                    key={payment.id}
+                    className={`flex items-center gap-3 rounded-[16px] border p-3 ${warm ? 'border-state-danger-dot bg-state-danger-bg' : 'border-primary-border bg-surface-muted-ui'}`}
+                  >
+                    <div
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] text-xs font-bold ${warm ? 'bg-state-danger text-white' : 'bg-card text-primary-accent'}`}
+                    >
+                      {tag}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-text-primary">
+                        {payment.clientName}
+                      </p>
+                      <p className="mt-0.5 text-xs text-text-secondary">
+                        {due.toLocaleDateString('es-DO', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'long',
+                        })}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-sm font-bold text-text-primary">
+                      {formatCurrency(payment.amount)}
+                    </span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-text-primary">{payment.clientName}</p>
-                    <p className="mt-0.5 text-xs text-text-secondary">{due.toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-                  </div>
-                  <span className="shrink-0 text-sm font-bold text-text-primary">{formatCurrency(payment.amount)}</span>
-                </div>
-              );
-            })}
-            <button className="mt-3 h-11 w-full rounded-[16px] bg-surface-muted-ui text-sm font-bold text-primary-accent">Ver agenda completa</button>
+                );
+              })
+            )}
+            <button className="mt-3 h-11 w-full rounded-[16px] bg-surface-muted-ui text-sm font-bold text-primary-accent">
+              Ver agenda completa
+            </button>
           </div>
         </Card>
       </div>
@@ -507,11 +720,11 @@ export function DashboardHome() {
                   href={`/inversiones/${item.investmentId}`}
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-text-primary">
-                      {item.investmentCode}
-                    </p>
-                    <p className="mt-0.5 truncate text-xs text-text-secondary">
+                    <p className="truncate text-base font-bold text-text-primary">
                       {item.investorName}
+                    </p>
+                    <p className="mt-0.5 truncate text-sm font-medium text-text-secondary">
+                      {item.investmentCode}
                     </p>
                   </div>
                   <div className="hidden min-w-0 sm:block">
@@ -547,7 +760,6 @@ export function DashboardHome() {
           )}
         </div>
       </Card>
-
     </div>
   );
 }
