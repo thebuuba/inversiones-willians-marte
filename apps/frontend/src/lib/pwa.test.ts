@@ -25,8 +25,10 @@ test('pwa manifest uses installable standalone settings', () => {
 test('service worker keeps api requests out of shell cache', async () => {
   const sw = await readFile(new URL('../../public/sw.js', import.meta.url), 'utf8');
 
-  assert.match(sw, /const CACHE_NAME = 'inversiones-shell-v3'/);
+  assert.match(sw, /const CACHE_NAME = 'inversiones-shell-v4'/);
   assert.match(sw, /'\/offline'/);
+  assert.doesNotMatch(sw, /'\/inicio'/);
+  assert.doesNotMatch(sw, /cache\.put\(request/);
   assert.match(sw, /url\.pathname\.startsWith\('\/api\/'\)/);
   assert.match(sw, /url\.pathname\.startsWith\('\/_next\/'\)/);
   assert.match(sw, /url\.pathname\.startsWith\('\/captura-'\)/);
@@ -41,5 +43,17 @@ test('development unregisters service workers so localhost never serves stale bu
   assert.match(register, /process\.env\.NODE_ENV !== 'production'/);
   assert.match(register, /registration\.unregister\(\)/);
   assert.match(register, /caches\.delete\(key\)/);
-  assert.match(register, /register\('\/sw\.js\?v=3'\)/);
+  assert.match(register, /register\('\/sw\.js\?v=4'\)/);
+});
+
+test('iPhone install guidance explains the manual Safari flow', async () => {
+  const hint = await readFile(
+    new URL('../components/pwa/ios-install-hint.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(hint, /iphone\|ipad\|ipod/i);
+  assert.match(hint, /display-mode: standalone/);
+  assert.match(hint, /Añadir a pantalla de inicio/);
+  assert.match(hint, /safe-area-inset-bottom/);
 });
