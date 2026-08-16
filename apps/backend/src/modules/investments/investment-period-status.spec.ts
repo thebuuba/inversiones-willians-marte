@@ -42,6 +42,27 @@ describe('getInvestmentPeriodStatus', () => {
     expect(status.nextDueDate?.toISOString().slice(0, 10)).toBe('2026-10-20');
   });
 
+  it('keeps a partially paid period current until its monthly return is settled', () => {
+    const partial = getInvestmentPeriodStatus(
+      startDate,
+      [{ periodMonth: 8, periodYear: 2026, amount: 400 }],
+      new Date('2026-08-20T12:00:00.000Z'),
+      1_000,
+    );
+    expect(partial.currentPeriodMonth).toBe(8);
+
+    const settled = getInvestmentPeriodStatus(
+      startDate,
+      [
+        { periodMonth: 8, periodYear: 2026, amount: 400 },
+        { periodMonth: 8, periodYear: 2026, amount: 600 },
+      ],
+      new Date('2026-08-20T12:00:00.000Z'),
+      1_000,
+    );
+    expect(settled.currentPeriodMonth).toBe(9);
+  });
+
   it('clamps monthly due dates to the final day of shorter months', () => {
     const status = getInvestmentPeriodStatus(
       '2026-01-31T00:00:00.000Z',
