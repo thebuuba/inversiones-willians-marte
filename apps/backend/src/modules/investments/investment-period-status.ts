@@ -9,12 +9,23 @@ export interface InvestmentPeriodStatus {
 
 export function getInvestmentPeriodStatus(
   startDate: Date | string | null | undefined,
-  payments: Array<{ periodMonth: number; periodYear: number }> = [],
+  payments: Array<{ periodMonth: number; periodYear: number; amount?: number | string }> = [],
   today = new Date(),
+  monthlyPayment?: number | string,
 ): InvestmentPeriodStatus {
   let targetPeriod = getTargetPeriod(startDate, today);
+  const requiredAmount = monthlyPayment === undefined ? undefined : Number(monthlyPayment);
+  const totalsByPeriod = new Map<string, number>();
+  for (const payment of payments) {
+    const key = `${payment.periodYear}-${payment.periodMonth}`;
+    totalsByPeriod.set(key, (totalsByPeriod.get(key) ?? 0) + Number(payment.amount ?? 0));
+  }
   const paidPeriods = new Set(
-    payments.map((payment) => `${payment.periodYear}-${payment.periodMonth}`),
+    requiredAmount === undefined
+      ? payments.map((payment) => `${payment.periodYear}-${payment.periodMonth}`)
+      : [...totalsByPeriod.entries()]
+          .filter(([, total]) => total >= requiredAmount)
+          .map(([period]) => period),
   );
   while (paidPeriods.has(`${targetPeriod.year}-${targetPeriod.month}`)) {
     targetPeriod = nextPeriod(targetPeriod);
