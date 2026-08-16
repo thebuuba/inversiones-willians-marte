@@ -296,7 +296,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             onClick={() => setMobileOpen(false)}
             type="button"
           />
-          <aside className="relative h-dvh w-[260px] border-r border-border-soft bg-card">
+          <aside className="relative h-dvh w-[260px] border-r border-border-soft bg-card pb-[env(safe-area-inset-bottom)]">
             {sidebarContent(false)}
           </aside>
         </div>
