@@ -176,9 +176,13 @@ export class InvestmentsService {
 
   getCurrentPeriodStatus(
     startDate: Date | string | null | undefined,
-    payments: Array<{ periodMonth: number; periodYear: number; amount?: number | string }>,
+    payments: Array<{
+      periodMonth: number;
+      periodYear: number;
+      amount?: number | string | { toString(): string };
+    }>,
     today = new Date(),
-    monthlyPayment?: number | string,
+    monthlyPayment?: number | string | { toString(): string },
   ) {
     return getInvestmentPeriodStatus(startDate, payments, today, monthlyPayment);
   }
