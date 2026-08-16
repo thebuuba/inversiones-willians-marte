@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
@@ -24,8 +24,7 @@ import { formatInvestorCurrency } from './investors-panel.helpers';
 import type { InvestorItem } from '@inversiones/shared';
 import { Card as PanelCard } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
-const PAGE_SIZE = 8;
+import { calculateClientPageSize } from '@/components/clients/clients-pagination';
 
 const statusLabels: Record<string, string> = {
   ACTIVE: 'Activo',
@@ -40,8 +39,26 @@ export function InvestorsPanel() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('Todos');
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const { data, loading, error } = useClientCache<InvestorItem[]>('investors', getInvestors);
   const investors = useMemo(() => data ?? [], [data]);
+
+  useEffect(() => {
+    const container = bodyRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      const fits = calculateClientPageSize(entry.contentRect.height, window.innerWidth);
+      setPageSize((previous) => {
+        if (previous !== fits) setPage(0);
+        return fits;
+      });
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   const stats = useMemo(() => {
     const total = investors.length;
@@ -96,13 +113,13 @@ export function InvestorsPanel() {
     });
   }, [investors, filter, search]);
 
-  const totalPages = Math.ceil(filteredInvestors.length / PAGE_SIZE);
-  const displayInvestors = filteredInvestors.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const totalPages = Math.ceil(filteredInvestors.length / pageSize);
+  const displayInvestors = filteredInvestors.slice(page * pageSize, (page + 1) * pageSize);
   const initialLoading = loading && !data;
 
   return (
-    <div className="flex h-[calc(100dvh-4rem-env(safe-area-inset-top))] min-h-0 flex-col overflow-hidden bg-page p-5 font-sans text-text-primary">
-      <div className="flex w-full flex-1 flex-col gap-5">
+    <div className="flex min-h-[calc(100dvh-4rem-env(safe-area-inset-top))] flex-col bg-page p-4 font-sans text-text-primary md:h-[calc(100dvh-4rem-env(safe-area-inset-top))] md:min-h-0 md:overflow-hidden md:p-5">
+      <div className="flex w-full flex-col gap-5 md:min-h-0 md:flex-1">
         <header
           className={`${pageEntryHeaderClassName} flex flex-col justify-between gap-4 xl:flex-row xl:items-end`}
         >
@@ -158,7 +175,7 @@ export function InvestorsPanel() {
         )}
 
         <PanelCard
-          className={`${pageEntryTableClassName} flex min-h-0 flex-1 flex-col overflow-hidden bg-card md:overflow-x-auto`}
+          className={`${pageEntryTableClassName} flex flex-col overflow-hidden bg-card md:min-h-0 md:flex-1 md:overflow-x-auto`}
         >
           {/* search + filters */}
           <div className="min-w-0 border-b border-border-soft bg-card p-4 md:min-w-[760px]">
@@ -196,16 +213,19 @@ export function InvestorsPanel() {
           </div>
 
           {/* table header */}
-          <div className="sticky top-0 z-10 grid min-w-0 grid-cols-[1fr_auto] items-center border-b border-border-soft bg-card px-4 py-3.5 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:min-w-[760px] md:grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] md:px-6">
+          <div className="sticky top-0 z-10 grid min-w-0 grid-cols-[1fr_auto] items-center border-b border-border-soft bg-card px-4 py-3.5 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary md:min-w-[760px] md:grid-cols-[2fr_1.1fr_1.2fr_0.7fr_0.85fr] md:px-6">
             <span>INVERSIONISTA</span>
             <span className="hidden md:block">CÓDIGO</span>
             <span className="hidden md:block">CAPITAL</span>
             <span className="hidden md:block">TASA</span>
-            <span>ESTADO</span>
+            <span className="justify-self-end">ESTADO</span>
           </div>
 
           {/* body */}
-          <div className="relative min-w-0 flex-1 overflow-hidden md:min-w-[760px]">
+          <div
+            ref={bodyRef}
+            className="relative min-w-0 md:min-w-[760px] md:flex-1 md:overflow-hidden"
+          >
             {initialLoading ? (
               <div className="flex h-full items-center justify-center text-sm font-medium text-text-secondary">
                 Cargando inversionistas...
@@ -220,7 +240,7 @@ export function InvestorsPanel() {
               displayInvestors.map((investor) => (
                 <div
                   key={investor.id}
-                  className="group grid min-h-[72px] cursor-pointer grid-cols-[1fr_auto] items-center border-b border-border-soft bg-card px-4 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle md:min-h-[64px] md:grid-cols-[2fr_1.2fr_1.2fr_0.7fr_1fr] md:px-6"
+                  className="group grid min-h-[72px] cursor-pointer grid-cols-[1fr_auto] items-center border-b border-border-soft bg-card px-4 transition-colors duration-150 last:border-b-0 hover:bg-surface-subtle md:min-h-[64px] md:grid-cols-[2fr_1.1fr_1.2fr_0.7fr_0.85fr] md:px-6"
                   onClick={() => router.push(`/inversionistas/${investor.id}`)}
                 >
                   <div className="flex items-center gap-3">
@@ -256,7 +276,7 @@ export function InvestorsPanel() {
                   <span className="hidden [font-variant-numeric:tabular-nums] text-sm text-text-secondary md:block">
                     {investor.rate}%
                   </span>
-                  <span>
+                  <span className="justify-self-end">
                     <Badge
                       className="min-w-[76px] justify-center py-1.5"
                       dot

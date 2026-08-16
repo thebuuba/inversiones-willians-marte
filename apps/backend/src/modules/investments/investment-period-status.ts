@@ -9,26 +9,35 @@ export interface InvestmentPeriodStatus {
 
 export function getInvestmentPeriodStatus(
   startDate: Date | string | null | undefined,
-  payments: Array<{ periodMonth: number; periodYear: number }> = [],
+  payments: Array<{
+    periodMonth: number;
+    periodYear: number;
+    amount?: number | string | { toString(): string };
+  }> = [],
   today = new Date(),
+  monthlyPayment?: number | string | { toString(): string },
 ): InvestmentPeriodStatus {
-  const targetPeriod = getTargetPeriod(startDate, today);
-  const paid = payments.some(
-    (payment) =>
-      payment.periodMonth === targetPeriod.month && payment.periodYear === targetPeriod.year,
+  let targetPeriod = getTargetPeriod(startDate, today);
+  const requiredAmount = monthlyPayment === undefined ? undefined : Number(monthlyPayment);
+  const totalsByPeriod = new Map<string, number>();
+  for (const payment of payments) {
+    const key = `${payment.periodYear}-${payment.periodMonth}`;
+    totalsByPeriod.set(key, (totalsByPeriod.get(key) ?? 0) + Number(payment.amount ?? 0));
+  }
+  const paidPeriods = new Set(
+    requiredAmount === undefined
+      ? payments.map((payment) => `${payment.periodYear}-${payment.periodMonth}`)
+      : [...totalsByPeriod.entries()]
+          .filter(([, total]) => total >= requiredAmount)
+          .map(([period]) => period),
   );
+  while (paidPeriods.has(`${targetPeriod.year}-${targetPeriod.month}`)) {
+    targetPeriod = nextPeriod(targetPeriod);
+  }
   const nextDueDate = startDate
     ? dueDateForPeriod(new Date(startDate), targetPeriod.year, targetPeriod.month)
     : null;
 
-  if (paid) {
-    return {
-      currentPeriodMonth: targetPeriod.month,
-      currentPeriodYear: targetPeriod.year,
-      nextDueDate,
-      paymentStatus: 'PAID',
-    };
-  }
   if (!nextDueDate) {
     return {
       currentPeriodMonth: targetPeriod.month,
@@ -51,6 +60,12 @@ export function getInvestmentPeriodStatus(
     nextDueDate,
     paymentStatus,
   };
+}
+
+function nextPeriod(period: { month: number; year: number }) {
+  return period.month === 12
+    ? { month: 1, year: period.year + 1 }
+    : { month: period.month + 1, year: period.year };
 }
 
 function getTargetPeriod(startDate: Date | string | null | undefined, today: Date) {

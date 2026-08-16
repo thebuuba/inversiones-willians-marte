@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { X, Printer, Download, MessageCircle } from 'lucide-react';
+import { X, Printer, Download, MessageCircle, CheckCircle2 } from 'lucide-react';
 import { formatDop } from '@/lib/currency';
 import { getSettings, type SystemSettings } from '@/lib/api/settings';
-import { amountToSpanishWords } from '@/components/loans/loan-disbursement-receipt.helpers';
 import type { InvestorInvestmentSummary, InvestorItem, InvestorPaymentItem } from '@inversiones/shared';
 
 const fmt = (n: number | string) => formatDop(n);
@@ -29,11 +28,30 @@ interface PaymentReceiptModalProps {
   investor: InvestorItem;
   investment?: InvestorInvestmentSummary | null;
   onClose: () => void;
+  newlyCreated?: boolean;
 }
 
-export function PaymentReceiptModal({ payment, investor, investment, onClose }: PaymentReceiptModalProps) {
+function ReceiptDetail({
+  emphasized = false,
+  label,
+  value,
+}: {
+  emphasized?: boolean;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-control-comfortable border border-border-soft bg-surface-subtle px-4 py-3">
+      <p className="text-xs font-medium text-text-muted">{label}</p>
+      <p className={`mt-1 break-words font-bold ${emphasized ? 'text-lg text-primary-accent' : 'text-sm text-text-primary'}`}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+export function PaymentReceiptModal({ payment, investor, investment, onClose, newlyCreated = false }: PaymentReceiptModalProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
-  const [mode, setMode] = useState<'two-part' | 'company' | 'investor'>('two-part');
   const [company, setCompany] = useState<SystemSettings | null>(null);
 
   useEffect(() => {
@@ -134,17 +152,17 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
     <div
       aria-labelledby="investor-payment-receipt-title"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-3 py-4 backdrop-blur-[2px] sm:items-center sm:px-4 sm:py-6"
       onClick={onClose}
       role="dialog"
     >
       <div
-        className="flex w-full max-w-[560px] flex-col overflow-hidden rounded-panel border border-border-soft bg-card shadow-modal"
+        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-[640px] flex-col overflow-y-auto rounded-panel border border-border-soft bg-card shadow-modal sm:max-h-[calc(100dvh-3rem)]"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-start justify-between gap-4 bg-surface-muted px-6 py-5">
           <div>
-            <h2 className="text-xl font-bold text-text-primary" id="investor-payment-receipt-title">Recibo de pago</h2>
+            <h2 className="text-xl font-bold text-text-primary" id="investor-payment-receipt-title">Información del recibo</h2>
             <p className="mt-1 text-sm font-medium text-text-muted">
               Recibo #{padReceipt} — {investor.name}
             </p>
@@ -159,40 +177,26 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
           </button>
         </header>
 
-        <div className="border-b border-border-soft px-6 py-3">
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-text-secondary">
-            Formato de salida
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {([
-              ['two-part', 'Autocopiante'],
-              ['company', 'Solo original'],
-              ['investor', 'Solo copia'],
-            ] as const).map(([value, label]) => (
-              <button
-                aria-pressed={mode === value}
-                className={`min-h-11 rounded-full px-4 text-sm font-bold transition ${
-                  mode === value
-                    ? 'bg-primary text-white'
-                    : 'border border-primary-border bg-card text-text-primary hover:bg-primary-soft'
-                }`}
-                key={value}
-                onClick={() => setMode(value)}
-                type="button"
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {mode === 'two-part' && (
-            <p className="mt-2 text-xs font-medium text-text-secondary">
-              Imprime una sola vez sobre papel autocopiante de dos capas; la firma pasa a la copia.
-            </p>
+        <section className="border-b border-border-soft px-4 py-5 sm:px-6" aria-label="Datos del pago registrado">
+          {newlyCreated && (
+            <div className="mb-4 flex items-center gap-2 text-primary-accent">
+              <CheckCircle2 className="h-5 w-5" />
+              <p className="font-bold">Pago registrado correctamente</p>
+            </div>
           )}
-        </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <ReceiptDetail label="Número de recibo" value={`#${padReceipt}`} />
+            <ReceiptDetail label="Inversionista" value={investor.name} />
+            <ReceiptDetail label="Inversión" value={investment?.code ?? investor.code} />
+            <ReceiptDetail label="Período" value={`${monthLabel} ${payment.periodYear}`} />
+            <ReceiptDetail label="Monto pagado" value={fmt(Number(payment.amount))} emphasized />
+            <ReceiptDetail label="Fecha del pago" value={fmtDate(payment.paymentDate)} />
+            <ReceiptDetail label="Método" value={payment.paymentMethod ?? 'No especificado'} />
+          </div>
+        </section>
 
-        {/* Receipt content */}
-        <div className="overflow-auto px-6 py-5">
+        {/* The printable receipt stays off-screen and is only rendered in print/PDF output. */}
+        <div aria-hidden="true" style={{ position: 'fixed', left: '-10000px', top: 0 }}>
           <div
             ref={receiptRef}
             style={{
@@ -215,58 +219,46 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
               {company?.companyAddress && <><br />{company.companyAddress}</>}
             </div>
 
-            <div style={{ fontSize: '14px', marginBottom: '8px' }}>
+            <div style={{ fontSize: '14px', margin: '8px 0' }}>
               <strong>RECIBO DE PAGO</strong><br />
-              <span style={{ fontSize: '11px' }}>No. {padReceipt}</span><br />
-              <strong style={{ fontSize: '10px' }}>
-                {mode === 'two-part' ? 'ORIGINAL BLANCO · COPIA AMARILLA' : mode === 'company' ? 'ORIGINAL · EMPRESA' : 'COPIA · INVERSIONISTA'}
-              </strong>
+              <span style={{ fontSize: '11px' }}>No. {padReceipt}</span>
             </div>
 
-            <div style={{ borderBottom: '1px dashed #000', paddingBottom: '8px', marginBottom: '8px', textAlign: 'left' }}>
+            <div style={{ borderBottom: '1px dashed #000', borderTop: '1px dashed #000', padding: '8px 0', textAlign: 'left' }}>
+              <strong>Fecha:</strong> {fmtDate(payment.paymentDate)}<br />
               <strong>Inversionista:</strong> {investor.name}<br />
-              <strong>Código:</strong> {investor.code}<br />
               {investment?.code && (
                 <>
                   <strong>Inversión:</strong> {investment.code}<br />
                 </>
               )}
               <strong>Período:</strong> {monthLabel} {payment.periodYear}<br />
+              <strong>Método:</strong> {payment.paymentMethod ?? '—'}
             </div>
 
-            <div style={{ borderBottom: '1px dashed #000', paddingBottom: '8px', marginBottom: '8px', textAlign: 'left' }}>
-              <strong>Monto pagado:</strong>{' '}
-              <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{fmt(Number(payment.amount))}</span><br />
-              <span style={{ fontSize: '10px' }}>{amountToSpanishWords(Number(payment.amount)).toUpperCase()}</span><br />
-              <strong>Fecha:</strong> {fmtDate(payment.paymentDate)}<br />
-              <strong>Método:</strong> {payment.paymentMethod ?? '—'}<br />
-              <strong>Referencia:</strong> {payment.reference ?? '—'}
+            <div style={{ borderBottom: '1px dashed #000', padding: '10px 0' }}>
+              <span style={{ fontSize: '10px' }}>MONTO PAGADO</span><br />
+              <strong style={{ fontSize: '18px' }}>{fmt(Number(payment.amount))}</strong>
             </div>
 
-            <div style={{ borderBottom: '1px dashed #000', paddingBottom: '8px', marginBottom: '8px' }}>
-              <div style={{ border: '1px dashed #000', height: '52px', margin: '8px 0', paddingTop: '32px' }}>
-                Firma del inversionista
-              </div>
-              <div style={{ border: '1px dashed #000', height: '52px', margin: '8px 0', paddingTop: '32px' }}>
-                Firma del representante
-              </div>
-            </div>
+            <p style={{ fontSize: '10px', margin: '10px 0 24px' }}>
+              Recibí conforme el pago indicado en este recibo.
+            </p>
 
-            <div style={{ fontSize: '10px', color: '#666' }}>
-              Generado el {fmtDate(payment.createdAt)}<br />
-              Gracias por su confianza
+            <div style={{ borderTop: '1px solid #000', margin: '0 auto', paddingTop: '4px', width: '70%' }}>
+              Firma del inversionista
             </div>
           </div>
         </div>
 
-        <footer className="flex flex-wrap justify-end gap-3 border-t border-border-soft px-6 py-4">
+        <footer className="flex flex-col-reverse gap-3 border-t border-border-soft px-4 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:px-6">
           <button
             className="inline-flex h-11 items-center gap-2 rounded-full border border-primary-border bg-card px-6 text-sm font-bold text-text-primary"
             onClick={handlePrint}
             type="button"
           >
             <Printer className="h-4 w-4" />
-            Imprimir
+            Imprimir recibo
           </button>
           <button
             className="inline-flex h-11 items-center gap-2 rounded-full border border-primary-border bg-card px-6 text-sm font-bold text-state-success hover:bg-primary-soft"

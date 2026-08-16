@@ -254,7 +254,12 @@ export class InvestorsService {
       activeInvestments: activeInvestments.length,
       investments: investor.investments.map((investment) => ({
         ...investment,
-        ...getInvestmentPeriodStatus(investment.startDate, investment.payments),
+        ...getInvestmentPeriodStatus(
+          investment.startDate,
+          investment.payments,
+          new Date(),
+          investment.monthlyPayment,
+        ),
         capital: Number(investment.capital),
         monthlyPayment: Number(investment.monthlyPayment),
         rate: Number(investment.rate),

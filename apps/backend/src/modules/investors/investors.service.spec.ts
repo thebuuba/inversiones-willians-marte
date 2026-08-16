@@ -148,16 +148,16 @@ describe('InvestorsService', () => {
           startDate: new Date('2026-07-09T00:00:00.000Z'),
           term: '12m',
           status: 'ACTIVE',
-          payments: [{ periodMonth: 7, periodYear: 2026 }],
+          payments: [{ periodMonth: 7, periodYear: 2026, amount: 3000 }],
         },
       ],
     } as never);
 
     const investor = await service.findOne('investor-8');
 
-    expect(investor.investments[0].paymentStatus).toBe('PAID');
-    expect(investor.investments[0].currentPeriodMonth).toBe(7);
+    expect(investor.investments[0].paymentStatus).toBe('SCHEDULED');
+    expect(investor.investments[0].currentPeriodMonth).toBe(8);
     expect(investor.investments[0].currentPeriodYear).toBe(2026);
-    expect(investor.investments[0].nextDueDate.toISOString().slice(0, 10)).toBe('2026-07-09');
+    expect(investor.investments[0].nextDueDate.toISOString().slice(0, 10)).toBe('2026-08-09');
   });
 });

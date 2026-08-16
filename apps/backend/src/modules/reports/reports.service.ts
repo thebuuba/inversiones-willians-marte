@@ -54,7 +54,7 @@ export class ReportsService {
         startDate: true,
         investor: { select: { id: true, name: true } },
         payments: {
-          select: { periodMonth: true, periodYear: true },
+          select: { periodMonth: true, periodYear: true, amount: true },
           orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }],
           take: 24,
         },
@@ -64,7 +64,12 @@ export class ReportsService {
 
     return investments
       .map((investment) => {
-        const period = getInvestmentPeriodStatus(investment.startDate, investment.payments, today);
+        const period = getInvestmentPeriodStatus(
+          investment.startDate,
+          investment.payments,
+          today,
+          investment.monthlyPayment,
+        );
         if (
           !period.nextDueDate ||
           !['OVERDUE', 'PENDING', 'UPCOMING'].includes(period.paymentStatus)

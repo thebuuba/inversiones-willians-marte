@@ -9,3 +9,8 @@ test('uses all seven 64px row slots available in the client table body', () => {
 test('does not add a row when the last 64px slot is incomplete', () => {
   assert.equal(calculateClientPageSize(7 * 64 - 1), 6);
 });
+
+test('shows exactly five rows on phones regardless of available height', () => {
+  assert.equal(calculateClientPageSize(1000, 767), 5);
+  assert.equal(calculateClientPageSize(200, 375), 5);
+});

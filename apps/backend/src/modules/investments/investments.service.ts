@@ -176,10 +176,15 @@ export class InvestmentsService {
 
   getCurrentPeriodStatus(
     startDate: Date | string | null | undefined,
-    payments: Array<{ periodMonth: number; periodYear: number }>,
+    payments: Array<{
+      periodMonth: number;
+      periodYear: number;
+      amount?: number | string | { toString(): string };
+    }>,
     today = new Date(),
+    monthlyPayment?: number | string | { toString(): string },
   ) {
-    return getInvestmentPeriodStatus(startDate, payments, today);
+    return getInvestmentPeriodStatus(startDate, payments, today, monthlyPayment);
   }
 
   private detailInclude() {
@@ -189,7 +194,11 @@ export class InvestmentsService {
         orderBy: [{ periodYear: 'desc' as const }, { periodMonth: 'desc' as const }],
         take: 500,
       },
-      movements: { orderBy: { movementDate: 'desc' as const }, take: 500 },
+      movements: {
+        include: { createdBy: { select: { id: true, name: true } } },
+        orderBy: { movementDate: 'desc' as const },
+        take: 500,
+      },
     };
   }
 
@@ -212,7 +221,12 @@ export class InvestmentsService {
       | Prisma.InvestorInvestmentGetPayload<Record<string, never>>,
   ) {
     const payments = 'payments' in investment ? investment.payments : [];
-    const status = this.getCurrentPeriodStatus(investment.startDate, payments);
+    const status = this.getCurrentPeriodStatus(
+      investment.startDate,
+      payments,
+      new Date(),
+      investment.monthlyPayment,
+    );
     return {
       ...investment,
       capital: Number(investment.capital),

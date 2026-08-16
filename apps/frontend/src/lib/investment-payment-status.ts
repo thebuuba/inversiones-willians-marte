@@ -1,15 +1,16 @@
 import type { InvestorInvestmentPaymentStatus } from '@inversiones/shared';
+import { loanStatusVisuals } from './loan-status-visuals';
 
 export const investmentPaymentStatusVisuals: Record<
   InvestorInvestmentPaymentStatus,
   { label: string; className: string }
 > = {
-  PAID: { label: 'Pagado', className: 'bg-state-success-bg text-state-success' },
+  PAID: { label: 'A tiempo', className: loanStatusVisuals.CURRENT.badgeClassName },
   SCHEDULED: {
-    label: 'Programado',
-    className: 'bg-surface-muted-ui text-text-secondary',
+    label: 'A tiempo',
+    className: loanStatusVisuals.CURRENT.badgeClassName,
   },
-  UPCOMING: { label: 'Próximo', className: 'bg-state-info-bg text-state-info' },
-  PENDING: { label: 'Pendiente', className: 'bg-state-warning-bg text-state-warning' },
-  OVERDUE: { label: 'Atrasado', className: 'bg-state-danger-bg text-state-danger' },
+  UPCOMING: { label: 'Próximo', className: loanStatusVisuals.PAID.badgeClassName },
+  PENDING: { label: 'Pendiente', className: loanStatusVisuals.PENDING.badgeClassName },
+  OVERDUE: { label: 'Atrasado', className: loanStatusVisuals.LATE.badgeClassName },
 };

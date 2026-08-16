@@ -87,3 +87,19 @@ test('links every investment priority row to its investment detail', () => {
   assert.match(source, /title="Orden de pagos de inversiones"/);
   assert.match(source, /href={`\/inversiones\/\$\{item\.investmentId\}`}/);
 });
+
+test('prioritizes the investor name over the investment code', () => {
+  const source = readFileSync(new URL('./dashboard-home.tsx', import.meta.url), 'utf8');
+  const name = source.indexOf('{item.investorName}');
+  const code = source.indexOf('{item.investmentCode}');
+
+  assert.ok(name >= 0 && name < code);
+  assert.match(
+    source,
+    /truncate text-base font-bold text-text-primary[^>]*>\s*\{item\.investorName\}/,
+  );
+  assert.match(
+    source,
+    /truncate text-sm font-medium text-text-secondary[^>]*>\s*\{item\.investmentCode\}/,
+  );
+});
