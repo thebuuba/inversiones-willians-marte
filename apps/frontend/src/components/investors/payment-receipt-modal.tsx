@@ -28,6 +28,7 @@ interface PaymentReceiptModalProps {
   investor: InvestorItem;
   investment?: InvestorInvestmentSummary | null;
   onClose: () => void;
+  newlyCreated?: boolean;
 }
 
 function ReceiptDetail({
@@ -49,7 +50,7 @@ function ReceiptDetail({
   );
 }
 
-export function PaymentReceiptModal({ payment, investor, investment, onClose }: PaymentReceiptModalProps) {
+export function PaymentReceiptModal({ payment, investor, investment, onClose, newlyCreated = false }: PaymentReceiptModalProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [company, setCompany] = useState<SystemSettings | null>(null);
 
@@ -177,10 +178,12 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose }: 
         </header>
 
         <section className="border-b border-border-soft px-4 py-5 sm:px-6" aria-label="Datos del pago registrado">
-          <div className="mb-4 flex items-center gap-2 text-primary-accent">
-            <CheckCircle2 className="h-5 w-5" />
-            <p className="font-bold">Pago registrado correctamente</p>
-          </div>
+          {newlyCreated && (
+            <div className="mb-4 flex items-center gap-2 text-primary-accent">
+              <CheckCircle2 className="h-5 w-5" />
+              <p className="font-bold">Pago registrado correctamente</p>
+            </div>
+          )}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <ReceiptDetail label="Número de recibo" value={`#${padReceipt}`} />
             <ReceiptDetail label="Inversionista" value={investor.name} />
