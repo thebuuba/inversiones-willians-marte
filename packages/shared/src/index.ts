@@ -378,6 +378,7 @@ export interface InvestorInvestmentMovementItem {
   movementDate: string;
   notes?: string;
   createdById: string;
+  createdBy?: { id: string; name: string };
   createdAt: string;
 }
 
