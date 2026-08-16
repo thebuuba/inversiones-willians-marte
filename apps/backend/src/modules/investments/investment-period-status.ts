@@ -9,9 +9,13 @@ export interface InvestmentPeriodStatus {
 
 export function getInvestmentPeriodStatus(
   startDate: Date | string | null | undefined,
-  payments: Array<{ periodMonth: number; periodYear: number; amount?: number | string }> = [],
+  payments: Array<{
+    periodMonth: number;
+    periodYear: number;
+    amount?: number | string | { toString(): string };
+  }> = [],
   today = new Date(),
-  monthlyPayment?: number | string,
+  monthlyPayment?: number | string | { toString(): string },
 ): InvestmentPeriodStatus {
   let targetPeriod = getTargetPeriod(startDate, today);
   const requiredAmount = monthlyPayment === undefined ? undefined : Number(monthlyPayment);
