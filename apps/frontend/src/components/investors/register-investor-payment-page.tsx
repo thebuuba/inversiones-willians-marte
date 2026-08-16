@@ -43,7 +43,9 @@ export function RegisterInvestorPaymentPage() {
   const [periodMonth, setPeriodMonth] = useState(currentMonth);
   const [periodYear, setPeriodYear] = useState(currentYear);
   const [amount, setAmount] = useState('');
-  const [paymentDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [paymentDate] = useState(() =>
+    new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santo_Domingo' }),
+  );
   const [paymentMethod, setPaymentMethod] = useState(METHODS[0]);
 
   const [saving, setSaving] = useState(false);
@@ -379,6 +381,7 @@ export function RegisterInvestorPaymentPage() {
 
       {createdPayment && investor && (
         <PaymentReceiptModal
+          newlyCreated
           payment={createdPayment}
           investor={investor}
           investment={investment}
