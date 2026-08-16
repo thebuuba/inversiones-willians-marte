@@ -7,6 +7,7 @@ import { NetworkStatusBanner } from '@/components/layout/network-status-banner';
 import { GlobalSearch } from '@/components/layout/global-search';
 import { useAuth } from '@/lib/auth-context';
 import { NotificationCenter } from '@/components/layout/notification-center';
+import { IosInstallHint } from '@/components/pwa/ios-install-hint';
 
 const publicRoutes = ['/login'];
 const publicRoutePrefixes = ['/captura-documento/', '/captura-foto-cliente/'];
@@ -73,13 +74,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main
-        className={`min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] transition-[margin] duration-200 ease-out lg:pt-16 ${
+        className={`min-h-screen pb-[env(safe-area-inset-bottom)] pt-[calc(4rem+env(safe-area-inset-top))] transition-[margin] duration-200 ease-out lg:pt-16 ${
           sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'
         }`}
       >
         {children}
       </main>
       <NetworkStatusBanner />
+      <IosInstallHint />
     </>
   );
 }

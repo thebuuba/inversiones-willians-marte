@@ -1,7 +1,5 @@
-const CACHE_NAME = 'inversiones-shell-v3';
+const CACHE_NAME = 'inversiones-shell-v4';
 const APP_SHELL = [
-  '/',
-  '/inicio',
   '/offline',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
@@ -40,15 +38,17 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          return response;
-        })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/offline'))),
+        .catch(() => caches.match('/offline')),
     );
     return;
   }
 
-  event.respondWith(caches.match(request).then((cached) => cached || fetch(request)));
+  const isPublicPwaAsset =
+    url.pathname === '/manifest.webmanifest' ||
+    url.pathname === '/offline' ||
+    url.pathname.startsWith('/icons/');
+
+  if (isPublicPwaAsset) {
+    event.respondWith(caches.match(request).then((cached) => cached || fetch(request)));
+  }
 });
