@@ -148,7 +148,7 @@ describe('InvestorsService', () => {
           startDate: new Date('2026-07-09T00:00:00.000Z'),
           term: '12m',
           status: 'ACTIVE',
-          payments: [{ periodMonth: 7, periodYear: 2026 }],
+          payments: [{ periodMonth: 7, periodYear: 2026, amount: 3000 }],
         },
       ],
     } as never);
