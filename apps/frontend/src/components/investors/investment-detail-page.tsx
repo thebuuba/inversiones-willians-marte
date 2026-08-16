@@ -84,13 +84,16 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
 
   const investorHref = `/inversionistas/${investment.investorId}`;
   const statusVisual = investmentPaymentStatusVisuals[investment.paymentStatus ?? 'SCHEDULED'];
+  const initialCapital =
+    Number(investment.capital) -
+    (investment.movements ?? []).reduce((sum, movement) => sum + Number(movement.amount), 0);
   const historyEvents: InvestmentHistoryEvent[] = [
     {
       id: `investment-${investment.id}`,
-      type: 'Inversión',
+      type: 'Inversión' as const,
       title: 'Inversión creada',
       detail: investment.code,
-      amount: Number(investment.capital),
+      amount: initialCapital,
       author: 'Sistema',
       createdAt: investment.createdAt,
     },
@@ -100,8 +103,8 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
       title: 'Aporte de capital registrado',
       detail: movement.notes,
       amount: Number(movement.amount),
-      author: 'Sistema',
-      createdAt: movement.createdAt || movement.movementDate,
+      author: movement.createdBy?.name ?? 'Sistema',
+      createdAt: movement.movementDate,
     })),
     ...(investment.payments ?? []).map((payment) => ({
       id: `payment-${payment.id}`,
@@ -110,7 +113,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
       detail: `Recibo #${String(payment.receiptNumber).padStart(5, '0')}`,
       amount: Number(payment.amount),
       author: payment.receivedBy?.name ?? 'Sistema',
-      createdAt: payment.createdAt || payment.paymentDate,
+      createdAt: payment.paymentDate,
     })),
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
