@@ -15,10 +15,12 @@ export function IosInstallHint() {
       navigatorWithStandalone.standalone === true ||
       window.matchMedia('(display-mode: standalone)').matches;
 
-    setVisible(
-      isIos &&
-        !isStandalone &&
-        localStorage.getItem(DISMISSED_KEY) !== 'true',
+    queueMicrotask(() =>
+      setVisible(
+        isIos &&
+          !isStandalone &&
+          localStorage.getItem(DISMISSED_KEY) !== 'true',
+      ),
     );
   }, []);
 
