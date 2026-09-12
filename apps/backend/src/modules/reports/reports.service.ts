@@ -516,7 +516,20 @@ function toDateOnlyString(value: Date | string) {
 function formatMonthShort(value: Date | string) {
   const dateOnly = toDateOnlyString(value);
   const monthIndex = Number(dateOnly.slice(5, 7)) - 1;
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  const months = [
+    'ene',
+    'feb',
+    'mar',
+    'abr',
+    'may',
+    'jun',
+    'jul',
+    'ago',
+    'sep',
+    'oct',
+    'nov',
+    'dic',
+  ];
   return months[monthIndex] ?? dateOnly.slice(5, 7);
 }
 
