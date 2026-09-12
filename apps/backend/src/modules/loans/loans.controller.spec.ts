@@ -12,8 +12,8 @@ jest.mock('../../common/portfolio-scope', () => ({
   resolvePortfolioScope: jest.fn(),
 }));
 
-describe('LoansController creation scope', () => {
-  const loans = { create: jest.fn() };
+describe('LoansController portfolio permissions', () => {
+  const loans = { create: jest.fn(), update: jest.fn() };
   const controller = new LoansController(loans as never);
   const collector = { id: 'collector-1', role: 'COLLECTOR' as const };
 
@@ -27,6 +27,7 @@ describe('LoansController creation scope', () => {
     jest.mocked(assertClientAccess).mockResolvedValue();
     jest.mocked(assertLoanAccess).mockResolvedValue();
     loans.create.mockResolvedValue({ id: 'loan-new' });
+    loans.update.mockResolvedValue({ id: 'loan-1' });
   });
 
   it('rejects creating a loan in an unassigned portfolio', async () => {
@@ -95,5 +96,24 @@ describe('LoansController creation scope', () => {
 
     expect(assertClientAccess).toHaveBeenCalledTimes(1);
     expect(loans.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects portfolio reassignment by collectors', async () => {
+    await expect(
+      controller.update(collector, 'loan-1', { portfolioId: 'portfolio-1' }),
+    ).rejects.toThrow(ForbiddenException);
+
+    expect(loans.update).not.toHaveBeenCalled();
+  });
+
+  it('allows collectors to update non-portfolio fields on visible loans', async () => {
+    await controller.update(collector, 'loan-1', { notes: 'Seguimiento actualizado' });
+
+    expect(loans.update).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: collector.id }),
+      'loan-1',
+      { notes: 'Seguimiento actualizado' },
+      collector.id,
+    );
   });
 });
