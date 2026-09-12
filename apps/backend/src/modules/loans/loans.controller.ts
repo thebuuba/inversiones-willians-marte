@@ -120,12 +120,15 @@ export class LoansController {
     @Body() dto: UpdateLoanDto,
   ) {
     const scope = await resolvePortfolioScope(user);
+    if (!scope.isAdmin && dto.portfolioId !== undefined) {
+      throw new ForbiddenException('Only administrators can reassign loan portfolios');
+    }
     return this.loans.update(scope, id, dto, user.id);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  @Roles('ADMIN', 'COLLECTOR')
+  @Roles('ADMIN')
   async remove(@CurrentUser() user: ScopeUser, @Param('id') id: string) {
     const scope = await resolvePortfolioScope(user);
     await this.loans.remove(scope, id);
