@@ -24,7 +24,7 @@ export class CashController {
   }
 
   @Delete('movements/:sourceType/:id')
-  @Roles('ADMIN', 'COLLECTOR')
+  @Roles('ADMIN')
   deleteMovement(
     @Param('sourceType') sourceType: string,
     @Param('id') id: string,

@@ -9,6 +9,7 @@ import {
   Delete,
   HttpCode,
   Patch,
+  ForbiddenException,
 } from '@nestjs/common';
 import { LoansService } from './loans.service';
 import { CreateLoanDto } from './dto/create-loan.dto';
@@ -18,7 +19,12 @@ import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators';
-import { resolvePortfolioScope, type ScopeUser } from '../../common/portfolio-scope';
+import {
+  assertClientAccess,
+  assertLoanAccess,
+  resolvePortfolioScope,
+  type ScopeUser,
+} from '../../common/portfolio-scope';
 
 @Controller('loans')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -27,8 +33,19 @@ export class LoansController {
 
   @Post()
   @Roles('ADMIN', 'COLLECTOR')
-  create(@Body() dto: CreateLoanDto, @CurrentUser('id') userId: string) {
-    return this.loans.create(dto, userId);
+  async create(@Body() dto: CreateLoanDto, @CurrentUser() user: ScopeUser) {
+    const scope = await resolvePortfolioScope(user);
+    await assertClientAccess(scope, dto.clientId);
+
+    if (!scope.isAdmin && dto.portfolioId && !scope.portfolioIds.includes(dto.portfolioId)) {
+      throw new ForbiddenException('You cannot create loans in this portfolio');
+    }
+
+    for (const sourceLoanId of dto.sourceLoanIds ?? []) {
+      await assertLoanAccess(scope, sourceLoanId);
+    }
+
+    return this.loans.create(dto, user.id);
   }
 
   @Get()
@@ -103,12 +120,15 @@ export class LoansController {
     @Body() dto: UpdateLoanDto,
   ) {
     const scope = await resolvePortfolioScope(user);
+    if (!scope.isAdmin && dto.portfolioId !== undefined) {
+      throw new ForbiddenException('Only administrators can reassign loan portfolios');
+    }
     return this.loans.update(scope, id, dto, user.id);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  @Roles('ADMIN', 'COLLECTOR')
+  @Roles('ADMIN')
   async remove(@CurrentUser() user: ScopeUser, @Param('id') id: string) {
     const scope = await resolvePortfolioScope(user);
     await this.loans.remove(scope, id);

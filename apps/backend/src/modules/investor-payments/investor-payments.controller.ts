@@ -12,7 +12,7 @@ export class InvestorPaymentsController {
   constructor(private service: InvestorPaymentsService) {}
 
   @Post()
-  @Roles('ADMIN', 'COLLECTOR')
+  @Roles('ADMIN')
   create(@Body() dto: CreateInvestorPaymentDto, @CurrentUser('id') userId: string) {
     return this.service.create(dto, userId);
   }
