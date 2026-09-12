@@ -323,26 +323,34 @@ export class ReportsService {
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     const rows = await prisma.$queryRaw<
-      Array<{ month: Date; collected: string; expected: string }>
+      Array<{ month: Date | string; collected: string | number; expected: string | number }>
     >`
+      WITH schedule_totals AS (
+        SELECT
+          ps.id,
+          ps.due_date,
+          ps.amount,
+          COALESCE(SUM(pa.amount), 0) AS collected
+        FROM payment_schedule ps
+        JOIN loans l ON l.id = ps.loan_id
+        LEFT JOIN payment_allocations pa ON pa.schedule_id = ps.id
+        WHERE ps.due_date >= ${sixMonthsAgo}
+        ${scope.isAdmin ? Prisma.empty : Prisma.sql`AND ${loanScopeSql(scope)}`}
+        GROUP BY ps.id, ps.due_date, ps.amount
+      )
       SELECT
-        DATE_TRUNC('month', ps.due_date)::date AS month,
-        COALESCE(SUM(p.amount) FILTER (WHERE p.id IS NOT NULL), 0) AS collected,
-        COALESCE(SUM(ps.amount), 0) AS expected
-      FROM payment_schedule ps
-      JOIN loans l ON l.id = ps.loan_id
-      LEFT JOIN payment_allocations pa ON pa.schedule_id = ps.id
-      LEFT JOIN payments p ON p.id = pa.payment_id
-      WHERE ps.due_date >= ${sixMonthsAgo}
-      ${scope.isAdmin ? Prisma.empty : Prisma.sql`AND ${loanScopeSql(scope)}`}
-      GROUP BY DATE_TRUNC('month', ps.due_date)
+        DATE_TRUNC('month', due_date)::date AS month,
+        COALESCE(SUM(collected), 0) AS collected,
+        COALESCE(SUM(amount), 0) AS expected
+      FROM schedule_totals
+      GROUP BY DATE_TRUNC('month', due_date)
       ORDER BY month ASC
     `;
 
-    return rows.map((r) => ({
-      month: r.month.toLocaleString('default', { month: 'short' }),
-      collected: Number(r.collected),
-      expected: Number(r.expected),
+    return rows.map((row) => ({
+      month: formatMonthShort(row.month),
+      collected: Number(row.collected),
+      expected: Number(row.expected),
     }));
   }
 
@@ -351,7 +359,12 @@ export class ReportsService {
     startDate.setUTCDate(startDate.getUTCDate() - 29);
 
     const rows = await prisma.$queryRaw<
-      Array<{ date: Date; capital: string; interest: string; lateFee: string }>
+      Array<{
+        date: Date | string;
+        capital: string | number;
+        interest: string | number;
+        lateFee: string | number;
+      }>
     >`
       WITH days AS (
         SELECT GENERATE_SERIES(${startDate}::date, CURRENT_DATE, '1 day')::date AS date
@@ -380,7 +393,7 @@ export class ReportsService {
     `;
 
     return rows.map((row) => {
-      const date = row.date.toISOString().slice(0, 10);
+      const date = toDateOnlyString(row.date);
       return {
         date,
         label: `${date.slice(8, 10)}/${date.slice(5, 7)}`,
@@ -487,6 +500,24 @@ function daysBetweenUtc(from: Date, to: Date) {
 
 function signedDaysBetweenUtc(from: Date, to: Date) {
   return Math.round((startOfUtcDay(to).getTime() - startOfUtcDay(from).getTime()) / 86_400_000);
+}
+
+function toDateOnlyString(value: Date | string) {
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) throw new Error('Invalid report date');
+    return value.toISOString().slice(0, 10);
+  }
+
+  const match = /^(\d{4}-\d{2}-\d{2})/.exec(value);
+  if (!match) throw new Error('Invalid report date');
+  return match[1];
+}
+
+function formatMonthShort(value: Date | string) {
+  const dateOnly = toDateOnlyString(value);
+  const monthIndex = Number(dateOnly.slice(5, 7)) - 1;
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  return months[monthIndex] ?? dateOnly.slice(5, 7);
 }
 
 function loanScopeSql(scope: PortfolioScope) {
