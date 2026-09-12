@@ -161,9 +161,9 @@ describe('ReportsService', () => {
   });
 
   it('aggregates monthly collections by allocation without duplicating scheduled amounts', async () => {
-    jest.mocked(prisma.$queryRaw).mockResolvedValue([
-      { month: '2026-06-01', collected: '1200.50', expected: '2000' },
-    ]);
+    jest
+      .mocked(prisma.$queryRaw)
+      .mockResolvedValue([{ month: '2026-06-01', collected: '1200.50', expected: '2000' }]);
 
     await expect(service.monthlyCollections(adminScope)).resolves.toEqual([
       { month: 'jun', collected: 1200.5, expected: 2000 },
