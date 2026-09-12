@@ -160,6 +160,22 @@ describe('ReportsService', () => {
     expect(jest.mocked(prisma.$queryRaw).mock.calls[0][1]).toBeInstanceOf(Date);
   });
 
+  it('aggregates monthly collections by allocation without duplicating scheduled amounts', async () => {
+    jest.mocked(prisma.$queryRaw).mockResolvedValue([
+      { month: '2026-06-01', collected: '1200.50', expected: '2000' },
+    ]);
+
+    await expect(service.monthlyCollections(adminScope)).resolves.toEqual([
+      { month: 'jun', collected: 1200.5, expected: 2000 },
+    ]);
+
+    const queryParts = jest.mocked(prisma.$queryRaw).mock.calls[0][0] as TemplateStringsArray;
+    const queryText = Array.from(queryParts).join(' ');
+    expect(queryText).toContain('schedule_totals');
+    expect(queryText).toContain('SUM(pa.amount)');
+    expect(queryText).not.toContain('SUM(p.amount)');
+  });
+
   it('groups portfolio by calculated collection status', async () => {
     jest.mocked(prisma.$queryRaw).mockResolvedValue([
       { status: 'CURRENT', count: 5, balance: 5000, principal: 6000 },
@@ -195,6 +211,27 @@ describe('ReportsService', () => {
         capital: 1200.5,
         interest: 300.25,
         lateFee: 75,
+      },
+    ]);
+  });
+
+  it('accepts PostgreSQL date strings returned by the driver', async () => {
+    jest.mocked(prisma.$queryRaw).mockResolvedValue([
+      {
+        date: '2026-06-18',
+        capital: '100',
+        interest: '20',
+        lateFee: '5',
+      },
+    ]);
+
+    await expect(service.dailyIncome(adminScope)).resolves.toEqual([
+      {
+        date: '2026-06-18',
+        label: '18/06',
+        capital: 100,
+        interest: 20,
+        lateFee: 5,
       },
     ]);
   });
