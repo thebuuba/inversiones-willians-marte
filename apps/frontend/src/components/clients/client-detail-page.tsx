@@ -194,9 +194,19 @@ function LoanTableRow({
 
   return (
     <div
+      aria-label={`Abrir préstamo #${loan.loanNumber}`}
       className={`grid min-w-[1220px] cursor-pointer ${loanTableColumns} items-center border-t border-border-soft px-5 py-4 text-sm text-text-secondary transition hover:bg-surface-subtle`}
-      onDoubleClick={() => router.push(`/prestamos/${loan.id}`)}
-      title="Doble clic para abrir el préstamo"
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest('a, button, [role="menuitem"]')) return;
+        router.push(`/prestamos/${loan.id}`);
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' || event.target !== event.currentTarget) return;
+        router.push(`/prestamos/${loan.id}`);
+      }}
+      role="link"
+      tabIndex={0}
+      title="Clic para abrir el préstamo"
     >
       <span className="font-semibold text-text-primary">{loan.loanNumber}</span>
       <span className="font-semibold tabular-nums text-text-primary">
