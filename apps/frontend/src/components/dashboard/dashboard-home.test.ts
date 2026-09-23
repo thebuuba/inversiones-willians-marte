@@ -1,16 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import {
   getAgingBuckets,
   getDueTodayTotal,
-  getInvestmentDueLabel,
   getPortfolioStatusData,
   portfolioStatusConfig,
 } from './dashboard-home';
 import type {
   CollectionPriority,
-  InvestmentPriority,
   PortfolioGroup,
   UpcomingPayment,
 } from '@/lib/api/dashboard';
@@ -41,18 +38,18 @@ test('groups overdue priorities by age', () => {
   ]);
 });
 
-test('uses the same collection status colors as the loans panel', () => {
+test('uses the reference chart palette for portfolio groups', () => {
   assert.deepEqual(
     Object.fromEntries(
       Object.entries(portfolioStatusConfig).map(([status, config]) => [status, config.color]),
     ),
     {
-      CURRENT: '#7CC99B',
-      PENDING: '#26322C',
-      LATE: '#F3D477',
-      EXPIRED: '#E67C73',
-      PAID: '#8EB8D8',
-      WRITTEN_OFF: '#D1D5D3',
+      CURRENT: '#41c889',
+      PENDING: '#f59e0b',
+      LATE: '#faac38',
+      EXPIRED: '#f43f5e',
+      PAID: '#419fec',
+      WRITTEN_OFF: '#64748b',
     },
   );
 });
@@ -68,38 +65,5 @@ test('orders portfolio status from healthy to most overdue', () => {
   assert.deepEqual(
     getPortfolioStatusData(groups).map(({ name }) => name),
     ['A tiempo', 'Pendientes', 'Atrasados', 'Vencidos'],
-  );
-});
-
-test('describes investment payment urgency in calendar days', () => {
-  const priority = (paymentStatus: InvestmentPriority['paymentStatus'], daysUntilDue: number) =>
-    ({ paymentStatus, daysUntilDue }) as InvestmentPriority;
-
-  assert.equal(getInvestmentDueLabel(priority('UPCOMING', 5)), 'En 5 días');
-  assert.equal(getInvestmentDueLabel(priority('PENDING', 0)), 'Vence hoy');
-  assert.equal(getInvestmentDueLabel(priority('PENDING', -3)), 'Pendiente hace 3 días');
-  assert.equal(getInvestmentDueLabel(priority('OVERDUE', -6)), '6 días de atraso');
-});
-
-test('links every investment priority row to its investment detail', () => {
-  const source = readFileSync(new URL('./dashboard-home.tsx', import.meta.url), 'utf8');
-
-  assert.match(source, /title="Orden de pagos de inversiones"/);
-  assert.match(source, /href={`\/inversiones\/\$\{item\.investmentId\}`}/);
-});
-
-test('prioritizes the investor name over the investment code', () => {
-  const source = readFileSync(new URL('./dashboard-home.tsx', import.meta.url), 'utf8');
-  const name = source.indexOf('{item.investorName}');
-  const code = source.indexOf('{item.investmentCode}');
-
-  assert.ok(name >= 0 && name < code);
-  assert.match(
-    source,
-    /truncate text-base font-bold text-text-primary[^>]*>\s*\{item\.investorName\}/,
-  );
-  assert.match(
-    source,
-    /truncate text-sm font-medium text-text-secondary[^>]*>\s*\{item\.investmentCode\}/,
   );
 });

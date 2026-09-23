@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { prisma, Prisma } from '@inversiones/database';
 import { calculateCollectionPriority } from './collection-priority';
-import { getInvestmentPeriodStatus } from '../investments/investment-period-status';
 import {
   clientWhereVisible,
   loanWhereVisible,
@@ -16,19 +15,19 @@ export class ReportsService {
       portfolio,
       monthlyCollections,
       dailyIncome,
+      overdueAging,
       weeklyMovement,
       upcomingPayments,
       collectionPriorities,
-      investmentPriorities,
     ] = await Promise.all([
       this.dashboard(scope),
       this.portfolioByStatus(scope),
       this.monthlyCollections(scope),
       this.dailyIncome(scope),
+      this.overdueAging(scope),
       this.weeklyMovement(scope),
       this.upcomingPayments(scope),
       this.collectionPriorities(scope),
-      this.investmentPriorities(),
     ]);
 
     return {
@@ -36,64 +35,11 @@ export class ReportsService {
       portfolio,
       monthlyCollections,
       dailyIncome,
+      overdueAging,
       weeklyMovement,
       upcomingPayments,
       collectionPriorities,
-      investmentPriorities,
     };
-  }
-
-  async investmentPriorities() {
-    const today = new Date();
-    const investments = await prisma.investorInvestment.findMany({
-      where: { status: 'ACTIVE', startDate: { not: null } },
-      select: {
-        id: true,
-        code: true,
-        monthlyPayment: true,
-        startDate: true,
-        investor: { select: { id: true, name: true } },
-        payments: {
-          select: { periodMonth: true, periodYear: true, amount: true },
-          orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }],
-          take: 24,
-        },
-      },
-    });
-    const urgencyOrder = { OVERDUE: 0, PENDING: 1, UPCOMING: 2 } as const;
-
-    return investments
-      .map((investment) => {
-        const period = getInvestmentPeriodStatus(
-          investment.startDate,
-          investment.payments,
-          today,
-          investment.monthlyPayment,
-        );
-        if (
-          !period.nextDueDate ||
-          !['OVERDUE', 'PENDING', 'UPCOMING'].includes(period.paymentStatus)
-        ) {
-          return null;
-        }
-        return {
-          investmentId: investment.id,
-          investmentCode: investment.code,
-          investorId: investment.investor.id,
-          investorName: investment.investor.name,
-          amount: Number(investment.monthlyPayment),
-          dueDate: period.nextDueDate,
-          paymentStatus: period.paymentStatus as keyof typeof urgencyOrder,
-          daysUntilDue: signedDaysBetweenUtc(today, period.nextDueDate),
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null)
-      .sort(
-        (a, b) =>
-          urgencyOrder[a.paymentStatus] - urgencyOrder[b.paymentStatus] ||
-          a.dueDate.getTime() - b.dueDate.getTime(),
-      )
-      .slice(0, 5);
   }
 
   async collectionPriorities(scope: PortfolioScope) {
@@ -145,7 +91,6 @@ export class ReportsService {
           select: { id: true },
         },
       },
-      take: 100,
     });
 
     return loans
@@ -179,8 +124,60 @@ export class ReportsService {
           ...priority,
         };
       })
-      .sort((a, b) => b.score - a.score || b.daysOverdue - a.daysOverdue)
+      .sort(
+        (a, b) =>
+          ({ URGENT: 3, HIGH: 2, MEDIUM: 1 })[b.level] -
+            { URGENT: 3, HIGH: 2, MEDIUM: 1 }[a.level] ||
+          b.daysOverdue - a.daysOverdue ||
+          b.overdueAmount - a.overdueAmount,
+      )
       .slice(0, 5);
+  }
+
+  async overdueAging(scope: PortfolioScope) {
+    const today = startOfUtcDay(new Date());
+    const rows = await prisma.$queryRaw<Array<{ bucket: number; amount: unknown; count: number }>>`
+      WITH overdue_loans AS (
+        SELECT
+          l.id,
+          MIN(s.due_date)::date AS oldest_due,
+          SUM(GREATEST(s.amount - COALESCE(s."paidAmount", 0), 0)) AS amount
+        FROM loans l
+        JOIN payment_schedule s ON s.loan_id = l.id
+        WHERE l.status::text = 'ACTIVE'
+          AND s.due_date < ${today}
+          AND s.status::text IN ('PENDING', 'PARTIAL', 'OVERDUE')
+          ${scope.isAdmin ? Prisma.empty : Prisma.sql`AND ${loanScopeSql(scope)}`}
+        GROUP BY l.id
+      )
+      SELECT
+        CASE
+          WHEN ${today}::date - oldest_due <= 15 THEN 0
+          WHEN ${today}::date - oldest_due <= 30 THEN 1
+          WHEN ${today}::date - oldest_due <= 60 THEN 2
+          WHEN ${today}::date - oldest_due <= 90 THEN 3
+          WHEN ${today}::date - oldest_due <= 180 THEN 4
+          ELSE 5
+        END AS bucket,
+        SUM(amount) AS amount,
+        COUNT(*)::int AS count
+      FROM overdue_loans
+      GROUP BY bucket
+      ORDER BY bucket
+    `;
+    const labels = [
+      '1-15 días',
+      '16-30 días',
+      '31-60 días',
+      '61-90 días',
+      '91-180 días',
+      '+180 días',
+    ];
+    return labels.map((label, bucket) => ({
+      label,
+      amount: Number(rows.find((row) => row.bucket === bucket)?.amount ?? 0),
+      count: Number(rows.find((row) => row.bucket === bucket)?.count ?? 0),
+    }));
   }
 
   async dashboard(scope: PortfolioScope) {
@@ -207,7 +204,7 @@ export class ReportsService {
         }),
         prisma.loan.aggregate({
           where: { status: 'ACTIVE', ...(loanScopeWhere ?? {}) },
-          _sum: { balance: true, principal: true },
+          _sum: { balance: true, principal: true, totalAmount: true },
           _count: true,
         }),
         prisma.loan.count({
@@ -228,6 +225,7 @@ export class ReportsService {
       totalClients,
       collectionsToday: Number(paymentsToday._sum.amount ?? 0),
       portfolioBalance: Number(portfolioStats._sum.balance ?? 0),
+      totalContracted: Number(portfolioStats._sum.totalAmount ?? 0),
       overdueLoans,
     };
   }
@@ -465,11 +463,13 @@ export class ReportsService {
         id: true,
         dueDate: true,
         amount: true,
+        paidAmount: true,
         status: true,
         loan: {
           select: {
+            id: true,
             client: {
-              select: { firstName: true, lastName: true },
+              select: { firstName: true, lastName: true, phone: true },
             },
           },
         },
@@ -479,9 +479,11 @@ export class ReportsService {
 
     return schedules.map((s) => ({
       id: s.id,
+      loanId: s.loan.id,
+      phone: s.loan.client.phone,
       clientName: s.loan.client.firstName + ' ' + s.loan.client.lastName,
       dueDate: s.dueDate,
-      amount: Number(s.amount),
+      amount: Math.max(0, Number(s.amount) - Number(s.paidAmount ?? 0)),
       status: s.status,
     }));
   }
@@ -496,10 +498,6 @@ function daysBetweenUtc(from: Date, to: Date) {
     0,
     Math.floor((startOfUtcDay(to).getTime() - startOfUtcDay(from).getTime()) / 86_400_000),
   );
-}
-
-function signedDaysBetweenUtc(from: Date, to: Date) {
-  return Math.round((startOfUtcDay(to).getTime() - startOfUtcDay(from).getTime()) / 86_400_000);
 }
 
 function toDateOnlyString(value: Date | string) {

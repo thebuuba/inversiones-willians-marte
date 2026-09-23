@@ -52,8 +52,8 @@ export function GlobalSearch() {
   const showPanel = open && normalizedQuery.length >= 2;
 
   return (
-    <div className="relative w-full max-w-xl" ref={containerRef}>
-      <div className="flex h-10 items-center gap-3 rounded-full border border-primary-border bg-page px-4 transition focus-within:bg-card focus-within:ring-2 focus-within:ring-primary-soft">
+    <div className="relative w-full max-w-[450px]" ref={containerRef}>
+      <div className="flex h-11 items-center gap-3 rounded-[18px] border border-border-soft bg-card px-4 shadow-card transition focus-within:ring-2 focus-within:ring-primary-soft">
         <Search className="h-4 w-4 shrink-0 text-text-muted" aria-hidden="true" />
         <input
           aria-autocomplete="list"

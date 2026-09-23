@@ -10,7 +10,6 @@ jest.mock('@inversiones/database', () => ({
     client: { count: jest.fn() },
     loan: { aggregate: jest.fn(), count: jest.fn(), findMany: jest.fn() },
     payment: { aggregate: jest.fn(), groupBy: jest.fn() },
-    investorInvestment: { findMany: jest.fn() },
     user: { count: jest.fn(), findMany: jest.fn() },
   },
   Prisma: {
@@ -35,10 +34,10 @@ describe('ReportsService', () => {
       'portfolioByStatus',
       'monthlyCollections',
       'dailyIncome',
+      'overdueAging',
       'weeklyMovement',
       'upcomingPayments',
       'collectionPriorities',
-      'investmentPriorities',
     ] as const;
     const resolvers = new Map<string, (value: never) => void>();
 
@@ -63,55 +62,11 @@ describe('ReportsService', () => {
       portfolio: [],
       monthlyCollections: [],
       dailyIncome: [],
+      overdueAging: [],
       weeklyMovement: [],
       upcomingPayments: [],
       collectionPriorities: [],
-      investmentPriorities: [],
     });
-  });
-
-  it('ranks investments by overdue, pending, and upcoming urgency', async () => {
-    jest.useFakeTimers().setSystemTime(new Date('2026-08-20T12:00:00.000Z'));
-    jest
-      .mocked(prisma.investorInvestment.findMany)
-      .mockResolvedValue([
-        investmentPriorityFixture('upcoming', 24),
-        investmentPriorityFixture('scheduled', 30),
-        investmentPriorityFixture('pending', 18),
-        investmentPriorityFixture('overdue', 10),
-      ] as never);
-
-    const priorities = await service.investmentPriorities();
-
-    expect(priorities.map((item) => item.investmentId)).toEqual(['overdue', 'pending', 'upcoming']);
-    expect(priorities.map((item) => item.paymentStatus)).toEqual([
-      'OVERDUE',
-      'PENDING',
-      'UPCOMING',
-    ]);
-  });
-
-  it('limits investment payment priorities to five rows', async () => {
-    jest.useFakeTimers().setSystemTime(new Date('2026-08-20T12:00:00.000Z'));
-    jest
-      .mocked(prisma.investorInvestment.findMany)
-      .mockResolvedValue(
-        Array.from({ length: 7 }, (_, index) =>
-          investmentPriorityFixture(`pending-${index}`, 20),
-        ) as never,
-      );
-
-    await expect(service.investmentPriorities()).resolves.toHaveLength(5);
-  });
-
-  it('ranks every active investment before limiting the priority result', async () => {
-    jest.mocked(prisma.investorInvestment.findMany).mockResolvedValue([] as never);
-
-    await service.investmentPriorities();
-
-    expect(jest.mocked(prisma.investorInvestment.findMany).mock.calls[0][0]).not.toHaveProperty(
-      'take',
-    );
   });
 
   it('ranks overdue loans by explainable collection priority', async () => {
@@ -147,6 +102,22 @@ describe('ReportsService', () => {
         level: 'URGENT',
         suggestedAction: 'Contactar por promesa incumplida',
       }),
+    ]);
+  });
+
+  it('returns all six overdue aging buckets with real aggregated amounts', async () => {
+    jest.mocked(prisma.$queryRaw).mockResolvedValue([
+      { bucket: 0, amount: '250.50', count: 2 },
+      { bucket: 5, amount: '18000', count: 1 },
+    ]);
+
+    await expect(service.overdueAging(adminScope)).resolves.toEqual([
+      { label: '1-15 días', amount: 250.5, count: 2 },
+      { label: '16-30 días', amount: 0, count: 0 },
+      { label: '31-60 días', amount: 0, count: 0 },
+      { label: '61-90 días', amount: 0, count: 0 },
+      { label: '91-180 días', amount: 0, count: 0 },
+      { label: '+180 días', amount: 18000, count: 1 },
     ]);
   });
 
@@ -248,9 +219,10 @@ describe('ReportsService', () => {
     jest.mocked(prisma.client.count).mockResolvedValue(3);
     jest.mocked(prisma.user.count).mockResolvedValue(1);
     jest.mocked(prisma.payment.aggregate).mockResolvedValue({ _sum: { amount: 0 } } as never);
-    jest
-      .mocked(prisma.loan.aggregate)
-      .mockResolvedValue({ _sum: { balance: 0, principal: 0 }, _count: 0 } as never);
+    jest.mocked(prisma.loan.aggregate).mockResolvedValue({
+      _sum: { balance: 40, principal: 50, totalAmount: 80 },
+      _count: 1,
+    } as never);
 
     const result = service.dashboard(adminScope);
     await Promise.resolve();
@@ -259,7 +231,7 @@ describe('ReportsService', () => {
 
     resolveActiveLoans(4);
     await expect(result).resolves.toEqual(
-      expect.objectContaining({ activeLoans: 4, overdueLoans: 2 }),
+      expect.objectContaining({ activeLoans: 4, overdueLoans: 2, totalContracted: 80 }),
     );
   });
 
@@ -326,14 +298,3 @@ describe('ReportsService', () => {
     expect(queryText).not.toContain('TO_CHAR');
   });
 });
-
-function investmentPriorityFixture(id: string, dueDay: number) {
-  return {
-    id,
-    code: `INV-${id}`,
-    monthlyPayment: 3000,
-    startDate: new Date(Date.UTC(2026, 0, dueDay)),
-    investor: { id: `investor-${id}`, name: `Inversionista ${id}` },
-    payments: [],
-  };
-}

@@ -1,12 +1,12 @@
 import { api } from '../api';
 import type { ApiResponse } from '@inversiones/shared';
-import type { InvestorInvestmentPaymentStatus } from '@inversiones/shared';
 
 export interface DashboardData {
   activeLoans: number;
   totalClients: number;
   collectionsToday: number;
   portfolioBalance: number;
+  totalContracted: number;
   overdueLoans: number;
 }
 
@@ -53,6 +53,8 @@ export interface WeeklyMovementItem {
 
 export interface UpcomingPayment {
   id: string;
+  loanId: string;
+  phone: string | null;
   clientName: string;
   dueDate: string;
   amount: number;
@@ -76,26 +78,15 @@ export interface CollectionPriority {
   suggestedAction: string;
 }
 
-export interface InvestmentPriority {
-  investmentId: string;
-  investmentCode: string;
-  investorId: string;
-  investorName: string;
-  amount: number;
-  dueDate: string;
-  paymentStatus: Extract<InvestorInvestmentPaymentStatus, 'UPCOMING' | 'PENDING' | 'OVERDUE'>;
-  daysUntilDue: number;
-}
-
 export interface DashboardOverview {
   dashboard: DashboardData;
   portfolio: PortfolioGroup[];
   monthlyCollections: MonthlyCollection[];
   dailyIncome: DailyIncome[];
+  overdueAging: Array<{ label: string; amount: number; count: number }>;
   weeklyMovement: WeeklyMovementItem[];
   upcomingPayments: UpcomingPayment[];
   collectionPriorities: CollectionPriority[];
-  investmentPriorities: InvestmentPriority[];
 }
 
 export async function getDashboardOverview(): Promise<DashboardOverview> {
@@ -120,8 +111,8 @@ export async function getPortfolio(): Promise<PortfolioGroup[]> {
   return data.data ?? [];
 }
 
-export async function getAudit(): Promise<AuditEntry[]> {
-  const { data } = await api.get<ApiResponse<AuditEntry[]>>('/audit');
+export async function getAudit(take = 6): Promise<AuditEntry[]> {
+  const { data } = await api.get<ApiResponse<AuditEntry[]>>('/audit', { params: { take } });
   return data.data ?? [];
 }
 

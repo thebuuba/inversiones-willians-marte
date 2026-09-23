@@ -64,18 +64,27 @@ export function AppShell({ children }: { children: ReactNode }) {
     <>
       <Sidebar collapsed={sidebarCollapsed} onCollapsedChange={toggleSidebarCollapsed} />
       <header
-        className={`fixed right-0 top-0 z-30 hidden h-16 items-center border-b border-border-soft bg-card px-6 transition-[left] duration-200 ease-out lg:flex ${
-          sidebarCollapsed ? 'left-[72px]' : 'left-[260px]'
+        className={`fixed right-0 top-0 z-30 hidden h-20 items-center bg-page px-8 pt-3 transition-[left] duration-200 ease-out lg:flex ${
+          sidebarCollapsed ? 'left-[72px]' : 'left-[264px]'
         }`}
       >
         <div className="flex w-full items-center gap-4">
           <GlobalSearch />
           <NotificationCenter />
+          <span className="whitespace-nowrap text-sm font-bold text-text-primary">
+            Hola, {user?.name ?? 'Usuario'}
+          </span>
+          <span
+            aria-hidden="true"
+            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-card bg-[#4b3a91] text-sm font-bold text-white shadow-card"
+          >
+            {user?.name?.charAt(0).toUpperCase() ?? 'U'}
+          </span>
         </div>
       </header>
       <main
-        className={`min-h-screen pb-[env(safe-area-inset-bottom)] pt-[calc(4rem+env(safe-area-inset-top))] transition-[margin] duration-200 ease-out lg:pt-16 ${
-          sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'
+        className={`min-h-screen pb-[env(safe-area-inset-bottom)] pt-[calc(4rem+env(safe-area-inset-top))] transition-[margin] duration-200 ease-out lg:pt-20 ${
+          sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[264px]'
         }`}
       >
         {children}

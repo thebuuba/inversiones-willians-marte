@@ -13,6 +13,7 @@ const allowedDevOrigins = getAllowedDevOrigins(
 const nextConfig: NextConfig = {
   agentRules: false,
   poweredByHeader: false,
+  distDir: process.env.NEXT_DIST_DIR ?? '.next',
   ...(allowedDevOrigins.length > 0 ? { allowedDevOrigins } : {}),
   async headers() {
     return [

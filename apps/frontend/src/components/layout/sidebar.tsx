@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   Briefcase,
   Calendar,
+  ChevronLeft,
   ChevronsUpDown,
   FileText,
   Home,
@@ -14,8 +14,10 @@ import {
   Landmark,
   LogOut,
   Menu,
+  Plus,
   ReceiptText,
   Settings,
+  Sparkles,
   TrendingUp,
   Users,
   Wallet,
@@ -25,6 +27,8 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import { navItems } from '@/components/ui/visual-system';
 import { NotificationCenter } from '@/components/layout/notification-center';
+import { useClientCache } from '@/lib/use-client-cache';
+import { getRequestsCount } from '@/lib/api/requests';
 
 const navIconMap = {
   briefcase: Briefcase,
@@ -62,6 +66,11 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const { data: requestsCount } = useClientCache(
+    'sidebar-requests-count',
+    () => getRequestsCount('PENDING'),
+    60_000,
+  );
   const initial = user?.name?.charAt(0).toUpperCase() ?? 'N';
 
   function NavLink({
@@ -85,9 +94,9 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         aria-label={compact ? label : undefined}
         className={cn(
           'group/sidebar-item relative flex items-center rounded-[12px] transition-colors duration-150',
-          compact ? 'mx-auto h-10 w-10 justify-center p-0' : 'gap-3 px-3 py-2.5 text-sm',
+          compact ? 'mx-auto h-10 w-10 justify-center p-0' : 'min-h-12 gap-4 px-4 py-2.5 text-sm',
           active
-            ? 'bg-primary-soft font-bold text-text-primary'
+            ? 'bg-primary-soft font-bold text-primary'
             : 'text-text-secondary hover:bg-page hover:text-text-primary',
         )}
         href={href}
@@ -109,6 +118,11 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         >
           {label}
         </span>
+        {!compact && href === '/solicitudes' && Boolean(requestsCount) && (
+          <span className="ml-auto flex h-6 min-w-6 items-center justify-center rounded-full bg-primary-soft px-1 text-xs font-bold text-primary">
+            {requestsCount}
+          </span>
+        )}
         {compact && (
           <span className="pointer-events-none absolute left-[calc(100%+10px)] z-50 -translate-x-1 rounded-[8px] border border-border-soft bg-surface-elevated px-2.5 py-1.5 text-xs font-semibold text-text-primary opacity-0 shadow-card transition duration-100 ease-out group-hover/sidebar-item:translate-x-0 group-hover/sidebar-item:opacity-100">
             {label}
@@ -123,11 +137,13 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
       <header
         className={cn(
           'flex shrink-0',
-          compact ? 'flex-col items-center gap-3 px-3 py-5' : 'items-center gap-3 px-5 py-5',
+          compact
+            ? 'flex-col items-center gap-3 px-3 py-5'
+            : 'items-center gap-3 px-[18px] py-[26px]',
         )}
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
-          WM
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-sky text-white shadow-action">
+          <Landmark className="h-5 w-5" aria-hidden="true" />
         </div>
         <div
           className={cn(
@@ -149,23 +165,22 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           onClick={onCollapsedChange}
           type="button"
         >
-          <Image
-            alt=""
+          <ChevronLeft
             aria-hidden="true"
-            className="sidebar-toggle-icon h-4 w-4 opacity-80 grayscale"
-            height={16}
-            src={collapsed ? '/icons/sidebar-derecho.png' : '/icons/sidebar-izquierdo.png'}
-            width={16}
+            className={cn('h-4 w-4 transition-transform', collapsed && 'rotate-180')}
           />
         </button>
       </header>
 
       <nav
-        className={cn('flex-1 pb-5', compact ? 'overflow-visible px-3' : 'overflow-y-auto px-4')}
+        className={cn(
+          'min-h-0 flex-1 pb-3',
+          compact ? 'overflow-visible px-3' : 'overflow-y-auto px-[14px]',
+        )}
         aria-label="Navegación principal"
       >
         {navGroups.map((group, groupIndex) => (
-          <section key={group.label} className={cn(groupIndex > 0 && 'mt-6')}>
+          <section key={group.label} className={cn(groupIndex > 0 && 'mt-5')}>
             {compact ? (
               groupIndex > 0 && <div className="mx-auto mb-4 h-px w-6 bg-border-soft" />
             ) : (
@@ -193,9 +208,32 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         ))}
       </nav>
 
-      <footer
-        className={cn('shrink-0 border-t border-border-soft py-4', compact ? 'px-3' : 'px-4')}
-      >
+      <footer className={cn('shrink-0 pb-4', compact ? 'px-3' : 'px-[14px]')}>
+        {!compact && (
+          <div className="relative mb-3 overflow-hidden rounded-[22px] bg-page px-4 pb-3 pt-4 text-text-primary">
+            <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-card text-primary shadow-card">
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+            </div>
+            <p className="text-xs leading-5 text-text-secondary">
+              Automatiza tus <strong className="text-text-primary">recordatorios de cobro</strong>
+            </p>
+            <Link
+              className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary"
+              href="/configuracion"
+            >
+              Activar ahora <ChevronLeft className="h-3 w-3 rotate-180" />
+            </Link>
+          </div>
+        )}
+        {!compact && (
+          <Link
+            className="mb-3 flex h-11 items-center justify-center gap-2 rounded-[18px] bg-brand-sky text-sm font-bold text-white shadow-action hover:bg-primary"
+            href="/prestamos/nuevo"
+          >
+            <Plus className="h-4 w-4" />
+            Nuevo préstamo
+          </Link>
+        )}
         {settingsItem && (
           <NavLink
             compact={compact}
@@ -206,7 +244,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           />
         )}
 
-        <div className="relative mt-4">
+        <div className="relative mt-3">
           {profileOpen && (
             <div
               className={cn(
@@ -227,13 +265,13 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
           <button
             aria-label={compact ? `Perfil de ${user?.name ?? 'Nata'}` : undefined}
             className={cn(
-              'flex w-full items-center rounded-[12px] text-left transition-colors duration-150 hover:bg-page',
+              'flex w-full items-center rounded-[18px] border border-border-soft text-left transition-colors duration-150 hover:bg-page',
               compact ? 'h-10 justify-center p-0' : 'gap-3 p-2',
             )}
             onClick={() => setProfileOpen((open) => !open)}
             type="button"
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-text-primary text-sm font-bold text-white">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#4b3a91] text-sm font-bold text-white">
               {initial}
             </div>
             <div
@@ -267,8 +305,8 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
     <>
       <div className="fixed inset-x-0 top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] items-end justify-between border-b border-border-soft bg-card px-4 pb-3 pt-[env(safe-area-inset-top)] text-text-primary lg:hidden">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">
-            WM
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-sky text-white">
+            <Landmark className="h-4 w-4" aria-hidden="true" />
           </div>
           <div>
             <p className="text-sm font-bold leading-tight">Willians Marte</p>
@@ -296,7 +334,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             onClick={() => setMobileOpen(false)}
             type="button"
           />
-          <aside className="relative h-dvh w-[260px] border-r border-border-soft bg-card pb-[env(safe-area-inset-bottom)]">
+          <aside className="relative h-dvh w-[264px] rounded-r-[28px] bg-card pb-[env(safe-area-inset-bottom)]">
             {sidebarContent(false)}
           </aside>
         </div>
@@ -304,8 +342,8 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
 
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 hidden h-dvh overflow-visible border-r border-border-soft bg-card transition-[width] duration-200 ease-out lg:block',
-          collapsed ? 'w-[72px]' : 'w-[260px]',
+          'fixed left-0 top-0 z-40 hidden h-dvh overflow-visible rounded-r-[28px] bg-card shadow-[4px_0_24px_-12px_rgba(30,64,120,0.18)] transition-[width] duration-200 ease-out lg:block',
+          collapsed ? 'w-[72px]' : 'w-[264px]',
         )}
       >
         {sidebarContent(collapsed)}
