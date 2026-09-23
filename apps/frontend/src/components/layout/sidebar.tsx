@@ -334,7 +334,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             onClick={() => setMobileOpen(false)}
             type="button"
           />
-          <aside className="relative h-dvh w-[260px] border-r border-border-soft bg-card pb-[env(safe-area-inset-bottom)]">
+          <aside className="relative h-dvh w-[264px] rounded-r-[28px] bg-card pb-[env(safe-area-inset-bottom)]">
             {sidebarContent(false)}
           </aside>
         </div>
@@ -342,8 +342,8 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
 
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 hidden h-dvh overflow-visible border-r border-border-soft bg-card transition-[width] duration-200 ease-out lg:block',
-          collapsed ? 'w-[72px]' : 'w-[260px]',
+          'fixed left-0 top-0 z-40 hidden h-dvh overflow-visible rounded-r-[28px] bg-card shadow-[4px_0_24px_-12px_rgba(30,64,120,0.18)] transition-[width] duration-200 ease-out lg:block',
+          collapsed ? 'w-[72px]' : 'w-[264px]',
         )}
       >
         {sidebarContent(collapsed)}

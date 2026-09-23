@@ -232,7 +232,7 @@ function SelectControl({
 }) {
   return (
     <label className="relative flex h-12 min-w-[230px] items-center gap-3 rounded-full border border-primary-border bg-card px-5 shadow-[0_4px_10px_rgba(40,92,67,0.06)]">
-      <span className="text-[#7CC99B]">{icon}</span>
+      <span className="text-state-success">{icon}</span>
       <select
         className="h-full min-w-0 flex-1 appearance-none bg-transparent pr-8 text-sm font-bold text-text-primary outline-none"
         onChange={(event) => onChange(event.target.value)}

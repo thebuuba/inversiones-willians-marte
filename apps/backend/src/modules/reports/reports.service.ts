@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { prisma, Prisma } from '@inversiones/database';
 import { calculateCollectionPriority } from './collection-priority';
-import { getInvestmentPeriodStatus } from '../investments/investment-period-status';
 import {
   clientWhereVisible,
   loanWhereVisible,
@@ -20,7 +19,6 @@ export class ReportsService {
       weeklyMovement,
       upcomingPayments,
       collectionPriorities,
-      investmentPriorities,
     ] = await Promise.all([
       this.dashboard(scope),
       this.portfolioByStatus(scope),
@@ -30,7 +28,6 @@ export class ReportsService {
       this.weeklyMovement(scope),
       this.upcomingPayments(scope),
       this.collectionPriorities(scope),
-      this.investmentPriorities(),
     ]);
 
     return {
@@ -42,61 +39,7 @@ export class ReportsService {
       weeklyMovement,
       upcomingPayments,
       collectionPriorities,
-      investmentPriorities,
     };
-  }
-
-  async investmentPriorities() {
-    const today = new Date();
-    const investments = await prisma.investorInvestment.findMany({
-      where: { status: 'ACTIVE', startDate: { not: null } },
-      select: {
-        id: true,
-        code: true,
-        monthlyPayment: true,
-        startDate: true,
-        investor: { select: { id: true, name: true } },
-        payments: {
-          select: { periodMonth: true, periodYear: true, amount: true },
-          orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }],
-          take: 24,
-        },
-      },
-    });
-    const urgencyOrder = { OVERDUE: 0, PENDING: 1, UPCOMING: 2 } as const;
-
-    return investments
-      .map((investment) => {
-        const period = getInvestmentPeriodStatus(
-          investment.startDate,
-          investment.payments,
-          today,
-          investment.monthlyPayment,
-        );
-        if (
-          !period.nextDueDate ||
-          !['OVERDUE', 'PENDING', 'UPCOMING'].includes(period.paymentStatus)
-        ) {
-          return null;
-        }
-        return {
-          investmentId: investment.id,
-          investmentCode: investment.code,
-          investorId: investment.investor.id,
-          investorName: investment.investor.name,
-          amount: Number(investment.monthlyPayment),
-          dueDate: period.nextDueDate,
-          paymentStatus: period.paymentStatus as keyof typeof urgencyOrder,
-          daysUntilDue: signedDaysBetweenUtc(today, period.nextDueDate),
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null)
-      .sort(
-        (a, b) =>
-          urgencyOrder[a.paymentStatus] - urgencyOrder[b.paymentStatus] ||
-          a.dueDate.getTime() - b.dueDate.getTime(),
-      )
-      .slice(0, 5);
   }
 
   async collectionPriorities(scope: PortfolioScope) {
@@ -555,10 +498,6 @@ function daysBetweenUtc(from: Date, to: Date) {
     0,
     Math.floor((startOfUtcDay(to).getTime() - startOfUtcDay(from).getTime()) / 86_400_000),
   );
-}
-
-function signedDaysBetweenUtc(from: Date, to: Date) {
-  return Math.round((startOfUtcDay(to).getTime() - startOfUtcDay(from).getTime()) / 86_400_000);
 }
 
 function toDateOnlyString(value: Date | string) {

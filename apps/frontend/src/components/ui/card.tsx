@@ -13,7 +13,7 @@ type CardHeaderProps = Omit<HTMLAttributes<HTMLDivElement>, 'title'> & CardHeade
 
 export function Card({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('rounded-panel border border-border-soft bg-card shadow-card', className)} {...props}>
+    <div className={cn('rounded-panel bg-card shadow-card', className)} {...props}>
       {children}
     </div>
   );

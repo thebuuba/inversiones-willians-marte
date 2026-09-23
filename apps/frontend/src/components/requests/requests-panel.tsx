@@ -225,7 +225,7 @@ export function RequestsPanel() {
       label: 'PENDIENTES',
       value: String(pendingCount),
       icon: Clock3,
-      className: 'bg-[#26322C] text-white',
+      className: 'bg-state-warning-bg text-state-warning',
     },
     {
       label: 'APROBADAS',
