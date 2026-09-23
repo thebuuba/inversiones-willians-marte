@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   ArrowLeft,
   Banknote,
@@ -24,14 +24,8 @@ import {
 } from 'lucide-react';
 import { DatePickerInput } from '@/components/ui/date-picker-input';
 import { createPayment, type Payment } from '@/lib/api/payments';
-import {
-  getLoan,
-  getLoans,
-  getPayoffQuote,
-  type LoanDetail,
-  type LoanListItem,
-} from '@/lib/api/loans';
-import { formatDop, parseCurrencyInput } from '@/lib/currency';
+import { getLoan, getLoans, type LoanDetail, type LoanListItem } from '@/lib/api/loans';
+import { formatCurrencyInput, formatDop, parseCurrencyInput } from '@/lib/currency';
 import { getLoanTypeLabel } from '@/lib/loan-type';
 import { invalidateCache, invalidateCachePrefix } from '@/lib/use-client-cache';
 import {
@@ -48,7 +42,10 @@ const paymentMethods = [
   { label: 'Tarjeta', icon: CreditCard },
 ] as const;
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
 const frequencyLabels: Record<string, string> = {
   DAILY: 'Diaria',
   WEEKLY: 'Semanal',
@@ -79,14 +76,16 @@ function getApiErrorMessage(error: unknown): string {
   if (Array.isArray(message)) return message.map(String).join(', ');
   return typeof message === 'string'
     ? message
-    : 'No se pudo registrar el cobro. Revisa los datos e inténtalo nuevamente.';
+    : 'No se pudo confirmar el cobro. Revisa los pagos recientes antes de intentarlo de nuevo.';
 }
 
 function getLoanStatusLabel(status: string) {
   if (status === 'ACTIVE') return 'Activo';
   if (status === 'OVERDUE') return 'Atrasado';
   if (status === 'PAID') return 'Pagado';
-  return 'Pendiente';
+  if (status === 'RESTRUCTURED') return 'Reestructurado';
+  if (status === 'WRITTEN_OFF') return 'Castigado';
+  return status;
 }
 
 function LoanSearchResult({ loan, onSelect }: { loan: LoanListItem; onSelect: () => void }) {
@@ -169,11 +168,10 @@ export function RegisterLoanPaymentPage() {
   const [notes, setNotes] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loanNeedsRefresh, setLoanNeedsRefresh] = useState(false);
+  const paymentInFlight = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [createdPayment, setCreatedPayment] = useState<Payment | null>(null);
-  const [payoffQuote, setPayoffQuote] = useState<Awaited<ReturnType<typeof getPayoffQuote>> | null>(
-    null,
-  );
 
   useEffect(() => {
     let active = true;
@@ -182,7 +180,12 @@ export function RegisterLoanPaymentPage() {
         setSearching(true);
         getLoans(undefined, query.trim() || undefined, 12, 0, 'recent')
           .then((response) => {
-            if (active) setResults(response.data.filter((item) => item.status !== 'PAID'));
+            if (active)
+              setResults(
+                response.data.filter(
+                  (item) => item.status === 'ACTIVE' || item.status === 'OVERDUE',
+                ),
+              );
           })
           .catch(() => {
             if (active) setResults([]);
@@ -208,7 +211,9 @@ export function RegisterLoanPaymentPage() {
         if (!active) return;
         setLoan(selected);
         setAmount(
-          String(getAmountToBringCurrent(selected.schedule, today(), selected.lateFees ?? [])),
+          formatCurrencyInput(
+            String(getAmountToBringCurrent(selected.schedule, today(), selected.lateFees ?? [])),
+          ),
         );
       })
       .catch(() => {
@@ -222,30 +227,18 @@ export function RegisterLoanPaymentPage() {
     };
   }, [initialLoanId]);
 
-  useEffect(() => {
-    if (!loan || !paymentDate) return;
-    let active = true;
-    getPayoffQuote(loan.id, paymentDate)
-      .then((quote) => {
-        if (active) setPayoffQuote(quote);
-      })
-      .catch(() => {
-        if (active) setPayoffQuote(null);
-      });
-    return () => {
-      active = false;
-    };
-  }, [loan, paymentDate]);
-
   async function selectLoan(id: string) {
     setLoadingLoan(true);
     setError(null);
     setCreatedPayment(null);
+    setLoanNeedsRefresh(false);
     try {
       const selected = await getLoan(id);
       setLoan(selected);
       setAmount(
-        String(getAmountToBringCurrent(selected.schedule, today(), selected.lateFees ?? [])),
+        formatCurrencyInput(
+          String(getAmountToBringCurrent(selected.schedule, today(), selected.lateFees ?? [])),
+        ),
       );
       setSubmitted(false);
     } catch {
@@ -264,14 +257,35 @@ export function RegisterLoanPaymentPage() {
     ? getOutstandingScheduledAmount(loan.schedule, loan.lateFees ?? [])
     : 0;
   const allocationPreview = useMemo(
-    () => (loan ? buildPaymentAllocationPreview(loan.schedule, loan.payments, amountNumber) : []),
+    () =>
+      loan
+        ? buildPaymentAllocationPreview(
+            loan.schedule,
+            loan.payments,
+            amountNumber,
+            loan.lateFees ?? [],
+          )
+        : [],
     [amountNumber, loan],
   );
   const previewInterest = allocationPreview.reduce((sum, row) => sum + row.interest, 0);
   const previewPrincipal = allocationPreview.reduce((sum, row) => sum + row.principal, 0);
+  const previewPenalty = allocationPreview.reduce((sum, row) => sum + row.penalty, 0);
+  const previewApplied = allocationPreview.reduce((sum, row) => sum + row.applied, 0);
   const invalidAmount = submitted && amountNumber <= 0;
   const exceedsOutstanding = amountNumber > totalOutstanding && totalOutstanding > 0;
   const hasNoOutstanding = totalOutstanding <= 0;
+  const allocationMismatch = amountNumber > 0 && Math.abs(previewApplied - amountNumber) > 0.005;
+  const loanAcceptsPayments = loan?.status === 'ACTIVE' || loan?.status === 'OVERDUE';
+  const canSubmit =
+    !saving &&
+    loanAcceptsPayments &&
+    Boolean(paymentDate) &&
+    amountNumber > 0 &&
+    !exceedsOutstanding &&
+    !hasNoOutstanding &&
+    !allocationMismatch &&
+    !loanNeedsRefresh;
   const loanSummary = useMemo(
     () =>
       loan
@@ -280,7 +294,6 @@ export function RegisterLoanPaymentPage() {
             loan.payments,
             loan.lateFees ?? [],
             loan.principal,
-            loan.balance,
             paymentDate || today(),
           )
         : null,
@@ -293,9 +306,9 @@ export function RegisterLoanPaymentPage() {
     event.preventDefault();
     setSubmitted(true);
     setError(null);
-    if (!loan || amountNumber <= 0 || !paymentDate || exceedsOutstanding || hasNoOutstanding)
-      return;
+    if (!loan || !canSubmit || paymentInFlight.current) return;
 
+    paymentInFlight.current = true;
     setSaving(true);
     try {
       const payment = await createPayment({
@@ -313,18 +326,32 @@ export function RegisterLoanPaymentPage() {
       invalidateCache('portfolio');
       invalidateCache('monthlyCollections');
       invalidateCache('upcomingPayments');
-      const refreshed = await getLoan(loan.id);
-      setLoan(refreshed);
-      setAmount(
-        String(getAmountToBringCurrent(refreshed.schedule, today(), refreshed.lateFees ?? [])),
-      );
+      setCreatedPayment(payment);
+      setAmount('');
       setReference('');
       setNotes('');
       setSubmitted(false);
-      setCreatedPayment(payment);
+      try {
+        const refreshed = await getLoan(loan.id);
+        setLoan(refreshed);
+        setLoanNeedsRefresh(false);
+        setAmount(
+          formatCurrencyInput(
+            String(
+              getAmountToBringCurrent(refreshed.schedule, paymentDate, refreshed.lateFees ?? []),
+            ),
+          ),
+        );
+      } catch {
+        setLoanNeedsRefresh(true);
+        setError(
+          'Cobro registrado. No se pudo actualizar el estado del préstamo; recarga la página antes de registrar otro.',
+        );
+      }
     } catch (paymentError) {
       setError(getApiErrorMessage(paymentError));
     } finally {
+      paymentInFlight.current = false;
       setSaving(false);
     }
   }
@@ -363,6 +390,7 @@ export function RegisterLoanPaymentPage() {
                 <label className="relative block">
                   <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
                   <input
+                    aria-label="Buscar préstamos por cliente, cédula o número"
                     className="h-11 w-full rounded-control-comfortable border border-primary-border bg-surface-subtle pl-10 pr-10 text-sm font-semibold text-text-primary outline-none transition placeholder:text-text-muted focus:border-primary-accent focus:bg-card"
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Cliente, cédula o # de préstamo"
@@ -424,6 +452,11 @@ export function RegisterLoanPaymentPage() {
                 <p className="mt-1 max-w-sm text-sm font-medium text-text-muted">
                   Verás aquí la cuota pendiente, el desglose del pago y el historial reciente.
                 </p>
+                {error ? (
+                  <p role="alert" className="mt-3 text-sm font-semibold text-state-danger">
+                    {error}
+                  </p>
+                ) : null}
               </div>
             ) : (
               <div className="space-y-4">
@@ -458,25 +491,23 @@ export function RegisterLoanPaymentPage() {
                   <div className="grid gap-5 border-t border-border-soft px-6 py-5 sm:grid-cols-2 xl:grid-cols-[1.25fr_1fr_1fr_1fr]">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">
-                        A saldar hoy
+                        Saldo de cuotas y mora
                       </p>
                       <p className="mt-1.5 text-2xl font-bold tracking-[-0.03em] tabular-nums text-text-primary">
-                        {fmt(payoffQuote?.totalToPay ?? totalOutstanding)}
+                        {fmt(totalOutstanding)}
                       </p>
                       <p className="mt-1 text-xs font-medium text-text-muted">
-                        Capital, interés generado y mora
+                        Máximo para registrar un cobro de cuotas
                       </p>
                     </div>
                     <Metric
                       label="Capital pendiente"
-                      value={fmt(loanSummary?.capitalOutstanding ?? loan.balance)}
+                      value={fmt(loanSummary?.capitalOutstanding ?? loan.principal)}
                     />
                     <Metric
                       label="Interés pendiente"
                       tone="orange"
-                      value={fmt(
-                        payoffQuote?.earnedInterest ?? loanSummary?.interestOutstanding ?? 0,
-                      )}
+                      value={fmt(loanSummary?.interestOutstanding ?? 0)}
                     />
                     <Metric label="Cuota actual" tone="green" value={fmt(nextScheduled)} />
                   </div>
@@ -486,14 +517,12 @@ export function RegisterLoanPaymentPage() {
                   aria-label="Acciones del préstamo"
                   className="grid gap-3 rounded-panel border border-border-soft bg-card p-4 shadow-card sm:grid-cols-2 xl:grid-cols-5"
                 >
-                  <button
+                  <a
                     className="inline-flex h-12 items-center justify-center gap-2 rounded-control-comfortable bg-primary-accent px-4 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={saving || amountNumber <= 0 || exceedsOutstanding || hasNoOutstanding}
-                    form="loan-payment-form"
-                    type="submit"
+                    href="#loan-payment-form"
                   >
-                    <HandCoins className="h-4 w-4" /> Procesar pago
-                  </button>
+                    <HandCoins className="h-4 w-4" /> Ir al cobro
+                  </a>
                   <Link
                     className="inline-flex h-12 items-center justify-center gap-2 rounded-control-comfortable bg-primary px-4 text-sm font-bold text-text-inverse transition hover:-translate-y-0.5 hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
                     href={`/prestamos/${loan.id}?agreement=1`}
@@ -504,7 +533,7 @@ export function RegisterLoanPaymentPage() {
                     className="inline-flex h-12 items-center justify-center gap-2 rounded-control-comfortable bg-surface-subtle px-4 text-sm font-bold text-text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
                     href={`/prestamos/${loan.id}#saldo-anticipado`}
                   >
-                    <CheckCircle2 className="h-4 w-4" /> Saldar
+                    <CheckCircle2 className="h-4 w-4" /> Saldar anticipadamente
                   </Link>
                   <Link
                     className="inline-flex h-12 items-center justify-center gap-2 rounded-control-comfortable bg-surface-subtle px-4 text-sm font-bold text-text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
@@ -522,7 +551,7 @@ export function RegisterLoanPaymentPage() {
 
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_390px]">
                   <form
-                    className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card"
+                    className="scroll-mt-5 overflow-hidden rounded-panel border border-border-soft bg-card shadow-card"
                     id="loan-payment-form"
                     onSubmit={handleSubmit}
                   >
@@ -543,8 +572,11 @@ export function RegisterLoanPaymentPage() {
                           </label>
                           <button
                             className="text-xs font-bold text-primary-accent hover:underline"
-                            onClick={() => setAmount(String(amountToBringCurrent))}
+                            onClick={() =>
+                              setAmount(formatCurrencyInput(String(amountToBringCurrent)))
+                            }
                             type="button"
+                            disabled={amountToBringCurrent <= 0}
                           >
                             Usar monto para ponerse al día
                           </button>
@@ -562,11 +594,25 @@ export function RegisterLoanPaymentPage() {
                             }`}
                             id="loan-payment-amount"
                             inputMode="decimal"
-                            onChange={(event) => setAmount(event.target.value)}
+                            onChange={(event) => setAmount(formatCurrencyInput(event.target.value))}
                             placeholder="0.00"
                             value={amount}
+                            aria-invalid={invalidAmount || exceedsOutstanding || allocationMismatch}
+                            aria-describedby="loan-payment-amount-help"
                           />
                         </div>
+                        <p
+                          id="loan-payment-amount-help"
+                          className="mt-2 text-xs font-medium text-text-muted"
+                        >
+                          Puedes cobrar una cuota completa o registrar un abono parcial. Disponible:{' '}
+                          {fmt(totalOutstanding)}.
+                        </p>
+                        {invalidAmount ? (
+                          <p className="mt-2 text-xs font-semibold text-state-danger">
+                            Ingresa un monto mayor que cero.
+                          </p>
+                        ) : null}
                         {exceedsOutstanding ? (
                           <p className="mt-2 text-xs font-semibold text-state-danger">
                             El monto supera la deuda programada de {fmt(totalOutstanding)}.
@@ -575,6 +621,17 @@ export function RegisterLoanPaymentPage() {
                         {hasNoOutstanding ? (
                           <p className="mt-2 text-xs font-semibold text-state-danger">
                             Este préstamo no tiene cuotas pendientes para cobrar.
+                          </p>
+                        ) : null}
+                        {!loanAcceptsPayments ? (
+                          <p className="mt-2 text-xs font-semibold text-state-danger">
+                            Este préstamo no está abierto para cobros.
+                          </p>
+                        ) : null}
+                        {allocationMismatch && !exceedsOutstanding ? (
+                          <p className="mt-2 text-xs font-semibold text-state-danger">
+                            No se puede aplicar todo el monto con los datos actuales. Actualiza el
+                            préstamo antes de cobrar.
                           </p>
                         ) : null}
                       </div>
@@ -586,6 +643,7 @@ export function RegisterLoanPaymentPage() {
                           </span>
                           <DatePickerInput
                             className={inputClass}
+                            id="loan-payment-date"
                             invalid={submitted && !paymentDate}
                             onChange={setPaymentDate}
                             value={paymentDate}
@@ -597,6 +655,7 @@ export function RegisterLoanPaymentPage() {
                           </span>
                           <input
                             className={inputClass}
+                            name="reference"
                             onChange={(event) => setReference(event.target.value)}
                             placeholder="Opcional"
                             value={reference}
@@ -608,21 +667,27 @@ export function RegisterLoanPaymentPage() {
                         <legend className="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
                           Método de pago
                         </legend>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid gap-2 sm:grid-cols-3">
                           {paymentMethods.map(({ label, icon: Icon }) => (
-                            <button
-                              className={`flex min-h-12 items-center justify-center gap-2 rounded-control-comfortable border px-2 text-xs font-bold transition ${
+                            <label
+                              className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-control-comfortable border px-2 text-xs font-bold transition focus-within:ring-2 focus-within:ring-primary-accent ${
                                 paymentMethod === label
                                   ? 'border-primary-accent bg-primary-soft text-primary-accent'
                                   : 'border-primary-border bg-card text-text-secondary hover:bg-surface-subtle'
                               }`}
                               key={label}
-                              onClick={() => setPaymentMethod(label)}
-                              type="button"
                             >
+                              <input
+                                className="sr-only"
+                                type="radio"
+                                name="paymentMethod"
+                                value={label}
+                                checked={paymentMethod === label}
+                                onChange={() => setPaymentMethod(label)}
+                              />
                               <Icon className="h-4 w-4" />
-                              <span className="hidden sm:inline">{label}</span>
-                            </button>
+                              <span>{label}</span>
+                            </label>
                           ))}
                         </div>
                       </fieldset>
@@ -639,17 +704,52 @@ export function RegisterLoanPaymentPage() {
                         />
                       </label>
 
+                      {amountNumber > 0 && !allocationMismatch ? (
+                        <div className="rounded-control-comfortable border border-primary-border bg-surface-subtle p-4">
+                          <p className="text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
+                            Resumen antes de registrar
+                          </p>
+                          <div className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                            <div>
+                              <span className="block text-text-muted">Interés</span>
+                              <strong className="tabular-nums text-text-primary">
+                                {fmt(previewInterest)}
+                              </strong>
+                            </div>
+                            <div>
+                              <span className="block text-text-muted">Capital</span>
+                              <strong className="tabular-nums text-text-primary">
+                                {fmt(previewPrincipal)}
+                              </strong>
+                            </div>
+                            <div>
+                              <span className="block text-text-muted">Mora</span>
+                              <strong className="tabular-nums text-text-primary">
+                                {fmt(previewPenalty)}
+                              </strong>
+                            </div>
+                            <div>
+                              <span className="block text-text-muted">Total</span>
+                              <strong className="tabular-nums text-primary-accent">
+                                {fmt(previewApplied)}
+                              </strong>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+
                       {error ? (
-                        <div className="rounded-control-comfortable border border-state-danger-bg bg-state-danger-bg px-4 py-3 text-sm font-semibold text-state-danger">
+                        <div
+                          role="alert"
+                          className="rounded-control-comfortable border border-state-danger-bg bg-state-danger-bg px-4 py-3 text-sm font-semibold text-state-danger"
+                        >
                           {error}
                         </div>
                       ) : null}
 
                       <button
                         className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white shadow-action transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled={
-                          saving || amountNumber <= 0 || exceedsOutstanding || hasNoOutstanding
-                        }
+                        disabled={!canSubmit}
                         type="submit"
                       >
                         <CheckCircle2 className="h-4 w-4" />
@@ -724,6 +824,12 @@ export function RegisterLoanPaymentPage() {
                       </div>
                       {allocationPreview.length ? (
                         <div>
+                          {loan.lateFeeEnabled ? (
+                            <p className="border-b border-border-soft px-4 py-2 text-xs text-text-muted">
+                              Vista previa con la mora registrada. El importe final se confirma al
+                              guardar.
+                            </p>
+                          ) : null}
                           {allocationPreview.map((row) => (
                             <div
                               className="border-b border-border-soft p-4 last:border-b-0"
@@ -739,7 +845,7 @@ export function RegisterLoanPaymentPage() {
                                   {fmtDate(row.dueDate)}
                                 </p>
                               </div>
-                              <div className="mt-2 grid grid-cols-3 gap-2 text-right tabular-nums">
+                              <div className="mt-2 grid grid-cols-2 gap-2 text-right tabular-nums sm:grid-cols-4">
                                 <div className="text-left">
                                   <p className="text-xs font-bold uppercase text-text-muted">
                                     Aplicado
@@ -764,13 +870,27 @@ export function RegisterLoanPaymentPage() {
                                     {fmt(row.principal)}
                                   </p>
                                 </div>
+                                <div>
+                                  <p className="text-xs font-bold uppercase text-text-muted">
+                                    Mora
+                                  </p>
+                                  <p className="mt-1 text-xs font-bold text-state-danger">
+                                    {fmt(row.penalty)}
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           ))}
-                          <div className="grid grid-cols-2 gap-3 bg-surface-subtle px-4 py-3 text-xs font-bold tabular-nums">
-                            <span className="text-state-danger">Interés: {fmt(previewInterest)}</span>
-                            <span className="text-right text-primary-accent">
+                          <div className="grid grid-cols-2 gap-3 bg-surface-subtle px-4 py-3 text-xs font-bold tabular-nums sm:grid-cols-4">
+                            <span className="text-state-danger">
+                              Interés: {fmt(previewInterest)}
+                            </span>
+                            <span className="text-primary-accent">
                               Capital: {fmt(previewPrincipal)}
+                            </span>
+                            <span className="text-state-danger">Mora: {fmt(previewPenalty)}</span>
+                            <span className="text-right text-text-primary">
+                              Total: {fmt(previewApplied)}
                             </span>
                           </div>
                         </div>
@@ -783,12 +903,14 @@ export function RegisterLoanPaymentPage() {
 
                     {createdPayment ? (
                       <section className="rounded-panel border border-primary-border bg-primary-soft p-4 shadow-card">
-                        <div className="flex items-start gap-3">
+                        <div className="flex items-start gap-3" role="status">
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-accent text-white">
                             <CheckCircle2 className="h-4 w-4" />
                           </span>
                           <div>
-                            <p className="text-sm font-bold text-primary-accent">Cobro registrado</p>
+                            <p className="text-sm font-bold text-primary-accent">
+                              Cobro registrado
+                            </p>
                             <p className="mt-1 text-xl font-bold tabular-nums text-text-primary">
                               {fmt(createdPayment.amount)}
                             </p>

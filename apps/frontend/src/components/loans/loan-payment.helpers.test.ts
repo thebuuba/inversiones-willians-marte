@@ -52,7 +52,6 @@ test('summarizes the financial data shown while collecting a loan', () => {
       ],
       [{ amount: 75, paid: false }],
       2000,
-      1700,
       '2026-07-16',
     ),
     {
@@ -69,6 +68,12 @@ test('summarizes the financial data shown while collecting a loan', () => {
   );
 });
 
+test('does not show interest-inclusive loan balance as pending capital', () => {
+  const summary = getLoanPaymentSummary(schedule, [], [], 200000, '2026-09-23');
+  assert.equal(summary.capitalPaid, 0);
+  assert.equal(summary.capitalOutstanding, 200000);
+});
+
 test('previews the same interest-first allocation used by the backend', () => {
   const preview = buildPaymentAllocationPreview(
     schedule,
@@ -83,6 +88,7 @@ test('previews the same interest-first allocation used by the backend', () => {
       applied: 900,
       interest: 200,
       principal: 700,
+      penalty: 0,
     },
     {
       scheduleId: 's2',
@@ -90,6 +96,64 @@ test('previews the same interest-first allocation used by the backend', () => {
       applied: 300,
       interest: 250,
       principal: 50,
+      penalty: 0,
     },
   ]);
+});
+
+test('previews mora after each installment and includes it in the applied total', () => {
+  assert.deepEqual(
+    buildPaymentAllocationPreview(schedule, [], 1050, [
+      { scheduleId: 's1', amount: 75, paidAmount: 25, paid: false },
+    ]),
+    [
+      {
+        scheduleId: 's1',
+        dueDate: '2026-07-15',
+        applied: 950,
+        interest: 300,
+        principal: 600,
+        penalty: 50,
+      },
+      {
+        scheduleId: 's2',
+        dueDate: '2026-08-15',
+        applied: 100,
+        interest: 100,
+        principal: 0,
+        penalty: 0,
+      },
+    ],
+  );
+});
+
+test('previews a fee even when its installment has already been fully covered', () => {
+  const feeOnly = [{ ...schedule[0], paidAmount: 1000, status: 'PARTIAL' }];
+  assert.deepEqual(
+    buildPaymentAllocationPreview(feeOnly, [], 25, [{ scheduleId: 's1', amount: 25, paid: false }]),
+    [
+      {
+        scheduleId: 's1',
+        dueDate: '2026-07-15',
+        applied: 25,
+        interest: 0,
+        principal: 0,
+        penalty: 25,
+      },
+    ],
+  );
+});
+
+test('does not include cancelled installments in a collection preview', () => {
+  assert.deepEqual(
+    buildPaymentAllocationPreview([{ ...schedule[0], status: 'CANCELLED' }], [], 500),
+    [],
+  );
+});
+
+test('does not offer cancelled installments or their fees as collectible', () => {
+  const cancelled = [{ ...schedule[0], status: 'CANCELLED' }];
+  const fees = [{ scheduleId: 's1', amount: 50, paid: false }];
+  assert.equal(getOutstandingScheduledAmount(cancelled, fees), 0);
+  assert.equal(getAmountToBringCurrent(cancelled, '2026-07-16', fees), 0);
 });
