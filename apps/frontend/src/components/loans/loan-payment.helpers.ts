@@ -28,7 +28,7 @@ export interface LoanPaymentSummary {
   paidInstallments: number;
 }
 
-type PaymentLateFee = {
+export type PaymentLateFee = {
   scheduleId?: string;
   amount: number | string;
   paid: boolean;
@@ -41,15 +41,21 @@ function getOutstandingFees(lateFees: PaymentLateFee[]): number {
     .reduce((sum, fee) => sum + Math.max(0, Number(fee.amount) - Number(fee.paidAmount ?? 0)), 0);
 }
 
+function isCollectible(status: string): boolean {
+  return status === 'PENDING' || status === 'PARTIAL' || status === 'OVERDUE';
+}
+
 export function getLoanPaymentSummary(
   schedule: PaymentPreviewSchedule[],
   payments: PaymentPreviewPayment[],
   lateFees: PaymentLateFee[],
   principal: number,
-  balance: number,
   asOfDate: string,
 ): LoanPaymentSummary {
   const allocations = payments.flatMap((payment) => payment.allocations ?? []);
+  const capitalPaid = allocations
+    .filter((allocation) => allocation.type === 'PRINCIPAL')
+    .reduce((sum, allocation) => sum + Number(allocation.amount), 0);
   const interestPaid = allocations
     .filter((allocation) => allocation.type === 'INTEREST')
     .reduce((sum, allocation) => sum + Number(allocation.amount), 0);
@@ -61,12 +67,12 @@ export function getLoanPaymentSummary(
     );
   }
 
-  const outstandingRows = schedule.filter((row) => row.status !== 'PAID');
+  const outstandingRows = schedule.filter((row) => isCollectible(row.status));
   const overdueRows = outstandingRows.filter((row) => row.dueDate.slice(0, 10) < asOfDate);
 
   return {
-    capitalPaid: roundMoney(Math.max(0, principal - balance)),
-    capitalOutstanding: roundMoney(Math.max(0, balance)),
+    capitalPaid: roundMoney(capitalPaid),
+    capitalOutstanding: roundMoney(Math.max(0, principal - capitalPaid)),
     interestPaid: roundMoney(interestPaid),
     interestOutstanding: roundMoney(
       outstandingRows.reduce(
@@ -94,18 +100,24 @@ export interface PaymentAllocationPreviewRow {
   applied: number;
   interest: number;
   principal: number;
+  penalty: number;
 }
 
 export function getOutstandingScheduledAmount(
   schedule: PaymentPreviewSchedule[],
   lateFees: PaymentLateFee[] = [],
 ): number {
+  const collectibleIds = new Set(
+    schedule.filter((row) => isCollectible(row.status)).map((row) => row.id),
+  );
   return roundMoney(
     schedule
-      .filter((row) => row.status !== 'PAID')
+      .filter((row) => isCollectible(row.status))
       .reduce(
         (sum, row) => sum + Math.max(0, Number(row.amount) - Number(row.paidAmount ?? 0)),
-        getOutstandingFees(lateFees),
+        getOutstandingFees(
+          lateFees.filter((fee) => !fee.scheduleId || collectibleIds.has(fee.scheduleId)),
+        ),
       ),
   );
 }
@@ -116,11 +128,13 @@ export function getAmountToBringCurrent(
   lateFees: PaymentLateFee[] = [],
 ): number {
   const dueScheduleIds = new Set(
-    schedule.filter((row) => row.dueDate.slice(0, 10) <= asOfDate).map((row) => row.id),
+    schedule
+      .filter((row) => isCollectible(row.status) && row.dueDate.slice(0, 10) <= asOfDate)
+      .map((row) => row.id),
   );
   return roundMoney(
     schedule
-      .filter((row) => row.status !== 'PAID' && row.dueDate.slice(0, 10) <= asOfDate)
+      .filter((row) => isCollectible(row.status) && row.dueDate.slice(0, 10) <= asOfDate)
       .reduce(
         (sum, row) => sum + Math.max(0, Number(row.amount) - Number(row.paidAmount ?? 0)),
         getOutstandingFees(
@@ -132,7 +146,7 @@ export function getAmountToBringCurrent(
 
 export function getNextScheduledAmount(schedule: PaymentPreviewSchedule[]): number {
   const next = [...schedule]
-    .filter((row) => row.status !== 'PAID')
+    .filter((row) => isCollectible(row.status))
     .sort((left, right) => new Date(left.dueDate).getTime() - new Date(right.dueDate).getTime())[0];
 
   return next ? roundMoney(Math.max(0, Number(next.amount) - Number(next.paidAmount ?? 0))) : 0;
@@ -142,6 +156,7 @@ export function buildPaymentAllocationPreview(
   schedule: PaymentPreviewSchedule[],
   payments: PaymentPreviewPayment[],
   paymentAmount: number,
+  lateFees: PaymentLateFee[] = [],
 ): PaymentAllocationPreviewRow[] {
   const paidInterestBySchedule = new Map<string, number>();
   for (const allocation of payments.flatMap((payment) => payment.allocations ?? [])) {
@@ -152,31 +167,41 @@ export function buildPaymentAllocationPreview(
     );
   }
 
-  let remainingPayment = Math.max(0, paymentAmount);
+  let remainingCents = Math.max(0, Math.round(paymentAmount * 100));
   const rows: PaymentAllocationPreviewRow[] = [];
   const pendingSchedule = [...schedule]
-    .filter((row) => row.status !== 'PAID')
+    .filter((row) => isCollectible(row.status))
     .sort((left, right) => new Date(left.dueDate).getTime() - new Date(right.dueDate).getTime());
 
   for (const row of pendingSchedule) {
-    if (remainingPayment <= 0) break;
-    const outstanding = Math.max(0, Number(row.amount) - Number(row.paidAmount ?? 0));
-    if (outstanding <= 0) continue;
-    const applied = Math.min(outstanding, remainingPayment);
-    const remainingInterest = Math.max(
+    if (remainingCents <= 0) break;
+    const outstandingCents = Math.max(
       0,
-      Number(row.interestPart) - (paidInterestBySchedule.get(row.id) ?? 0),
+      Math.round((Number(row.amount) - Number(row.paidAmount ?? 0)) * 100),
     );
-    const interest = Math.min(applied, remainingInterest);
+    const appliedCents = Math.min(outstandingCents, remainingCents);
+    const remainingInterestCents = Math.max(
+      0,
+      Math.round((Number(row.interestPart) - (paidInterestBySchedule.get(row.id) ?? 0)) * 100),
+    );
+    const interestCents = Math.min(appliedCents, remainingInterestCents);
+    remainingCents -= appliedCents;
+    const fee = lateFees.find((item) => item.scheduleId === row.id && !item.paid);
+    const feeCents = fee
+      ? Math.max(0, Math.round((Number(fee.amount) - Number(fee.paidAmount ?? 0)) * 100))
+      : 0;
+    const penaltyCents = Math.min(feeCents, remainingCents);
+    remainingCents -= penaltyCents;
+    if (appliedCents + penaltyCents === 0) continue;
 
     rows.push({
       scheduleId: row.id,
       dueDate: row.dueDate,
-      applied: roundMoney(applied),
-      interest: roundMoney(interest),
-      principal: roundMoney(applied - interest),
+      applied: (appliedCents + penaltyCents) / 100,
+      interest: interestCents / 100,
+      principal: (appliedCents - interestCents) / 100,
+      penalty: penaltyCents / 100,
     });
-    remainingPayment -= applied;
   }
 
   return rows;
