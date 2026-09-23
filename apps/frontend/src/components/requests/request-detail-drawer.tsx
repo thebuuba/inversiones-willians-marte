@@ -139,7 +139,7 @@ function InfoCard({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-panel bg-card p-3.5 transition hover:-translate-y-0.5">
+    <div className="flex items-center gap-3 rounded-panel bg-card p-3.5 shadow-card transition hover:-translate-y-0.5">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-state-neutral-bg text-text-muted">
         <Icon className="h-4 w-4" />
       </div>
@@ -557,7 +557,7 @@ export function RequestDetailDrawer({
             <div className="flex-1 px-6 py-5 pb-32">
               <motion.div
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-panel border border-primary-border bg-card p-5"
+                className="rounded-panel border border-primary-border bg-card p-5 shadow-card"
                 initial={{ opacity: 0, y: 10 }}
                 transition={{ delay: 0.08 }}
               >
@@ -611,7 +611,7 @@ export function RequestDetailDrawer({
                     <FileText className="h-4 w-4" />
                     DESCRIPCIÓN
                   </h3>
-                  <div className="rounded-panel bg-card p-4 text-sm leading-relaxed text-text-primary">
+                  <div className="rounded-panel bg-card p-4 text-sm leading-relaxed text-text-primary shadow-card">
                     {data.description}
                   </div>
                 </section>

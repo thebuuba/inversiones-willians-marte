@@ -463,7 +463,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
 
 function Summary({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-control-comfortable border border-border-soft bg-card p-5 shadow-soft">
+    <div className="rounded-control-comfortable border border-border-soft bg-card p-5 shadow-card">
       <p className="text-xs font-medium text-text-subtle">{label}</p>
       <p className="mt-1.5 text-lg font-bold tabular-nums text-text-primary">{value}</p>
     </div>

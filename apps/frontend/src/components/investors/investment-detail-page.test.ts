@@ -37,7 +37,7 @@ test('separates the investment summary into individual cards', () => {
   assert.match(source, /grid grid-cols-1 gap-3 border-t[^\n]*bg-page p-4/);
   assert.match(
     source,
-    /rounded-control-comfortable border border-border-soft bg-card p-5 shadow-soft/,
+    /rounded-control-comfortable border border-border-soft bg-card p-5 shadow-card/,
   );
 });
 
