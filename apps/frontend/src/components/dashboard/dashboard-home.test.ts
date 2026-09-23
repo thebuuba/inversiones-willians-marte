@@ -48,7 +48,7 @@ test('uses the same collection status colors as the loans panel', () => {
     ),
     {
       CURRENT: '#7CC99B',
-      PENDING: '#B5BBB8',
+      PENDING: '#26322C',
       LATE: '#F3D477',
       EXPIRED: '#E67C73',
       PAID: '#8EB8D8',

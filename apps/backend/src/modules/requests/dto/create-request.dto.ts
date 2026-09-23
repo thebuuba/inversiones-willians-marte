@@ -1,33 +1,34 @@
-import { IsInt, IsString, IsNumber, IsOptional, MinLength, Min } from 'class-validator';
+import { IsInt, IsString, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class CreateRequestDto {
+  @IsOptional()
   @IsString()
-  @MinLength(2)
-  firstName: string;
-
-  @IsString()
-  @MinLength(2)
-  lastName: string;
+  firstName?: string | null;
 
   @IsOptional()
   @IsString()
-  identification?: string;
+  lastName?: string | null;
 
   @IsOptional()
   @IsString()
-  phone?: string;
+  identification?: string | null;
 
+  @IsOptional()
+  @IsString()
+  phone?: string | null;
+
+  @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(1)
-  amount: number;
+  @Min(0)
+  amount?: number | null;
 
   @IsOptional()
   @IsString()
-  description?: string;
+  description?: string | null;
 
   @IsOptional()
   @IsString()
-  reference?: string;
+  reference?: string | null;
 
   @IsOptional()
   @IsInt()

@@ -5,9 +5,9 @@ export const loanStatusVisuals = {
     dotClassName: 'bg-[#7CC99B]',
   },
   PENDING: {
-    color: '#B5BBB8',
-    badgeClassName: 'bg-[#B5BBB8] text-[#26322C]',
-    dotClassName: 'bg-[#B5BBB8]',
+    color: '#26322C',
+    badgeClassName: 'bg-[#26322C] text-white',
+    dotClassName: 'bg-[#26322C]',
   },
   LATE: {
     color: '#F3D477',

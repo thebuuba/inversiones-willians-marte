@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Calendar,
@@ -8,13 +10,16 @@ import {
   FileText,
   Image as ImageIcon,
   MessageCircle,
+  Pencil,
   Phone,
   Printer,
   User,
   X,
   type LucideIcon,
 } from 'lucide-react';
-import { formatDop } from '@/lib/currency';
+import { getRequestPhotoUrl } from '@/lib/api/requests';
+import { requestName, requestInitials, requestAmount } from '@/lib/request-display';
+import { statusToneDots, statusTones } from '@/components/ui/visual-system';
 import type { LoanRequestItem } from '@inversiones/shared';
 
 interface RequestDetailDrawerProps {
@@ -23,36 +28,89 @@ interface RequestDetailDrawerProps {
   request?: LoanRequestItem | null;
   onApprove?: () => void;
   onReject?: () => void;
+  onAddPhoto?: (file: File) => Promise<void>;
+  onEdit?: (request: LoanRequestItem) => void;
+  canDecide?: boolean;
+  busy?: boolean;
+}
+
+function RequestPhotos({ request }: { request: LoanRequestItem }) {
+  const [urls, setUrls] = useState<string[]>([]);
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    let active = true;
+    const loaded: string[] = [];
+    Promise.allSettled(
+      (request.photos ?? []).map((photo) => getRequestPhotoUrl(request.id, photo.id)),
+    ).then((results) => {
+      loaded.push(
+        ...results
+          .filter(
+            (result): result is PromiseFulfilledResult<string> => result.status === 'fulfilled',
+          )
+          .map((result) => result.value),
+      );
+      if (active) {
+        setUrls(loaded);
+        setError(results.some((result) => result.status === 'rejected'));
+      } else loaded.forEach((url) => URL.revokeObjectURL(url));
+    });
+    return () => {
+      active = false;
+      loaded.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [request]);
+  if (!request.photos?.length) return <p className="text-sm text-text-subtle">Sin fotos</p>;
+  return (
+    <div>
+      {error && (
+        <p className="mb-2 text-sm text-state-danger">Algunas fotos no se pudieron cargar.</p>
+      )}
+      <div className="grid grid-cols-2 gap-3">
+        {urls.map((url, index) => (
+          <Image
+            key={url}
+            src={url}
+            alt={`Foto ${index + 1} de la solicitud`}
+            width={320}
+            height={224}
+            unoptimized
+            className="max-h-56 w-full rounded-panel object-contain"
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 const statusMap: Record<string, { label: string; className: string; dot: string }> = {
   PENDING: {
     label: 'Pendiente',
-    className: 'bg-state-warning-bg text-state-warning',
-    dot: 'bg-state-warning-dot',
+    className: statusTones.pending,
+    dot: statusToneDots.pending,
   },
   UNDER_REVIEW: {
     label: 'En revisión',
-    className: 'bg-state-info-bg text-state-info',
-    dot: 'bg-state-info-dot',
+    className: statusTones.info,
+    dot: statusToneDots.info,
   },
   APPROVED: {
     label: 'Aprobada',
-    className: 'bg-state-success-bg text-state-success',
-    dot: 'bg-state-success-dot',
+    className: statusTones.success,
+    dot: statusToneDots.success,
   },
   REJECTED: {
     label: 'Rechazada',
-    className: 'bg-state-danger-bg text-state-danger',
-    dot: 'bg-state-danger-dot',
+    className: statusTones.danger,
+    dot: statusToneDots.danger,
   },
 };
 
 const printStatusColors: Record<string, { label: string; bg: string; text: string }> = {
-  PENDING: { label: 'Pendiente', bg: '#FFF4C8', text: '#B89A22' },
-  UNDER_REVIEW: { label: 'En revisión', bg: '#E4F0FF', text: '#2F5F91' },
-  APPROVED: { label: 'Aprobada', bg: '#E7F4EC', text: '#2F7654' },
-  REJECTED: { label: 'Rechazada', bg: '#FFE8D8', text: '#9F3F25' },
+  PENDING: { label: 'Pendiente', bg: '#26322C', text: '#FFFFFF' },
+  UNDER_REVIEW: { label: 'En revisión', bg: '#8EB8D8', text: '#17354A' },
+  APPROVED: { label: 'Aprobada', bg: '#7CC99B', text: '#173B29' },
+  REJECTED: { label: 'Rechazada', bg: '#E67C73', text: '#4A201D' },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -116,15 +174,21 @@ export function RequestDetailDrawer({
   request,
   onApprove,
   onReject,
+  onAddPhoto,
+  onEdit,
+  canDecide = false,
+  busy = false,
 }: RequestDetailDrawerProps) {
   const data = request;
+  const [photoError, setPhotoError] = useState('');
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   function handlePrint() {
     if (!data) return;
     const win = window.open('', '_blank');
     if (!win) return;
     const status = getPrintableStatus(data.status);
-    const fullName = `${data.firstName} ${data.lastName}`;
+    const fullName = requestName(data);
     const receivedDate = formatRequestDate(data.createdAt, {
       day: 'numeric',
       month: 'long',
@@ -375,7 +439,7 @@ export function RequestDetailDrawer({
           </div>
           <div class="amount-card">
             <p class="eyebrow">Monto solicitado</p>
-            <div class="amount">${escapeHtml(formatDop(data.amount))}</div>
+            <div class="amount">${escapeHtml(requestAmount(data))}</div>
           </div>
         </section>
 
@@ -394,7 +458,7 @@ export function RequestDetailDrawer({
         <section class="section">
           <h3 class="section-title">Información de la solicitud</h3>
           <div class="info-grid">
-            <div class="info-cell"><div class="label">Monto</div><div class="value">${escapeHtml(formatDop(data.amount))}</div></div>
+            <div class="info-cell"><div class="label">Monto</div><div class="value">${escapeHtml(requestAmount(data))}</div></div>
             <div class="info-cell"><div class="label">Estado</div><div class="value">${escapeHtml(status.label)}</div></div>
             <div class="info-cell"><div class="label">Recibido</div><div class="value">${escapeHtml(receivedDate)}</div></div>
             <div class="info-cell"><div class="label">Generado</div><div class="value">${escapeHtml(generatedAt)}</div></div>
@@ -422,14 +486,14 @@ export function RequestDetailDrawer({
     if (!data) return;
     const text = encodeURIComponent(
       `*Solicitud ${data.code}*\n` +
-        `*Cliente:* ${data.firstName} ${data.lastName}\n` +
-        `*Monto:* ${formatDop(data.amount)}\n` +
+        `*Cliente:* ${requestName(data)}\n` +
+        `*Monto:* ${requestAmount(data)}\n` +
         `*Cédula:* ${data.identification || '—'}\n` +
         `*Teléfono:* ${data.phone || '—'}\n` +
         `*Referente:* ${data.reference || '—'}\n` +
         `*Fecha:* ${new Date(data.createdAt).toLocaleDateString('es-DO')}\n` +
         `${data.description ? `*Descripción:* ${data.description}` : ''}\n` +
-        `*Estado:* ${data.status === 'PENDING' ? 'Pendiente' : data.status === 'APPROVED' ? 'Aprobada' : 'Rechazada'}\n` +
+        `*Estado:* ${statusMap[data.status]?.label ?? data.status}\n` +
         `\n— Enviado desde Inversiones Willians Marte`,
     );
     window.open(`https://wa.me/?text=${text}`, '_blank');
@@ -456,27 +520,38 @@ export function RequestDetailDrawer({
             <div className="sticky top-0 z-10 flex items-start justify-between border-b border-primary-border bg-card px-6 py-5">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-state-neutral-bg text-sm font-bold text-text-secondary">
-                  {data.firstName[0]}
-                  {data.lastName[0]}
+                  {requestInitials(data)}
                 </div>
                 <div>
                   <p className="text-xs font-bold text-text-muted">{data.code}</p>
                   <h2 className="mt-1 text-lg font-bold leading-tight text-text-primary">
-                    {data.firstName} {data.lastName}
+                    {requestName(data)}
                   </h2>
                   <div className="mt-2">
                     <StatusBadge status={data.status} />
                   </div>
                 </div>
               </div>
-              <button
-                aria-label="Cerrar detalle"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-primary-border bg-card text-text-muted transition hover:bg-state-neutral-bg hover:text-text-secondary"
-                onClick={onClose}
-                type="button"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                {onEdit && (
+                  <button
+                    className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-card px-4 text-sm font-bold text-text-primary hover:bg-state-neutral-bg"
+                    onClick={() => onEdit(data)}
+                    type="button"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Editar
+                  </button>
+                )}
+                <button
+                  aria-label="Cerrar detalle"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-primary-border bg-card text-text-muted transition hover:bg-state-neutral-bg hover:text-text-secondary"
+                  onClick={onClose}
+                  type="button"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 px-6 py-5 pb-32">
@@ -490,7 +565,7 @@ export function RequestDetailDrawer({
                   MONTO SOLICITADO
                 </p>
                 <p className="mt-3 text-[30px] font-bold leading-none text-text-primary">
-                  {formatDop(data.amount)}
+                  {requestAmount(data)}
                 </p>
                 <p className="mt-3 text-sm text-text-muted">
                   Recibido el{' '}
@@ -502,7 +577,7 @@ export function RequestDetailDrawer({
                 </p>
                 {data.status !== 'PENDING' && (
                   <p className="mt-1.5 text-xs font-bold text-text-muted">
-                    {data.status === 'APPROVED' ? 'Aprobada' : 'Rechazada'} el{' '}
+                    Actualizada el{' '}
                     {new Date(data.updatedAt).toLocaleDateString('es-DO', {
                       day: 'numeric',
                       month: 'long',
@@ -547,13 +622,45 @@ export function RequestDetailDrawer({
                   <ImageIcon className="h-4 w-4" />
                   FOTOGRAFÍAS
                 </h3>
-                <div className="flex h-[118px] w-[155px] items-center justify-center rounded-panel bg-state-neutral-bg text-xs text-text-subtle">
-                  Sin fotos
-                </div>
+                <RequestPhotos key={`${data.id}-${data.photos?.length ?? 0}`} request={data} />
+                {onAddPhoto && (
+                  <label className="mt-3 inline-flex h-10 cursor-pointer items-center rounded-full border border-primary-border px-4 text-sm font-bold text-text-primary">
+                    {uploadingPhoto ? 'Subiendo foto...' : 'Añadir foto'}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="sr-only"
+                      disabled={uploadingPhoto}
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        event.target.value = '';
+                        if (!file) return;
+                        if (file.size > 10 * 1024 * 1024) {
+                          setPhotoError('La foto debe pesar menos de 10 MB.');
+                          return;
+                        }
+                        setUploadingPhoto(true);
+                        setPhotoError('');
+                        try {
+                          await onAddPhoto(file);
+                        } catch {
+                          setPhotoError('No se pudo subir la foto. Inténtalo de nuevo.');
+                        } finally {
+                          setUploadingPhoto(false);
+                        }
+                      }}
+                    />
+                  </label>
+                )}
+                {photoError && (
+                  <p role="alert" className="mt-2 text-sm text-state-danger">
+                    {photoError}
+                  </p>
+                )}
               </section>
             </div>
 
-            {data.status === 'PENDING' && (
+            {data.status === 'PENDING' && canDecide && (
               <div className="fixed bottom-0 right-0 w-full max-w-[540px] border-t border-primary-border bg-card px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                 <div className="mb-3 grid grid-cols-2 gap-3">
                   <button
@@ -577,6 +684,7 @@ export function RequestDetailDrawer({
                   <button
                     className="flex h-10 items-center justify-center gap-2.5 rounded-full border border-state-danger-bg bg-card text-sm font-bold text-state-danger transition hover:bg-state-danger-bg"
                     onClick={onReject}
+                    disabled={busy}
                     type="button"
                   >
                     <X className="h-4 w-4" />
@@ -585,6 +693,7 @@ export function RequestDetailDrawer({
                   <button
                     className="flex h-10 items-center justify-center gap-2.5 rounded-full bg-primary text-sm font-bold text-white shadow-action transition hover:bg-primary-hover"
                     onClick={onApprove}
+                    disabled={busy}
                     type="button"
                   >
                     <Check className="h-4 w-4" />

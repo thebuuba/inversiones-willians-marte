@@ -476,25 +476,34 @@ export const RequestStatusEnum = {
 export type RequestStatus = (typeof RequestStatusEnum)[keyof typeof RequestStatusEnum];
 
 export interface CreateRequestDto {
-  firstName: string;
-  lastName: string;
-  identification?: string;
-  phone?: string;
-  amount: number;
-  description?: string;
-  reference?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  identification?: string | null;
+  phone?: string | null;
+  amount?: number | null;
+  description?: string | null;
+  reference?: string | null;
   clientId?: number;
 }
 
-export interface LoanRequestItem extends CreateRequestDto {
+export type UpdateRequestDto = Omit<CreateRequestDto, 'clientId'>;
+
+export interface LoanRequestItem extends Omit<
+  CreateRequestDto,
+  'firstName' | 'lastName' | 'amount'
+> {
   id: string;
   code: string;
+  firstName: string | null;
+  lastName: string | null;
+  amount: number | string | null;
   status: RequestStatus;
   createdById: string;
   createdAt: string;
   updatedAt: string;
   createdByName?: string;
   client?: { id: number; firstName: string; lastName: string };
+  photos?: { id: string; createdAt: string }[];
 }
 
 export interface CreatePaymentDto {
