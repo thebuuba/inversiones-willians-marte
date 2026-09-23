@@ -3,6 +3,7 @@ dist/
 dist-worker*/
 .wrangler/
 .next/
+.next-validation/
 .open-next/
 .dev.vars
 cloudflare-env.d.ts

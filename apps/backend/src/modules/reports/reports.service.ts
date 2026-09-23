@@ -16,6 +16,7 @@ export class ReportsService {
       portfolio,
       monthlyCollections,
       dailyIncome,
+      overdueAging,
       weeklyMovement,
       upcomingPayments,
       collectionPriorities,
@@ -25,6 +26,7 @@ export class ReportsService {
       this.portfolioByStatus(scope),
       this.monthlyCollections(scope),
       this.dailyIncome(scope),
+      this.overdueAging(scope),
       this.weeklyMovement(scope),
       this.upcomingPayments(scope),
       this.collectionPriorities(scope),
@@ -36,6 +38,7 @@ export class ReportsService {
       portfolio,
       monthlyCollections,
       dailyIncome,
+      overdueAging,
       weeklyMovement,
       upcomingPayments,
       collectionPriorities,
@@ -145,7 +148,6 @@ export class ReportsService {
           select: { id: true },
         },
       },
-      take: 100,
     });
 
     return loans
@@ -179,8 +181,60 @@ export class ReportsService {
           ...priority,
         };
       })
-      .sort((a, b) => b.score - a.score || b.daysOverdue - a.daysOverdue)
+      .sort(
+        (a, b) =>
+          ({ URGENT: 3, HIGH: 2, MEDIUM: 1 })[b.level] -
+            { URGENT: 3, HIGH: 2, MEDIUM: 1 }[a.level] ||
+          b.daysOverdue - a.daysOverdue ||
+          b.overdueAmount - a.overdueAmount,
+      )
       .slice(0, 5);
+  }
+
+  async overdueAging(scope: PortfolioScope) {
+    const today = startOfUtcDay(new Date());
+    const rows = await prisma.$queryRaw<Array<{ bucket: number; amount: unknown; count: number }>>`
+      WITH overdue_loans AS (
+        SELECT
+          l.id,
+          MIN(s.due_date)::date AS oldest_due,
+          SUM(GREATEST(s.amount - COALESCE(s."paidAmount", 0), 0)) AS amount
+        FROM loans l
+        JOIN payment_schedule s ON s.loan_id = l.id
+        WHERE l.status::text = 'ACTIVE'
+          AND s.due_date < ${today}
+          AND s.status::text IN ('PENDING', 'PARTIAL', 'OVERDUE')
+          ${scope.isAdmin ? Prisma.empty : Prisma.sql`AND ${loanScopeSql(scope)}`}
+        GROUP BY l.id
+      )
+      SELECT
+        CASE
+          WHEN ${today}::date - oldest_due <= 15 THEN 0
+          WHEN ${today}::date - oldest_due <= 30 THEN 1
+          WHEN ${today}::date - oldest_due <= 60 THEN 2
+          WHEN ${today}::date - oldest_due <= 90 THEN 3
+          WHEN ${today}::date - oldest_due <= 180 THEN 4
+          ELSE 5
+        END AS bucket,
+        SUM(amount) AS amount,
+        COUNT(*)::int AS count
+      FROM overdue_loans
+      GROUP BY bucket
+      ORDER BY bucket
+    `;
+    const labels = [
+      '1-15 días',
+      '16-30 días',
+      '31-60 días',
+      '61-90 días',
+      '91-180 días',
+      '+180 días',
+    ];
+    return labels.map((label, bucket) => ({
+      label,
+      amount: Number(rows.find((row) => row.bucket === bucket)?.amount ?? 0),
+      count: Number(rows.find((row) => row.bucket === bucket)?.count ?? 0),
+    }));
   }
 
   async dashboard(scope: PortfolioScope) {
@@ -207,7 +261,7 @@ export class ReportsService {
         }),
         prisma.loan.aggregate({
           where: { status: 'ACTIVE', ...(loanScopeWhere ?? {}) },
-          _sum: { balance: true, principal: true },
+          _sum: { balance: true, principal: true, totalAmount: true },
           _count: true,
         }),
         prisma.loan.count({
@@ -228,6 +282,7 @@ export class ReportsService {
       totalClients,
       collectionsToday: Number(paymentsToday._sum.amount ?? 0),
       portfolioBalance: Number(portfolioStats._sum.balance ?? 0),
+      totalContracted: Number(portfolioStats._sum.totalAmount ?? 0),
       overdueLoans,
     };
   }
@@ -465,11 +520,13 @@ export class ReportsService {
         id: true,
         dueDate: true,
         amount: true,
+        paidAmount: true,
         status: true,
         loan: {
           select: {
+            id: true,
             client: {
-              select: { firstName: true, lastName: true },
+              select: { firstName: true, lastName: true, phone: true },
             },
           },
         },
@@ -479,9 +536,11 @@ export class ReportsService {
 
     return schedules.map((s) => ({
       id: s.id,
+      loanId: s.loan.id,
+      phone: s.loan.client.phone,
       clientName: s.loan.client.firstName + ' ' + s.loan.client.lastName,
       dueDate: s.dueDate,
-      amount: Number(s.amount),
+      amount: Math.max(0, Number(s.amount) - Number(s.paidAmount ?? 0)),
       status: s.status,
     }));
   }

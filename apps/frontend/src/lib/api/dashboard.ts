@@ -7,6 +7,7 @@ export interface DashboardData {
   totalClients: number;
   collectionsToday: number;
   portfolioBalance: number;
+  totalContracted: number;
   overdueLoans: number;
 }
 
@@ -53,6 +54,8 @@ export interface WeeklyMovementItem {
 
 export interface UpcomingPayment {
   id: string;
+  loanId: string;
+  phone: string | null;
   clientName: string;
   dueDate: string;
   amount: number;
@@ -92,6 +95,7 @@ export interface DashboardOverview {
   portfolio: PortfolioGroup[];
   monthlyCollections: MonthlyCollection[];
   dailyIncome: DailyIncome[];
+  overdueAging: Array<{ label: string; amount: number; count: number }>;
   weeklyMovement: WeeklyMovementItem[];
   upcomingPayments: UpcomingPayment[];
   collectionPriorities: CollectionPriority[];
@@ -120,8 +124,8 @@ export async function getPortfolio(): Promise<PortfolioGroup[]> {
   return data.data ?? [];
 }
 
-export async function getAudit(): Promise<AuditEntry[]> {
-  const { data } = await api.get<ApiResponse<AuditEntry[]>>('/audit');
+export async function getAudit(take = 6): Promise<AuditEntry[]> {
+  const { data } = await api.get<ApiResponse<AuditEntry[]>>('/audit', { params: { take } });
   return data.data ?? [];
 }
 
