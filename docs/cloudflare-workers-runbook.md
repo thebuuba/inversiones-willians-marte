@@ -29,6 +29,23 @@ pnpm android:check
 
 ## 3. Datos y despliegue paralelo
 
+### Despliegues desde `main`
+
+Los Workers `inversiones-willians-marte-api-staging` y
+`inversiones-willians-marte-web-staging` usan Cloudflare Builds con la rama `main`.
+La aplicación de GitHub **Cloudflare Workers and Pages** debe tener acceso al
+repositorio `thebuuba/inversiones-willians-marte` en *Only select repositories*.
+Si Cloudflare muestra que el proyecto está desconectado de Git y deja de crear
+builds tras un push, revisar primero ese acceso en GitHub > Settings >
+Applications. El workflow `CI` solo verifica y compila artefactos; no publica
+Workers.
+
+En Cloudflare Builds, usar `apps/backend` como raíz del Worker API, con build
+`pnpm build` y deploy `pnpm exec wrangler deploy --env staging`. Para el Worker
+web, usar `apps/frontend`, build `pnpm worker:build` y deploy
+`pnpm exec opennextjs-cloudflare deploy`. Antes de publicar cambios del esquema,
+aplicar y verificar las migraciones de PostgreSQL.
+
 ```bash
 pnpm --filter backend worker:r2:migrate:staging
 pnpm --filter backend worker:r2:migrate:staging -- --execute
