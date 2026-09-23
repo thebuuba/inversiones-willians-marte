@@ -12,8 +12,17 @@ export class AuditController {
 
   @Get()
   @Roles('ADMIN')
-  findAll(@Query('entityType') entityType?: string, @Query('entityId') entityId?: string) {
-    return this.audit.findAll(entityType, entityId);
+  findAll(
+    @Query('entityType') entityType?: string,
+    @Query('entityId') entityId?: string,
+    @Query('take') take?: string,
+  ) {
+    const limit = Number(take);
+    return this.audit.findAll(
+      entityType,
+      entityId,
+      Number.isInteger(limit) && limit > 0 ? limit : 6,
+    );
   }
 
   @Get('client/:clientId/history')

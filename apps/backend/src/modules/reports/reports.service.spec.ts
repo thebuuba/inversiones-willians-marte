@@ -35,6 +35,7 @@ describe('ReportsService', () => {
       'portfolioByStatus',
       'monthlyCollections',
       'dailyIncome',
+      'overdueAging',
       'weeklyMovement',
       'upcomingPayments',
       'collectionPriorities',
@@ -63,6 +64,7 @@ describe('ReportsService', () => {
       portfolio: [],
       monthlyCollections: [],
       dailyIncome: [],
+      overdueAging: [],
       weeklyMovement: [],
       upcomingPayments: [],
       collectionPriorities: [],
@@ -147,6 +149,22 @@ describe('ReportsService', () => {
         level: 'URGENT',
         suggestedAction: 'Contactar por promesa incumplida',
       }),
+    ]);
+  });
+
+  it('returns all six overdue aging buckets with real aggregated amounts', async () => {
+    jest.mocked(prisma.$queryRaw).mockResolvedValue([
+      { bucket: 0, amount: '250.50', count: 2 },
+      { bucket: 5, amount: '18000', count: 1 },
+    ]);
+
+    await expect(service.overdueAging(adminScope)).resolves.toEqual([
+      { label: '1-15 días', amount: 250.5, count: 2 },
+      { label: '16-30 días', amount: 0, count: 0 },
+      { label: '31-60 días', amount: 0, count: 0 },
+      { label: '61-90 días', amount: 0, count: 0 },
+      { label: '91-180 días', amount: 0, count: 0 },
+      { label: '+180 días', amount: 18000, count: 1 },
     ]);
   });
 
@@ -248,9 +266,10 @@ describe('ReportsService', () => {
     jest.mocked(prisma.client.count).mockResolvedValue(3);
     jest.mocked(prisma.user.count).mockResolvedValue(1);
     jest.mocked(prisma.payment.aggregate).mockResolvedValue({ _sum: { amount: 0 } } as never);
-    jest
-      .mocked(prisma.loan.aggregate)
-      .mockResolvedValue({ _sum: { balance: 0, principal: 0 }, _count: 0 } as never);
+    jest.mocked(prisma.loan.aggregate).mockResolvedValue({
+      _sum: { balance: 40, principal: 50, totalAmount: 80 },
+      _count: 1,
+    } as never);
 
     const result = service.dashboard(adminScope);
     await Promise.resolve();
@@ -259,7 +278,7 @@ describe('ReportsService', () => {
 
     resolveActiveLoans(4);
     await expect(result).resolves.toEqual(
-      expect.objectContaining({ activeLoans: 4, overdueLoans: 2 }),
+      expect.objectContaining({ activeLoans: 4, overdueLoans: 2, totalContracted: 80 }),
     );
   });
 

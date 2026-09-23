@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'Nunito Sans';
+  src: url('/fonts/nunito-sans-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
   --background: #f0fbf4;
@@ -16,6 +24,7 @@
   --brand-200: #b8ebc9;
   --brand-100: #dcf7e5;
   --brand-50: #f0fbf4;
+  --brand-sky: #3e96e7;
 
   --surface: #f0fbf4;
   --surface-muted: #eef3ef;
@@ -40,23 +49,23 @@
   --loan: #0f766e;
   --document: #475569;
 
-  --page: #e8ebee;
+  --page: #f3f7ff;
   --card: #ffffff;
-  --surface-subtle: #f8fbf9;
-  --surface-muted-ui: #f3faf6;
+  --surface-subtle: #f7faff;
+  --surface-muted-ui: #eef4fd;
   --surface-elevated: #ffffff;
-  --primary: #285c43;
-  --primary-hover: #1f4a36;
-  --primary-accent: #2f7654;
-  --primary-soft: #e7f4ec;
-  --primary-border: #ddebe3;
-  --text-primary: #173d2c;
-  --text-secondary: #5c6d63;
-  --text-muted: #5c6d63;
-  --text-subtle: #5c6d63;
+  --primary: #236fb8;
+  --primary-hover: #185d9f;
+  --primary-accent: #236fb8;
+  --primary-soft: #eaf4ff;
+  --primary-border: #dbe5f3;
+  --text-primary: #25334b;
+  --text-secondary: #61718b;
+  --text-muted: #61718b;
+  --text-subtle: #697b96;
   --text-inverse: #ffffff;
-  --border-soft: #edf2ef;
-  --border-strong-ui: #b8dcc5;
+  --border-soft: #e3eaf5;
+  --border-strong-ui: #cbdcf0;
   --state-success: #2f7654;
   --state-success-bg: #e7f4ec;
   --state-success-dot: #5fa37d;
@@ -72,9 +81,9 @@
   --state-neutral: #5c6d63;
   --state-neutral-bg: #eef3ef;
   --state-neutral-dot: #5c6d63;
-  --shadow-soft: 0 3px 8px rgba(40, 92, 67, 0.06);
-  --shadow-card: 0 1px 1px rgba(31, 35, 40, 0.06), 0 3px 6px rgba(31, 35, 40, 0.09);
-  --shadow-action: 0 12px 22px rgba(40, 92, 67, 0.2);
+  --shadow-soft: 0 2px 5px rgba(39, 63, 105, 0.04);
+  --shadow-card: 0 1px 2px rgba(39, 63, 105, 0.10);
+  --shadow-action: 0 4px 9px rgba(62, 150, 231, 0.20);
   --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.22);
   --radius-panel: 1rem;
   --radius-control-compact: 0.5rem;
@@ -148,6 +157,7 @@
 }
 
 @theme inline {
+  --font-sans: 'Nunito Sans', Arial, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-brand-950: var(--brand-950);
@@ -161,6 +171,7 @@
   --color-brand-200: var(--brand-200);
   --color-brand-100: var(--brand-100);
   --color-brand-50: var(--brand-50);
+  --color-brand-sky: var(--brand-sky);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
   --color-border: var(--border);
@@ -213,9 +224,9 @@
   --color-state-neutral: var(--state-neutral);
   --color-state-neutral-bg: var(--state-neutral-bg);
   --color-state-neutral-dot: var(--state-neutral-dot);
-  --shadow-soft: 0 3px 8px rgba(40, 92, 67, 0.06);
-  --shadow-card: 0 1px 1px rgba(31, 35, 40, 0.06), 0 3px 6px rgba(31, 35, 40, 0.09);
-  --shadow-action: 0 12px 22px rgba(40, 92, 67, 0.2);
+  --shadow-soft: 0 2px 5px rgba(39, 63, 105, 0.04);
+  --shadow-card: 0 1px 2px rgba(39, 63, 105, 0.10);
+  --shadow-action: 0 4px 9px rgba(62, 150, 231, 0.20);
   --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.22);
   --radius-panel: 1rem;
   --radius-control-compact: 0.5rem;
@@ -239,7 +250,7 @@
 body {
   background: var(--page);
   color: var(--text-primary);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Nunito Sans', Arial, sans-serif;
 }
 
 .overflow-x-auto {

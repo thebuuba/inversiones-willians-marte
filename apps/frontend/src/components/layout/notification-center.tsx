@@ -65,7 +65,7 @@ export function NotificationCenter() {
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-label={`${unread.length} notificaciones nuevas`}
-        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-primary-border bg-card text-text-secondary transition hover:bg-primary-soft hover:text-primary-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
+        className="relative flex h-11 w-11 items-center justify-center rounded-full text-text-secondary transition hover:bg-primary-soft hover:text-primary-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
         onClick={() => {
           setOpen((value) => !value);
           void load();

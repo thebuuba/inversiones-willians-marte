@@ -66,7 +66,7 @@ export class AuditService {
     });
   }
 
-  async findAll(entityType?: string, entityId?: string) {
+  async findAll(entityType?: string, entityId?: string, take = 6) {
     const where: Prisma.AuditLogWhereInput = {};
     if (entityType) where.entityType = entityType;
     if (entityId) where.entityId = entityId;
@@ -75,7 +75,7 @@ export class AuditService {
       where,
       include: { user: { select: { id: true, name: true } } },
       orderBy: { createdAt: 'desc' },
-      take: 6,
+      take: Math.min(100, Math.max(1, take)),
     });
     const auditLoanIds = audits.map(getAuditLoanId).filter((id): id is string => Boolean(id));
     const loans =

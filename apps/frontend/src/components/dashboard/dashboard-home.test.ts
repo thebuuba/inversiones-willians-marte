@@ -94,12 +94,6 @@ test('prioritizes the investor name over the investment code', () => {
   const code = source.indexOf('{item.investmentCode}');
 
   assert.ok(name >= 0 && name < code);
-  assert.match(
-    source,
-    /truncate text-base font-bold text-text-primary[^>]*>\s*\{item\.investorName\}/,
-  );
-  assert.match(
-    source,
-    /truncate text-sm font-medium text-text-secondary[^>]*>\s*\{item\.investmentCode\}/,
-  );
+  assert.match(source, /<strong[^>]*>\{item\.investorName\}<\/strong>/);
+  assert.match(source, /\{item\.investmentCode\} · \{getInvestmentDueLabel\(item\)\}/);
 });
