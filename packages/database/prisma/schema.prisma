@@ -247,11 +247,11 @@ model Client {
 model LoanRequest {
   id             String        @id @default(uuid())
   code           String        @unique
-  firstName      String        @map("first_name")
-  lastName       String        @map("last_name")
+  firstName      String?       @map("first_name")
+  lastName       String?       @map("last_name")
   identification String?
   phone          String?
-  amount         Decimal
+  amount         Decimal?
   description    String?
   reference      String?
   status         RequestStatus @default(PENDING)
@@ -262,10 +262,23 @@ model LoanRequest {
 
   createdBy User    @relation(fields: [createdById], references: [id])
   client    Client? @relation(fields: [clientId], references: [id])
+  photos    LoanRequestPhoto[]
 
   @@index([status])
   @@index([createdAt])
   @@map("loan_requests")
+}
+
+model LoanRequestPhoto {
+  id        String      @id @default(uuid())
+  requestId String      @map("request_id")
+  fileKey   String      @map("file_key")
+  mimeType  String      @map("mime_type")
+  createdAt DateTime    @default(now()) @map("created_at")
+  request   LoanRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@map("loan_request_photos")
 }
 
 // ─── Loan Products (templates) ──────────────────────────────────────────────

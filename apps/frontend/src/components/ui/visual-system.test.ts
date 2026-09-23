@@ -49,19 +49,21 @@ test('does not draw a rectangular outline over custom form focus styles', () => 
   );
 });
 
-test('maps semantic states to tokenized classes', () => {
-  assert.match(statusTones.success, /bg-state-success-bg/);
-  assert.match(statusTones.warning, /bg-state-warning-bg/);
-  assert.match(statusTones.danger, /bg-state-danger-bg/);
-  assert.match(statusTones.info, /bg-state-info-bg/);
+test('maps shared badges to the loan status palette', () => {
+  assert.match(statusTones.success, /bg-\[#7CC99B\]/);
+  assert.match(statusTones.pending, /bg-\[#26322C\] text-white/);
+  assert.match(statusTones.warning, /bg-\[#F3D477\]/);
+  assert.match(statusTones.danger, /bg-\[#E67C73\]/);
+  assert.match(statusTones.info, /bg-\[#8EB8D8\]/);
   assert.match(statusTones.neutral, /bg-state-neutral-bg/);
 });
 
-test('maps semantic state dots to static tokenized classes', () => {
-  assert.match(statusToneDots.success, /bg-state-success-dot/);
-  assert.match(statusToneDots.warning, /bg-state-warning-dot/);
-  assert.match(statusToneDots.danger, /bg-state-danger-dot/);
-  assert.match(statusToneDots.info, /bg-state-info-dot/);
+test('keeps status dots visible against their badge backgrounds', () => {
+  assert.match(statusToneDots.success, /bg-\[#173B29\]/);
+  assert.match(statusToneDots.pending, /bg-white/);
+  assert.match(statusToneDots.warning, /bg-\[#4A3905\]/);
+  assert.match(statusToneDots.danger, /bg-\[#4A201D\]/);
+  assert.match(statusToneDots.info, /bg-\[#17354A\]/);
   assert.match(statusToneDots.neutral, /bg-state-neutral-dot/);
 });
 
@@ -70,14 +72,17 @@ test('normalizes Spanish status labels to semantic tones', () => {
   assert.equal(getStatusTone(' Activo '), 'success');
   assert.equal(getStatusTone('Aprobado'), 'success');
   assert.equal(getStatusTone('Aprobada'), 'success');
-  assert.equal(getStatusTone('Atrasado'), 'danger');
+  assert.equal(getStatusTone('Atrasado'), 'warning');
+  assert.equal(getStatusTone('Atrasada'), 'warning');
   assert.equal(getStatusTone('Vencido'), 'danger');
+  assert.equal(getStatusTone('Vencida'), 'danger');
   assert.equal(getStatusTone('Rechazado'), 'danger');
   assert.equal(getStatusTone('Rechazada'), 'danger');
-  assert.equal(getStatusTone('Pendiente'), 'warning');
+  assert.equal(getStatusTone('Pendiente'), 'pending');
   assert.equal(getStatusTone('Pausado'), 'warning');
   assert.equal(getStatusTone('En revisión'), 'info');
-  assert.equal(getStatusTone('Pagado'), 'neutral');
+  assert.equal(getStatusTone('Pagado'), 'info');
+  assert.equal(getStatusTone('Pagada'), 'info');
   assert.equal(getStatusTone('Inactivo'), 'neutral');
   assert.equal(getStatusTone('Retirado'), 'neutral');
 });

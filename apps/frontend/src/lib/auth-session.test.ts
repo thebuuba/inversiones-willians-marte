@@ -46,6 +46,7 @@ test('validates stored auth with the backend profile before accepting it', async
   const auth = await loadStoredAuthSession(async () => ({
     id: 'fresh',
     name: 'Fresh Name',
+    username: 'fresh',
     email: 'fresh@example.com',
     role: 'ADMIN',
   }));
@@ -71,9 +72,9 @@ test('keeps a newly rotated access token after profile validation', async () => 
   const auth = await loadStoredAuthSession(async () => {
     saveStoredAuth({
       token: 'rotated-token',
-      user: { id: 'user-1', name: 'Nata', email: 'nata@example.com', role: 'ADMIN' },
+      user: { id: 'user-1', name: 'Nata', username: 'nata', email: 'nata@example.com', role: 'ADMIN' },
     });
-    return { id: 'user-1', name: 'Nata', email: 'nata@example.com', role: 'ADMIN' };
+    return { id: 'user-1', name: 'Nata', username: 'nata', email: 'nata@example.com', role: 'ADMIN' };
   });
 
   assert.equal(auth.token, 'rotated-token');

@@ -7,8 +7,11 @@ import {
 } from '@nestjs/common';
 import { Prisma, RequestStatus, prisma } from '@inversiones/database';
 import { CreateRequestDto } from './dto/create-request.dto';
+import { UpdateRequestDto } from './dto/update-request.dto';
 import { formatPersonName } from '../../common/text/name-case';
 import { normalizePagination } from '../../common/pagination';
+import { FileStorageService } from '../../common/storage/file-storage.service';
+import { randomUUID } from 'node:crypto';
 import {
   assertClientAccess,
   clientWhereVisible,
@@ -18,12 +21,15 @@ import {
 const requestInclude = {
   createdBy: { select: { name: true } },
   client: { select: { id: true, firstName: true, lastName: true } },
+  photos: { select: { id: true, createdAt: true } },
 } as const;
 
 type LoanRequestDetail = Prisma.LoanRequestGetPayload<{ include: typeof requestInclude }>;
 
 @Injectable()
 export class RequestsService {
+  constructor(private readonly storage: FileStorageService) {}
+
   async create(
     scope: PortfolioScope,
     dto: CreateRequestDto,
@@ -46,10 +52,7 @@ export class RequestsService {
         };
     return prisma.loanRequest.findMany({
       where,
-      include: {
-        createdBy: { select: { name: true } },
-        client: { select: { id: true, firstName: true, lastName: true } },
-      },
+      include: requestInclude,
       orderBy: { createdAt: 'desc' },
       take: pagination.take,
       skip: pagination.skip,
@@ -60,13 +63,68 @@ export class RequestsService {
     await this.assertRequestAccess(scope, id);
     const request = await prisma.loanRequest.findUnique({
       where: { id },
-      include: {
-        createdBy: { select: { name: true } },
-        client: { select: { id: true, firstName: true, lastName: true } },
-      },
+      include: requestInclude,
     });
     if (!request) throw new NotFoundException('Request not found');
     return request;
+  }
+
+  async update(scope: PortfolioScope, id: string, dto: UpdateRequestDto, userId: string) {
+    await this.assertRequestAccess(scope, id);
+    return prisma.$transaction(async (tx) => {
+      const current = await tx.loanRequest.findUnique({ where: { id } });
+      if (!current) throw new NotFoundException('Request not found');
+
+      const data: Omit<CreateRequestDto, 'clientId'> = {};
+      if (dto.firstName !== undefined)
+        data.firstName = dto.firstName?.trim() ? formatPersonName(dto.firstName.trim()) : null;
+      if (dto.lastName !== undefined)
+        data.lastName = dto.lastName?.trim() ? formatPersonName(dto.lastName.trim()) : null;
+      if (dto.identification !== undefined)
+        data.identification = dto.identification?.trim() || null;
+      if (dto.phone !== undefined) data.phone = dto.phone?.trim() || null;
+      if (dto.amount !== undefined) data.amount = dto.amount;
+      if (dto.description !== undefined) data.description = dto.description?.trim() || null;
+      if (dto.reference !== undefined) data.reference = dto.reference?.trim() || null;
+      if (Object.keys(data).length === 0) throw new BadRequestException('No fields to update');
+      const fields = [
+        'firstName',
+        'lastName',
+        'identification',
+        'phone',
+        'amount',
+        'description',
+        'reference',
+      ] as const;
+      if (
+        fields.every(
+          (field) =>
+            data[field] === undefined || current[field]?.toString() === data[field]?.toString(),
+        )
+      ) {
+        return tx.loanRequest.findUniqueOrThrow({ where: { id }, include: requestInclude });
+      }
+
+      const updated = await tx.loanRequest.update({ where: { id }, data, include: requestInclude });
+      const oldValues = Object.fromEntries(
+        fields.map((field) => [field, current[field]?.toString() ?? null]),
+      );
+      const newValues = Object.fromEntries(
+        fields.map((field) => [field, updated[field]?.toString() ?? null]),
+      );
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'LOAN_REQUEST_UPDATED',
+          entityType: 'LoanRequest',
+          entityId: id,
+          clientId: updated.clientId,
+          oldValues,
+          newValues,
+        },
+      });
+      return updated;
+    });
   }
 
   async count(scope: PortfolioScope, status?: string) {
@@ -90,6 +148,34 @@ export class RequestsService {
   async reject(scope: PortfolioScope, id: string, userId: string) {
     await this.assertRequestAccess(scope, id);
     return this.changePendingStatus(id, 'REJECTED', userId);
+  }
+
+  async addPhoto(scope: PortfolioScope, id: string, file: { buffer: Buffer; mimetype: string }) {
+    await this.findOne(scope, id);
+    const extension =
+      file.mimetype === 'image/jpeg' ? 'jpg' : file.mimetype === 'image/png' ? 'png' : 'webp';
+    const fileKey = `requests/photos/${randomUUID()}.${extension}`;
+    await this.storage.put(fileKey, file.buffer, file.mimetype);
+    try {
+      return await prisma.loanRequestPhoto.create({
+        data: { requestId: id, fileKey, mimeType: file.mimetype },
+        select: { id: true, createdAt: true },
+      });
+    } catch (error) {
+      await this.storage.delete(fileKey);
+      throw error;
+    }
+  }
+
+  async getPhoto(scope: PortfolioScope, id: string, photoId: string) {
+    await this.assertRequestAccess(scope, id);
+    const photo = await prisma.loanRequestPhoto.findFirst({
+      where: { id: photoId, requestId: id },
+    });
+    if (!photo) throw new NotFoundException('Photo not found');
+    const contents = await this.storage.get(photo.fileKey);
+    if (!contents) throw new NotFoundException('Photo file not found');
+    return { contents, mimeType: photo.mimeType };
   }
 
   private async assertRequestAccess(scope: PortfolioScope, id: string) {
@@ -120,9 +206,9 @@ export class RequestsService {
           const request = await tx.loanRequest.create({
             data: {
               ...dto,
-              firstName: formatPersonName(dto.firstName),
-              lastName: formatPersonName(dto.lastName),
-              amount: dto.amount,
+              firstName: dto.firstName?.trim() ? formatPersonName(dto.firstName.trim()) : null,
+              lastName: dto.lastName?.trim() ? formatPersonName(dto.lastName.trim()) : null,
+              amount: dto.amount ?? null,
               code,
               createdById: userId,
               clientId: dto.clientId ?? null,
@@ -136,7 +222,7 @@ export class RequestsService {
               entityType: 'LoanRequest',
               entityId: request.id,
               clientId: request.clientId,
-              newValues: { code, amount: dto.amount, status: request.status },
+              newValues: { code, amount: dto.amount ?? null, status: request.status },
             },
           });
           return request;

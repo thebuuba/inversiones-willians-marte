@@ -1,3 +1,5 @@
+import { loanStatusVisuals } from '@/lib/loan-status-visuals';
+
 export const buttonVariants = {
   primary: 'bg-primary text-text-inverse hover:bg-primary-hover',
   secondary: 'bg-surface-muted text-text-primary hover:bg-primary-soft',
@@ -20,18 +22,20 @@ export const controlDensities = {
 } as const;
 
 export const statusTones = {
-  success: 'bg-state-success-bg text-state-success',
-  warning: 'bg-state-warning-bg text-state-warning',
-  danger: 'bg-state-danger-bg text-state-danger',
-  info: 'bg-state-info-bg text-state-info',
+  success: loanStatusVisuals.CURRENT.badgeClassName,
+  pending: loanStatusVisuals.PENDING.badgeClassName,
+  warning: loanStatusVisuals.LATE.badgeClassName,
+  danger: loanStatusVisuals.EXPIRED.badgeClassName,
+  info: loanStatusVisuals.PAID.badgeClassName,
   neutral: 'bg-state-neutral-bg text-state-neutral',
 } as const;
 
 export const statusToneDots = {
-  success: 'bg-state-success-dot',
-  warning: 'bg-state-warning-dot',
-  danger: 'bg-state-danger-dot',
-  info: 'bg-state-info-dot',
+  success: 'bg-[#173B29]',
+  pending: 'bg-white',
+  warning: 'bg-[#4A3905]',
+  danger: 'bg-[#4A201D]',
+  info: 'bg-[#17354A]',
   neutral: 'bg-state-neutral-dot',
 } as const;
 
@@ -45,22 +49,25 @@ export const statusToneMap: Record<string, StatusTone> = {
   aprobado: 'success',
   aprobada: 'success',
   success: 'success',
-  overdue: 'danger',
-  atrasado: 'danger',
+  overdue: 'warning',
+  atrasado: 'warning',
+  atrasada: 'warning',
   vencido: 'danger',
+  vencida: 'danger',
   rejected: 'danger',
   rechazado: 'danger',
   rechazada: 'danger',
   danger: 'danger',
-  pending: 'warning',
-  pendiente: 'warning',
+  pending: 'pending',
+  pendiente: 'pending',
   paused: 'warning',
   pausado: 'warning',
   review: 'info',
   'en revisión': 'info',
   info: 'info',
-  paid: 'neutral',
-  pagado: 'neutral',
+  paid: 'info',
+  pagado: 'info',
+  pagada: 'info',
   inactive: 'neutral',
   inactivo: 'neutral',
   withdrawn: 'neutral',

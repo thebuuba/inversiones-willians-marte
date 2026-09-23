@@ -11,6 +11,7 @@ const allowedDevOrigins = getAllowedDevOrigins(
 );
 
 const nextConfig: NextConfig = {
+  agentRules: false,
   poweredByHeader: false,
   ...(allowedDevOrigins.length > 0 ? { allowedDevOrigins } : {}),
   async headers() {

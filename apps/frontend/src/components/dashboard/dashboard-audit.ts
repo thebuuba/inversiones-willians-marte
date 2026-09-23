@@ -14,6 +14,7 @@ const actionLabels: Record<string, string> = {
   LOAN_CREATED: 'creó un préstamo',
   LOAN_PRODUCT_DELETED: 'desactivó un producto de préstamo',
   LOAN_REQUEST_CREATED: 'creó una solicitud de préstamo',
+  LOAN_REQUEST_UPDATED: 'actualizó una solicitud de préstamo',
   LOAN_STATUS_CHANGED: 'cambió el estado de un préstamo',
   LOAN_UPDATED: 'actualizó un préstamo',
   NOTE_CREATED: 'agregó una nota',

@@ -216,30 +216,40 @@ export function DashboardHome() {
       value: String(activeLoans),
       icon: BriefcaseBusiness,
       tone: 'bg-primary-soft text-primary',
+      surface: 'bg-[var(--card-tone-green)]',
+      border: 'border-[var(--card-border-green)]',
     },
     {
       label: 'Cobrado hoy',
       value: formatCurrency(collectionsToday),
       icon: DollarSign,
-      tone: 'bg-state-warning-bg text-state-warning',
+      tone: 'bg-state-info-bg text-state-info',
+      surface: 'bg-[var(--card-tone-blue)]',
+      border: 'border-[var(--card-border-blue)]',
     },
     {
       label: 'Por cobrar hoy',
       value: formatCurrency(dueToday),
       icon: CalendarClock,
-      tone: 'bg-primary-soft text-primary',
+      tone: 'bg-state-warning-bg text-state-warning',
+      surface: 'bg-[var(--card-tone-yellow)]',
+      border: 'border-[var(--card-border-yellow)]',
     },
     {
       label: 'Total vencido',
       value: formatCurrency(overdueTotal),
       icon: AlertTriangle,
       tone: 'bg-state-danger-bg text-state-danger',
+      surface: 'bg-[var(--card-tone-coral)]',
+      border: 'border-[var(--card-border-coral)]',
     },
     {
       label: 'Saldo cartera',
       value: formatCurrency(portfolioBalance),
       icon: Wallet,
       tone: 'bg-state-info-bg text-state-info',
+      surface: 'bg-[var(--card-tone-neutral)]',
+      border: 'border-[var(--card-border-neutral)]',
     },
   ];
 
@@ -288,7 +298,7 @@ export function DashboardHome() {
           return (
             <div
               key={k.label}
-              className="rounded-panel bg-card p-4 shadow-card border border-border-soft sm:p-6"
+              className={`rounded-panel border p-4 shadow-card sm:p-6 ${k.surface} ${k.border}`}
             >
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 <div
