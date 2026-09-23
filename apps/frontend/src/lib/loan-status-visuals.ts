@@ -1,33 +1,33 @@
 export const loanStatusVisuals = {
   CURRENT: {
-    color: '#7CC99B',
-    badgeClassName: 'bg-[#7CC99B] text-[#173B29]',
-    dotClassName: 'bg-[#7CC99B]',
+    color: '#10b981',
+    badgeClassName: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+    dotClassName: 'bg-emerald-500',
   },
   PENDING: {
-    color: '#26322C',
-    badgeClassName: 'bg-[#26322C] text-white',
-    dotClassName: 'bg-[#26322C]',
+    color: '#f59e0b',
+    badgeClassName: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+    dotClassName: 'bg-amber-500',
   },
   LATE: {
-    color: '#F3D477',
-    badgeClassName: 'bg-[#F3D477] text-[#4A3905]',
-    dotClassName: 'bg-[#F3D477]',
+    color: '#f43f5e',
+    badgeClassName: 'bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300',
+    dotClassName: 'bg-rose-500',
   },
   EXPIRED: {
-    color: '#E67C73',
-    badgeClassName: 'bg-[#E67C73] text-[#4A201D]',
-    dotClassName: 'bg-[#E67C73]',
+    color: '#e11d48',
+    badgeClassName: 'bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300',
+    dotClassName: 'bg-rose-600',
   },
   PAID: {
-    color: '#8EB8D8',
-    badgeClassName: 'bg-[#8EB8D8] text-[#17354A]',
-    dotClassName: 'bg-[#8EB8D8]',
+    color: '#0ea5e9',
+    badgeClassName: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
+    dotClassName: 'bg-sky-500',
   },
   WRITTEN_OFF: {
-    color: '#D1D5D3',
-    badgeClassName: 'bg-[#D1D5D3] text-[#343A36]',
-    dotClassName: 'bg-[#D1D5D3]',
+    color: '#64748b',
+    badgeClassName: 'bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300',
+    dotClassName: 'bg-slate-500',
   },
 } as const;
 
@@ -36,7 +36,7 @@ export function getLoanStatusBadgeClass(label: string) {
   if (['al día', 'a tiempo', 'activo'].includes(normalized)) {
     return loanStatusVisuals.CURRENT.badgeClassName;
   }
-  if (['pendiente', 'parcial'].includes(normalized)) {
+  if (['pendiente', 'parcial', 'en revisión'].includes(normalized)) {
     return loanStatusVisuals.PENDING.badgeClassName;
   }
   if (normalized === 'atrasado') return loanStatusVisuals.LATE.badgeClassName;

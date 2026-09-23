@@ -65,7 +65,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Sidebar collapsed={sidebarCollapsed} onCollapsedChange={toggleSidebarCollapsed} />
       <header
         className={`fixed right-0 top-0 z-30 hidden h-20 items-center bg-page px-8 pt-3 transition-[left] duration-200 ease-out lg:flex ${
-          sidebarCollapsed ? 'left-[72px]' : 'left-[260px]'
+          sidebarCollapsed ? 'left-[72px]' : 'left-[264px]'
         }`}
       >
         <div className="flex w-full items-center gap-4">
@@ -84,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
       <main
         className={`min-h-screen pb-[env(safe-area-inset-bottom)] pt-[calc(4rem+env(safe-area-inset-top))] transition-[margin] duration-200 ease-out lg:pt-20 ${
-          sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'
+          sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[264px]'
         }`}
       >
         {children}

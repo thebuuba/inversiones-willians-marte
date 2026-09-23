@@ -24,18 +24,18 @@ export const controlDensities = {
 export const statusTones = {
   success: loanStatusVisuals.CURRENT.badgeClassName,
   pending: loanStatusVisuals.PENDING.badgeClassName,
-  warning: loanStatusVisuals.LATE.badgeClassName,
+  warning: loanStatusVisuals.PENDING.badgeClassName,
   danger: loanStatusVisuals.EXPIRED.badgeClassName,
   info: loanStatusVisuals.PAID.badgeClassName,
   neutral: 'bg-state-neutral-bg text-state-neutral',
 } as const;
 
 export const statusToneDots = {
-  success: 'bg-[#173B29]',
-  pending: 'bg-white',
-  warning: 'bg-[#4A3905]',
-  danger: 'bg-[#4A201D]',
-  info: 'bg-[#17354A]',
+  success: loanStatusVisuals.CURRENT.dotClassName,
+  pending: loanStatusVisuals.PENDING.dotClassName,
+  warning: loanStatusVisuals.PENDING.dotClassName,
+  danger: loanStatusVisuals.EXPIRED.dotClassName,
+  info: loanStatusVisuals.PAID.dotClassName,
   neutral: 'bg-state-neutral-dot',
 } as const;
 
@@ -49,9 +49,9 @@ export const statusToneMap: Record<string, StatusTone> = {
   aprobado: 'success',
   aprobada: 'success',
   success: 'success',
-  overdue: 'warning',
-  atrasado: 'warning',
-  atrasada: 'warning',
+  overdue: 'danger',
+  atrasado: 'danger',
+  atrasada: 'danger',
   vencido: 'danger',
   vencida: 'danger',
   rejected: 'danger',
@@ -62,8 +62,8 @@ export const statusToneMap: Record<string, StatusTone> = {
   pendiente: 'pending',
   paused: 'warning',
   pausado: 'warning',
-  review: 'info',
-  'en revisión': 'info',
+  review: 'warning',
+  'en revisión': 'warning',
   info: 'info',
   paid: 'info',
   pagado: 'info',

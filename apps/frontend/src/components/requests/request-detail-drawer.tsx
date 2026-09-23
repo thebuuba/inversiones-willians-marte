@@ -91,8 +91,8 @@ const statusMap: Record<string, { label: string; className: string; dot: string 
   },
   UNDER_REVIEW: {
     label: 'En revisión',
-    className: statusTones.info,
-    dot: statusToneDots.info,
+    className: statusTones.warning,
+    dot: statusToneDots.warning,
   },
   APPROVED: {
     label: 'Aprobada',
@@ -107,10 +107,10 @@ const statusMap: Record<string, { label: string; className: string; dot: string 
 };
 
 const printStatusColors: Record<string, { label: string; bg: string; text: string }> = {
-  PENDING: { label: 'Pendiente', bg: '#26322C', text: '#FFFFFF' },
-  UNDER_REVIEW: { label: 'En revisión', bg: '#8EB8D8', text: '#17354A' },
-  APPROVED: { label: 'Aprobada', bg: '#7CC99B', text: '#173B29' },
-  REJECTED: { label: 'Rechazada', bg: '#E67C73', text: '#4A201D' },
+  PENDING: { label: 'Pendiente', bg: '#fef3c7', text: '#b45309' },
+  UNDER_REVIEW: { label: 'En revisión', bg: '#fef3c7', text: '#b45309' },
+  APPROVED: { label: 'Aprobada', bg: '#d1fae5', text: '#047857' },
+  REJECTED: { label: 'Rechazada', bg: '#ffe4e6', text: '#e11d48' },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -165,7 +165,7 @@ function formatRequestDate(value: string, options?: Intl.DateTimeFormatOptions):
 }
 
 function getPrintableStatus(status: string) {
-  return printStatusColors[status] ?? { label: status, bg: '#F3FAF6', text: '#5C6D63' };
+  return printStatusColors[status] ?? { label: status, bg: '#f1f5f9', text: '#334155' };
 }
 
 export function RequestDetailDrawer({

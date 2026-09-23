@@ -38,16 +38,16 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useClientCache } from '@/lib/use-client-cache';
-import { loanStatusVisuals } from '@/lib/loan-status-visuals';
+import { getLoanStatusBadgeClass } from '@/lib/loan-status-visuals';
 import {
   getAudit,
   getDashboardOverview,
   type CollectionPriority,
-  type InvestmentPriority,
   type PortfolioGroup,
   type UpcomingPayment,
 } from '@/lib/api/dashboard';
-import { getLoans } from '@/lib/api/loans';
+import { getLoans, type LoanListItem } from '@/lib/api/loans';
+import { getClient } from '@/lib/api/clients';
 import { formatDop } from '@/lib/currency';
 import { formatRelativeDate, formatShortDate } from '@/lib/date-format';
 import { toDashboardAuditRow } from './dashboard-audit';
@@ -105,23 +105,13 @@ function detailedAgingBuckets(priorities: CollectionPriority[]) {
   }));
 }
 
-export function getInvestmentDueLabel(item: InvestmentPriority): string {
-  if (item.paymentStatus === 'UPCOMING')
-    return item.daysUntilDue === 1 ? 'En 1 día' : `En ${item.daysUntilDue} días`;
-  if (item.daysUntilDue === 0) return 'Vence hoy';
-  const days = Math.abs(item.daysUntilDue);
-  return item.paymentStatus === 'PENDING'
-    ? `Pendiente hace ${days} ${days === 1 ? 'día' : 'días'}`
-    : `${days} ${days === 1 ? 'día' : 'días'} de atraso`;
-}
-
 export const portfolioStatusConfig: Record<string, { label: string; color: string }> = {
-  CURRENT: { label: 'A tiempo', color: loanStatusVisuals.CURRENT.color },
-  PENDING: { label: 'Pendientes', color: loanStatusVisuals.PENDING.color },
-  LATE: { label: 'Atrasados', color: loanStatusVisuals.LATE.color },
-  EXPIRED: { label: 'Vencidos', color: loanStatusVisuals.EXPIRED.color },
-  PAID: { label: 'Pagados', color: loanStatusVisuals.PAID.color },
-  WRITTEN_OFF: { label: 'Castigados', color: loanStatusVisuals.WRITTEN_OFF.color },
+  CURRENT: { label: 'A tiempo', color: '#41c889' },
+  PENDING: { label: 'Pendientes', color: '#f59e0b' },
+  LATE: { label: 'Atrasados', color: '#faac38' },
+  EXPIRED: { label: 'Vencidos', color: '#f43f5e' },
+  PAID: { label: 'Pagados', color: '#419fec' },
+  WRITTEN_OFF: { label: 'Castigados', color: '#64748b' },
 };
 const portfolioStatusOrder = ['CURRENT', 'PENDING', 'LATE', 'EXPIRED', 'PAID', 'WRITTEN_OFF'];
 export function getPortfolioStatusData(portfolio: PortfolioGroup[]) {
@@ -132,6 +122,21 @@ export function getPortfolioStatusData(portfolio: PortfolioGroup[]) {
       value: group.count,
       color: portfolioStatusConfig[group.status]?.color ?? '#cbd5e1',
     }));
+}
+
+function recentLoanStatusLabel(loan: LoanListItem) {
+  if (loan.status === 'PAID') return 'Pagado';
+  return {
+    CURRENT: 'Al día',
+    PENDING: 'Pendiente',
+    LATE: 'Atrasado',
+    EXPIRED: 'Vencido',
+  }[loan.collectionStatus];
+}
+
+function recentLoanNextPayment(loan: LoanListItem) {
+  if (loan.collectionStatus === 'LATE' || loan.collectionStatus === 'EXPIRED') return 'Vencido';
+  return loan.nextPaymentDate ? formatShortDate(loan.nextPaymentDate) : '—';
 }
 
 const quickLinks = [
@@ -152,7 +157,7 @@ const optionalQuickLinks = [
 function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <section
-      className={`rounded-[22px] border border-border-soft bg-card shadow-card ${className}`}
+      className={`rounded-2xl bg-card shadow-card ${className}`}
     >
       {children}
     </section>
@@ -162,7 +167,7 @@ function Panel({ children, className = '' }: { children: React.ReactNode; classN
 function Heading({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div>
-      <h2 className="text-[17px] font-bold text-text-primary">{title}</h2>
+      <h2 className="text-lg font-extrabold text-text-primary">{title}</h2>
       {subtitle && <p className="mt-0.5 text-sm text-text-secondary">{subtitle}</p>}
     </div>
   );
@@ -177,17 +182,27 @@ function CircleProgress({
   color: string;
   blue?: boolean;
 }) {
+  const radius = 24;
+  const circumference = 2 * Math.PI * radius;
+  const progress = Math.min(100, Math.max(0, value));
   return (
-    <div
-      className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-      style={{
-        background: `conic-gradient(${blue ? '#ffffff' : color} ${Math.min(100, Math.max(0, value))}%, ${blue ? '#ffffff55' : '#e8eef7'} 0)`,
-      }}
-    >
-      <span
-        className={`flex h-10 w-10 items-center justify-center rounded-full text-[10px] font-bold ${blue ? 'bg-brand-sky text-white' : 'bg-card text-text-primary'}`}
-      >
-        {Math.round(value)}%
+    <div className="relative h-[52px] w-[52px] shrink-0">
+      <svg className="-rotate-90" width="52" height="52" aria-hidden="true">
+        <circle cx="26" cy="26" r={radius} fill="none" strokeWidth="4" stroke={blue ? 'rgba(255,255,255,.25)' : '#e8eef7'} />
+        <circle
+          cx="26"
+          cy="26"
+          r={radius}
+          fill="none"
+          strokeWidth="4"
+          strokeLinecap="round"
+          stroke={blue ? '#fff' : color}
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - progress / 100)}
+        />
+      </svg>
+      <span className={`absolute inset-0 flex items-center justify-center text-[11px] font-bold ${blue ? 'text-white' : 'text-text-primary'}`}>
+        {Math.round(progress)}<span className="text-[8px]">%</span>
       </span>
     </div>
   );
@@ -209,7 +224,29 @@ export function DashboardHome() {
   );
   const [period, setPeriod] = useState<7 | 14 | 30>(30);
   const [priorityTab, setPriorityTab] = useState<'Vencidos' | 'Hoy' | 'Semana'>('Vencidos');
+  const [selectedRecentLoanId, setSelectedRecentLoanId] = useState<string | null>(null);
+  const [recentClientPhotos, setRecentClientPhotos] = useState<Record<number, string>>({});
   const [extraQuickLinks, setExtraQuickLinks] = useState<string[]>([]);
+  useEffect(() => {
+    const ids = [...new Set(recentLoans?.data.map((loan) => loan.clientId) ?? [])];
+    if (ids.length === 0) return;
+    let active = true;
+    Promise.allSettled(ids.map((id) => getClient(id))).then((results) => {
+      if (!active) return;
+      setRecentClientPhotos((current) => {
+        const next = { ...current };
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled' && result.value.photo) {
+            next[ids[index]] = result.value.photo;
+          }
+        });
+        return next;
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [recentLoans]);
   useEffect(() => {
     const stored = localStorage.getItem('dashboard-quick-links');
     if (stored) {
@@ -243,7 +280,6 @@ export function DashboardHome() {
   const upcoming = overview?.upcomingPayments ?? [];
   const priorities = overview?.collectionPriorities ?? [];
   const agingBuckets = overview?.overdueAging ?? detailedAgingBuckets(priorities);
-  const investmentPriorities = overview?.investmentPriorities ?? [];
   const totalLoans = portfolio.reduce((sum, group) => sum + group.count, 0);
   const totalContracted = dash?.totalContracted ?? 0;
   const activeLoans = dash?.activeLoans ?? 0;
@@ -257,19 +293,9 @@ export function DashboardHome() {
     overview?.overdueAging?.reduce((sum, item) => sum + item.count, 0) ?? priorities.length;
   const balance = dash?.portfolioBalance ?? 0;
   const portfolioPie = getPortfolioStatusData(portfolio);
-  const dashboardPie = portfolioPie.map((entry) => ({
-    ...entry,
-    color:
-      entry.name === 'A tiempo'
-        ? '#2fc38f'
-        : entry.name === 'Pagados'
-          ? '#3e96e7'
-          : entry.name === 'Atrasados'
-            ? '#faa936'
-            : entry.color,
-  }));
-  const displayPie = dashboardPie.length
-    ? dashboardPie
+  const highlightedRecentLoanId = selectedRecentLoanId ?? recentLoans?.data[2]?.id;
+  const displayPie = portfolioPie.length
+    ? portfolioPie
     : [{ name: 'Sin datos', value: 1, color: '#e8eef7' }];
   const today = new Date();
   const titleDate = today.toLocaleDateString('es-DO', {
@@ -295,7 +321,7 @@ export function DashboardHome() {
       value: money(balance),
       detail: `de RD$${new Intl.NumberFormat('es-DO', { notation: 'compact', maximumFractionDigits: 1 }).format(totalContracted)} contratado`,
       icon: Wallet,
-      color: '#3e96e7',
+      color: '#419fec',
       iconTone: 'bg-white text-primary',
       blue: true,
       percent: totalContracted ? (balance / totalContracted) * 100 : 0,
@@ -305,8 +331,8 @@ export function DashboardHome() {
       value: String(activeLoans),
       detail: `de ${totalLoans} en cartera`,
       icon: BriefcaseBusiness,
-      color: '#8052e8',
-      iconTone: 'bg-[#f0eaff] text-[#8052e8]',
+      color: '#8b5cf6',
+      iconTone: 'bg-violet-100 text-violet-600',
       percent: totalLoans ? (activeLoans / totalLoans) * 100 : 0,
     },
     {
@@ -314,8 +340,8 @@ export function DashboardHome() {
       value: money(collected),
       detail: `meta ${money(dueToday)}`,
       icon: Banknote,
-      color: '#11b985',
-      iconTone: 'bg-[#daf9eb] text-[#07a276]',
+      color: '#10b981',
+      iconTone: 'bg-emerald-100 text-emerald-600',
       percent: collected + dueToday ? (collected / (collected + dueToday)) * 100 : 0,
     },
     {
@@ -323,8 +349,8 @@ export function DashboardHome() {
       value: money(dueToday),
       detail: `${installmentsDueToday} ${installmentsDueToday === 1 ? 'cuota pendiente' : 'cuotas pendientes'}`,
       icon: CalendarClock,
-      color: '#e8a000',
-      iconTone: 'bg-[#fff4d3] text-[#db9700]',
+      color: '#f59e0b',
+      iconTone: 'bg-amber-100 text-amber-600',
       percent: upcoming.length
         ? (installmentsDueToday / upcoming.length) * 100
         : 0,
@@ -334,8 +360,8 @@ export function DashboardHome() {
       value: money(overdue),
       detail: `${overdueLoans} préstamos`,
       icon: ClipboardList,
-      color: '#ee3d65',
-      iconTone: 'bg-[#ffe6ec] text-[#ee3d65]',
+      color: '#f43f5e',
+      iconTone: 'bg-rose-100 text-rose-600',
       percent: totalLoans ? (overdueLoans / totalLoans) * 100 : 0,
     },
   ];
@@ -355,14 +381,14 @@ export function DashboardHome() {
         <div className="flex gap-3">
           <Link
             href="/reportes"
-            className="flex h-11 items-center gap-2 rounded-[18px] border border-border-soft bg-card px-5 text-sm font-bold shadow-card"
+            className="flex h-11 items-center gap-2 rounded-xl bg-card px-5 text-sm font-bold shadow-card"
           >
             <FileBarChart2 className="h-4 w-4 text-primary" />
             Ver reportes
           </Link>
           <Link
             href="/prestamos/nuevo"
-              className="flex h-11 items-center gap-2 rounded-[18px] bg-brand-sky px-5 text-sm font-bold text-white shadow-action hover:bg-primary"
+              className="flex h-11 items-center gap-2 rounded-xl bg-brand-sky px-5 text-sm font-bold text-white shadow-action hover:bg-primary"
           >
             <Plus className="h-4 w-4" />
             Nuevo préstamo
@@ -374,7 +400,7 @@ export function DashboardHome() {
         {metrics.map((metric) => (
           <div
             key={metric.label}
-            className={`relative flex min-h-[158px] flex-col justify-between overflow-hidden rounded-[22px] border p-5 shadow-card ${metric.blue ? 'border-brand-sky bg-brand-sky text-white shadow-[0_8px_18px_rgba(53,132,216,0.18)]' : 'border-border-soft bg-card'}`}
+            className={`relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-2xl p-5 shadow-card ${metric.blue ? 'bg-brand-sky text-white shadow-[0_20px_25px_-5px_rgba(65,159,236,0.30),0_8px_10px_-6px_rgba(65,159,236,0.30)]' : 'bg-card transition-shadow hover:shadow-md'}`}
           >
             {metric.blue && (
               <>
@@ -383,7 +409,7 @@ export function DashboardHome() {
               </>
             )}
             <div
-              className={`relative flex h-10 w-10 items-center justify-center rounded-full ${metric.iconTone}`}
+              className={`relative flex h-10 w-10 items-center justify-center rounded-xl ${metric.iconTone}`}
             >
               <metric.icon className="h-5 w-5" aria-hidden="true" />
             </div>
@@ -416,7 +442,7 @@ export function DashboardHome() {
                   <Link
                     href={href}
                     aria-label={label}
-                    className="flex h-16 w-16 items-center justify-center rounded-[22px] border border-border-soft bg-card shadow-card transition-transform hover:-translate-y-1"
+                    className="flex h-16 w-16 items-center justify-center rounded-2xl bg-card shadow-card transition-transform hover:-translate-y-0.5"
                   >
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-xl text-white ${color}`}
@@ -560,45 +586,46 @@ export function DashboardHome() {
             </Panel>
             <Panel className="p-6">
               <Heading title="Estado de cartera" subtitle="Distribución por estatus" />
-              <div className="relative mx-auto mt-4 h-[180px] max-w-[200px]">
+              <div className="relative my-4 h-[200px] w-full">
                 <ResponsiveContainer
                   width="100%"
                   height="100%"
                   minWidth={0}
                   minHeight={0}
-                  initialDimension={{ width: 200, height: 180 }}
+                  initialDimension={{ width: 320, height: 200 }}
                 >
                   <PieChart>
                     <Pie
                       data={displayPie}
                       dataKey="value"
-                      innerRadius={61}
-                      outerRadius={87}
-                      startAngle={-20}
-                      endAngle={340}
-                      paddingAngle={3}
+                      innerRadius={62}
+                      outerRadius={86}
+                      paddingAngle={4}
+                      cornerRadius={8}
+                      strokeWidth={0}
                     >
                       {displayPie.map((entry) => (
-                        <Cell key={entry.name} fill={entry.color} stroke="white" strokeWidth={2} />
+                        <Cell key={entry.name} fill={entry.color} />
                       ))}
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-sm text-text-secondary">
-                  Total<strong className="text-3xl text-text-primary">{totalLoans}</strong>
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-xs font-semibold text-text-secondary">Total</span>
+                  <strong className="text-3xl font-extrabold text-text-primary">{totalLoans}</strong>
                 </div>
               </div>
-              <div className="mt-3 space-y-2">
+              <div className="space-y-2">
                 {portfolioPie.map((entry) => (
                   <div
                     key={entry.name}
-                    className="flex items-center gap-3 rounded-full bg-page px-3 py-2 text-sm"
+                    className="flex items-center gap-3 rounded-xl bg-surface-muted-ui/60 px-3 py-2 text-sm"
                   >
                     <span
                       className="h-2.5 w-2.5 rounded-full"
                       style={{ background: entry.color }}
                     />
-                    <span className="flex-1">{entry.name}</span>
+                    <span className="flex-1 font-semibold">{entry.name}</span>
                     <span className="text-xs text-text-secondary">
                       {totalLoans ? Math.round((entry.value / totalLoans) * 100) : 0}%
                     </span>
@@ -617,25 +644,35 @@ export function DashboardHome() {
               </Link>
             </div>
             <Panel className="overflow-x-auto">
-              <table className="w-full min-w-[690px] text-left text-sm">
+              <table className="w-full min-w-[690px] table-fixed text-left text-sm">
+                <colgroup>
+                  <col className="w-[31%]" />
+                  <col className="w-[17%]" />
+                  <col className="w-[17%]" />
+                  <col className="w-[16%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[5%]" />
+                </colgroup>
                 <thead>
-                  <tr className="text-xs text-text-secondary">
-                    <th className="px-5 py-4 font-medium">Cliente</th>
-                    <th className="py-4 font-medium">Monto</th>
-                    <th className="py-4 font-medium">Balance</th>
-                    <th className="py-4 font-medium">Próximo pago</th>
-                    <th className="py-4 font-medium">Estado</th>
-                    <th className="pr-5" />
+                  <tr className="text-xs font-bold text-text-secondary">
+                    <th className="px-5 py-4 font-bold">Cliente</th>
+                    <th className="px-3 py-4 font-bold">Monto</th>
+                    <th className="px-3 py-4 font-bold">Balance</th>
+                    <th className="px-3 py-4 font-bold">Próximo pago</th>
+                    <th className="px-3 py-4 font-bold">Estado</th>
+                    <th className="px-3 py-4" />
                   </tr>
                 </thead>
                 <tbody>
                   {(recentLoans?.data ?? []).map((loan) => (
                     <tr
                       key={loan.id}
-                      className="cursor-pointer border-t border-border-soft even:bg-[#f7faff] hover:bg-primary-soft/50"
+                      className={`cursor-pointer transition-colors ${loan.id === highlightedRecentLoanId ? 'bg-primary-soft' : 'hover:bg-surface-muted-ui/60'} focus-visible:bg-primary-soft focus-visible:outline-primary`}
                       role="link"
                       tabIndex={0}
                       aria-label={`Abrir préstamo ${loan.loanNumber} de ${loan.client.firstName} ${loan.client.lastName}`}
+                      onMouseEnter={() => setSelectedRecentLoanId(loan.id)}
+                      onMouseLeave={() => setSelectedRecentLoanId(null)}
                       onClick={() => router.push(`/prestamos/${loan.id}`)}
                       onKeyDown={(event) => {
                         if (
@@ -650,16 +687,18 @@ export function DashboardHome() {
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
                           <span
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e5e5fb] text-xs font-bold text-[#4b3a91]"
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100 bg-cover bg-center text-xs font-bold text-violet-700"
+                            style={recentClientPhotos[loan.clientId] ? { backgroundImage: `url(${recentClientPhotos[loan.clientId]})` } : undefined}
                             aria-hidden="true"
                           >
-                            {loan.client.firstName.charAt(0)}
-                            {loan.client.lastName.charAt(0)}
+                            {!recentClientPhotos[loan.clientId] && (
+                              <>{loan.client.firstName.charAt(0)}{loan.client.lastName.charAt(0)}</>
+                            )}
                           </span>
                           <div>
                             <Link
                               href={`/prestamos/${loan.id}`}
-                              className="font-semibold text-text-primary"
+                              className={`block truncate font-bold ${loan.id === highlightedRecentLoanId ? 'text-primary' : 'text-text-primary'}`}
                             >
                               {loan.client.firstName} {loan.client.lastName}
                             </Link>
@@ -669,27 +708,19 @@ export function DashboardHome() {
                           </div>
                         </div>
                       </td>
-                      <td className="text-text-secondary">{money(loan.principal)}</td>
-                      <td className="font-semibold">{money(loan.balance)}</td>
-                      <td className="text-text-secondary">
-                        {loan.nextPaymentDate ? formatShortDate(loan.nextPaymentDate) : '—'}
+                      <td className={`px-3 py-3 ${loan.id === highlightedRecentLoanId ? 'text-primary' : 'text-text-secondary'}`}>{money(loan.principal)}</td>
+                      <td className={`px-3 py-3 font-bold ${loan.id === highlightedRecentLoanId ? 'text-primary' : ''}`}>{money(loan.balance)}</td>
+                      <td className={`px-3 py-3 ${loan.id === highlightedRecentLoanId ? 'text-primary' : 'text-text-secondary'}`}>
+                        {recentLoanNextPayment(loan)}
                       </td>
-                      <td>
+                      <td className="px-3 py-3">
                         <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${loan.status === 'PAID' ? 'bg-[#e0f2ff] text-[#1877b9]' : loan.collectionStatus === 'CURRENT' ? 'bg-[#dbfaec] text-[#107e5a]' : loan.collectionStatus === 'PENDING' ? 'bg-[#e9ecef] text-[#26322c]' : loan.collectionStatus === 'LATE' ? 'bg-[#fff2d2] text-[#9a6b00]' : 'bg-[#ffe6ec] text-[#bd3153]'}`}
+                          className={`rounded-full px-2.5 py-1 text-xs font-bold ${getLoanStatusBadgeClass(recentLoanStatusLabel(loan))}`}
                         >
-                          {loan.status === 'PAID'
-                            ? 'Pagado'
-                            : loan.collectionStatus === 'CURRENT'
-                              ? 'Al día'
-                              : loan.collectionStatus === 'PENDING'
-                                ? 'Pendiente'
-                                : loan.collectionStatus === 'LATE'
-                                  ? 'Atrasado'
-                                  : 'Vencido'}
+                          {recentLoanStatusLabel(loan)}
                         </span>
                       </td>
-                      <td className="pr-5 text-right">
+                      <td className="px-3 py-3 text-right">
                         <details
                           className="group relative inline-block"
                           onClick={(event) => event.stopPropagation()}
@@ -781,31 +812,6 @@ export function DashboardHome() {
             </div>
           </Panel>
 
-          {investmentPriorities.length > 0 && (
-            <Panel className="p-6">
-              <Heading
-                title="Orden de pagos de inversiones"
-                subtitle="Inversiones que requieren atención, ordenadas por urgencia"
-              />
-              <div className="mt-3 divide-y divide-border-soft">
-                {investmentPriorities.map((item) => (
-                  <Link
-                    key={item.investmentId}
-                    href={`/inversiones/${item.investmentId}`}
-                    className="flex items-center justify-between gap-3 py-3 text-sm"
-                  >
-                    <span>
-                      <strong className="block">{item.investorName}</strong>
-                      <span className="text-text-secondary">
-                        {item.investmentCode} · {getInvestmentDueLabel(item)}
-                      </span>
-                    </span>
-                    <strong>{money(item.amount)}</strong>
-                  </Link>
-                ))}
-              </div>
-            </Panel>
-          )}
         </div>
 
         <aside className="min-w-0">

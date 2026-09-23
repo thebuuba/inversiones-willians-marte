@@ -1,6 +1,5 @@
 import { api } from '../api';
 import type { ApiResponse } from '@inversiones/shared';
-import type { InvestorInvestmentPaymentStatus } from '@inversiones/shared';
 
 export interface DashboardData {
   activeLoans: number;
@@ -79,17 +78,6 @@ export interface CollectionPriority {
   suggestedAction: string;
 }
 
-export interface InvestmentPriority {
-  investmentId: string;
-  investmentCode: string;
-  investorId: string;
-  investorName: string;
-  amount: number;
-  dueDate: string;
-  paymentStatus: Extract<InvestorInvestmentPaymentStatus, 'UPCOMING' | 'PENDING' | 'OVERDUE'>;
-  daysUntilDue: number;
-}
-
 export interface DashboardOverview {
   dashboard: DashboardData;
   portfolio: PortfolioGroup[];
@@ -99,7 +87,6 @@ export interface DashboardOverview {
   weeklyMovement: WeeklyMovementItem[];
   upcomingPayments: UpcomingPayment[];
   collectionPriorities: CollectionPriority[];
-  investmentPriorities: InvestmentPriority[];
 }
 
 export async function getDashboardOverview(): Promise<DashboardOverview> {
