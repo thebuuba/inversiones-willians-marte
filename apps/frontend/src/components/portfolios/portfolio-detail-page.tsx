@@ -147,7 +147,7 @@ export function PortfolioDetailPage({ portfolioId }: { portfolioId: string }) {
 
         <section className="mt-4 space-y-3">
           {clients.length === 0 ? (
-            <div className="rounded-panel border border-dashed border-primary-border bg-card p-10 text-center text-sm font-medium text-text-secondary">Esta cartera todavía no tiene préstamos.</div>
+            <div className="rounded-panel border border-dashed border-primary-border bg-card p-10 text-center text-sm font-medium text-text-secondary shadow-card">Esta cartera todavía no tiene préstamos.</div>
           ) : clients.map((client) => (
             <article className="grid overflow-hidden rounded-panel border border-border-soft bg-card shadow-card lg:grid-cols-[minmax(260px,0.7fr)_minmax(700px,2.5fr)]" key={client.id}>
               <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3 lg:border-b-0 lg:border-r">

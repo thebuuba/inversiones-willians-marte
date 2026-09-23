@@ -220,28 +220,24 @@ export function RequestsPanel() {
       value: String(total),
       icon: Inbox,
       className: 'bg-state-neutral-bg text-primary',
-      surface: 'bg-[var(--card-tone-neutral)]',
     },
     {
       label: 'PENDIENTES',
       value: String(pendingCount),
       icon: Clock3,
       className: 'bg-[#26322C] text-white',
-      surface: 'bg-[var(--card-tone-neutral)]',
     },
     {
       label: 'APROBADAS',
       value: String(approved),
       icon: CheckCircle2,
       className: 'bg-state-success-bg text-state-success',
-      surface: 'bg-[var(--card-tone-green)]',
     },
     {
       label: 'RECHAZADAS',
       value: String(rejected),
       icon: XCircle,
       className: 'bg-state-danger-bg text-state-danger',
-      surface: 'bg-[var(--card-tone-coral)]',
     },
   ];
 
@@ -276,10 +272,7 @@ export function RequestsPanel() {
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <PanelCard
-              key={stat.label}
-              className={`${pageEntryStatCardClassName(index)} min-h-[124px] p-5 ${stat.surface}`}
-            >
+            <PanelCard key={stat.label} className={`${pageEntryStatCardClassName(index)} min-h-[124px] p-5`}>
               <div
                 className={`mb-4 flex h-10 w-10 items-center justify-center rounded-control ${stat.className}`}
               >
@@ -344,7 +337,7 @@ export function RequestsPanel() {
                 role="button"
                 tabIndex={0}
                 aria-label={`Ver solicitud ${request.code} de ${requestName(request)}`}
-                className="flex min-h-[86px] cursor-pointer flex-col items-stretch gap-4 rounded-panel border border-border-soft bg-card px-5 py-4 shadow-soft transition-colors duration-150 hover:bg-surface-subtle hover:shadow-soft focus-visible:outline-2 focus-visible:outline-primary sm:flex-row sm:items-center"
+                className="flex min-h-[86px] cursor-pointer flex-col items-stretch gap-4 rounded-panel border border-border-soft bg-card px-5 py-4 shadow-card transition-colors duration-150 hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-primary sm:flex-row sm:items-center"
               >
                 <div className="flex min-w-0 flex-1 items-center gap-4">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary-accent">
@@ -414,7 +407,7 @@ export function RequestsPanel() {
                     role="button"
                     tabIndex={0}
                     aria-label={`Ver solicitud ${request.code} de ${requestName(request)}`}
-                    className="flex min-h-[86px] cursor-pointer flex-col items-stretch gap-4 rounded-panel border border-border-soft bg-card px-5 py-4 shadow-soft transition-colors duration-150 hover:bg-surface-subtle hover:shadow-soft focus-visible:outline-2 focus-visible:outline-primary sm:flex-row sm:items-center"
+                    className="flex min-h-[86px] cursor-pointer flex-col items-stretch gap-4 rounded-panel border border-border-soft bg-card px-5 py-4 shadow-card transition-colors duration-150 hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-primary sm:flex-row sm:items-center"
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-4">
                       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-state-neutral-bg text-sm font-bold text-[var(--text-secondary)]">
