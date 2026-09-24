@@ -10,7 +10,7 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ClientsService } from './clients.service';
+import { ClientsService, type ClientListFilter } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
@@ -36,6 +36,7 @@ export class ClientsController {
     @Query('search') search?: string,
     @Query('take') take?: string,
     @Query('skip') skip?: string,
+    @Query('filter') filter?: string,
   ) {
     const scope = await resolvePortfolioScope(user);
     return this.clients.findAll(
@@ -43,6 +44,9 @@ export class ClientsController {
       search,
       take ? parseInt(take, 10) : 50,
       skip ? parseInt(skip, 10) : 0,
+      (['CURRENT', 'OVERDUE', 'NO_LOANS'].includes(filter ?? '')
+        ? filter
+        : 'ALL') as ClientListFilter,
     );
   }
 

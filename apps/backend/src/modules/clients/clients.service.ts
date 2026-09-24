@@ -5,11 +5,15 @@ import { UpdateClientDto } from './dto/update-client.dto';
 import { AuditService } from '../audit/audit.service';
 import { formatPersonName } from '../../common/text/name-case';
 import { normalizePagination } from '../../common/pagination';
+import { getLoanCollectionStatus } from '../../common/loan-collection-status';
 import {
   assertClientAccess,
   clientWhereVisible,
+  loanWhereVisible,
   type PortfolioScope,
 } from '../../common/portfolio-scope';
+
+export type ClientListFilter = 'ALL' | 'CURRENT' | 'OVERDUE' | 'NO_LOANS';
 
 type ClientLoanRow = {
   id: string;
@@ -67,7 +71,13 @@ export class ClientsService {
     });
   }
 
-  async findAll(scope: PortfolioScope, search?: string, take = 50, skip = 0) {
+  async findAll(
+    scope: PortfolioScope,
+    search?: string,
+    take = 50,
+    skip = 0,
+    filter: ClientListFilter = 'ALL',
+  ) {
     const pagination = normalizePagination(take, skip);
     const searchWhere = search
       ? {
@@ -80,36 +90,136 @@ export class ClientsService {
         }
       : {};
     const scopeWhere = clientWhereVisible(scope);
-
+    const visibleLoan: Prisma.LoanWhereInput = loanWhereVisible(scope) ?? {};
+    const openLoan: Prisma.LoanWhereInput = {
+      ...visibleLoan,
+      status: { in: ['ACTIVE', 'OVERDUE'] },
+      balance: { gt: 0 },
+    };
+    const settings = await prisma.systemSettings.findUnique({
+      where: { id: 1 },
+      select: { graceDays: true },
+    });
+    const graceDays = settings?.graceDays ?? 5;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const overdueBefore = new Date(today);
+    overdueBefore.setDate(overdueBefore.getDate() - graceDays);
+    const overdueLoan: Prisma.LoanWhereInput = {
+      ...openLoan,
+      OR: [
+        { status: 'OVERDUE' },
+        { interestType: { not: 'INDEFINITE' }, endDate: { lt: today } },
+        {
+          schedule: {
+            some: { status: { notIn: ['PAID', 'CANCELLED'] }, dueDate: { lt: overdueBefore } },
+          },
+        },
+      ],
+    };
     const recentThreshold = new Date(Date.now() - 30 * 86400000);
-
-    const where = {
+    const previousRecentThreshold = new Date(Date.now() - 60 * 86400000);
+    const baseWhere: Prisma.ClientWhereInput = {
       active: true,
-      AND: [...(scopeWhere ? [scopeWhere] : []), ...(searchWhere ? [searchWhere] : [])],
+      ...(scopeWhere ?? {}),
+    };
+    const segmentWhere: Prisma.ClientWhereInput = {
+      CURRENT: { loans: { some: openLoan }, NOT: { loans: { some: overdueLoan } } },
+      OVERDUE: { loans: { some: overdueLoan } },
+      NO_LOANS: { loans: { none: visibleLoan } },
+      ALL: {},
+    }[filter];
+    const where: Prisma.ClientWhereInput = {
+      AND: [baseWhere, searchWhere, segmentWhere],
     };
 
-    const [data, total, activeTotal, withoutLoans, recent] = await Promise.all([
+    const [
+      data,
+      total,
+      globalTotal,
+      activeTotal,
+      current,
+      overdue,
+      withoutLoans,
+      recent,
+      previousRecent,
+    ] = await Promise.all([
       prisma.client.findMany({
         where,
-        include: { _count: { select: { loans: true } } },
+        include: {
+          _count: { select: { loans: { where: visibleLoan } } },
+          loans: {
+            where: visibleLoan,
+            select: {
+              balance: true,
+              status: true,
+              interestType: true,
+              endDate: true,
+              schedule: {
+                where: { status: { notIn: ['PAID', 'CANCELLED'] } },
+                orderBy: { dueDate: 'asc' },
+                take: 1,
+                select: { dueDate: true, status: true },
+              },
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
         take: pagination.take,
         skip: pagination.skip,
       }),
       prisma.client.count({ where }),
-      prisma.client.count({ where: { active: true } }),
-      prisma.client.count({ where: { active: true, loans: { none: {} } } }),
-      prisma.client.count({ where: { active: true, createdAt: { gte: recentThreshold } } }),
+      prisma.client.count({ where: baseWhere }),
+      prisma.client.count({ where: { AND: [baseWhere, { loans: { some: openLoan } }] } }),
+      prisma.client.count({
+        where: {
+          AND: [baseWhere, { loans: { some: openLoan }, NOT: { loans: { some: overdueLoan } } }],
+        },
+      }),
+      prisma.client.count({ where: { AND: [baseWhere, { loans: { some: overdueLoan } }] } }),
+      prisma.client.count({ where: { AND: [baseWhere, { loans: { none: visibleLoan } }] } }),
+      prisma.client.count({ where: { AND: [baseWhere, { createdAt: { gte: recentThreshold } }] } }),
+      prisma.client.count({
+        where: {
+          AND: [baseWhere, { createdAt: { gte: previousRecentThreshold, lt: recentThreshold } }],
+        },
+      }),
     ]);
 
     return {
-      data: data.map(formatClientNames),
+      data: data.map((client) => {
+        const loans = client.loans ?? [];
+        const openLoans = loans.filter(
+          (loan) => ['ACTIVE', 'OVERDUE'].includes(loan.status) && Number(loan.balance) > 0,
+        );
+        const isOverdue = openLoans.some(
+          (loan) =>
+            loan.status === 'OVERDUE' ||
+            ['LATE', 'EXPIRED'].includes(getLoanCollectionStatus(loan, graceDays)),
+        );
+        const clientFields = { ...client, loans: undefined };
+        return {
+          ...formatClientNames(clientFields),
+          balance: openLoans.reduce((sum, loan) => sum + Number(loan.balance), 0),
+          loanStatus:
+            loans.length === 0
+              ? 'NO_LOANS'
+              : isOverdue
+                ? 'OVERDUE'
+                : openLoans.length > 0
+                  ? 'CURRENT'
+                  : 'PAID',
+        };
+      }),
       total,
       stats: {
-        total: activeTotal,
+        total: globalTotal,
         active: activeTotal,
+        current,
+        overdue,
         withoutLoans,
         recent,
+        previousRecent,
       },
     };
   }

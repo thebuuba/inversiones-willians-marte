@@ -18,6 +18,7 @@ jest.mock('@inversiones/database', () => ({
       update: jest.fn(),
       count: jest.fn(),
     },
+    systemSettings: { findUnique: jest.fn() },
     $queryRaw: jest.fn(),
   },
   Prisma: {
@@ -43,6 +44,7 @@ describe('ClientsService', () => {
 
   beforeEach(async () => {
     jest.mocked(prisma.$queryRaw).mockResolvedValue([]);
+    jest.mocked(prisma.systemSettings.findUnique).mockResolvedValue(null);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [ClientsService, { provide: AuditService, useValue: audit }],
@@ -81,10 +83,21 @@ describe('ClientsService', () => {
         expect.objectContaining({ firstName: 'Alexauris', lastName: 'Diaz' }),
       );
       expect(result.total).toBe(1);
-      expect(result.stats).toEqual({ total: 1, active: 1, withoutLoans: 1, recent: 1 });
+      expect(result.stats).toEqual({
+        total: 1,
+        active: 1,
+        current: 1,
+        overdue: 1,
+        withoutLoans: 1,
+        recent: 1,
+        previousRecent: 1,
+      });
+      expect(result.data[0]).toEqual(
+        expect.objectContaining({ balance: 0, loanStatus: 'NO_LOANS' }),
+      );
       expect(prisma.client.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ active: true }),
+          where: expect.objectContaining({ AND: expect.arrayContaining([{ active: true }]) }),
         }),
       );
     });
@@ -97,6 +110,68 @@ describe('ClientsService', () => {
       expect(result.data).toHaveLength(1);
       expect(result.total).toBe(1);
       expect(prisma.client.count).toHaveBeenCalledWith({ where: { active: true } });
+    });
+
+    it('sums open balances and marks a client late when an unpaid installment passed grace', async () => {
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() - 10);
+      jest.mocked(prisma.client.findMany).mockResolvedValue([
+        {
+          ...mockClient,
+          _count: { loans: 2 },
+          loans: [
+            {
+              status: 'ACTIVE',
+              balance: 1200,
+              interestType: 'FLAT',
+              endDate: null,
+              schedule: [{ dueDate, status: 'PENDING' }],
+            },
+            { status: 'PAID', balance: 0, interestType: 'FLAT', endDate: null, schedule: [] },
+          ],
+        },
+      ] as any);
+      jest.mocked(prisma.client.count).mockResolvedValue(1);
+
+      const result = await service.findAll(adminScope, undefined, 7, 0, 'OVERDUE');
+
+      expect(result.data[0]).toEqual(
+        expect.objectContaining({ balance: 1200, loanStatus: 'OVERDUE' }),
+      );
+      expect(prisma.client.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: expect.arrayContaining([
+              expect.objectContaining({ loans: { some: expect.any(Object) } }),
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it('scopes client metrics and loan summaries to the collector portfolio', async () => {
+      jest.mocked(prisma.client.findMany).mockResolvedValue([]);
+      jest.mocked(prisma.client.count).mockResolvedValue(0);
+      const scope: PortfolioScope = {
+        userId: 'collector-1',
+        isAdmin: false,
+        portfolioIds: ['portfolio-1'],
+      };
+
+      await service.findAll(scope);
+
+      expect(prisma.client.count).toHaveBeenCalledWith({
+        where: expect.objectContaining({ active: true, OR: expect.any(Array) }),
+      });
+      expect(prisma.client.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: expect.objectContaining({
+            loans: expect.objectContaining({
+              where: expect.objectContaining({ OR: expect.any(Array) }),
+            }),
+          }),
+        }),
+      );
     });
 
     it('uses bounded defaults when pagination query values are malformed', async () => {
