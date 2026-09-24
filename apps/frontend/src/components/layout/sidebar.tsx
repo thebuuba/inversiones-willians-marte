@@ -14,10 +14,8 @@ import {
   Landmark,
   LogOut,
   Menu,
-  Plus,
   ReceiptText,
   Settings,
-  Sparkles,
   TrendingUp,
   Users,
   Wallet,
@@ -47,10 +45,8 @@ const navIconMap = {
 const navGroups = [
   { label: 'OPERACIÓN', hrefs: ['/inicio', '/clientes', '/prestamos', '/solicitudes'] },
   { label: 'FINANZAS', hrefs: ['/caja', '/inversionistas', '/carteras'] },
-  { label: 'GENERAL', hrefs: ['/agenda', '/recibos', '/documentos'] },
+  { label: 'GENERAL', hrefs: ['/agenda', '/recibos', '/documentos', '/configuracion'] },
 ] as const;
-
-const settingsItem = navItems.find((item) => item.href === '/configuracion');
 
 interface SidebarProps {
   collapsed: boolean;
@@ -93,23 +89,33 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
       <Link
         aria-label={compact ? label : undefined}
         className={cn(
-          'group/sidebar-item relative flex items-center rounded-[12px] transition-colors duration-150',
-          compact ? 'mx-auto h-10 w-10 justify-center p-0' : 'min-h-12 gap-4 px-4 py-2.5 text-sm',
+          'group/sidebar-item relative flex items-center rounded-[14px] transition-colors duration-150',
+          compact
+            ? 'mx-auto h-10 w-10 justify-center p-0'
+            : active
+              ? 'min-h-12 gap-3 rounded-[18px] px-3 py-1 text-sm'
+              : 'min-h-12 gap-4 px-4 py-2.5 text-sm',
           active
-            ? 'bg-primary-soft font-bold text-primary'
+            ? 'bg-primary-soft font-medium text-primary'
             : 'text-text-secondary hover:bg-page hover:text-text-primary',
         )}
         href={href}
         onClick={onClick}
       >
-        <Icon
-          aria-hidden="true"
-          className={cn(
-            'h-[18px] w-[18px] shrink-0 transition-colors duration-150',
-            active ? 'text-primary' : 'text-current',
-          )}
-          strokeWidth={2}
-        />
+        {active && !compact ? (
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-sky text-white shadow-[0_2px_4px_rgba(35,111,184,0.16)]">
+            <Icon aria-hidden="true" className="h-4 w-4" strokeWidth={2} />
+          </span>
+        ) : (
+          <Icon
+            aria-hidden="true"
+            className={cn(
+              'h-[18px] w-[18px] shrink-0 transition-colors duration-150',
+              active ? 'text-primary' : 'text-current',
+            )}
+            strokeWidth={2}
+          />
+        )}
         <span
           className={cn(
             'min-w-0 truncate transition-opacity duration-150',
@@ -142,7 +148,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             : 'items-center gap-3 px-[18px] py-[26px]',
         )}
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-sky text-white shadow-action">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-brand-sky text-white shadow-action">
           <Landmark className="h-5 w-5" aria-hidden="true" />
         </div>
         <div
@@ -161,7 +167,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         <button
           aria-expanded={!collapsed}
           aria-label={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] text-text-secondary transition-colors duration-150 hover:bg-page hover:text-text-primary"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border-soft text-text-secondary transition-colors duration-150 hover:bg-page hover:text-text-primary"
           onClick={onCollapsedChange}
           type="button"
         >
@@ -209,42 +215,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
       </nav>
 
       <footer className={cn('shrink-0 pb-4', compact ? 'px-3' : 'px-[14px]')}>
-        {!compact && (
-          <div className="relative mb-3 overflow-hidden rounded-[22px] bg-page px-4 pb-3 pt-4 text-text-primary">
-            <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-card text-primary shadow-card">
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-            </div>
-            <p className="text-xs leading-5 text-text-secondary">
-              Automatiza tus <strong className="text-text-primary">recordatorios de cobro</strong>
-            </p>
-            <Link
-              className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary"
-              href="/configuracion"
-            >
-              Activar ahora <ChevronLeft className="h-3 w-3 rotate-180" />
-            </Link>
-          </div>
-        )}
-        {!compact && (
-          <Link
-            className="mb-3 flex h-11 items-center justify-center gap-2 rounded-[18px] bg-brand-sky text-sm font-bold text-white shadow-action hover:bg-primary"
-            href="/prestamos/nuevo"
-          >
-            <Plus className="h-4 w-4" />
-            Nuevo préstamo
-          </Link>
-        )}
-        {settingsItem && (
-          <NavLink
-            compact={compact}
-            href={settingsItem.href}
-            icon={settingsItem.icon}
-            label={settingsItem.label}
-            onClick={() => setMobileOpen(false)}
-          />
-        )}
-
-        <div className="relative mt-3">
+        <div className="relative">
           {profileOpen && (
             <div
               className={cn(
