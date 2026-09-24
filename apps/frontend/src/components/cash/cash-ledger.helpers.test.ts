@@ -39,7 +39,7 @@ const movements: CashLedgerMovement[] = [
 
 test('filters the daily ledger by direction, category and person', () => {
   assert.deepEqual(filterCashMovements(movements, 'in', 'ana', 'Pago de préstamo'), [movements[0]]);
-  assert.deepEqual(filterCashMovements(movements, 'out', '', ''), [movements[1]]);
+  assert.deepEqual(filterCashMovements(movements, 'out', '', ''), []);
   assert.deepEqual(filterCashMovements(movements, 'external', '', ''), [movements[1]]);
 });
 

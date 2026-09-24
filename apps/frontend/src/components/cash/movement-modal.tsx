@@ -1,6 +1,7 @@
 'use client';
 
 import { memo, type FormEvent, type ReactNode, useMemo, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowDownLeft, ArrowUpRight, ChevronDown, Wallet, X } from 'lucide-react';
 import { formatCurrencyInput } from '@/lib/currency';
 
@@ -11,6 +12,7 @@ export interface MovementFormValues {
   person: string;
   amount: string;
   method: string;
+  category: string;
   description: string;
   affectsBalance: boolean;
 }
@@ -21,20 +23,28 @@ interface MovementModalProps {
   onSubmit: (values: MovementFormValues) => Promise<void>;
 }
 
-const methods = ['Efectivo', 'Transferencia', 'Tarjeta'];
+const methods = ['Efectivo', 'Transferencia', 'Cheque', 'Tarjeta'];
+const categories = [
+  'Otro',
+  'Gasto operativo',
+  'Ingreso adicional',
+  'Aporte inversionista',
+  'Retiro de socio',
+];
 
 const initialValues: MovementFormValues = {
-  type: '',
+  type: 'in',
   person: '',
   amount: '',
   method: 'Efectivo',
+  category: 'Otro',
   description: '',
   affectsBalance: true,
 };
 
 function inputClass(hasError = false) {
-  return `h-11 w-full rounded-[10px] border bg-card px-3.5 text-sm font-medium text-text-primary outline-none transition-colors placeholder:text-text-secondary/60 focus:border-primary-accent ${
-    hasError ? 'border-state-danger' : 'border-primary-border'
+  return `h-11 w-full rounded-[18px] border-0 bg-surface-subtle px-4 text-sm font-medium text-text-primary shadow-card outline-none transition-colors placeholder:text-text-secondary/60 focus:ring-2 focus:ring-brand-sky ${
+    hasError ? 'ring-2 ring-state-danger' : ''
   }`;
 }
 
@@ -52,7 +62,7 @@ function FormField({
   return (
     <label className={`block ${className}`}>
       <span
-        className={`mb-2 block text-sm font-bold ${error ? 'text-state-danger' : 'text-text-secondary'}`}
+        className={`mb-2 block text-[11px] font-bold uppercase tracking-[0.1em] ${error ? 'text-state-danger' : 'text-text-secondary'}`}
       >
         {label}
       </span>
@@ -81,18 +91,18 @@ function MovementTypeButton({
   return (
     <button
       aria-pressed={active}
-      className={`flex min-h-[68px] flex-1 items-center gap-3 rounded-[12px] border px-4 text-left transition-colors ${
+      className={`flex min-h-[66px] flex-1 items-center gap-3 rounded-[22px] border px-4 text-left transition-colors ${
         active
           ? income
-            ? 'border-primary-accent bg-primary-soft'
-            : 'border-[#e6b89a] bg-[#fff4ec]'
-          : 'border-primary-border bg-card hover:bg-surface-subtle'
+            ? 'border-emerald-700 bg-emerald-50'
+            : 'border-rose-500 bg-rose-50'
+          : 'border-transparent bg-surface-subtle hover:bg-card'
       }`}
       onClick={onClick}
       type="button"
     >
       <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] ${income ? 'bg-[#b8dcc5] text-primary' : 'bg-[#ffe3d2] text-state-danger'}`}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white shadow-card ${income ? 'bg-emerald-500' : 'bg-rose-500'}`}
       >
         {icon}
       </span>
@@ -113,6 +123,7 @@ export const MovementModal = memo(function MovementModal({
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const shouldReduceMotion = useReducedMotion();
 
   const amountNumber = useMemo(
     () => Number(values.amount.replace(/[^\d.]/g, '')) || 0,
@@ -163,29 +174,36 @@ export const MovementModal = memo(function MovementModal({
   return (
     <div
       aria-hidden={!isOpen}
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6 transition-opacity duration-150 ${
-        isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
-      }`}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) closeModal();
-      }}
+      className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-6 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
     >
-      <form
+      <div
+        className={`absolute inset-0 bg-black/70 transition-opacity duration-300 motion-reduce:transition-none ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        onClick={closeModal}
+      />
+      <motion.form
+        animate={{ opacity: isOpen ? 1 : 0, scale: shouldReduceMotion ? 1 : isOpen ? 1 : 0.82 }}
         aria-labelledby="movement-modal-title"
         aria-modal="true"
-        className={`max-h-[calc(100dvh-3rem)] w-full max-w-[600px] overflow-y-auto rounded-[16px] border border-border-soft bg-card shadow-modal transition-[opacity,transform] duration-150 ${
-          isOpen ? 'scale-100 opacity-100' : 'scale-[0.98] opacity-0'
-        }`}
+        className="relative max-h-[calc(100dvh-3rem)] w-full max-w-[510px] overflow-y-auto rounded-[18px] bg-page shadow-modal"
+        initial={false}
         onSubmit={handleSubmit}
         role="dialog"
+        transition={
+          shouldReduceMotion
+            ? { duration: 0 }
+            : {
+                scale: { type: 'spring', stiffness: 380, damping: isOpen ? 17 : 18, mass: 0.8 },
+                opacity: { duration: isOpen ? 0.14 : 0.12, delay: isOpen ? 0 : 0.25 },
+              }
+        }
       >
         <header className="flex items-start justify-between gap-4 border-b border-border-soft px-6 py-5">
           <div className="flex items-center gap-3.5">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-primary-soft text-primary">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-blue-100 text-brand-sky">
               <Wallet className="h-5 w-5" />
             </span>
             <div>
-              <h2 className="text-lg font-bold text-text-primary" id="movement-modal-title">
+              <h2 className="text-base font-extrabold text-text-primary" id="movement-modal-title">
                 Movimiento manual
               </h2>
               <p className="mt-0.5 text-sm text-text-secondary">
@@ -230,7 +248,7 @@ export const MovementModal = memo(function MovementModal({
             )}
           </div>
 
-          <FormField error={errors.person} label="Persona o concepto">
+          <FormField error={errors.person} label="Persona o concepto *">
             <input
               className={inputClass(errors.person)}
               onChange={(event) => updateValue('person', event.target.value)}
@@ -239,8 +257,8 @@ export const MovementModal = memo(function MovementModal({
             />
           </FormField>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <FormField error={errors.amount} label="Monto">
+          <div>
+            <FormField error={errors.amount} label="Monto *">
               <div className="relative">
                 <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-text-secondary">
                   RD$
@@ -252,12 +270,27 @@ export const MovementModal = memo(function MovementModal({
                     updateValue('amount', formatCurrencyInput(event.target.value))
                   }
                   pattern="[0-9,]+([.][0-9]{0,2})?"
-                  placeholder="0.00"
+                  placeholder="0"
                   value={values.amount}
                 />
               </div>
             </FormField>
-
+            <div className="mt-2 flex flex-wrap gap-5 px-3">
+              {[500, 1000, 2000, 5000].map((increment) => (
+                <button
+                  className="text-xs font-semibold text-text-secondary hover:text-brand-sky"
+                  key={increment}
+                  onClick={() =>
+                    updateValue('amount', formatCurrencyInput(String(amountNumber + increment)))
+                  }
+                  type="button"
+                >
+                  +{increment.toLocaleString('en-US')}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField label="Método">
               <div className="relative">
                 <select
@@ -272,34 +305,46 @@ export const MovementModal = memo(function MovementModal({
                 <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
               </div>
             </FormField>
+            <FormField label="Categoría">
+              <div className="relative">
+                <select
+                  className={`${inputClass()} appearance-none pr-10`}
+                  onChange={(event) => updateValue('category', event.target.value)}
+                  value={values.category}
+                >
+                  {categories.map((category) => (
+                    <option key={category}>{category}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+              </div>
+            </FormField>
           </div>
 
-          <label
-            className={`flex cursor-pointer items-start gap-3 rounded-[12px] border p-4 transition-colors ${
-              values.affectsBalance
-                ? 'border-primary-border bg-card'
-                : 'border-[#d4c39b] bg-[#fffaf0]'
-            }`}
-          >
+          <label className="flex cursor-pointer items-start gap-3 rounded-[12px] p-2 transition-colors">
             <input
               checked={!values.affectsBalance}
-              className="mt-0.5 h-5 w-5 shrink-0 accent-[#8A6A20]"
+              className="peer sr-only"
               onChange={(event) => updateValue('affectsBalance', !event.target.checked)}
               type="checkbox"
+            />
+            <span
+              aria-hidden="true"
+              className="relative mt-0.5 h-5 w-9 shrink-0 rounded-full bg-slate-200 shadow-card transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:bg-brand-sky peer-checked:after:translate-x-4 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-sky peer-focus-visible:ring-offset-2"
             />
             <span>
               <span className="block text-sm font-bold text-text-primary">
                 Dinero externo al negocio
               </span>
               <span className="mt-1 block text-xs leading-relaxed text-text-secondary">
-                Se registra para control, pero no suma ni resta en el cuadre de Caja.
+                Se registra para control, pero no suma ni resta en el cuadre de caja.
               </span>
             </span>
           </label>
 
           <FormField label="Descripción (opcional)">
             <textarea
-              className="h-20 w-full resize-none rounded-[10px] border border-primary-border bg-card px-3.5 py-3 text-sm font-medium text-text-primary outline-none transition-colors placeholder:text-text-secondary/60 focus:border-primary-accent"
+              className="h-20 w-full resize-none rounded-[18px] border-0 bg-surface-subtle px-4 py-3 text-sm font-medium text-text-primary shadow-card outline-none transition-colors placeholder:text-text-secondary/60 focus:ring-2 focus:ring-brand-sky"
               onChange={(event) => updateValue('description', event.target.value)}
               placeholder="Agrega algún detalle si es necesario"
               value={values.description}
@@ -311,7 +356,7 @@ export const MovementModal = memo(function MovementModal({
 
         <footer className="flex justify-end gap-3 border-t border-border-soft px-6 py-4">
           <button
-            className="h-10 rounded-full border border-primary-border bg-card px-6 text-sm font-bold text-text-primary transition-colors hover:bg-surface-muted-ui"
+            className="h-11 rounded-[18px] bg-card px-5 text-sm font-bold text-text-primary shadow-card transition-colors hover:bg-surface-muted-ui"
             disabled={saving}
             onClick={closeModal}
             type="button"
@@ -319,14 +364,18 @@ export const MovementModal = memo(function MovementModal({
             Cancelar
           </button>
           <button
-            className="h-10 rounded-full bg-primary px-6 text-sm font-bold text-white transition-colors hover:bg-primary-hover disabled:cursor-wait disabled:opacity-70"
+            className="h-11 rounded-[18px] bg-brand-sky px-5 text-sm font-bold text-white shadow-action transition-colors hover:bg-primary disabled:cursor-wait disabled:opacity-70"
             disabled={saving}
             type="submit"
           >
-            {saving ? 'Registrando...' : 'Registrar'}
+            {saving
+              ? 'Registrando...'
+              : values.type === 'out'
+                ? 'Registrar salida'
+                : 'Registrar entrada'}
           </button>
         </footer>
-      </form>
+      </motion.form>
     </div>
   );
 });
