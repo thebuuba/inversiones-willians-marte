@@ -1,22 +1,37 @@
 import { api } from '../api';
 import type { ApiResponse, Client, ClientDetail, CreateClientDto } from '@inversiones/shared';
 
+export type ClientListFilter = 'ALL' | 'CURRENT' | 'OVERDUE' | 'NO_LOANS';
+export type ClientListItem = Client & {
+  balance: number;
+  loanStatus: 'CURRENT' | 'OVERDUE' | 'NO_LOANS' | 'PAID';
+};
+
 export interface PaginatedClients {
-  data: Client[];
+  data: ClientListItem[];
   total: number;
   stats?: {
     total: number;
     active: number;
+    current: number;
+    overdue: number;
     withoutLoans: number;
     recent: number;
+    previousRecent: number;
   };
 }
 
-export async function getClients(search?: string, take = 50, skip = 0): Promise<PaginatedClients> {
+export async function getClients(
+  search?: string,
+  take = 50,
+  skip = 0,
+  filter: ClientListFilter = 'ALL',
+): Promise<PaginatedClients> {
   const params: Record<string, string> = {};
   if (search) params.search = search;
   if (take !== 50) params.take = String(take);
   if (skip > 0) params.skip = String(skip);
+  if (filter !== 'ALL') params.filter = filter;
   const { data } = await api.get<ApiResponse<PaginatedClients>>('/clients', { params });
   return (data.data as PaginatedClients) ?? { data: [], total: 0 };
 }
@@ -36,7 +51,10 @@ export async function createClient(dto: CreateClientDto): Promise<Client> {
   return data.data as Client;
 }
 
-export async function updateClient(id: number | string, dto: Partial<CreateClientDto>): Promise<Client> {
+export async function updateClient(
+  id: number | string,
+  dto: Partial<CreateClientDto>,
+): Promise<Client> {
   const { data } = await api.patch<ApiResponse<Client>>(`/clients/${id}`, dto);
   return data.data as Client;
 }
