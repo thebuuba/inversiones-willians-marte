@@ -106,11 +106,24 @@ export interface CreateClientDto {
   email?: string;
   identification?: string;
   address?: string;
+  city?: string;
   birthDate?: string;
   gender?: string;
   maritalStatus?: string;
   nationality?: string;
   dependents?: number;
+  incomeType?: string;
+  occupation?: string;
+  workplace?: string;
+  monthlyIncome?: number | null;
+  workTenure?: string;
+  guarantorName?: string;
+  guarantorRelation?: string;
+  guarantorPhone?: string;
+  guarantorIdentification?: string;
+  referenceName?: string;
+  referencePhone?: string;
+  tags?: string[];
   photo?: string;
   notes?: string;
 }

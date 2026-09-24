@@ -82,3 +82,25 @@ test('includes an empty photo when editing so an existing profile photo can be r
 
   assert.equal(payload.photo, '');
 });
+
+test('preserves expanded profile fields when editing a client', () => {
+  const form = getClientFormFromClient({
+    id: 5,
+    firstName: 'Ana',
+    lastName: 'Díaz',
+    city: 'Santiago',
+    incomeType: 'Empleado',
+    monthlyIncome: 25000,
+    guarantorName: 'Luis Díaz',
+    tags: ['Referido'],
+    createdById: 'u1',
+    active: true,
+    createdAt: '',
+    updatedAt: '',
+    loans: [],
+  });
+
+  assert.equal(form.monthlyIncome, '25000');
+  assert.deepEqual(getClientPayload(form).tags, ['Referido']);
+  assert.equal(getClientPayload(form).guarantorName, 'Luis Díaz');
+});
