@@ -12,8 +12,8 @@ export function filterCashMovements(
   const normalizedSearch = search.trim().toLocaleLowerCase('es');
 
   return movements.filter((movement) => {
-    if (filter === 'in' && movement.type !== 'IN') return false;
-    if (filter === 'out' && movement.type !== 'OUT') return false;
+    if (filter === 'in' && (movement.type !== 'IN' || !movement.affectsBalance)) return false;
+    if (filter === 'out' && (movement.type !== 'OUT' || !movement.affectsBalance)) return false;
     if (filter === 'external' && movement.affectsBalance) return false;
     if (category && movement.category !== category) return false;
     if (!normalizedSearch) return true;

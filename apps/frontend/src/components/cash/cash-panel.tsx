@@ -6,11 +6,15 @@ import type { Variants } from 'framer-motion';
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  AlertTriangle,
   Banknote,
   Calendar,
   ChevronLeft,
   ChevronRight,
   CreditCard,
+  FileCheck2,
+  LockKeyhole,
+  MoreHorizontal,
   Plus,
   Printer,
   Repeat2,
@@ -27,7 +31,12 @@ import {
   type CashLedgerMovement,
 } from '@/lib/api/cash';
 import { getStaggerDelay } from '@/lib/animation';
-import { formatDop, formatSignedDop, parseCurrencyInput } from '@/lib/currency';
+import {
+  formatCurrencyInput,
+  formatDop,
+  formatSignedDop,
+  parseCurrencyInput,
+} from '@/lib/currency';
 import {
   buildCashClosingPrintDocument,
   buildManualCashMovementDate,
@@ -36,6 +45,8 @@ import {
   type CashMovementFilter,
 } from './cash-ledger.helpers';
 import { getSettings } from '@/lib/api/settings';
+import { CircleProgress } from '@/components/ui/circle-progress';
+import { cn } from '@/lib/utils';
 
 type TagTone = 'green' | 'orange' | 'blue' | 'purple' | 'yellow' | 'gray';
 
@@ -94,7 +105,7 @@ function ShellCard({
   return (
     <motion.section
       animate="visible"
-      className={`rounded-panel border border-border-soft bg-card shadow-card ${className}`}
+      className={cn('rounded-panel bg-card shadow-card', className)}
       custom={index}
       initial="hidden"
       variants={fadeUp}
@@ -108,31 +119,27 @@ function Header({ onNewMovement, onPrint }: { onNewMovement: () => void; onPrint
   return (
     <motion.header
       animate="visible"
-      className="mb-5 flex flex-col justify-between gap-4 2xl:flex-row 2xl:items-end"
+      className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-end"
       initial="hidden"
       variants={fadeUp}
     >
       <div>
-        <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-text-primary">
-          <span className="h-2 w-2 rounded-full bg-primary-accent" />
-          Libro diario de caja
-        </span>
-        <h1 className="mt-3 text-3xl font-bold leading-tight text-text-primary">Caja</h1>
-        <p className="mt-1.5 text-sm text-text-secondary">
+        <h1 className="text-[30px] font-extrabold leading-tight text-text-primary">Caja</h1>
+        <p className="mt-1 text-sm text-text-secondary">
           Entradas y salidas generadas por las operaciones del negocio.
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
         <button
-          className="flex h-11 items-center gap-2 rounded-full border border-primary-border bg-card px-5 text-sm font-bold text-text-primary transition hover:bg-primary-soft"
+          className="flex h-11 items-center gap-2 rounded-[18px] bg-card px-5 text-sm font-bold text-text-primary shadow-card transition hover:bg-surface-subtle"
           onClick={onPrint}
           type="button"
         >
-          <Printer className="h-4 w-4" />
+          <Printer className="h-4 w-4 text-brand-sky" />
           Imprimir cuadre
         </button>
         <button
-          className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-white shadow-action transition hover:-translate-y-0.5"
+          className="flex h-11 items-center gap-2 rounded-[18px] bg-brand-sky px-5 text-sm font-bold text-white shadow-action transition hover:bg-primary"
           onClick={onNewMovement}
           type="button"
         >
@@ -151,40 +158,67 @@ function SummaryCard({
   value,
   detail,
   index,
+  percent,
 }: {
-  variant: 'balance' | 'income' | 'expense';
+  variant: 'balance' | 'income' | 'expense' | 'external';
   icon: ReactNode;
   title: string;
   value: string;
   detail: ReactNode;
   index: number;
+  percent: number;
 }) {
   const isBalance = variant === 'balance';
   const iconTone = isBalance
-    ? 'bg-card text-primary'
+    ? 'bg-card text-brand-sky'
     : variant === 'expense'
-      ? 'bg-state-danger-bg text-state-danger'
-      : 'bg-state-success-bg text-state-success';
+      ? 'bg-rose-100 text-rose-500'
+      : variant === 'external'
+        ? 'bg-amber-100 text-amber-600'
+        : 'bg-emerald-100 text-emerald-600';
+  const ringColor = isBalance
+    ? '#fff'
+    : variant === 'income'
+      ? '#0eaa7d'
+      : variant === 'expense'
+        ? '#ef4265'
+        : '#e9eef6';
 
   return (
     <ShellCard
-      className={isBalance ? 'border-primary-border bg-primary-soft p-5' : 'p-5'}
+      className={cn(
+        'relative flex h-[160px] flex-col justify-between overflow-hidden p-5',
+        isBalance
+          ? 'bg-brand-sky text-white shadow-[0_20px_25px_-5px_rgba(65,159,236,0.30),0_8px_10px_-6px_rgba(65,159,236,0.30)]'
+          : 'bg-card',
+      )}
       index={index}
     >
-      <div className="flex items-center gap-4">
+      {isBalance && (
+        <>
+          <span className="pointer-events-none absolute -right-5 -top-12 h-32 w-32 rounded-full bg-white/10" />
+          <span className="pointer-events-none absolute -bottom-16 right-10 h-28 w-28 rounded-full bg-white/10" />
+        </>
+      )}
+      <div className="relative">
         <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-control ${iconTone}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${iconTone}`}
         >
           {icon}
         </div>
-        <p className="text-xs font-bold uppercase tracking-[0.09em] text-text-secondary">{title}</p>
       </div>
-      <p
-        className={`mt-6 text-3xl font-bold leading-none ${value.includes('-') ? 'text-state-danger' : 'text-text-primary'}`}
-      >
-        {value}
-      </p>
-      <div className="mt-4 text-sm font-medium text-text-secondary">{detail}</div>
+      <div className="relative flex items-end justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-sm font-bold">{title}</p>
+          <p className="mt-1 text-lg font-extrabold leading-none">{value}</p>
+          <div
+            className={`mt-1.5 truncate text-xs ${isBalance ? 'text-white/85' : 'text-text-secondary'}`}
+          >
+            {detail}
+          </div>
+        </div>
+        <CircleProgress value={percent} color={ringColor} blue={isBalance} />
+      </div>
     </ShellCard>
   );
 }
@@ -195,6 +229,7 @@ function FilterBar({
   search,
   category,
   categories,
+  counts,
   onDateChange,
   onPreviousDate,
   onNextDate,
@@ -207,6 +242,7 @@ function FilterBar({
   search: string;
   category: string;
   categories: string[];
+  counts: Record<CashMovementFilter, number>;
   onDateChange: (value: string) => void;
   onPreviousDate: () => void;
   onNextDate: () => void;
@@ -222,36 +258,41 @@ function FilterBar({
   ];
 
   return (
-    <ShellCard className="mb-5 p-3.5" index={4}>
+    <ShellCard className="mb-7 p-3" index={4}>
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="grid shrink-0 grid-cols-2 items-center gap-1 rounded-control bg-surface-subtle p-1 sm:flex">
+        <div className="grid shrink-0 grid-cols-2 items-center gap-1 rounded-[20px] bg-surface-subtle p-1 sm:flex">
           {tabs.map((tab) => (
             <button
-              className={`h-11 rounded-control px-4 text-sm font-semibold transition sm:h-9 ${
+              className={`h-11 rounded-[16px] px-4 text-sm font-semibold transition sm:h-9 ${
                 filter === tab.value
-                  ? 'bg-primary-soft text-text-primary shadow-card'
+                  ? 'bg-card text-brand-sky shadow-card'
                   : 'text-text-secondary hover:bg-card'
               }`}
               key={tab.value}
               onClick={() => onFilterChange(tab.value)}
               type="button"
             >
-              {tab.label}
+              {tab.label}{' '}
+              <span
+                className={`ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ${filter === tab.value ? 'bg-brand-sky text-white' : 'bg-slate-200/60 text-text-secondary'}`}
+              >
+                {counts[tab.value]}
+              </span>
             </button>
           ))}
         </div>
-        <div className="flex h-10 items-center rounded-full border border-primary-border bg-card text-text-secondary">
+        <div className="flex h-10 items-center rounded-full bg-surface-subtle text-text-secondary">
           <button
             aria-label="Día anterior"
-            className="flex h-10 w-10 items-center justify-center rounded-l-full transition hover:bg-primary-soft hover:text-text-primary"
+            className="flex h-10 w-10 items-center justify-center rounded-l-full transition hover:bg-blue-100 hover:text-text-primary"
             onClick={onPreviousDate}
             title="Día anterior"
             type="button"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <label className="flex h-10 items-center gap-2 border-x border-primary-border px-3">
-            <Calendar className="h-4 w-4" />
+          <label className="flex h-10 items-center gap-2 px-2">
+            <Calendar className="h-4 w-4 text-brand-sky" />
             <input
               className="w-[126px] bg-transparent text-sm font-semibold text-text-primary outline-none"
               onChange={(event) => {
@@ -263,7 +304,7 @@ function FilterBar({
           </label>
           <button
             aria-label="Día siguiente"
-            className="flex h-10 w-10 items-center justify-center rounded-r-full transition hover:bg-primary-soft hover:text-text-primary"
+            className="flex h-10 w-10 items-center justify-center rounded-r-full transition hover:bg-blue-100 hover:text-text-primary"
             onClick={onNextDate}
             title="Día siguiente"
             type="button"
@@ -271,7 +312,7 @@ function FilterBar({
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
-        <label className="flex h-10 flex-1 items-center gap-3 rounded-full border border-primary-border bg-surface-subtle px-4 text-text-secondary xl:ml-auto xl:max-w-[340px]">
+        <label className="flex h-10 flex-1 items-center gap-3 rounded-[18px] bg-surface-subtle px-4 text-text-secondary xl:ml-auto xl:max-w-[340px]">
           <Search className="h-4 w-4 shrink-0" />
           <input
             className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-text-muted"
@@ -281,7 +322,7 @@ function FilterBar({
           />
         </label>
         <select
-          className="h-10 rounded-full border border-primary-border bg-card px-4 text-sm font-semibold text-text-primary outline-none"
+          className="h-10 rounded-[18px] bg-surface-subtle px-4 text-sm font-semibold text-text-primary outline-none"
           onChange={(event) => onCategoryChange(event.target.value)}
           value={category}
         >
@@ -297,23 +338,20 @@ function FilterBar({
   );
 }
 
-function Tag({ label, tone, icon }: { label: string; tone: TagTone; icon?: string | null }) {
+function Tag({ label, tone }: { label: string; tone: TagTone }) {
   const styles = {
-    green: 'border border-[#79c99d] bg-[#dff5e7] text-[#08783f]',
-    orange: 'border border-[#f0a39b] bg-[#fde8e6] text-[#b42318]',
-    blue: 'bg-state-info-bg text-state-info',
-    purple: 'bg-state-neutral-bg text-text-secondary',
-    yellow: 'bg-state-warning-bg text-state-warning',
-    gray: 'bg-surface-muted-ui text-text-secondary border border-primary-border',
+    green: 'bg-emerald-100 text-emerald-700',
+    orange: 'bg-rose-100 text-rose-600',
+    blue: 'bg-blue-100 text-blue-700',
+    purple: 'bg-violet-100 text-violet-700',
+    yellow: 'bg-amber-100 text-amber-700',
+    gray: 'bg-surface-subtle text-text-secondary',
   }[tone];
-  const Icon =
-    icon === 'Transferencia' ? Repeat2 : icon === 'Tarjeta' ? CreditCard : icon ? Banknote : null;
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${styles}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${styles}`}
     >
-      {Icon && <Icon className="h-3 w-3" />}
       {label}
     </span>
   );
@@ -330,59 +368,206 @@ function TransactionItem({
 }) {
   const isIncome = movement.type === 'IN';
   const DirectionIcon = isIncome ? ArrowDownLeft : ArrowUpRight;
-  const initials = movement.person
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('');
+  const time = new Intl.DateTimeFormat('es-DO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'America/Santo_Domingo',
+  }).format(new Date(movement.movementDate));
 
   return (
-    <div className="grid min-h-[76px] grid-cols-[1fr_auto] items-center gap-4 border-b border-border-soft px-5 py-3.5 last:border-b-0 hover:bg-surface-subtle">
+    <div
+      className={`grid min-h-[77px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border-soft px-5 py-3 last:border-b-0 hover:bg-surface-subtle ${!movement.affectsBalance ? 'bg-amber-50/50' : ''}`}
+    >
       <div className="flex min-w-0 items-center gap-4">
         <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-control border ${isIncome ? 'border-[#79c99d] bg-[#dff5e7] text-[#08783f]' : 'border-[#f0a39b] bg-[#fde8e6] text-[#b42318]'}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] ${!movement.affectsBalance ? 'bg-amber-100 text-amber-600' : isIncome ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-500'}`}
         >
           <DirectionIcon className="h-4 w-4" />
         </div>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-muted-ui text-xs font-bold text-text-secondary">
-          {initials}
-        </div>
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <h3 className="truncate text-sm font-bold text-text-primary">{movement.person}</h3>
-          </div>
-          <p className="mt-0.5 text-xs text-text-secondary">{movement.description}</p>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
             <Tag label={movement.category} tone={categoryTone(movement.category)} />
-            {!movement.affectsBalance && (
-              <Tag label="Externo · No afecta el cuadre" tone="yellow" />
-            )}
-            {movement.paymentMethod && (
-              <Tag icon={movement.paymentMethod} label={movement.paymentMethod} tone="gray" />
-            )}
-            <Tag label={`Registrado por ${movement.registeredBy}`} tone="gray" />
+            {!movement.affectsBalance && <Tag label="Externo" tone="yellow" />}
           </div>
+          <p className="mt-1 truncate text-xs text-text-secondary">
+            {time} <span className="px-1">·</span> {movement.paymentMethod || 'Sin método'}{' '}
+            <span className="px-1">·</span> {movement.description} <span className="px-1">·</span>{' '}
+            por {movement.registeredBy}
+          </p>
         </div>
       </div>
       <div className="flex items-center gap-2 text-right">
         <p
-          className={`text-base font-bold tabular-nums ${!movement.affectsBalance ? 'text-text-muted' : isIncome ? 'text-[#08783f]' : 'text-[#b42318]'}`}
+          className={`text-sm font-extrabold tabular-nums ${!movement.affectsBalance ? 'text-text-muted' : isIncome ? 'text-emerald-700' : 'text-rose-500'}`}
         >
           {formatSignedDop(movement.amount, { negative: !isIncome })}
         </p>
-        <button
-          aria-label={`Eliminar movimiento de ${movement.person}`}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-[#b42318] transition hover:bg-[#fde8e6] disabled:cursor-wait disabled:opacity-50"
-          disabled={deleting}
-          onClick={() => onDelete(movement)}
-          title="Eliminar movimiento"
-          type="button"
-        >
-          <Trash2 className="h-[18px] w-[18px]" />
-        </button>
+        <details className="relative">
+          <summary
+            aria-label={`Opciones de ${movement.person}`}
+            className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-text-secondary hover:bg-surface-subtle"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </summary>
+          <div className="absolute right-0 top-full z-10 min-w-40 rounded-[16px] bg-white p-1 shadow-card">
+            <button
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+              disabled={deleting}
+              onClick={() => onDelete(movement)}
+              type="button"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Eliminar movimiento
+            </button>
+          </div>
+        </details>
       </div>
     </div>
+  );
+}
+
+function MethodSummary({ movements }: { movements: CashLedgerMovement[] }) {
+  const methods = ['Efectivo', 'Transferencia', 'Cheque', 'Tarjeta'];
+  const rows = methods
+    .map((method) => ({
+      method,
+      amount: movements
+        .filter(
+          (movement) =>
+            movement.affectsBalance &&
+            movement.paymentMethod?.toLocaleLowerCase('es') === method.toLocaleLowerCase('es'),
+        )
+        .reduce((sum, movement) => sum + movement.amount * (movement.type === 'IN' ? 1 : -1), 0),
+    }))
+    .filter((row) => row.method !== 'Tarjeta' || row.amount !== 0);
+  const unclassified = movements.filter(
+    (movement) =>
+      movement.affectsBalance &&
+      (!movement.paymentMethod ||
+        !methods.some(
+          (method) =>
+            method.toLocaleLowerCase('es') === movement.paymentMethod?.toLocaleLowerCase('es'),
+        )),
+  );
+  if (unclassified.length > 0)
+    rows.push({
+      method: 'Sin método',
+      amount: unclassified.reduce(
+        (sum, movement) => sum + movement.amount * (movement.type === 'IN' ? 1 : -1),
+        0,
+      ),
+    });
+  const icons = {
+    Efectivo: Banknote,
+    Transferencia: Repeat2,
+    Cheque: FileCheck2,
+    Tarjeta: CreditCard,
+    'Sin método': Wallet,
+  };
+  const tones = {
+    Efectivo: 'bg-emerald-500',
+    Transferencia: 'bg-sky-500',
+    Cheque: 'bg-violet-500',
+    Tarjeta: 'bg-indigo-500',
+    'Sin método': 'bg-slate-400',
+  };
+  return (
+    <ShellCard className="p-5">
+      <h2 className="font-extrabold text-text-primary">Por método de pago</h2>
+      <p className="mt-0.5 text-xs text-text-secondary">Neto del día (sin externos)</p>
+      <div className="mt-5 space-y-4">
+        {rows.map(({ method, amount }) => {
+          const Icon = icons[method as keyof typeof icons];
+          return (
+            <div className="flex items-center gap-3" key={method}>
+              <span
+                className={`flex h-9 w-9 items-center justify-center rounded-full text-white shadow-card ${tones[method as keyof typeof tones]}`}
+              >
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className="flex-1 text-sm font-semibold text-text-primary">{method}</span>
+              <span
+                className={`text-sm font-bold tabular-nums ${amount > 0 ? 'text-emerald-700' : amount < 0 ? 'text-rose-500' : 'text-text-secondary'}`}
+              >
+                {amount > 0 ? '+' : amount < 0 ? '−' : ''}
+                {formatDop(Math.abs(amount))}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </ShellCard>
+  );
+}
+
+function ClosingSummary({ ledger }: { ledger: CashLedgerDay }) {
+  const [counted, setCounted] = useState('');
+  const cashNet = ledger.movements
+    .filter(
+      (movement) =>
+        movement.affectsBalance && movement.paymentMethod?.toLocaleLowerCase('es') === 'efectivo',
+    )
+    .reduce((sum, movement) => sum + movement.amount * (movement.type === 'IN' ? 1 : -1), 0);
+  const expected = ledger.totals.openingBalance + cashNet;
+  const difference = counted ? parseCurrencyInput(counted) - expected : null;
+  return (
+    <ShellCard className="p-5">
+      <div className="flex items-center justify-between">
+        <h2 className="font-extrabold text-text-primary">Cierre de caja</h2>
+        <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-brand-sky">
+          Abierta
+        </span>
+      </div>
+      <dl className="mt-5 space-y-3 text-sm">
+        <div className="flex justify-between gap-3 text-text-secondary">
+          <dt>Fondo inicial</dt>
+          <dd className="font-semibold text-text-primary">
+            {formatDop(ledger.totals.openingBalance)}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-3 text-text-secondary">
+          <dt>Neto en efectivo</dt>
+          <dd className="font-semibold text-text-primary">{formatDop(cashNet)}</dd>
+        </div>
+        <div className="flex justify-between gap-3 border-t border-border-soft pt-3 font-bold text-text-primary">
+          <dt>Efectivo esperado</dt>
+          <dd>{formatDop(expected)}</dd>
+        </div>
+      </dl>
+      <label className="mt-5 block">
+        <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.1em] text-text-secondary">
+          Efectivo contado
+        </span>
+        <span className="flex h-11 items-center gap-2 rounded-[18px] bg-surface-subtle px-4 text-sm text-text-secondary shadow-card">
+          RD${' '}
+          <input
+            className="min-w-0 flex-1 bg-transparent font-semibold text-text-primary outline-none"
+            inputMode="decimal"
+            onChange={(event) => setCounted(formatCurrencyInput(event.target.value))}
+            placeholder="0"
+            value={counted}
+          />
+        </span>
+      </label>
+      {difference !== null && (
+        <p
+          className={`mt-2 text-xs font-semibold ${difference === 0 ? 'text-emerald-700' : 'text-rose-500'}`}
+        >
+          Diferencia: {formatSignedDop(Math.abs(difference), { negative: difference < 0 })}
+        </p>
+      )}
+      <button
+        className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-[18px] bg-blue-300 text-sm font-bold text-white"
+        disabled
+        title="El registro de cierre aún no está disponible"
+        type="button"
+      >
+        <LockKeyhole className="h-4 w-4" />
+        Cerrar caja del día
+      </button>
+    </ShellCard>
   );
 }
 
@@ -442,6 +627,7 @@ export function CashPanel() {
         person: values.person,
         amount,
         movementDate: buildManualCashMovementDate(date),
+        category: values.category || undefined,
         paymentMethod: values.method,
         description: values.description,
         affectsBalance: values.affectsBalance,
@@ -492,58 +678,70 @@ export function CashPanel() {
 
   const { totals } = ledger;
   const balanceMovements = ledger.movements.filter((movement) => movement.affectsBalance);
-  const externalIncomeCount = ledger.movements.filter(
-    (movement) => !movement.affectsBalance && movement.type === 'IN',
-  ).length;
-  const externalExpenseCount = ledger.movements.filter(
-    (movement) => !movement.affectsBalance && movement.type === 'OUT',
-  ).length;
+  const externalMovements = ledger.movements.filter((movement) => !movement.affectsBalance);
+  const incomeCount = balanceMovements.filter((movement) => movement.type === 'IN').length;
+  const expenseCount = balanceMovements.filter((movement) => movement.type === 'OUT').length;
+  const externalAmount = externalMovements.reduce((sum, movement) => sum + movement.amount, 0);
+  const volume = totals.income + totals.expense;
+  const incomePercent = volume ? Math.round((totals.income / volume) * 100) : 0;
+  const expensePercent = volume ? Math.round((totals.expense / volume) * 100) : 0;
+  const counts: Record<CashMovementFilter, number> = {
+    all: ledger.movements.length,
+    in: incomeCount,
+    out: expenseCount,
+    external: externalMovements.length,
+  };
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-page p-4 font-sans text-text-primary sm:p-5">
       <Header onNewMovement={() => setIsModalOpen(true)} onPrint={handlePrint} />
 
-      <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <div className="mb-7 grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <SummaryCard
-          detail={<span>Entradas del día menos salidas del día</span>}
+          detail={<span>Entradas menos salidas</span>}
           icon={<Wallet className="h-5 w-5" />}
           index={1}
-          title="CUADRE DEL DÍA"
-          value={formatDop(totals.balance)}
+          title="Cuadre del día"
+          value={
+            totals.balance < 0
+              ? `−${formatDop(Math.abs(totals.balance))}`
+              : formatDop(totals.balance)
+          }
           variant="balance"
+          percent={incomePercent}
         />
         <SummaryCard
-          detail={
-            <span>
-              {balanceMovements.filter((movement) => movement.type === 'IN').length} entradas en el
-              cuadre
-              {externalIncomeCount > 0 ? ` · ${externalIncomeCount} externas registradas` : ''}
-            </span>
-          }
+          detail={<span>{incomeCount} movimientos</span>}
           icon={<ArrowDownLeft className="h-5 w-5" />}
           index={2}
-          title="ENTRADAS"
+          title="Entradas"
           value={formatDop(totals.income)}
           variant="income"
+          percent={incomePercent}
         />
         <SummaryCard
-          detail={
-            <span>
-              {balanceMovements.filter((movement) => movement.type === 'OUT').length} salidas en el
-              cuadre
-              {externalExpenseCount > 0 ? ` · ${externalExpenseCount} externas registradas` : ''}
-            </span>
-          }
+          detail={<span>{expenseCount} movimientos</span>}
           icon={<ArrowUpRight className="h-5 w-5" />}
           index={3}
-          title="SALIDAS"
+          title="Salidas"
           value={formatDop(totals.expense)}
           variant="expense"
+          percent={expensePercent}
+        />
+        <SummaryCard
+          detail={<span>no afectan el cuadre</span>}
+          icon={<AlertTriangle className="h-5 w-5" />}
+          index={4}
+          title="Externos"
+          value={formatDop(externalAmount)}
+          variant="external"
+          percent={0}
         />
       </div>
 
       <FilterBar
         categories={categories}
+        counts={counts}
         category={category}
         date={date}
         filter={filter}
@@ -562,49 +760,57 @@ export function CashPanel() {
         </p>
       )}
 
-      <motion.section animate="visible" initial="hidden" variants={fadeUp}>
-        <div className="mb-3 flex items-center justify-between gap-4 px-1">
-          <div className="flex items-center gap-2.5">
-            <Calendar className="h-4 w-4 text-text-secondary" />
-            <p className="text-sm font-bold capitalize text-text-primary">
-              {formatOfficeDate(date)}
-              <span className="px-2 text-text-secondary">·</span>
-              <span className="font-medium text-text-muted">
-                {visibleMovements.length} movimientos
-              </span>
-            </p>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <motion.section animate="visible" initial="hidden" variants={fadeUp}>
+          <div className="mb-3 flex items-center justify-between gap-4 px-1">
+            <div className="flex items-center gap-2.5">
+              <Calendar className="h-4 w-4 text-text-secondary" />
+              <p className="text-sm font-bold capitalize text-text-primary">
+                {formatOfficeDate(date)}
+                <span className="px-2 text-text-secondary">·</span>
+                <span className="font-medium text-text-muted">
+                  {visibleMovements.length} movimientos
+                </span>
+              </p>
+            </div>
+            <div className="hidden items-center gap-5 text-sm font-bold sm:flex">
+              <span className="text-emerald-700">+{formatDop(totals.income)}</span>
+              <span className="text-rose-500">−{formatDop(totals.expense)}</span>
+            </div>
           </div>
-          <div className="hidden items-center gap-5 text-sm font-bold sm:flex">
-            <span className="text-text-primary">+{formatDop(totals.income)}</span>
-            <span className="text-text-secondary">−{formatDop(totals.expense)}</span>
+          <div className="overflow-visible rounded-panel bg-card shadow-card">
+            {loading && (
+              <p className="px-5 py-16 text-center text-sm font-medium text-text-secondary">
+                Cargando movimientos...
+              </p>
+            )}
+            {!loading && error && (
+              <p className="px-5 py-16 text-center text-sm font-medium text-state-danger">
+                {error}
+              </p>
+            )}
+            {!loading && !error && visibleMovements.length === 0 && (
+              <p className="px-5 py-16 text-center text-sm font-medium text-text-secondary">
+                No hay movimientos para esta fecha y filtros.
+              </p>
+            )}
+            {!loading &&
+              !error &&
+              visibleMovements.map((movement) => (
+                <TransactionItem
+                  deleting={deletingId === movement.id}
+                  key={`${movement.sourceType}-${movement.id}`}
+                  movement={movement}
+                  onDelete={handleDeleteMovement}
+                />
+              ))}
           </div>
-        </div>
-        <div className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
-          {loading && (
-            <p className="px-5 py-16 text-center text-sm font-medium text-text-secondary">
-              Cargando movimientos...
-            </p>
-          )}
-          {!loading && error && (
-            <p className="px-5 py-16 text-center text-sm font-medium text-state-danger">{error}</p>
-          )}
-          {!loading && !error && visibleMovements.length === 0 && (
-            <p className="px-5 py-16 text-center text-sm font-medium text-text-secondary">
-              No hay movimientos para esta fecha y filtros.
-            </p>
-          )}
-          {!loading &&
-            !error &&
-            visibleMovements.map((movement) => (
-              <TransactionItem
-                deleting={deletingId === movement.id}
-                key={`${movement.sourceType}-${movement.id}`}
-                movement={movement}
-                onDelete={handleDeleteMovement}
-              />
-            ))}
-        </div>
-      </motion.section>
+        </motion.section>
+        <aside className="space-y-5">
+          <MethodSummary movements={ledger.movements} />
+          <ClosingSummary key={date} ledger={ledger} />
+        </aside>
+      </div>
 
       <MovementModal
         isOpen={isModalOpen}
