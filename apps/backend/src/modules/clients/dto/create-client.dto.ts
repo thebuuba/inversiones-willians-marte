@@ -5,6 +5,8 @@ import {
   IsOptional,
   IsEmail,
   IsInt,
+  IsNumber,
+  IsArray,
   MaxLength,
   Matches,
   Min,
@@ -39,6 +41,20 @@ export class CreateClientDto {
   @IsOptional()
   @IsString()
   address?: string;
+
+  @IsOptional() @IsString() city?: string;
+  @IsOptional() @IsString() incomeType?: string;
+  @IsOptional() @IsString() occupation?: string;
+  @IsOptional() @IsString() workplace?: string;
+  @IsOptional() @IsNumber() @Min(0) monthlyIncome?: number | null;
+  @IsOptional() @IsString() workTenure?: string;
+  @IsOptional() @IsString() guarantorName?: string;
+  @IsOptional() @IsString() guarantorRelation?: string;
+  @IsOptional() @IsString() guarantorPhone?: string;
+  @IsOptional() @IsString() guarantorIdentification?: string;
+  @IsOptional() @IsString() referenceName?: string;
+  @IsOptional() @IsString() referencePhone?: string;
+  @IsOptional() @IsArray() @IsString({ each: true }) tags?: string[];
 
   @IsOptional()
   @Type(() => Date)

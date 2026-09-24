@@ -206,25 +206,38 @@ model CashLedgerExclusion {
 // ─── Clients ────────────────────────────────────────────────────────────────
 
 model Client {
-  id             Int       @id @default(autoincrement())
-  firstName      String    @map("first_name")
-  lastName       String    @map("last_name")
-  phone          String?
-  altPhone       String?   @map("alt_phone")
-  email          String?
-  identification String?   @map("identification")
-  address        String?
-  birthDate      DateTime? @map("birth_date")
-  gender         String?
-  maritalStatus  String?   @map("marital_status")
-  nationality    String?
-  dependents     Int?
-  photo          String?
-  notes          String?
-  createdById    String    @map("created_by")
-  active         Boolean   @default(true)
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id                      Int       @id @default(autoincrement())
+  firstName               String    @map("first_name")
+  lastName                String    @map("last_name")
+  phone                   String?
+  altPhone                String?   @map("alt_phone")
+  email                   String?
+  identification          String?   @map("identification")
+  address                 String?
+  city                    String?
+  birthDate               DateTime? @map("birth_date")
+  gender                  String?
+  maritalStatus           String?   @map("marital_status")
+  nationality             String?
+  dependents              Int?
+  incomeType              String?   @map("income_type")
+  occupation              String?
+  workplace               String?
+  monthlyIncome           Decimal?  @map("monthly_income") @db.Decimal(14, 2)
+  workTenure              String?   @map("work_tenure")
+  guarantorName           String?   @map("guarantor_name")
+  guarantorRelation       String?   @map("guarantor_relation")
+  guarantorPhone          String?   @map("guarantor_phone")
+  guarantorIdentification String?   @map("guarantor_identification")
+  referenceName           String?   @map("reference_name")
+  referencePhone          String?   @map("reference_phone")
+  tags                    String[]  @default([])
+  photo                   String?
+  notes                   String?
+  createdById             String    @map("created_by")
+  active                  Boolean   @default(true)
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
 
   createdBy               User                        @relation("ClientCreatedBy", fields: [createdById], references: [id])
   loans                   Loan[]
@@ -260,8 +273,8 @@ model LoanRequest {
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
-  createdBy User    @relation(fields: [createdById], references: [id])
-  client    Client? @relation(fields: [clientId], references: [id])
+  createdBy User               @relation(fields: [createdById], references: [id])
+  client    Client?            @relation(fields: [clientId], references: [id])
   photos    LoanRequestPhoto[]
 
   @@index([status])
@@ -794,8 +807,8 @@ model Portfolio {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  createdBy User   @relation(fields: [createdById], references: [id])
-  loans     Loan[]
+  createdBy   User            @relation(fields: [createdById], references: [id])
+  loans       Loan[]
   assignments UserPortfolio[]
 
   @@index([createdAt])
