@@ -76,7 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </span>
           <span
             aria-hidden="true"
-            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-card bg-[#4b3a91] text-sm font-bold text-white shadow-card"
+            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-card bg-primary text-sm font-bold text-white shadow-card"
           >
             {user?.name?.charAt(0).toUpperCase() ?? 'U'}
           </span>

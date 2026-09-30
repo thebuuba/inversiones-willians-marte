@@ -80,7 +80,7 @@ const summaryTones = {
     value: 'text-[#B63B0B]',
   },
   paid: {
-    icon: 'bg-[#dbeafe] text-state-info',
+    icon: 'bg-primary-soft text-state-info',
     value: 'text-[#1E4E9A]',
   },
   quota: {

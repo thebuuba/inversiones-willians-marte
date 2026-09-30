@@ -103,7 +103,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
         onClick={onClick}
       >
         {active && !compact ? (
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-sky text-white shadow-[0_2px_4px_rgba(35,111,184,0.16)]">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-sky text-white shadow-action">
             <Icon aria-hidden="true" className="h-4 w-4" strokeWidth={2} />
           </span>
         ) : (
@@ -242,7 +242,7 @@ export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
             onClick={() => setProfileOpen((open) => !open)}
             type="button"
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#4b3a91] text-sm font-bold text-white">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
               {initial}
             </div>
             <div

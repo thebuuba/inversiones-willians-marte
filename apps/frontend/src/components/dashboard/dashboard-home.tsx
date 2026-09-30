@@ -111,7 +111,7 @@ export const portfolioStatusConfig: Record<string, { label: string; color: strin
   PENDING: { label: 'Pendientes', color: '#f59e0b' },
   LATE: { label: 'Atrasados', color: '#faac38' },
   EXPIRED: { label: 'Vencidos', color: '#f43f5e' },
-  PAID: { label: 'Pagados', color: '#419fec' },
+  PAID: { label: 'Pagados', color: '#ee8faf' },
   WRITTEN_OFF: { label: 'Castigados', color: '#64748b' },
 };
 const portfolioStatusOrder = ['CURRENT', 'PENDING', 'LATE', 'EXPIRED', 'PAID', 'WRITTEN_OFF'];
@@ -141,18 +141,18 @@ function recentLoanNextPayment(loan: LoanListItem) {
 }
 
 const quickLinks = [
-  { label: 'Registrar pago', href: '/prestamos/cobrar', icon: Banknote, color: 'bg-[#0ab487]' },
-  { label: 'Nuevo cliente', href: '/clientes/nuevo', icon: UserRoundPlus, color: 'bg-[#8052e8]' },
-  { label: 'Solicitudes', href: '/solicitudes', icon: ClipboardList, color: 'bg-[#f3647b]' },
-  { label: 'Recibos', href: '/recibos', icon: ReceiptText, color: 'bg-[#f3b51b]' },
-  { label: 'Caja', href: '/caja', icon: Wallet, color: 'bg-[#079cdb]' },
-  { label: 'Simulador', href: '/simulador', icon: Landmark, color: 'bg-[#8192ac]' },
-  { label: 'Reportes', href: '/reportes', icon: FileBarChart2, color: 'bg-[#6254e8]' },
+  { label: 'Registrar pago', href: '/prestamos/cobrar', icon: Banknote, color: 'bg-primary text-white' },
+  { label: 'Nuevo cliente', href: '/clientes/nuevo', icon: UserRoundPlus, color: 'bg-red-500 text-white' },
+  { label: 'Solicitudes', href: '/solicitudes', icon: ClipboardList, color: 'bg-highlight text-text-primary' },
+  { label: 'Recibos', href: '/recibos', icon: ReceiptText, color: 'bg-pink-400 text-text-primary' },
+  { label: 'Caja', href: '/caja', icon: Wallet, color: 'bg-teal-300 text-text-primary' },
+  { label: 'Simulador', href: '/simulador', icon: Landmark, color: 'bg-primary text-white' },
+  { label: 'Reportes', href: '/reportes', icon: FileBarChart2, color: 'bg-red-500 text-white' },
 ];
 const optionalQuickLinks = [
-  { label: 'Clientes', href: '/clientes', icon: ContactRound, color: 'bg-[#3e96e7]' },
-  { label: 'Agenda', href: '/agenda', icon: CalendarDays, color: 'bg-[#eea232]' },
-  { label: 'Carteras', href: '/carteras', icon: FolderOpen, color: 'bg-[#6479bb]' },
+  { label: 'Clientes', href: '/clientes', icon: ContactRound, color: 'bg-primary text-white' },
+  { label: 'Agenda', href: '/agenda', icon: CalendarDays, color: 'bg-highlight text-text-primary' },
+  { label: 'Carteras', href: '/carteras', icon: FolderOpen, color: 'bg-teal-300 text-text-primary' },
 ];
 
 function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -262,7 +262,7 @@ export function DashboardHome() {
   const highlightedRecentLoanId = selectedRecentLoanId ?? recentLoans?.data[2]?.id;
   const displayPie = portfolioPie.length
     ? portfolioPie
-    : [{ name: 'Sin datos', value: 1, color: '#e8eef7' }];
+    : [{ name: 'Sin datos', value: 1, color: '#e9e5df' }];
   const today = new Date();
   const titleDate = today.toLocaleDateString('es-DO', {
     weekday: 'long',
@@ -287,7 +287,7 @@ export function DashboardHome() {
       value: money(balance),
       detail: `de RD$${new Intl.NumberFormat('es-DO', { notation: 'compact', maximumFractionDigits: 1 }).format(totalContracted)} contratado`,
       icon: Wallet,
-      color: '#419fec',
+      color: '#139666',
       iconTone: 'bg-white text-primary',
       blue: true,
       percent: totalContracted ? (balance / totalContracted) * 100 : 0,
@@ -297,8 +297,8 @@ export function DashboardHome() {
       value: String(activeLoans),
       detail: `de ${totalLoans} en cartera`,
       icon: BriefcaseBusiness,
-      color: '#8b5cf6',
-      iconTone: 'bg-violet-100 text-violet-600',
+      color: '#139666',
+      iconTone: 'bg-primary-soft text-primary',
       percent: totalLoans ? (activeLoans / totalLoans) * 100 : 0,
     },
     {
@@ -315,7 +315,7 @@ export function DashboardHome() {
       value: money(dueToday),
       detail: `${installmentsDueToday} ${installmentsDueToday === 1 ? 'cuota pendiente' : 'cuotas pendientes'}`,
       icon: CalendarClock,
-      color: '#f59e0b',
+      color: '#ffd23d',
       iconTone: 'bg-amber-100 text-amber-600',
       percent: upcoming.length
         ? (installmentsDueToday / upcoming.length) * 100
@@ -366,7 +366,7 @@ export function DashboardHome() {
         {metrics.map((metric) => (
           <div
             key={metric.label}
-            className={`relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-2xl p-5 shadow-card ${metric.blue ? 'bg-brand-sky text-white shadow-[0_20px_25px_-5px_rgba(65,159,236,0.30),0_8px_10px_-6px_rgba(65,159,236,0.30)]' : 'bg-card transition-shadow hover:shadow-md'}`}
+            className={`relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-2xl p-5 shadow-card ${metric.blue ? 'bg-highlight text-text-primary' : 'bg-card transition-shadow hover:shadow-md'}`}
           >
             {metric.blue && (
               <>
@@ -384,12 +384,12 @@ export function DashboardHome() {
                 <p className="truncate text-sm font-semibold">{metric.label}</p>
                 <p className="mt-0.5 truncate text-lg font-bold tabular-nums">{metric.value}</p>
                 <p
-                  className={`truncate text-xs ${metric.blue ? 'text-white/80' : 'text-text-secondary'}`}
+                  className="truncate text-xs text-text-secondary"
                 >
                   {metric.detail}
                 </p>
               </div>
-              <CircleProgress value={metric.percent} color={metric.color} blue={metric.blue} />
+              <CircleProgress value={metric.percent} color={metric.color} />
             </div>
           </div>
         ))}
@@ -411,7 +411,7 @@ export function DashboardHome() {
                     className="flex h-16 w-16 items-center justify-center rounded-2xl bg-card shadow-card transition-transform hover:-translate-y-0.5"
                   >
                     <span
-                      className={`flex h-8 w-8 items-center justify-center rounded-xl text-white ${color}`}
+                      className={`flex h-8 w-8 items-center justify-center rounded-xl ${color}`}
                     >
                       <Icon className="h-4 w-4" aria-hidden="true" />
                     </span>
@@ -422,7 +422,7 @@ export function DashboardHome() {
               <Dialog.Root>
                 <div className="flex flex-col items-center gap-2 text-center text-xs text-text-primary">
                   <Dialog.Trigger
-                    className="flex h-16 w-16 items-center justify-center rounded-[22px] border-2 border-dashed border-[#d8e1ef] text-text-secondary hover:border-primary hover:text-primary"
+                    className="flex h-16 w-16 items-center justify-center rounded-[22px] border-2 border-dashed border-border-strong-ui text-text-secondary hover:border-primary hover:text-primary"
                     aria-label="Personalizar accesos rápidos"
                   >
                     <Plus className="h-5 w-5" />
@@ -430,7 +430,7 @@ export function DashboardHome() {
                   Agregar
                 </div>
                 <Dialog.Portal>
-                  <Dialog.Overlay className="fixed inset-0 z-50 bg-[#1d2b45]/40" />
+                  <Dialog.Overlay className="fixed inset-0 z-50 bg-[#241d19]/40" />
                   <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-[22px] bg-card p-6 shadow-modal">
                     <Dialog.Title className="text-lg font-bold text-text-primary">
                       Accesos rápidos
@@ -484,10 +484,10 @@ export function DashboardHome() {
               </div>
               <div className="mb-3 flex gap-4 text-xs text-text-secondary">
                 <span>
-                  <i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#3e96e7]" /> Capital
+                  <i className="mr-1 inline-block h-2 w-2 rounded-full bg-primary-accent" /> Capital
                 </span>
                 <span>
-                  <i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#735ee9]" /> Interés
+                  <i className="mr-1 inline-block h-2 w-2 rounded-full bg-highlight" /> Interés
                 </span>
                 <span>
                   <i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#ef5d68]" /> Mora
@@ -507,16 +507,16 @@ export function DashboardHome() {
                   >
                     <defs>
                       <linearGradient id="incomeCapital" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="#3e96e7" stopOpacity={0.18} />
-                        <stop offset="100%" stopColor="#3e96e7" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#139666" stopOpacity={0.18} />
+                        <stop offset="100%" stopColor="#139666" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid stroke="#e9eff8" strokeDasharray="4 4" vertical={false} />
+                    <CartesianGrid stroke="#e9e5df" strokeDasharray="4 4" vertical={false} />
                     <XAxis
                       dataKey="label"
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fill: '#71819b', fontSize: 11 }}
+                      tick={{ fill: '#766e66', fontSize: 11 }}
                     />
                     <YAxis hide />
                     <Tooltip
@@ -528,14 +528,14 @@ export function DashboardHome() {
                     <Area
                       dataKey="capital"
                       type="monotone"
-                      stroke="#3e96e7"
+                      stroke="#139666"
                       strokeWidth={2.5}
                       fill="url(#incomeCapital)"
                     />
                     <Area
                       dataKey="interest"
                       type="monotone"
-                      stroke="#735ee9"
+                      stroke="#ffd23d"
                       strokeWidth={2}
                       fill="none"
                     />
@@ -653,7 +653,7 @@ export function DashboardHome() {
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
                           <span
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100 bg-cover bg-center text-xs font-bold text-violet-700"
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft bg-cover bg-center text-xs font-bold text-primary"
                             style={recentClientPhotos[loan.clientId] ? { backgroundImage: `url(${recentClientPhotos[loan.clientId]})` } : undefined}
                             aria-hidden="true"
                           >
@@ -752,12 +752,12 @@ export function DashboardHome() {
                 initialDimension={{ width: 700, height: 230 }}
               >
                 <BarChart data={agingBuckets} margin={{ top: 5, right: 0, left: -40, bottom: 0 }}>
-                  <CartesianGrid stroke="#e9eff8" strokeDasharray="4 4" vertical={false} />
+                  <CartesianGrid stroke="#e9e5df" strokeDasharray="4 4" vertical={false} />
                   <XAxis
                     dataKey="label"
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: '#71819b', fontSize: 11 }}
+                    tick={{ fill: '#766e66', fontSize: 11 }}
                   />
                   <YAxis hide />
                   <Tooltip formatter={(value) => money(Number(value))} />
@@ -768,7 +768,7 @@ export function DashboardHome() {
                         fill={
                           index === 5
                             ? '#ef5d68'
-                            : ['#a8d5fb', '#9accf6', '#84bff2', '#a0cef8', '#67adeb'][index]
+                            : ['#d0ecdd', '#aee0c8', '#83cdaa', '#51b98e', '#139666'][index]
                         }
                       />
                     ))}
@@ -792,7 +792,7 @@ export function DashboardHome() {
               {(['Vencidos', 'Hoy', 'Semana'] as const).map((tab) => (
                 <button
                   key={tab}
-                  className={`rounded-full px-3 py-1.5 ${priorityTab === tab ? 'bg-[#e6f2ff] text-[#2386d9]' : 'text-text-secondary'}`}
+                    className={`rounded-full px-3 py-1.5 ${priorityTab === tab ? 'bg-primary-soft text-primary' : 'text-text-secondary'}`}
                   onClick={() => setPriorityTab(tab)}
                   type="button"
                 >
@@ -843,7 +843,7 @@ export function DashboardHome() {
                 upcomingInTab.map((item) => (
                   <div
                     key={item.id}
-                    className="relative border-l border-border-soft pl-5 before:absolute before:-left-[7px] before:top-1 before:h-3 before:w-3 before:rounded-full before:bg-[#3e96e7]"
+                    className="relative border-l border-border-soft pl-5 before:absolute before:-left-[7px] before:top-1 before:h-3 before:w-3 before:rounded-full before:bg-primary-accent"
                   >
                     <div className="flex justify-between gap-2 text-sm">
                       <Link href={`/prestamos/${item.loanId}`} className="font-semibold">

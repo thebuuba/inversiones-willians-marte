@@ -465,7 +465,7 @@ function ClientPhotoUploader({
           className={`flex aspect-square w-full flex-col items-center justify-center rounded-[20px] border-2 border-dashed px-3 text-center transition ${
             dragging
               ? 'border-primary-accent bg-primary-soft'
-              : 'border-[#bedfff] bg-[#f6fbff] hover:border-brand-sky'
+              : 'border-primary-border bg-primary-soft hover:border-brand-sky'
           }`}
           onClick={() => inputRef.current?.click()}
           onDragLeave={() => setDragging(false)}
@@ -844,8 +844,8 @@ function WorkInfoCard({
         <div className="flex items-start justify-between">
           <CardHeader
             icon={<BriefcaseBusiness className="h-5 w-5" />}
-            iconBg="#eee8ff"
-            iconColor="#7650df"
+            iconBg="#ffe7ef"
+            iconColor="#ad335c"
             title="Información laboral"
             subtitle="Ayuda a evaluar la capacidad de pago."
           />
@@ -862,7 +862,7 @@ function WorkInfoCard({
               {['Empleado', 'Independiente', 'Negocio propio', 'Pensionado'].map((type) => (
                 <button
                   aria-pressed={values.incomeType === type}
-                  className={`h-11 rounded-[18px] text-sm font-bold ${values.incomeType === type ? 'bg-blue-100 text-brand-sky ring-1 ring-brand-sky' : 'bg-surface-subtle text-text-secondary'}`}
+                  className={`h-11 rounded-[18px] text-sm font-bold ${values.incomeType === type ? 'bg-primary-soft text-brand-sky ring-1 ring-brand-sky' : 'bg-surface-subtle text-text-secondary'}`}
                   key={type}
                   onClick={() => onChange('incomeType', values.incomeType === type ? '' : type)}
                   type="button"
@@ -1013,7 +1013,7 @@ function AdditionalNotesCard({
             (tag) => (
               <button
                 aria-pressed={tags.includes(tag)}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${tags.includes(tag) ? 'bg-blue-100 text-brand-sky ring-1 ring-brand-sky' : 'bg-surface-subtle text-text-secondary'}`}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${tags.includes(tag) ? 'bg-primary-soft text-brand-sky ring-1 ring-brand-sky' : 'bg-surface-subtle text-text-secondary'}`}
                 key={tag}
                 onClick={() =>
                   onTagsChange(

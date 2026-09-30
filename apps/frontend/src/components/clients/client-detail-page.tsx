@@ -1109,7 +1109,7 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
   const overdueLoans = activeLoans.filter((l) => l.schedule?.some((p) => p.status === 'OVERDUE'));
 
   const summary = [
-    { label: 'Préstamos activos', value: activeLoans.length, color: 'text-blue-600' },
+    { label: 'Préstamos activos', value: activeLoans.length, color: 'text-primary' },
     { label: 'Préstamos pagados', value: paidLoans.length, color: 'text-primary-accent' },
     { label: 'Capital total prestado', value: fmt(totalPrincipal), color: 'text-text-primary' },
     { label: 'Balance total pendiente', value: fmt(totalBalance), color: 'text-state-danger' },
@@ -1165,7 +1165,7 @@ function ClientAccountStatementTab({ loans }: { loans: LoanSummary[] }) {
                 <span
                   className={`font-semibold ${
                     loan.status === 'ACTIVE'
-                      ? 'text-blue-600'
+                      ? 'text-primary'
                       : loan.status === 'PAID'
                         ? 'text-primary-accent'
                         : 'text-text-subtle'

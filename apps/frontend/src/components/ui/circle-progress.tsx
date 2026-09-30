@@ -19,7 +19,7 @@ export function CircleProgress({
           r={radius}
           fill="none"
           strokeWidth="4"
-          stroke={blue ? 'rgba(255,255,255,.25)' : '#e8eef7'}
+          stroke={blue ? 'rgba(255,255,255,.25)' : '#e9e5df'}
         />
         <circle
           cx="26"

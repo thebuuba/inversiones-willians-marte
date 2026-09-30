@@ -199,7 +199,7 @@ export const MovementModal = memo(function MovementModal({
       >
         <header className="flex items-start justify-between gap-4 border-b border-border-soft px-6 py-5">
           <div className="flex items-center gap-3.5">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-blue-100 text-brand-sky">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-primary-soft text-brand-sky">
               <Wallet className="h-5 w-5" />
             </span>
             <div>

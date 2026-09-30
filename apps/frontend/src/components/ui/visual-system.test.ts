@@ -54,7 +54,7 @@ test('maps shared badges to the loan status palette', () => {
   assert.match(statusTones.pending, /bg-amber-100 text-amber-700/);
   assert.match(statusTones.warning, /bg-amber-100 text-amber-700/);
   assert.match(statusTones.danger, /bg-rose-100 text-rose-600/);
-  assert.match(statusTones.info, /bg-sky-100 text-sky-700/);
+  assert.match(statusTones.info, /bg-pink-100 text-pink-700/);
   assert.match(statusTones.neutral, /bg-state-neutral-bg/);
 });
 
@@ -63,7 +63,7 @@ test('keeps status dots visible against their badge backgrounds', () => {
   assert.match(statusToneDots.pending, /bg-amber-500/);
   assert.match(statusToneDots.warning, /bg-amber-500/);
   assert.match(statusToneDots.danger, /bg-rose-600/);
-  assert.match(statusToneDots.info, /bg-sky-500/);
+  assert.match(statusToneDots.info, /bg-pink-500/);
   assert.match(statusToneDots.neutral, /bg-state-neutral-dot/);
 });
 

@@ -20,9 +20,9 @@ export const loanStatusVisuals = {
     dotClassName: 'bg-rose-600',
   },
   PAID: {
-    color: '#0ea5e9',
-    badgeClassName: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
-    dotClassName: 'bg-sky-500',
+    color: '#ee8faf',
+    badgeClassName: 'bg-pink-100 text-pink-700 dark:bg-pink-500/15 dark:text-pink-300',
+    dotClassName: 'bg-pink-500',
   },
   WRITTEN_OFF: {
     color: '#64748b',

@@ -10,8 +10,8 @@ test('pwa manifest uses installable standalone settings', () => {
   assert.equal(data.short_name, 'Inversiones');
   assert.equal(data.start_url, '/inicio');
   assert.equal(data.display, 'standalone');
-  assert.equal(data.background_color, '#F3F4F6');
-  assert.equal(data.theme_color, '#2f7654');
+  assert.equal(data.background_color, '#FAF8F5');
+  assert.equal(data.theme_color, '#0d7d55');
   assert.equal(
     data.icons?.some((icon) => icon.src === '/icons/icon-192.png' && icon.sizes === '192x192'),
     true,
