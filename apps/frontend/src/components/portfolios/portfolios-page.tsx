@@ -24,7 +24,7 @@ import {
 import { useAuth } from '@/lib/auth-context';
 import { invalidateCache, useClientCache } from '@/lib/use-client-cache';
 
-const portfolioColors = ['#2F7654', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#14B8A6'];
+const portfolioColors = ['#139666', '#FFD23D', '#EF4444', '#EE8FAF', '#74CDB0', '#D78138'];
 
 function SummaryCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (

@@ -32,10 +32,10 @@ import { calculateClientPageSize } from './clients-pagination';
 const columns =
   'grid-cols-[minmax(250px,2.2fr)_minmax(170px,1fr)_minmax(185px,1.15fr)_minmax(150px,.9fr)_minmax(115px,.75fr)_minmax(80px,.55fr)_44px]';
 const avatarColors = [
-  'bg-sky-100 text-sky-700',
+  'bg-primary-soft text-primary',
   'bg-amber-100 text-amber-700',
   'bg-emerald-100 text-emerald-700',
-  'bg-violet-100 text-violet-700',
+  'bg-pink-100 text-pink-700',
 ];
 
 function EmptyField() {
@@ -51,7 +51,7 @@ function clientStatus(status?: ClientListItem['loanStatus']) {
     CURRENT: { label: 'Al día', className: 'bg-emerald-100 text-emerald-700' },
     OVERDUE: { label: 'Atrasado', className: 'bg-rose-100 text-rose-600' },
     NO_LOANS: { label: 'Sin préstamos', className: 'bg-amber-100 text-amber-700' },
-    PAID: { label: 'Pagado', className: 'bg-sky-100 text-sky-700' },
+    PAID: { label: 'Pagado', className: 'bg-pink-100 text-pink-700' },
   };
   return status ? statuses[status] : { label: '—', className: 'bg-slate-100 text-slate-600' };
 }
@@ -133,8 +133,8 @@ export function ClientsPanel() {
       value: String(globalStats?.recent ?? 0),
       detail: `vs. ${globalStats?.previousRecent ?? 0} el mes pasado`,
       icon: UserRoundPlus,
-      bg: 'bg-violet-100',
-      color: 'text-violet-700',
+      bg: 'bg-pink-100',
+      color: 'text-pink-700',
       blue: false,
     },
   ];
@@ -245,7 +245,7 @@ export function ClientsPanel() {
             return (
               <PanelCard
                 key={stat.label}
-                className={`${pageEntryStatCardClassName(index)} relative flex h-[136px] flex-col justify-between overflow-hidden p-4 shadow-card ${stat.blue ? 'bg-brand-sky text-white shadow-[0_20px_25px_-5px_rgba(65,159,236,0.30),0_8px_10px_-6px_rgba(65,159,236,0.30)]' : 'bg-card transition-shadow hover:shadow-md'}`}
+                className={`${pageEntryStatCardClassName(index)} relative flex h-[136px] flex-col justify-between overflow-hidden p-4 shadow-card ${stat.blue ? 'bg-brand-sky text-white shadow-action' : 'bg-card transition-shadow hover:shadow-md'}`}
               >
                 {stat.blue && (
                   <>

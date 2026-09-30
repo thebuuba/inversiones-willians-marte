@@ -182,14 +182,14 @@ function SummaryCard({
       ? '#0eaa7d'
       : variant === 'expense'
         ? '#ef4265'
-        : '#e9eef6';
+        : '#e9e5df';
 
   return (
     <ShellCard
       className={cn(
         'relative flex h-[160px] flex-col justify-between overflow-hidden p-5',
         isBalance
-          ? 'bg-brand-sky text-white shadow-[0_20px_25px_-5px_rgba(65,159,236,0.30),0_8px_10px_-6px_rgba(65,159,236,0.30)]'
+          ? 'bg-brand-sky text-white shadow-action'
           : 'bg-card',
       )}
       index={index}
@@ -284,7 +284,7 @@ function FilterBar({
         <div className="flex h-10 items-center rounded-full bg-surface-subtle text-text-secondary">
           <button
             aria-label="Día anterior"
-            className="flex h-10 w-10 items-center justify-center rounded-l-full transition hover:bg-blue-100 hover:text-text-primary"
+            className="flex h-10 w-10 items-center justify-center rounded-l-full transition hover:bg-primary-soft hover:text-text-primary"
             onClick={onPreviousDate}
             title="Día anterior"
             type="button"
@@ -304,7 +304,7 @@ function FilterBar({
           </label>
           <button
             aria-label="Día siguiente"
-            className="flex h-10 w-10 items-center justify-center rounded-r-full transition hover:bg-blue-100 hover:text-text-primary"
+            className="flex h-10 w-10 items-center justify-center rounded-r-full transition hover:bg-primary-soft hover:text-text-primary"
             onClick={onNextDate}
             title="Día siguiente"
             type="button"
@@ -342,8 +342,8 @@ function Tag({ label, tone }: { label: string; tone: TagTone }) {
   const styles = {
     green: 'bg-emerald-100 text-emerald-700',
     orange: 'bg-rose-100 text-rose-600',
-    blue: 'bg-blue-100 text-blue-700',
-    purple: 'bg-violet-100 text-violet-700',
+    blue: 'bg-primary-soft text-primary',
+    purple: 'bg-pink-100 text-pink-700',
     yellow: 'bg-amber-100 text-amber-700',
     gray: 'bg-surface-subtle text-text-secondary',
   }[tone];
@@ -468,9 +468,9 @@ function MethodSummary({ movements }: { movements: CashLedgerMovement[] }) {
   };
   const tones = {
     Efectivo: 'bg-emerald-500',
-    Transferencia: 'bg-sky-500',
-    Cheque: 'bg-violet-500',
-    Tarjeta: 'bg-indigo-500',
+    Transferencia: 'bg-teal-500',
+    Cheque: 'bg-pink-400',
+    Tarjeta: 'bg-amber-400',
     'Sin método': 'bg-slate-400',
   };
   return (
@@ -516,7 +516,7 @@ function ClosingSummary({ ledger }: { ledger: CashLedgerDay }) {
     <ShellCard className="p-5">
       <div className="flex items-center justify-between">
         <h2 className="font-extrabold text-text-primary">Cierre de caja</h2>
-        <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-brand-sky">
+        <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-brand-sky">
           Abierta
         </span>
       </div>
@@ -559,7 +559,7 @@ function ClosingSummary({ ledger }: { ledger: CashLedgerDay }) {
         </p>
       )}
       <button
-        className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-[18px] bg-blue-300 text-sm font-bold text-white"
+        className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-[18px] bg-surface-muted-ui text-sm font-bold text-text-secondary"
         disabled
         title="El registro de cierre aún no está disponible"
         type="button"

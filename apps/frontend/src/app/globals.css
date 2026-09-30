@@ -11,8 +11,8 @@
 
 :root {
   color-scheme: light;
-  --background: #edf1f8;
-  --foreground: #1e2f48;
+  --background: #faf8f5;
+  --foreground: #241d19;
 
   --brand-950: #052e16;
   --brand-900: #064e24;
@@ -25,15 +25,16 @@
   --brand-200: #b8ebc9;
   --brand-100: #dcf7e5;
   --brand-50: #f0fbf4;
-  --brand-sky: #3498e6;
+  --brand-sky: #0d7d55;
+  --highlight: #ffd23d;
 
-  --surface: #edf1f8;
-  --surface-muted: #edf2f7;
-  --border: #e1e7ef;
-  --border-strong: #cbd5e1;
-  --ink: #1e2f48;
-  --ink-secondary: #7a899f;
-  --ink-muted: #7a899f;
+  --surface: #faf8f5;
+  --surface-muted: #f5f3ef;
+  --border: #e9e5df;
+  --border-strong: #d6d0c8;
+  --ink: #241d19;
+  --ink-secondary: #675f58;
+  --ink-muted: #766e66;
   --ink-inverse: #ffffff;
 
   --success: #047857;
@@ -42,49 +43,49 @@
   --warning-bg: #fef3c7;
   --danger: #e11d48;
   --danger-bg: #ffe4e6;
-  --info: #0369a1;
-  --info-bg: #e0f2fe;
+  --info: #0f766e;
+  --info-bg: #e1f4ef;
 
   --cash: #16a34a;
   --capital: #7a5a0a;
   --loan: #0f766e;
   --document: #475569;
 
-  --page: #edf1f8;
+  --page: #faf8f5;
   --card: #ffffff;
-  --surface-subtle: #f7faff;
-  --surface-muted-ui: #edf2f7;
+  --surface-subtle: #f8f6f2;
+  --surface-muted-ui: #f5f3ef;
   --surface-elevated: #ffffff;
-  --primary: #236fb8;
-  --primary-hover: #185d9f;
-  --primary-accent: #236fb8;
-  --primary-soft: #e7f3fe;
-  --primary-border: #e1e7ef;
-  --text-primary: #1e2f48;
-  --text-secondary: #66778f;
-  --text-muted: #7a899f;
-  --text-subtle: #7a899f;
+  --primary: #0d7d55;
+  --primary-hover: #096b49;
+  --primary-accent: #0d7d55;
+  --primary-soft: #e7f4ee;
+  --primary-border: #c9e6d8;
+  --text-primary: #241d19;
+  --text-secondary: #675f58;
+  --text-muted: #766e66;
+  --text-subtle: #766e66;
   --text-inverse: #ffffff;
-  --border-soft: #e1e7ef;
-  --border-strong-ui: #cbdcf0;
+  --border-soft: #e9e5df;
+  --border-strong-ui: #d6d0c8;
   --state-success: #047857;
   --state-success-bg: #d1fae5;
   --state-success-dot: #10b981;
   --state-warning: #b45309;
   --state-warning-bg: #fef3c7;
-  --state-warning-dot: #f59e0b;
+  --state-warning-dot: #ffd23d;
   --state-danger: #be123c;
   --state-danger-bg: #ffe4e6;
   --state-danger-dot: #f43f5e;
-  --state-info: #0369a1;
-  --state-info-bg: #e0f2fe;
-  --state-info-dot: #0ea5e9;
+  --state-info: #0f766e;
+  --state-info-bg: #e1f4ef;
+  --state-info-dot: #14b8a6;
   --state-neutral: #334155;
   --state-neutral-bg: #f1f5f9;
   --state-neutral-dot: #64748b;
-  --shadow-soft: 0 2px 5px rgba(39, 63, 105, 0.04);
+  --shadow-soft: 0 2px 5px rgba(51, 39, 27, 0.04);
   --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-action: 0 4px 9px rgba(62, 150, 231, 0.20);
+  --shadow-action: 0 4px 9px rgba(13, 125, 85, 0.20);
   --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.22);
   --radius-panel: 1.375rem;
   --radius-control-compact: 0.5rem;
@@ -112,8 +113,8 @@
   --warning-bg: #403713;
   --danger: #ef9a86;
   --danger-bg: #48241d;
-  --info: #9fc5ed;
-  --info-bg: #1d334a;
+  --info: #80d0bb;
+  --info-bg: #173b34;
 
   --page: #070707;
   --card: #141414;
@@ -141,9 +142,9 @@
   --state-danger: #ef9a86;
   --state-danger-bg: #48241d;
   --state-danger-dot: #df806b;
-  --state-info: #9fc5ed;
-  --state-info-bg: #1d334a;
-  --state-info-dot: #79aee4;
+  --state-info: #80d0bb;
+  --state-info-bg: #173b34;
+  --state-info-dot: #57bda3;
   --state-neutral: #b5c2ba;
   --state-neutral-bg: #292929;
   --state-neutral-dot: #a0a0a0;
@@ -175,6 +176,7 @@
   --color-brand-100: var(--brand-100);
   --color-brand-50: var(--brand-50);
   --color-brand-sky: var(--brand-sky);
+  --color-highlight: var(--highlight);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
   --color-border: var(--border);

@@ -7,8 +7,8 @@ import { FolderOpen, Palette, Plus, Check, X } from 'lucide-react';
 import { getPortfolios, createPortfolio, type PortfolioItem } from '@/lib/api/portfolios';
 
 const PRESET_COLORS = [
-  '#2F7654', '#3B82F6', '#F59E0B', '#EF4444',
-  '#8B5CF6', '#EC4899', '#14B8A6', '#F97316',
+  '#139666', '#FFD23D', '#EF4444', '#EE8FAF',
+  '#74CDB0', '#D78138', '#0D7D55', '#F97316',
 ];
 const LOAN_CARD_SHADOW = 'shadow-card';
 

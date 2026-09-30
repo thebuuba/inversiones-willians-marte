@@ -48,7 +48,7 @@ test('uses the reference chart palette for portfolio groups', () => {
       PENDING: '#f59e0b',
       LATE: '#faac38',
       EXPIRED: '#f43f5e',
-      PAID: '#419fec',
+      PAID: '#ee8faf',
       WRITTEN_OFF: '#64748b',
     },
   );

@@ -1010,7 +1010,7 @@ function SettingsUsersRolesTab() {
 
   const roleDot: Record<string, string> = {
     ADMIN: '#B8DCC5',
-    COLLECTOR: '#D8E9FF',
+    COLLECTOR: '#FFE8A3',
   };
 
   const roleLabel: Record<string, string> = {

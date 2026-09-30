@@ -45,7 +45,7 @@ const promiseLabels = {
 
 const promiseTones = {
   PENDING: 'bg-amber-50 text-amber-700',
-  PARTIAL: 'bg-blue-50 text-blue-700',
+  PARTIAL: 'bg-primary-soft text-primary',
   FULFILLED: 'bg-emerald-50 text-emerald-700',
   BROKEN: 'bg-state-danger-bg text-state-danger',
   CANCELLED: 'bg-state-neutral-bg text-text-secondary',
