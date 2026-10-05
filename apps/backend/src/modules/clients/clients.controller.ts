@@ -44,7 +44,7 @@ export class ClientsController {
       search,
       take ? parseInt(take, 10) : 50,
       skip ? parseInt(skip, 10) : 0,
-      (['CURRENT', 'OVERDUE', 'NO_LOANS'].includes(filter ?? '')
+      (['CURRENT', 'OVERDUE', 'NO_LOANS', 'NEW'].includes(filter ?? '')
         ? filter
         : 'ALL') as ClientListFilter,
     );

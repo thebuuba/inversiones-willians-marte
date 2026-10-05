@@ -13,7 +13,7 @@ import {
   type PortfolioScope,
 } from '../../common/portfolio-scope';
 
-export type ClientListFilter = 'ALL' | 'CURRENT' | 'OVERDUE' | 'NO_LOANS';
+export type ClientListFilter = 'ALL' | 'CURRENT' | 'OVERDUE' | 'NO_LOANS' | 'NEW';
 
 type ClientLoanRow = {
   id: string;
@@ -86,6 +86,11 @@ export class ClientsService {
             { lastName: { contains: search, mode: 'insensitive' as const } },
             { phone: { contains: search } },
             { identification: { contains: search } },
+            ...(/^\d+$/.test(search) &&
+            Number.isSafeInteger(Number(search)) &&
+            Number(search) <= 2147483647
+              ? [{ id: Number(search) }]
+              : []),
           ],
         }
       : {};
@@ -127,6 +132,7 @@ export class ClientsService {
       CURRENT: { loans: { some: openLoan }, NOT: { loans: { some: overdueLoan } } },
       OVERDUE: { loans: { some: overdueLoan } },
       NO_LOANS: { loans: { none: visibleLoan } },
+      NEW: { createdAt: { gte: recentThreshold } },
       ALL: {},
     }[filter];
     const where: Prisma.ClientWhereInput = {
@@ -200,6 +206,7 @@ export class ClientsService {
         const clientFields = { ...client, loans: undefined };
         return {
           ...formatClientNames(clientFields),
+          activeLoans: openLoans.length,
           balance: openLoans.reduce((sum, loan) => sum + Number(loan.balance), 0),
           loanStatus:
             loans.length === 0

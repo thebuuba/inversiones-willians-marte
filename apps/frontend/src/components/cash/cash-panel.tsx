@@ -3,21 +3,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import {
   ArrowDownLeft,
   ArrowUpRight,
   AlertTriangle,
-  Banknote,
   Calendar,
   ChevronLeft,
   ChevronRight,
-  CreditCard,
-  FileCheck2,
   LockKeyhole,
   MoreHorizontal,
   Plus,
   Printer,
-  Repeat2,
   Search,
   Trash2,
   Wallet,
@@ -41,6 +38,7 @@ import {
   buildCashClosingPrintDocument,
   buildManualCashMovementDate,
   filterCashMovements,
+  getCashWeekDates,
   shiftCashLedgerDate,
   type CashMovementFilter,
 } from './cash-ledger.helpers';
@@ -188,9 +186,7 @@ function SummaryCard({
     <ShellCard
       className={cn(
         'relative flex h-[160px] flex-col justify-between overflow-hidden p-5',
-        isBalance
-          ? 'bg-brand-sky text-white shadow-action'
-          : 'bg-card',
+        isBalance ? 'bg-brand-sky text-white shadow-action' : 'bg-card',
       )}
       index={index}
     >
@@ -428,76 +424,162 @@ function TransactionItem({
   );
 }
 
-function MethodSummary({ movements }: { movements: CashLedgerMovement[] }) {
-  const methods = ['Efectivo', 'Transferencia', 'Cheque', 'Tarjeta'];
-  const rows = methods
-    .map((method) => ({
-      method,
-      amount: movements
-        .filter(
-          (movement) =>
-            movement.affectsBalance &&
-            movement.paymentMethod?.toLocaleLowerCase('es') === method.toLocaleLowerCase('es'),
-        )
-        .reduce((sum, movement) => sum + movement.amount * (movement.type === 'IN' ? 1 : -1), 0),
-    }))
-    .filter((row) => row.method !== 'Tarjeta' || row.amount !== 0);
-  const unclassified = movements.filter(
-    (movement) =>
-      movement.affectsBalance &&
-      (!movement.paymentMethod ||
-        !methods.some(
-          (method) =>
-            method.toLocaleLowerCase('es') === movement.paymentMethod?.toLocaleLowerCase('es'),
-        )),
-  );
-  if (unclassified.length > 0)
-    rows.push({
-      method: 'Sin método',
-      amount: unclassified.reduce(
-        (sum, movement) => sum + movement.amount * (movement.type === 'IN' ? 1 : -1),
-        0,
-      ),
+function WeeklyFlow({
+  date,
+  ledger,
+  ledgerError,
+}: {
+  date: string;
+  ledger: CashLedgerDay;
+  ledgerError: string;
+}) {
+  const [days, setDays] = useState<CashLedgerDay[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      setLoading(true);
+      setError('');
+      setDays([]);
+      if (ledger.date !== date) return;
+      void Promise.all(
+        getCashWeekDates(date).map((day) => (day === date ? ledger : getCashLedger(day))),
+      )
+        .then((result) => {
+          if (active) setDays(result);
+        })
+        .catch(() => {
+          if (active) setError('No se pudo cargar el flujo semanal.');
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
     });
-  const icons = {
-    Efectivo: Banknote,
-    Transferencia: Repeat2,
-    Cheque: FileCheck2,
-    Tarjeta: CreditCard,
-    'Sin método': Wallet,
-  };
-  const tones = {
-    Efectivo: 'bg-emerald-500',
-    Transferencia: 'bg-teal-500',
-    Cheque: 'bg-pink-400',
-    Tarjeta: 'bg-amber-400',
-    'Sin método': 'bg-slate-400',
-  };
+    return () => {
+      active = false;
+    };
+  }, [date, ledger]);
+
+  const labels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  const data = days.map((day, index) => ({
+    date: day.date,
+    day: labels[index],
+    income: day.totals.income,
+    expense: day.totals.expense,
+  }));
+  const hasMovements = data.some((day) => day.income > 0 || day.expense > 0);
+
   return (
     <ShellCard className="p-5">
-      <h2 className="font-extrabold text-text-primary">Por método de pago</h2>
-      <p className="mt-0.5 text-xs text-text-secondary">Neto del día (sin externos)</p>
-      <div className="mt-5 space-y-4">
-        {rows.map(({ method, amount }) => {
-          const Icon = icons[method as keyof typeof icons];
-          return (
-            <div className="flex items-center gap-3" key={method}>
-              <span
-                className={`flex h-9 w-9 items-center justify-center rounded-full text-white shadow-card ${tones[method as keyof typeof tones]}`}
-              >
-                <Icon className="h-4 w-4" />
-              </span>
-              <span className="flex-1 text-sm font-semibold text-text-primary">{method}</span>
-              <span
-                className={`text-sm font-bold tabular-nums ${amount > 0 ? 'text-emerald-700' : amount < 0 ? 'text-rose-500' : 'text-text-secondary'}`}
-              >
-                {amount > 0 ? '+' : amount < 0 ? '−' : ''}
-                {formatDop(Math.abs(amount))}
-              </span>
-            </div>
-          );
-        })}
+      <h2 className="font-extrabold text-text-primary">Flujo semanal</h2>
+      <p className="mt-0.5 text-xs text-text-secondary">Ingresos vs egresos</p>
+      <div className="mt-3 flex items-center gap-4 text-xs text-text-secondary">
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+          Ingresos
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-pink-300" />
+          Egresos
+        </span>
       </div>
+      {ledgerError || error ? (
+        <p
+          className="flex h-[230px] items-center justify-center text-sm text-state-danger"
+          role="alert"
+        >
+          No se pudo cargar el flujo semanal.
+        </p>
+      ) : loading ? (
+        <p
+          className="flex h-[230px] items-center justify-center text-sm text-text-secondary"
+          role="status"
+        >
+          Cargando flujo semanal...
+        </p>
+      ) : (
+        <>
+          <div className="mt-4 h-[230px] min-w-0">
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              minWidth={0}
+              initialDimension={{ width: 300, height: 230 }}
+            >
+              <BarChart
+                data={data}
+                margin={{ top: 8, right: 0, bottom: 0, left: 0 }}
+                barGap={4}
+                accessibilityLayer
+              >
+                <CartesianGrid
+                  stroke="var(--color-border-soft)"
+                  strokeDasharray="4 4"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="day"
+                  axisLine={false}
+                  tickLine={false}
+                  interval={0}
+                  tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
+                />
+                <YAxis hide domain={[0, (maximum: number) => Math.max(maximum, 1)]} />
+                <Tooltip
+                  formatter={(value) => formatDop(Number(value))}
+                  cursor={{ fill: 'var(--color-surface-subtle)' }}
+                  contentStyle={{
+                    background: 'var(--color-card)',
+                    border: '1px solid var(--color-border-soft)',
+                    borderRadius: 12,
+                  }}
+                />
+                <Bar
+                  dataKey="income"
+                  name="Ingresos"
+                  fill="#059669"
+                  radius={[10, 10, 10, 10]}
+                  maxBarSize={18}
+                />
+                <Bar
+                  dataKey="expense"
+                  name="Egresos"
+                  fill="#f9a8d4"
+                  radius={[10, 10, 10, 10]}
+                  maxBarSize={18}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          {!hasMovements && (
+            <p className="mt-2 text-center text-xs text-text-secondary">
+              No hay movimientos de caja esta semana.
+            </p>
+          )}
+          <table className="sr-only">
+            <caption>Ingresos y egresos de la semana de la fecha seleccionada</caption>
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Ingresos</th>
+                <th scope="col">Egresos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((day) => (
+                <tr key={day.date}>
+                  <th scope="row">{day.date}</th>
+                  <td>{formatDop(day.income)}</td>
+                  <td>{formatDop(day.expense)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
     </ShellCard>
   );
 }
@@ -807,7 +889,7 @@ export function CashPanel() {
           </div>
         </motion.section>
         <aside className="space-y-5">
-          <MethodSummary movements={ledger.movements} />
+          <WeeklyFlow date={date} ledger={ledger} ledgerError={error} />
           <ClosingSummary key={date} ledger={ledger} />
         </aside>
       </div>

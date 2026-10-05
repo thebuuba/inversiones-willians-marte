@@ -71,6 +71,26 @@ describe('ClientsService', () => {
   });
 
   describe('findAll', () => {
+    it('counts only active or overdue loans with an outstanding balance', async () => {
+      const loan = { interestType: 'FLAT', endDate: null, schedule: [] };
+      jest.mocked(prisma.client.findMany).mockResolvedValue([
+        {
+          ...mockClient,
+          _count: { loans: 5 },
+          loans: [
+            { ...loan, status: 'ACTIVE', balance: 1200 },
+            { ...loan, status: 'OVERDUE', balance: 500 },
+            { ...loan, status: 'PAID', balance: 0 },
+            { ...loan, status: 'ACTIVE', balance: 0 },
+            { ...loan, status: 'CANCELLED', balance: 100 },
+          ],
+        },
+      ] as any);
+      jest.mocked(prisma.client.count).mockResolvedValue(1);
+      const result = await service.findAll(adminScope);
+      expect(result.data[0]).toEqual(expect.objectContaining({ activeLoans: 2 }));
+    });
+
     it('should return paginated active clients', async () => {
       jest
         .mocked(prisma.client.findMany)
@@ -100,6 +120,33 @@ describe('ClientsService', () => {
           where: expect.objectContaining({ AND: expect.arrayContaining([{ active: true }]) }),
         }),
       );
+    });
+
+    it('filters new clients by the same 30-day window as the recent metric', async () => {
+      jest.mocked(prisma.client.findMany).mockResolvedValue([]);
+      jest.mocked(prisma.client.count).mockResolvedValue(0);
+      const before = Date.now() - 30 * 86400000;
+      await service.findAll(adminScope, undefined, 50, 0, 'NEW');
+      const query = jest.mocked(prisma.client.findMany).mock.calls[0][0] as any;
+      const threshold = query.where.AND[2].createdAt.gte;
+      expect(threshold.getTime()).toBeGreaterThanOrEqual(before);
+      expect(threshold.getTime()).toBeLessThanOrEqual(Date.now() - 30 * 86400000);
+      expect(prisma.client.count).toHaveBeenCalledWith({
+        where: { AND: [{ active: true }, { createdAt: { gte: threshold } }] },
+      });
+    });
+
+    it('searches numeric IDs without treating text or oversized numbers as IDs', async () => {
+      jest.mocked(prisma.client.findMany).mockResolvedValue([]);
+      jest.mocked(prisma.client.count).mockResolvedValue(0);
+      for (const search of ['46', 'Juan', '99999999999999999999']) {
+        await service.findAll(adminScope, search);
+        const calls = jest.mocked(prisma.client.findMany).mock.calls;
+        const query = calls[calls.length - 1][0] as any;
+        const conditions = query.where.AND[1].OR;
+        if (search === '46') expect(conditions).toContainEqual({ id: 46 });
+        else expect(conditions.some((condition: any) => 'id' in condition)).toBe(false);
+      }
     });
 
     it('should search clients by name', async () => {

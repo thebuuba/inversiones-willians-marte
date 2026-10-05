@@ -36,6 +36,12 @@ export function shiftCashLedgerDate(date: string, days: number) {
   return value.toISOString().slice(0, 10);
 }
 
+export function getCashWeekDates(date: string) {
+  const weekday = new Date(`${date}T12:00:00Z`).getUTCDay();
+  const monday = shiftCashLedgerDate(date, -((weekday + 6) % 7));
+  return Array.from({ length: 7 }, (_, index) => shiftCashLedgerDate(monday, index));
+}
+
 function escapePrintHtml(value: string) {
   return value
     .replaceAll('&', '&amp;')
