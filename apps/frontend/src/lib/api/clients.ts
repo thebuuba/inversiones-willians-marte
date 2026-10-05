@@ -1,8 +1,9 @@
 import { api } from '../api';
 import type { ApiResponse, Client, ClientDetail, CreateClientDto } from '@inversiones/shared';
 
-export type ClientListFilter = 'ALL' | 'CURRENT' | 'OVERDUE' | 'NO_LOANS';
+export type ClientListFilter = 'ALL' | 'CURRENT' | 'OVERDUE' | 'NO_LOANS' | 'NEW';
 export type ClientListItem = Client & {
+  activeLoans: number;
   balance: number;
   loanStatus: 'CURRENT' | 'OVERDUE' | 'NO_LOANS' | 'PAID';
 };

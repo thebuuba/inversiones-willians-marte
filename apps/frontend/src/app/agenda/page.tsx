@@ -1,1016 +1,578 @@
-'use client';
+﻿'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import type { Variants } from 'framer-motion';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
-  Plus,
-  ListTodo,
-  CircleCheck,
-  Circle,
-  Clock,
-  CalendarDays,
+  Banknote,
+  ChevronLeft,
   ChevronRight,
-  MessageCircle,
-  PhoneCall,
+  Clock,
+  House,
+  Phone,
+  Plus,
+  Users,
   X,
 } from 'lucide-react';
+import type { CreateTaskDto, TaskItem, TaskStatus } from '@inversiones/shared';
 import { getTasks, createTask, updateTask, deleteTask } from '@/lib/api/tasks';
-import { getCollectionPriorities, type CollectionPriority } from '@/lib/api/dashboard';
-import { InteractionModal } from '@/components/loans/collection-management-panel';
-import { getStaggerDelay } from '@/lib/animation';
 import { getUsers, type UserItem } from '@/lib/api/users';
 import { useAuth } from '@/lib/auth-context';
-import type { TaskItem, TaskPriority, TaskStatus } from '@inversiones/shared';
+import { cn } from '@/lib/utils';
+import {
+  buildAgendaMonth,
+  getAgendaDate,
+  getAgendaDayEvents,
+  getAgendaEventType,
+  type AgendaEventType,
+} from '@/components/agenda/agenda.helpers';
 
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: getStaggerDelay(i, 0.05) },
-  }),
+const eventTypes = {
+  cobro: {
+    label: 'Cobro',
+    icon: Banknote,
+    tone: 'bg-emerald-50 text-emerald-600',
+    dot: 'bg-emerald-600',
+  },
+  visita: { label: 'Visita', icon: House, tone: 'bg-rose-50 text-rose-500', dot: 'bg-rose-400' },
+  llamada: {
+    label: 'Llamada',
+    icon: Phone,
+    tone: 'bg-amber-100 text-amber-800',
+    dot: 'bg-amber-400',
+  },
+  reunion: { label: 'Reunión', icon: Users, tone: 'bg-sky-50 text-sky-600', dot: 'bg-sky-400' },
 };
+const inputClass =
+  'mt-1.5 h-11 w-full rounded-2xl border border-border-soft bg-surface-subtle px-3 text-sm text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-brand-sky';
 
-function MotionCard({
-  children,
-  className = '',
-  index = 0,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  index?: number;
-}) {
-  return (
-    <motion.div
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      custom={index}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-type FilterKey = 'todas' | 'pendiente' | 'en-progreso' | 'completada';
-
-const MONTHS = [
-  'Enero',
-  'Febrero',
-  'Marzo',
-  'Abril',
-  'Mayo',
-  'Junio',
-  'Julio',
-  'Agosto',
-  'Septiembre',
-  'Octubre',
-  'Noviembre',
-  'Diciembre',
-];
-const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-
-function isSameDay(a: string | null | undefined, b: Date): boolean {
-  if (!a) return false;
-  const d = new Date(a);
-  return (
-    d.getFullYear() === b.getFullYear() &&
-    d.getMonth() === b.getMonth() &&
-    d.getDate() === b.getDate()
-  );
-}
-
-function getDayLabel(date: Date): string {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(date);
-  target.setHours(0, 0, 0, 0);
-  const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  if (diff === 0) return 'Hoy';
-  if (diff === 1) return 'Mañana';
-  if (diff === -1) return 'Ayer';
-  return date.toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'short' });
-}
-
-function tasksOn(date: Date, allTasks: TaskItem[]): number {
-  return allTasks.filter((t) => isSameDay(t.dueDate, date)).length;
-}
-
-const priorityConfig: Record<string, { className: string; dot: string }> = {
-  URGENT: { className: 'bg-state-danger-bg text-state-danger', dot: 'bg-state-warning-dot' },
-  HIGH: { className: 'bg-state-danger-bg text-state-danger', dot: 'bg-state-warning-dot' },
-  MEDIUM: { className: 'bg-state-warning-bg text-state-warning', dot: 'bg-state-warning-dot' },
-  LOW: { className: 'bg-state-success-bg text-state-success', dot: 'bg-state-success-dot' },
-};
-
-const priorityTextColor: Record<string, string> = {
-  URGENT: 'text-state-warning',
-  HIGH: 'text-state-warning',
-  MEDIUM: 'text-state-warning',
-  LOW: 'text-state-success',
-};
-
-const categoryConfig: Record<string, { className: string; label: string }> = {
-  oficina: { className: 'bg-state-success-bg text-state-success', label: 'Oficina' },
-  prestamo: { className: 'bg-state-info-bg text-state-info', label: 'Préstamo' },
-  cobro: { className: 'bg-state-danger-bg text-state-danger', label: 'Cobro' },
-  cliente: { className: 'bg-primary-soft text-primary-accent', label: 'Cliente' },
-  reunion: { className: 'bg-state-info-bg text-state-info', label: 'Reunión' },
-  admin: { className: 'bg-state-neutral-bg text-state-neutral', label: 'Admin' },
-};
-
-function MiniCalendar({
-  selectedDate,
-  onDateChange,
-}: {
-  selectedDate: Date;
-  onDateChange: (d: Date) => void;
-}) {
-  const [viewing, setViewing] = useState(selectedDate);
-  const year = viewing.getFullYear();
-  const month = viewing.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const cells: (number | null)[] = [
-    ...Array(firstDay).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
-  while (cells.length % 7 !== 0) cells.push(null);
-
-  const prevMonth = () => setViewing(new Date(year, month - 1, 1));
-  const nextMonth = () => setViewing(new Date(year, month + 1, 1));
-
-  function isSelected(day: number) {
-    return (
-      day === selectedDate.getDate() &&
-      month === selectedDate.getMonth() &&
-      year === selectedDate.getFullYear()
-    );
-  }
-
-  function isToday(day: number) {
-    const t = new Date();
-    return day === t.getDate() && month === t.getMonth() && year === t.getFullYear();
-  }
-
-  return (
-    <div className="rounded-panel bg-card p-5 shadow-card border border-border-soft">
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm font-semibold text-text-primary">
-          {MONTHS[month]} {year}
-        </span>
-        <div className="flex gap-1">
-          <button
-            onClick={prevMonth}
-            aria-label="Mes anterior"
-            className="flex h-11 w-11 items-center justify-center rounded-control-compact text-text-muted hover:bg-primary-soft hover:text-primary-accent"
-          >
-            <ChevronRight className="h-4 w-4 rotate-180" />
-          </button>
-          <button
-            onClick={nextMonth}
-            aria-label="Mes siguiente"
-            className="flex h-11 w-11 items-center justify-center rounded-control-compact text-text-muted hover:bg-primary-soft hover:text-primary-accent"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-      <div className="grid grid-cols-7 gap-0.5 text-center">
-        {DAYS.map((d) => (
-          <div
-            key={d}
-            className="pb-1 text-xs font-semibold uppercase tracking-wide text-text-subtle"
-          >
-            {d}
-          </div>
-        ))}
-        {cells.map((day, i) => {
-          const sel = day ? isSelected(day) : false;
-          const tod = day ? isToday(day) : false;
-          return (
-            <button
-              key={i}
-              type="button"
-              disabled={!day}
-              onClick={() => day && onDateChange(new Date(year, month, day))}
-              className={`relative flex h-11 w-full items-center justify-center rounded-control-comfortable text-sm transition ${
-                sel
-                  ? 'bg-primary-accent font-bold text-white shadow-card'
-                  : tod
-                    ? 'border border-primary-accent font-bold text-primary-accent'
-                    : day
-                      ? 'text-text-secondary hover:bg-primary-soft'
-                      : ''
-              }`}
-            >
-              {day}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function NewTaskModal({
+function EventEditor({
+  event,
+  date,
   assignees,
   currentUserId,
+  canDelete,
   onClose,
   onSave,
+  onDelete,
 }: {
+  event: TaskItem | null;
+  date: string;
   assignees: UserItem[];
   currentUserId: string;
+  canDelete: boolean;
   onClose: () => void;
-  onSave: (f: {
-    title: string;
-    description: string;
-    time: string;
-    priority: TaskPriority;
-    category: string;
-    assignedToId: string;
-  }) => void;
+  onSave: (values: CreateTaskDto & { status: TaskStatus }) => Promise<void>;
+  onDelete: () => Promise<void>;
 }) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [time, setTime] = useState('');
-  const [priority, setPriority] = useState<TaskPriority>('MEDIUM');
-  const [category, setCategory] = useState('oficina');
-  const [assignedToId, setAssignedToId] = useState(currentUserId);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const shouldReduceMotion = useReducedMotion();
+  const [title, setTitle] = useState(event?.title ?? '');
+  const [description, setDescription] = useState(event?.description ?? '');
+  const [eventDate, setEventDate] = useState(event?.dueDate ? getAgendaDate(event.dueDate) : date);
+  const [time, setTime] = useState(event?.time ?? '');
+  const [category, setCategory] = useState<AgendaEventType>(
+    getAgendaEventType(event?.category ?? 'cobro'),
+  );
+  const [assignedToId, setAssignedToId] = useState(event?.assignedToId ?? currentUserId);
+  const [status, setStatus] = useState<TaskStatus>(event?.status ?? 'PENDING');
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  useEffect(() => {
+    dialogRef.current?.showModal();
+    dialogRef.current?.querySelector<HTMLInputElement>('input')?.focus();
+  }, []);
 
-  const handleSubmit = () => {
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (saving) return;
     if (!title.trim()) {
-      setError('El título es obligatorio.');
+      setError('Escribe el título del evento.');
       return;
     }
-    onSave({
-      title: title.trim(),
-      description: description.trim() || '',
-      time,
-      priority,
-      category,
-      assignedToId,
-    });
-    onClose();
-  };
-
+    setSaving(true);
+    setError('');
+    try {
+      await onSave({
+        title: title.trim(),
+        description: description.trim(),
+        dueDate: `${eventDate}T12:00:00-04:00`,
+        time,
+        category,
+        assignedToId: assignedToId || undefined,
+        status,
+      });
+      onClose();
+    } catch {
+      setError('No se pudo guardar el evento. Inténtalo de nuevo.');
+    } finally {
+      setSaving(false);
+    }
+  }
+  async function remove() {
+    if (saving || !window.confirm('¿Eliminar este evento?')) return;
+    setSaving(true);
+    setError('');
+    try {
+      await onDelete();
+      onClose();
+    } catch {
+      setError('No se pudo eliminar el evento. Inténtalo de nuevo.');
+    } finally {
+      setSaving(false);
+    }
+  }
+  const people = assignees.filter((person) => person.active || person.id === assignedToId);
+  if (assignedToId && !people.some((person) => person.id === assignedToId)) {
+    people.push({
+      id: assignedToId,
+      name: event?.assignedTo?.name ?? 'Yo',
+      active: true,
+    } as UserItem);
+  }
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+    <motion.dialog
+      ref={dialogRef}
+      initial={{ opacity: shouldReduceMotion ? 1 : 0, scale: shouldReduceMotion ? 1 : 0.82 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={
+        shouldReduceMotion
+          ? { duration: 0 }
+          : {
+              scale: { type: 'spring', stiffness: 380, damping: 17, mass: 0.8 },
+              opacity: { duration: 0.14 },
+            }
+      }
+      aria-labelledby="agenda-editor-title"
+      onCancel={(e) => {
+        if (saving) e.preventDefault();
+        else onClose();
+      }}
+      className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-[28px] bg-card p-6 text-text-primary shadow-modal backdrop:bg-black/40 backdrop:transition-opacity backdrop:duration-300 backdrop:starting:opacity-0 backdrop:motion-reduce:transition-none"
     >
-      <div className="w-full max-w-md rounded-panel bg-card shadow-modal border border-border-soft overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border-soft bg-surface-subtle px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-primary-soft">
-              <ListTodo className="h-4 w-4 text-primary-accent" />
-            </div>
-            <p className="text-base font-semibold text-text-primary">Nueva tarea</p>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Cerrar"
-            className="flex h-11 w-11 items-center justify-center rounded-full text-text-subtle transition hover:bg-state-neutral-bg hover:text-text-secondary"
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <h2 id="agenda-editor-title" className="text-xl font-bold">
+          {event ? 'Editar evento' : 'Nuevo evento'}
+        </h2>
+        <button
+          type="button"
+          aria-label="Cerrar"
+          disabled={saving}
+          onClick={onClose}
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-subtle disabled:opacity-50"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <form onSubmit={submit} className="space-y-4">
+        <label className="block text-sm font-semibold">
+          Título
+          <input
+            autoFocus
+            required
+            maxLength={200}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={inputClass}
+            placeholder="Ej.: Visita domiciliaria"
+          />
+        </label>
+        <label className="block text-sm font-semibold">
+          Persona o detalle
+          <input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className={inputClass}
+            placeholder="Nombre o detalles del evento"
+          />
+        </label>
+        <label className="block text-sm font-semibold">
+          Tipo
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value as AgendaEventType)}
+            className={inputClass}
           >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="space-y-4 px-6 py-5">
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
-              Título <span className="text-primary-accent">*</span>
-            </label>
+            {Object.entries(eventTypes).map(([key, type]) => (
+              <option key={key} value={key}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block text-sm font-semibold">
+            Fecha
             <input
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                setError('');
-              }}
-              placeholder="Ej: Llamar a cliente por cuota atrasada"
-              className={`h-11 w-full rounded-control-comfortable border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent ${error ? 'border-red-400' : 'border-primary-border'}`}
-              autoFocus
+              type="date"
+              required
+              value={eventDate}
+              onChange={(e) => setEventDate(e.target.value)}
+              className={inputClass}
             />
-            {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
-              Descripción
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Detalles adicionales..."
-              rows={2}
-              className="w-full rounded-control-comfortable border border-primary-border bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent resize-none"
+          </label>
+          <label className="block text-sm font-semibold">
+            Hora
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className={inputClass}
             />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
-                Hora
-              </label>
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
-                Prioridad
-              </label>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
-              >
-                <option value="LOW">Baja</option>
-                <option value="MEDIUM">Media</option>
-                <option value="HIGH">Alta</option>
-                <option value="URGENT">Urgente</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
-              Categoría
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-[#c2dfcb]/60 focus:border-primary-accent"
-            >
-              {Object.entries(categoryConfig).map(([key, c]) => (
-                <option key={key} value={key}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
-              Responsable
-            </label>
+          </label>
+        </div>
+        {people.length > 1 && (
+          <label className="block text-sm font-semibold">
+            Responsable
             <select
               value={assignedToId}
               onChange={(e) => setAssignedToId(e.target.value)}
-              className="h-11 w-full rounded-control-comfortable border border-primary-border bg-card px-4 text-sm outline-none focus:border-primary-accent focus:ring-2 focus:ring-[#c2dfcb]/60"
+              className={inputClass}
             >
-              {assignees
-                .filter((assignee) => assignee.active)
-                .map((assignee) => (
-                  <option key={assignee.id} value={assignee.id}>
-                    {assignee.id === currentUserId ? `${assignee.name} (Yo)` : assignee.name}
-                  </option>
-                ))}
+              {people.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.name}
+                </option>
+              ))}
             </select>
-          </div>
-        </div>
-        <div className="flex items-center justify-end gap-2 border-t border-border-soft bg-surface-subtle px-6 py-4">
+          </label>
+        )}
+        {event && (
+          <label className="block text-sm font-semibold">
+            Estado
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as TaskStatus)}
+              className={inputClass}
+            >
+              <option value="PENDING">Pendiente</option>
+              <option value="IN_PROGRESS">En progreso</option>
+              <option value="COMPLETED">Completado</option>
+            </select>
+          </label>
+        )}
+        {error && (
+          <p role="alert" className="text-sm text-state-danger">
+            {error}
+          </p>
+        )}
+        <div className="flex flex-wrap justify-end gap-2 pt-2">
+          {event && canDelete && (
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => void remove()}
+              className="mr-auto h-11 px-2 text-sm font-semibold text-state-danger disabled:opacity-50"
+            >
+              Eliminar
+            </button>
+          )}
           <button
+            type="button"
+            disabled={saving}
             onClick={onClose}
-            className="h-10 rounded-control-comfortable border border-primary-border bg-card px-5 text-sm font-semibold text-text-secondary hover:bg-surface-subtle"
+            className="h-11 rounded-full bg-surface-subtle px-4 text-sm font-semibold disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
-            onClick={handleSubmit}
-            className="h-10 rounded-control-comfortable bg-primary-accent px-5 text-sm font-semibold text-white shadow-card hover:bg-primary"
+            type="submit"
+            disabled={saving}
+            className="h-11 rounded-full bg-brand-sky px-5 text-sm font-semibold text-white disabled:opacity-50"
           >
-            Crear tarea
+            {saving ? 'Guardando...' : 'Guardar evento'}
           </button>
         </div>
-      </div>
-    </div>
+      </form>
+    </motion.dialog>
   );
 }
 
 export default function AgendaPage() {
   const { user } = useAuth();
-  const [tasks, setTasks] = useState<TaskItem[]>([]);
-  const [filter, setFilter] = useState<FilterKey>('todas');
-  const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [priorities, setPriorities] = useState<CollectionPriority[]>([]);
-  const [contactClient, setContactClient] = useState<CollectionPriority | null>(null);
+  const [events, setEvents] = useState<TaskItem[]>([]);
+  const [selectedDate, setSelectedDate] = useState(getAgendaDate);
+  const [viewingMonth, setViewingMonth] = useState(() => getAgendaDate().slice(0, 7));
+  const [editor, setEditor] = useState<TaskItem | null | undefined>(undefined);
   const [assignees, setAssignees] = useState<UserItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      setEvents(await getTasks());
+    } catch {
+      setError('No se pudo cargar la agenda.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  useEffect(() => {
+    let active = true;
+    queueMicrotask(() => {
+      if (active) void load();
+    });
+    return () => {
+      active = false;
+    };
+  }, [load]);
+  useEffect(() => {
+    if (user?.role !== 'ADMIN') return;
+    let active = true;
+    getUsers()
+      .then((people) => {
+        if (active) setAssignees(people);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [user?.role]);
 
-  const today = selectedDate;
-  const dateStr = today.toLocaleDateString('es-DO', {
-    weekday: 'long',
-    day: 'numeric',
+  const cells = buildAgendaMonth(`${viewingMonth}-01`);
+  const selectedEvents = getAgendaDayEvents(events, selectedDate);
+  const today = getAgendaDate();
+  const monthLabel = new Date(`${viewingMonth}-01T12:00:00Z`).toLocaleDateString('es-DO', {
     month: 'long',
     year: 'numeric',
+    timeZone: 'UTC',
   });
-  const tasksForDate = tasks.filter((t) => isSameDay(t.dueDate, selectedDate));
-
-  const load = useCallback(() => {
-    getTasks()
-      .then(setTasks)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    load();
-    getCollectionPriorities()
-      .then(setPriorities)
-      .catch(() => {});
-    getUsers()
-      .then(setAssignees)
-      .catch(() => {});
-  }, [load]);
-
-  const addTask = async (form: {
-    title: string;
-    description: string;
-    time: string;
-    priority: TaskPriority;
-    category: string;
-    assignedToId: string;
-  }) => {
-    await createTask({
-      title: form.title,
-      description: form.description || undefined,
-      dueDate: selectedDate.toISOString(),
-      time: form.time || undefined,
-      priority: form.priority,
-      category: form.category,
-      assignedToId: form.assignedToId,
-    });
-    load();
-  };
-
-  const toggleTask = async (id: string) => {
-    const task = tasks.find((t) => t.id === id);
-    if (!task) return;
-    const nextStatus: TaskStatus = task.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
-    await updateTask(id, { status: nextStatus });
-    load();
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar esta tarea?')) return;
-    await deleteTask(id);
-    load();
-  };
-
-  const visibleTasks =
-    filter === 'todas'
-      ? tasksForDate
-      : tasksForDate.filter((t) => t.status.toLowerCase().replace(/_/g, '-') === filter);
-
-  const doneCount = tasksForDate.filter((t) => t.status === 'COMPLETED').length;
-  const pendientes = tasksForDate.filter((t) => t.status === 'PENDING');
-  const clientFollowUps = pendientes.filter((task) => task.category === 'cliente' && task.client);
-  const appointments = tasksForDate
-    .filter((t) => t.time)
-    .sort((a, b) => {
-      if (a.time && b.time) return a.time.localeCompare(b.time);
-      return 0;
-    });
-
-  const untimed = tasksForDate.filter((t) => !t.time);
-  const nextDays = [0, 1, 2].map((n) => {
-    const d = new Date(selectedDate);
-    d.setDate(d.getDate() + n);
-    return { date: d, count: tasksOn(d, tasks) };
-  });
-
-  const filterLabels: Record<FilterKey, string> = {
-    todas: 'Todas',
-    pendiente: 'Pendientes',
-    'en-progreso': 'En progreso',
-    completada: 'Completadas',
-  };
-
+  const dayLabel =
+    selectedDate === today
+      ? 'Hoy'
+      : new Date(`${selectedDate}T12:00:00-04:00`).toLocaleDateString('es-DO', {
+          day: 'numeric',
+          month: 'long',
+          timeZone: 'America/Santo_Domingo',
+        });
+  function changeMonth(offset: number) {
+    const date = new Date(`${viewingMonth}-01T12:00:00Z`);
+    date.setUTCMonth(date.getUTCMonth() + offset);
+    const next = date.toISOString().slice(0, 7);
+    setViewingMonth(next);
+    setSelectedDate(next === today.slice(0, 7) ? today : `${next}-01`);
+  }
+  async function save(values: CreateTaskDto & { status: TaskStatus }) {
+    const { status, ...createValues } = values;
+    const saved = editor
+      ? await updateTask(editor.id, {
+          ...createValues,
+          status,
+          assignedToId:
+            createValues.assignedToId === editor.assignedToId
+              ? undefined
+              : createValues.assignedToId,
+          category:
+            createValues.category === getAgendaEventType(editor.category)
+              ? editor.category
+              : createValues.category,
+        })
+      : await createTask(createValues);
+    setEvents((current) =>
+      editor
+        ? current.map((event) => (event.id === saved.id ? saved : event))
+        : [...current, saved],
+    );
+    const date = getAgendaDate(saved.dueDate!);
+    setSelectedDate(date);
+    setViewingMonth(date.slice(0, 7));
+  }
+  async function remove() {
+    if (!editor) return;
+    await deleteTask(editor.id);
+    setEvents((current) => current.filter((event) => event.id !== editor.id));
+  }
   return (
-    <div className="min-h-screen bg-page">
-      <div className="px-4 py-8 sm:px-6">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-primary-accent">
-              Panel de trabajo
-            </p>
-            <h1 className="text-3xl font-bold tracking-tight text-text-primary">Agenda</h1>
-            <p className="mt-1 text-sm capitalize text-text-muted">{dateStr}</p>
-          </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="h-11 rounded-full bg-primary-accent px-6 text-white shadow-card hover:bg-primary inline-flex items-center"
-          >
-            <Plus className="mr-1.5 h-4 w-4" />
-            Nueva tarea
-          </button>
-          {showModal && user ? (
-            <NewTaskModal
-              assignees={
-                assignees.some((assignee) => assignee.id === user.id)
-                  ? assignees
-                  : [
-                      {
-                        id: user.id,
-                        name: user.name,
-                        username: user.username,
-                        email: user.email,
-                        role: user.role,
-                        active: true,
-                        createdAt: '',
-                      },
-                      ...assignees,
-                    ]
-              }
-              currentUserId={user.id}
-              onClose={() => setShowModal(false)}
-              onSave={addTask}
-            />
-          ) : null}
+    <div className="min-h-screen bg-page p-4 text-text-primary sm:p-6">
+      <header className="mb-6 flex animate-[fade-in-up_0.45s_ease-out_both] flex-wrap items-end justify-between gap-4 motion-reduce:animate-none">
+        <div>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-sky">
+            General
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Agenda</h1>
+          <p className="mt-1 text-sm text-text-secondary">
+            Cobros, visitas y llamadas programadas.
+          </p>
         </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr_300px]">
-          <aside className="space-y-5">
-            <MotionCard index={0}>
-              <MiniCalendar selectedDate={selectedDate} onDateChange={setSelectedDate} />
-            </MotionCard>
-            <MotionCard
-              index={1}
-              className="rounded-panel bg-card p-5 shadow-card border border-border-soft space-y-3"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-                Resumen de hoy
-              </p>
-              {[
-                {
-                  label: 'Tareas completadas',
-                  value: `${doneCount}/${tasksForDate.length}`,
-                  className: 'bg-state-success-bg',
-                  valueClass: 'text-state-success',
-                },
-                {
-                  label: 'Pendientes',
-                  value: String(pendientes.length),
-                  className: 'bg-state-warning-bg',
-                  valueClass: 'text-state-warning',
-                },
-                {
-                  label: 'Citas del día',
-                  value: String(appointments.length),
-                  className: 'bg-state-info-bg',
-                  valueClass: 'text-state-info',
-                },
-              ].map((s) => (
-                <div
-                  key={s.label}
-                  className={`flex items-center justify-between rounded-control-comfortable px-3 py-2 ${s.className}`}
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => setEditor(null)}
+          className="flex h-11 items-center gap-2 rounded-full bg-brand-sky px-5 text-sm font-semibold text-white transition hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky focus-visible:ring-offset-2 disabled:opacity-50"
+        >
+          <Plus className="h-4 w-4" />
+          Nuevo evento
+        </button>
+      </header>
+      <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <section
+          aria-label="Calendario mensual"
+          className="min-w-0 animate-[fade-in-up_0.45s_ease-out_both] rounded-[32px] bg-card p-4 shadow-card [animation-delay:70ms] motion-reduce:animate-none sm:p-6"
+        >
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <h2 className="text-xl font-bold capitalize">{monthLabel.replace(' de ', ' ')}</h2>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                aria-label="Mes anterior"
+                onClick={() => changeMonth(-1)}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-subtle transition hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-brand-sky"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                aria-label="Mes siguiente"
+                onClick={() => changeMonth(1)}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-subtle transition hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-brand-sky"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          <div className="mb-3 grid grid-cols-7 text-center text-[10px] font-bold uppercase text-text-secondary sm:text-xs">
+            {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day) => (
+              <span key={day}>{day}</span>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+            {cells.map((date, index) => {
+              if (!date) return <div aria-hidden="true" key={`blank-${index}`} />;
+              const dayEvents = getAgendaDayEvents(events, date);
+              const types = [
+                ...new Set(dayEvents.map((event) => getAgendaEventType(event.category))),
+              ];
+              return (
+                <button
+                  key={date}
+                  type="button"
+                  aria-pressed={selectedDate === date}
+                  aria-current={date === today ? 'date' : undefined}
+                  aria-label={`${new Date(`${date}T12:00:00Z`).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}, ${dayEvents.length} eventos`}
+                  onClick={() => setSelectedDate(date)}
+                  className={cn(
+                    'relative flex min-h-[64px] flex-col items-start rounded-2xl p-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky sm:min-h-[110px] sm:rounded-[24px] sm:p-3 sm:text-sm',
+                    selectedDate === date
+                      ? 'bg-[#ffd83d] text-[#25251e]'
+                      : 'bg-surface-subtle hover:bg-primary-soft',
+                  )}
                 >
-                  <span className="text-xs font-medium text-text-secondary">{s.label}</span>
-                  <span className={`text-sm font-bold ${s.valueClass}`}>{s.value}</span>
-                </div>
-              ))}
-            </MotionCard>
-            <MotionCard
-              index={2}
-              className="rounded-panel bg-card p-5 shadow-card border border-border-soft"
-            >
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
-                Próximos días
-              </p>
-              <div className="space-y-2">
-                {nextDays.map(({ date, count }) => (
-                  <button
-                    key={date.toISOString()}
-                    onClick={() => setSelectedDate(date)}
-                    className={`flex w-full items-center justify-between rounded-control-comfortable px-3 py-2.5 transition ${
-                      date.toDateString() === selectedDate.toDateString()
-                        ? 'bg-primary-soft text-primary-accent'
-                        : 'hover:bg-surface-subtle text-text-secondary'
-                    }`}
+                  <span>{Number(date.slice(-2))}</span>
+                  <span
+                    aria-hidden="true"
+                    className="mt-auto flex w-full justify-center gap-1 pb-0.5"
                   >
-                    <span className="text-sm font-medium capitalize">{getDayLabel(date)}</span>
+                    {types.map((type) => (
+                      <span
+                        key={type}
+                        className={cn('h-1.5 w-1.5 rounded-full', eventTypes[type].dot)}
+                      />
+                    ))}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-text-secondary">
+            {Object.entries(eventTypes).map(([key, type]) => (
+              <span key={key} className="flex items-center gap-1.5">
+                <span className={cn('h-2 w-2 rounded-full', type.dot)} />
+                {type.label}
+              </span>
+            ))}
+          </div>
+        </section>
+        <section
+          aria-labelledby="agenda-day-title"
+          className="min-w-0 animate-[fade-in-up_0.45s_ease-out_both] rounded-[32px] bg-card p-5 shadow-card [animation-delay:140ms] motion-reduce:animate-none sm:p-6"
+        >
+          <h2 id="agenda-day-title" className="text-xl font-bold">
+            {dayLabel}
+          </h2>
+          <p className="mt-1 text-xs text-text-secondary" aria-live="polite">
+            {selectedEvents.length} evento(s) programado(s)
+          </p>
+          <div className="mt-5 space-y-3">
+            {loading ? (
+              <p role="status" className="py-8 text-center text-sm text-text-secondary">
+                Cargando agenda...
+              </p>
+            ) : error ? (
+              <div role="alert" className="py-6 text-center text-sm text-state-danger">
+                <p>{error}</p>
+                <button
+                  type="button"
+                  onClick={() => void load()}
+                  className="mt-3 h-11 rounded-full bg-surface-subtle px-4 font-semibold text-text-primary"
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : selectedEvents.length === 0 ? (
+              <p className="py-8 text-center text-sm text-text-secondary">Día libre, sin eventos</p>
+            ) : (
+              selectedEvents.map((event) => {
+                const type = eventTypes[getAgendaEventType(event.category)];
+                const Icon = type.icon;
+                const person = event.client
+                  ? `${event.client.firstName} ${event.client.lastName}`
+                  : event.description;
+                return (
+                  <button
+                    type="button"
+                    key={event.id}
+                    onClick={() => setEditor(event)}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-[24px] border border-border-soft p-4 text-left transition hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky',
+                      event.status === 'COMPLETED' && 'opacity-60',
+                    )}
+                  >
                     <span
-                      className={`text-xs font-bold ${count > 0 ? 'bg-primary-accent text-white' : 'bg-state-neutral-bg text-text-subtle'} rounded-full px-2 py-0.5 min-w-[24px] text-center`}
+                      className={cn(
+                        'flex h-11 w-11 shrink-0 items-center justify-center rounded-full',
+                        type.tone,
+                      )}
                     >
-                      {count}
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={cn(
+                          'block text-sm font-bold',
+                          event.status === 'COMPLETED' && 'line-through',
+                        )}
+                      >
+                        {event.title}
+                      </span>
+                      {person && (
+                        <span className="mt-0.5 block truncate text-xs text-text-secondary">
+                          {person}
+                        </span>
+                      )}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1 text-[11px] text-text-secondary">
+                      <Clock className="h-3.5 w-3.5" />
+                      {event.time || 'Sin hora'}
                     </span>
                   </button>
-                ))}
-              </div>
-            </MotionCard>
-          </aside>
-
-          <main className="space-y-5">
-            <MotionCard
-              index={3}
-              className="rounded-panel bg-card p-5 shadow-card border border-border-soft"
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ListTodo className="h-5 w-5 text-primary-accent" />
-                  <span className="text-base font-semibold text-text-primary">Tareas del día</span>
-                </div>
-                <span className="text-sm font-bold text-primary-accent">
-                  {doneCount}/{tasksForDate.length}
-                </span>
-              </div>
-              {tasksForDate.length > 0 && (
-                <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-page">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-primary-accent to-primary-accent transition-all duration-500"
-                    style={{ width: `${(doneCount / tasksForDate.length) * 100}%` }}
-                  />
-                </div>
-              )}
-              <div className="flex flex-wrap gap-2">
-                {(Object.keys(filterLabels) as FilterKey[]).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={`min-h-11 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                      filter === f
-                        ? 'bg-primary-hover text-white shadow-card'
-                        : 'bg-primary-soft text-primary-accent hover:bg-primary-soft'
-                    }`}
-                  >
-                    {filterLabels[f]}
-                  </button>
-                ))}
-              </div>
-            </MotionCard>
-
-            <MotionCard
-              index={4}
-              className="overflow-hidden rounded-panel bg-card shadow-card border border-border-soft divide-y divide-border-soft"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center py-20">
-                  <p className="text-sm text-text-subtle">Cargando...</p>
-                </div>
-              ) : visibleTasks.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 py-12 text-center">
-                  <CircleCheck className="h-10 w-10 text-primary-border" />
-                  <p className="text-sm font-semibold text-text-secondary">¡Todo al día!</p>
-                  <p className="text-xs text-text-subtle">No hay tareas en esta categoría.</p>
-                </div>
-              ) : (
-                visibleTasks.map((task) => {
-                  const pri = priorityConfig[task.priority] ?? priorityConfig.MEDIUM;
-                  const cat = categoryConfig[task.category] ?? categoryConfig.oficina;
-                  const done = task.status === 'COMPLETED';
-
-                  return (
-                    <div
-                      key={task.id}
-                      className={`group flex items-start gap-3 rounded-control-comfortable px-4 py-3 transition hover:bg-primary-soft/50 ${done ? 'opacity-60' : ''}`}
-                    >
-                      <button
-                        onClick={() => toggleTask(task.id)}
-                        aria-label={
-                          done ? `Marcar ${task.title} como pendiente` : `Completar ${task.title}`
-                        }
-                        className="flex h-11 w-11 shrink-0 items-center justify-center transition"
-                      >
-                        {done ? (
-                          <CircleCheck className="h-5 w-5 text-primary-accent" />
-                        ) : (
-                          <Circle className="h-5 w-5 text-neutral-300 group-hover:text-primary-accent" />
-                        )}
-                      </button>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {task.loanId ? (
-                            <Link
-                              className={`max-w-[350px] truncate text-sm font-medium hover:text-primary-accent ${done ? 'line-through text-text-subtle' : 'text-text-primary'}`}
-                              href={`/prestamos/${task.loanId}`}
-                            >
-                              {task.title}
-                            </Link>
-                          ) : (
-                            <p
-                              className={`max-w-[350px] truncate text-sm font-medium ${done ? 'line-through text-text-subtle' : 'text-text-primary'}`}
-                            >
-                              {task.title}
-                            </p>
-                          )}
-                          {task.time && (
-                            <span className="inline-flex items-center gap-0.5 rounded-full bg-page px-2 py-0.5 text-xs font-semibold text-text-muted">
-                              <Clock className="h-3 w-3" />
-                              {task.time}
-                            </span>
-                          )}
-                          {task.assignedToId !== user?.id && task.assignedTo ? (
-                            <span className="rounded-full bg-state-info-bg px-2 py-0.5 text-xs font-semibold text-state-info">
-                              Para {task.assignedTo.name}
-                            </span>
-                          ) : null}
-                        </div>
-                        {task.description && (
-                          <p className="mt-0.5 text-xs text-text-muted line-clamp-1">
-                            {task.description}
-                          </p>
-                        )}
-                        <div className="mt-1.5 flex flex-wrap gap-1.5">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${cat.className}`}
-                          >
-                            {cat.label}
-                          </span>
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${pri.className}`}
-                          >
-                            <span className={`h-1.5 w-1.5 rounded-full ${pri.dot}`} />
-                            {task.priority === 'URGENT'
-                              ? 'Urgente'
-                              : task.priority === 'HIGH'
-                                ? 'Alta'
-                                : task.priority === 'MEDIUM'
-                                  ? 'Media'
-                                  : 'Baja'}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleDelete(task.id)}
-                        className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5"
-                      >
-                        <X className="h-4 w-4 text-neutral-300 hover:text-red-500" />
-                      </button>
-                    </div>
-                  );
-                })
-              )}
-            </MotionCard>
-
-            <MotionCard
-              index={5}
-              className="rounded-panel bg-card shadow-card border border-border-soft overflow-hidden"
-            >
-              <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-state-warning-bg">
-                  <PhoneCall className="h-4 w-4 text-state-warning" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-text-primary">
-                    Seguimientos de clientes
-                  </p>
-                  <p className="text-xs text-text-muted">Contactos programados para este día</p>
-                </div>
-              </div>
-              <div className="divide-y divide-border-soft">
-                {clientFollowUps.length === 0 ? (
-                  <div className="px-5 py-8 text-center text-xs text-text-subtle">
-                    Sin seguimientos de clientes
-                  </div>
-                ) : (
-                  clientFollowUps.slice(0, 5).map((t) => {
-                    const clientName = `${t.client!.firstName} ${t.client!.lastName}`;
-                    const initial = t.client!.firstName.charAt(0).toUpperCase();
-                    return (
-                      <div
-                        key={t.id}
-                        className="flex items-start gap-4 px-5 py-4 hover:bg-primary-soft/30 transition"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-accent text-sm font-bold text-white border-2 border-card shadow-card">
-                          {initial}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <Link
-                              className="truncate text-sm font-semibold text-text-primary hover:text-primary-accent"
-                              href={`/clientes/${t.clientId}`}
-                            >
-                              {clientName}
-                            </Link>
-                          </div>
-                          <p className="mt-0.5 text-xs text-text-muted">
-                            {t.description?.slice(0, 60) ?? 'Sin detalles'}
-                          </p>
-                          {t.time && (
-                            <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-state-warning-bg px-2.5 py-0.5 text-xs font-semibold text-state-warning">
-                              <Clock className="h-3 w-3" />
-                              {t.time}
-                            </div>
-                          )}
-                          {t.client!.phone ? (
-                            <a
-                              className="ml-2 inline-flex h-8 items-center gap-1 rounded-full border border-primary-border px-3 text-xs font-bold text-primary-accent"
-                              href={`tel:${t.client!.phone}`}
-                            >
-                              <PhoneCall className="h-3 w-3" /> {t.client!.phone}
-                            </a>
-                          ) : null}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </MotionCard>
-          </main>
-
-          <aside className="space-y-5">
-            <MotionCard
-              index={6}
-              className="rounded-panel bg-card shadow-card border border-border-soft overflow-hidden"
-            >
-              <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-state-danger-bg">
-                  <PhoneCall className="h-4 w-4 text-state-danger" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-text-primary">Contactos recomendados</p>
-                  <p className="text-xs text-text-muted">Ordenados por urgencia de cobro</p>
-                </div>
-              </div>
-              <div className="divide-y divide-border-soft">
-                {priorities.length === 0 ? (
-                  <div className="px-5 py-8 text-center text-xs text-text-subtle">
-                    No hay contactos urgentes
-                  </div>
-                ) : (
-                  priorities.map((item) => (
-                    <div className="px-5 py-4" key={item.loanId}>
-                      <div className="flex items-start justify-between gap-2">
-                        <Link
-                          className="text-sm font-bold text-text-primary hover:text-primary-accent"
-                          href={`/clientes/${item.clientId}`}
-                        >
-                          {item.clientName}
-                        </Link>
-                        <span className="rounded-full bg-state-danger-bg px-2 py-0.5 text-[10px] font-bold text-state-danger">
-                          {item.daysOverdue}d
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs font-semibold text-state-danger">
-                        {item.suggestedAction}
-                      </p>
-                      <p className="mt-1 text-xs text-text-muted">
-                        {item.lastContactAt
-                          ? `Último contacto: ${new Date(item.lastContactAt).toLocaleDateString('es-DO')}`
-                          : 'Sin contactos registrados'}
-                      </p>
-                      <div className="mt-3 flex items-center gap-2">
-                        {item.phone ? (
-                          <>
-                            <a
-                              aria-label={`Llamar a ${item.clientName}`}
-                              className="flex h-11 w-11 items-center justify-center rounded-full border border-primary-border text-primary-accent hover:bg-primary-soft"
-                              href={`tel:${item.phone}`}
-                            >
-                              <PhoneCall className="h-3.5 w-3.5" />
-                            </a>
-                            <a
-                              aria-label={`WhatsApp de ${item.clientName}`}
-                              className="flex h-11 w-11 items-center justify-center rounded-full border border-primary-border text-primary-accent hover:bg-primary-soft"
-                              href={`https://wa.me/${item.phone.replace(/\D/g, '')}`}
-                              rel="noreferrer"
-                              target="_blank"
-                            >
-                              <MessageCircle className="h-3.5 w-3.5" />
-                            </a>
-                          </>
-                        ) : null}
-                        <button
-                          className="ml-auto h-11 rounded-full bg-primary-accent px-4 text-xs font-bold text-white hover:bg-primary"
-                          onClick={() => setContactClient(item)}
-                          type="button"
-                        >
-                          Registrar
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </MotionCard>
-            <MotionCard
-              index={7}
-              className="rounded-panel bg-card shadow-card border border-border-soft overflow-hidden"
-            >
-              <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-state-info-bg">
-                  <CalendarDays className="h-4 w-4 text-state-info" />
-                </div>
-                <p className="text-sm font-semibold text-text-primary">Citas de hoy</p>
-              </div>
-              <div className="relative px-5 py-4">
-                <div className="absolute left-[2.35rem] top-0 bottom-0 w-px bg-state-neutral-bg" />
-                <div className="space-y-4">
-                  {appointments.length === 0 ? (
-                    <p className="text-xs text-text-subtle text-center py-4">
-                      Sin citas agendadas hoy
-                    </p>
-                  ) : (
-                    appointments.map((a) => (
-                      <div
-                        key={a.id}
-                        className={`relative flex items-start gap-3 ${a.status === 'COMPLETED' ? 'opacity-50' : ''}`}
-                      >
-                        <div
-                          className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-card shadow-sm ${
-                            a.status === 'COMPLETED'
-                              ? 'bg-state-success-bg text-state-success'
-                              : 'bg-state-info-bg text-state-info'
-                          }`}
-                        >
-                          <Clock className="h-3.5 w-3.5" />
-                        </div>
-                        <div className="min-w-0 flex-1 pb-1">
-                          <div className="flex items-center gap-2">
-                            <span className="rounded-full bg-page px-2 py-0.5 text-xs font-bold text-text-secondary">
-                              {a.time}
-                            </span>
-                            {a.status === 'COMPLETED' && (
-                              <span className="text-xs font-semibold text-primary-accent">
-                                ✓ Hecho
-                              </span>
-                            )}
-                          </div>
-                          <p
-                            className={`mt-0.5 text-xs font-semibold ${a.status === 'COMPLETED' ? 'line-through text-text-subtle' : 'text-text-primary'}`}
-                          >
-                            {a.title}
-                          </p>
-                          <div className="mt-1 flex items-center gap-1.5">
-                            <span className="text-xs text-text-muted">
-                              {categoryConfig[a.category]?.label ?? a.category}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </MotionCard>
-            <MotionCard
-              index={7}
-              className="rounded-panel bg-card shadow-card border border-border-soft overflow-hidden"
-            >
-              <div className="flex items-center gap-3 border-b border-border-soft bg-surface-subtle px-5 py-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-control-comfortable bg-page">
-                  <ListTodo className="h-4 w-4 text-text-muted" />
-                </div>
-                <p className="text-sm font-semibold text-text-primary">Otras tareas del día</p>
-              </div>
-              <div className="divide-y divide-border-soft">
-                {untimed.length === 0 ? (
-                  <div className="px-5 py-8 text-center text-xs text-text-subtle">
-                    Todas las tareas tienen horario
-                  </div>
-                ) : (
-                  untimed.map((t) => (
-                    <div
-                      key={t.id}
-                      className="flex items-start gap-3 px-5 py-3 hover:bg-surface-subtle transition"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-text-primary">{t.title}</p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <span className="text-xs font-medium text-text-muted">
-                            {categoryConfig[t.category]?.label ?? t.category}
-                          </span>
-                          <span
-                            className={`text-xs font-semibold ${priorityTextColor[t.priority] ?? 'text-text-muted'}`}
-                          >
-                            ·{' '}
-                            {t.priority === 'URGENT'
-                              ? 'Urgente'
-                              : t.priority === 'HIGH'
-                                ? 'Alta'
-                                : t.priority === 'MEDIUM'
-                                  ? 'Media'
-                                  : 'Baja'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </MotionCard>
-          </aside>
-        </div>
+                );
+              })
+            )}
+          </div>
+        </section>
       </div>
-      {contactClient ? (
-        <InteractionModal
-          clientId={contactClient.clientId}
-          clientName={contactClient.clientName}
-          phone={contactClient.phone}
-          onClose={() => setContactClient(null)}
-          onSaved={() => {
-            getCollectionPriorities()
-              .then(setPriorities)
-              .catch(() => {});
-            load();
-          }}
+      {editor !== undefined && (
+        <EventEditor
+          event={editor}
+          date={selectedDate}
+          assignees={assignees}
+          currentUserId={user?.id ?? ''}
+          canDelete={user?.role === 'ADMIN'}
+          onClose={() => setEditor(undefined)}
+          onSave={save}
+          onDelete={remove}
         />
-      ) : null}
+      )}
     </div>
   );
 }

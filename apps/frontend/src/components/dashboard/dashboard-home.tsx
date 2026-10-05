@@ -141,9 +141,24 @@ function recentLoanNextPayment(loan: LoanListItem) {
 }
 
 const quickLinks = [
-  { label: 'Registrar pago', href: '/prestamos/cobrar', icon: Banknote, color: 'bg-primary text-white' },
-  { label: 'Nuevo cliente', href: '/clientes/nuevo', icon: UserRoundPlus, color: 'bg-red-500 text-white' },
-  { label: 'Solicitudes', href: '/solicitudes', icon: ClipboardList, color: 'bg-highlight text-text-primary' },
+  {
+    label: 'Registrar pago',
+    href: '/prestamos/cobrar',
+    icon: Banknote,
+    color: 'bg-primary text-white',
+  },
+  {
+    label: 'Nuevo cliente',
+    href: '/clientes/nuevo',
+    icon: UserRoundPlus,
+    color: 'bg-red-500 text-white',
+  },
+  {
+    label: 'Solicitudes',
+    href: '/solicitudes',
+    icon: ClipboardList,
+    color: 'bg-highlight text-text-primary',
+  },
   { label: 'Recibos', href: '/recibos', icon: ReceiptText, color: 'bg-pink-400 text-text-primary' },
   { label: 'Caja', href: '/caja', icon: Wallet, color: 'bg-teal-300 text-text-primary' },
   { label: 'Simulador', href: '/simulador', icon: Landmark, color: 'bg-primary text-white' },
@@ -152,13 +167,27 @@ const quickLinks = [
 const optionalQuickLinks = [
   { label: 'Clientes', href: '/clientes', icon: ContactRound, color: 'bg-primary text-white' },
   { label: 'Agenda', href: '/agenda', icon: CalendarDays, color: 'bg-highlight text-text-primary' },
-  { label: 'Carteras', href: '/carteras', icon: FolderOpen, color: 'bg-teal-300 text-text-primary' },
+  {
+    label: 'Carteras',
+    href: '/carteras',
+    icon: FolderOpen,
+    color: 'bg-teal-300 text-text-primary',
+  },
 ];
 
-function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+function Panel({
+  children,
+  className = '',
+  delay = 300,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) {
   return (
     <section
-      className={`rounded-2xl bg-card shadow-card ${className}`}
+      className={`animate-[fade-in-up_0.45s_ease-out_both] rounded-2xl bg-card shadow-card motion-reduce:animate-none ${className}`}
+      style={{ animationDelay: `${delay}ms` }}
     >
       {children}
     </section>
@@ -317,9 +346,7 @@ export function DashboardHome() {
       icon: CalendarClock,
       color: '#ffd23d',
       iconTone: 'bg-amber-100 text-amber-600',
-      percent: upcoming.length
-        ? (installmentsDueToday / upcoming.length) * 100
-        : 0,
+      percent: upcoming.length ? (installmentsDueToday / upcoming.length) * 100 : 0,
     },
     {
       label: 'Total vencido',
@@ -354,7 +381,7 @@ export function DashboardHome() {
           </Link>
           <Link
             href="/prestamos/nuevo"
-              className="flex h-11 items-center gap-2 rounded-xl bg-brand-sky px-5 text-sm font-bold text-white shadow-action hover:bg-primary"
+            className="flex h-11 items-center gap-2 rounded-xl bg-brand-sky px-5 text-sm font-bold text-white shadow-action hover:bg-primary"
           >
             <Plus className="h-4 w-4" />
             Nuevo préstamo
@@ -363,10 +390,11 @@ export function DashboardHome() {
       </div>
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {metrics.map((metric) => (
+        {metrics.map((metric, index) => (
           <div
             key={metric.label}
-            className={`relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-2xl p-5 shadow-card ${metric.blue ? 'bg-highlight text-text-primary' : 'bg-card transition-shadow hover:shadow-md'}`}
+            style={{ animationDelay: `${index * 70}ms` }}
+            className={`animate-[fade-in-up_0.45s_ease-out_both] motion-reduce:animate-none motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-in-out motion-safe:hover:-translate-y-0.5 relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-2xl p-5 shadow-card ${metric.blue ? 'bg-highlight text-text-primary' : 'bg-card'}`}
           >
             {metric.blue && (
               <>
@@ -383,11 +411,7 @@ export function DashboardHome() {
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">{metric.label}</p>
                 <p className="mt-0.5 truncate text-lg font-bold tabular-nums">{metric.value}</p>
-                <p
-                  className="truncate text-xs text-text-secondary"
-                >
-                  {metric.detail}
-                </p>
+                <p className="truncate text-xs text-text-secondary">{metric.detail}</p>
               </div>
               <CircleProgress value={metric.percent} color={metric.color} />
             </div>
@@ -550,7 +574,7 @@ export function DashboardHome() {
                 </ResponsiveContainer>
               </div>
             </Panel>
-            <Panel className="p-6">
+            <Panel className="p-6" delay={370}>
               <Heading title="Estado de cartera" subtitle="Distribución por estatus" />
               <div className="relative my-4 h-[200px] w-full">
                 <ResponsiveContainer
@@ -578,7 +602,9 @@ export function DashboardHome() {
                 </ResponsiveContainer>
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-xs font-semibold text-text-secondary">Total</span>
-                  <strong className="text-3xl font-extrabold text-text-primary">{totalLoans}</strong>
+                  <strong className="text-3xl font-extrabold text-text-primary">
+                    {totalLoans}
+                  </strong>
                 </div>
               </div>
               <div className="space-y-2">
@@ -609,7 +635,7 @@ export function DashboardHome() {
                 Ver todos
               </Link>
             </div>
-            <Panel className="overflow-x-auto">
+            <Panel className="overflow-x-auto" delay={440}>
               <table className="w-full min-w-[690px] table-fixed text-left text-sm">
                 <colgroup>
                   <col className="w-[31%]" />
@@ -654,11 +680,18 @@ export function DashboardHome() {
                         <div className="flex items-center gap-3">
                           <span
                             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft bg-cover bg-center text-xs font-bold text-primary"
-                            style={recentClientPhotos[loan.clientId] ? { backgroundImage: `url(${recentClientPhotos[loan.clientId]})` } : undefined}
+                            style={
+                              recentClientPhotos[loan.clientId]
+                                ? { backgroundImage: `url(${recentClientPhotos[loan.clientId]})` }
+                                : undefined
+                            }
                             aria-hidden="true"
                           >
                             {!recentClientPhotos[loan.clientId] && (
-                              <>{loan.client.firstName.charAt(0)}{loan.client.lastName.charAt(0)}</>
+                              <>
+                                {loan.client.firstName.charAt(0)}
+                                {loan.client.lastName.charAt(0)}
+                              </>
                             )}
                           </span>
                           <div>
@@ -674,9 +707,19 @@ export function DashboardHome() {
                           </div>
                         </div>
                       </td>
-                      <td className={`px-3 py-3 ${loan.id === highlightedRecentLoanId ? 'text-primary' : 'text-text-secondary'}`}>{money(loan.principal)}</td>
-                      <td className={`px-3 py-3 font-bold ${loan.id === highlightedRecentLoanId ? 'text-primary' : ''}`}>{money(loan.balance)}</td>
-                      <td className={`px-3 py-3 ${loan.id === highlightedRecentLoanId ? 'text-primary' : 'text-text-secondary'}`}>
+                      <td
+                        className={`px-3 py-3 ${loan.id === highlightedRecentLoanId ? 'text-primary' : 'text-text-secondary'}`}
+                      >
+                        {money(loan.principal)}
+                      </td>
+                      <td
+                        className={`px-3 py-3 font-bold ${loan.id === highlightedRecentLoanId ? 'text-primary' : ''}`}
+                      >
+                        {money(loan.balance)}
+                      </td>
+                      <td
+                        className={`px-3 py-3 ${loan.id === highlightedRecentLoanId ? 'text-primary' : 'text-text-secondary'}`}
+                      >
                         {recentLoanNextPayment(loan)}
                       </td>
                       <td className="px-3 py-3">
@@ -735,7 +778,7 @@ export function DashboardHome() {
             </Panel>
           </section>
 
-          <Panel className="p-6">
+          <Panel className="p-6" delay={350}>
             <div className="mb-5 flex items-start justify-between">
               <Heading title="Mora por antigüedad" subtitle="Monto vencido por días de atraso" />
               <div className="text-right text-xs text-text-secondary">
@@ -777,11 +820,10 @@ export function DashboardHome() {
               </ResponsiveContainer>
             </div>
           </Panel>
-
         </div>
 
         <aside className="min-w-0">
-          <Panel className="p-6">
+          <Panel className="p-6" delay={420}>
             <div className="flex items-start justify-between">
               <Heading title="Cobros prioritarios" subtitle="Casos ordenados por urgencia" />
               <span className="rounded-full bg-[#ffe6ec] px-2.5 py-1 text-xs font-bold text-[#d42d52]">
@@ -792,7 +834,7 @@ export function DashboardHome() {
               {(['Vencidos', 'Hoy', 'Semana'] as const).map((tab) => (
                 <button
                   key={tab}
-                    className={`rounded-full px-3 py-1.5 ${priorityTab === tab ? 'bg-primary-soft text-primary' : 'text-text-secondary'}`}
+                  className={`rounded-full px-3 py-1.5 ${priorityTab === tab ? 'bg-primary-soft text-primary' : 'text-text-secondary'}`}
                   onClick={() => setPriorityTab(tab)}
                   type="button"
                 >
@@ -854,8 +896,7 @@ export function DashboardHome() {
                       </strong>
                     </div>
                     <p className="mt-1 text-xs text-text-secondary">
-                      Vence{' '}
-                      {formatShortDate(item.dueDate)}
+                      Vence {formatShortDate(item.dueDate)}
                     </p>
                     <div className="mt-2 flex items-center justify-between rounded-full bg-page px-3 py-2 text-xs text-text-primary">
                       <span>Ver préstamo</span>

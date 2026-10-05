@@ -4,6 +4,7 @@ import {
   buildCashClosingPrintDocument,
   buildManualCashMovementDate,
   filterCashMovements,
+  getCashWeekDates,
   shiftCashLedgerDate,
 } from './cash-ledger.helpers';
 import type { CashLedgerMovement } from '@/lib/api/cash';
@@ -53,6 +54,20 @@ test('uses noon in Santo Domingo when entering a historical movement', () => {
 test('moves between cash ledger days across month boundaries', () => {
   assert.equal(shiftCashLedgerDate('2026-07-31', 1), '2026-08-01');
   assert.equal(shiftCashLedgerDate('2026-08-01', -1), '2026-07-31');
+});
+
+test('returns Monday through Sunday for a cash week across year boundaries', () => {
+  const dates = [
+    '2025-12-29',
+    '2025-12-30',
+    '2025-12-31',
+    '2026-01-01',
+    '2026-01-02',
+    '2026-01-03',
+    '2026-01-04',
+  ];
+  assert.deepEqual(getCashWeekDates('2026-01-04'), dates);
+  assert.deepEqual(getCashWeekDates('2025-12-29'), dates);
 });
 
 test('prints the complete daily closing without operational codes or times', () => {

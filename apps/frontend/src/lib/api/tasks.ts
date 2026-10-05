@@ -8,8 +8,15 @@ export async function getTasksCount(status?: string): Promise<number> {
 }
 
 export async function getTasks(): Promise<TaskItem[]> {
-  const { data } = await api.get<ApiResponse<TaskItem[]>>('/tasks');
-  return data.data ?? [];
+  const tasks: TaskItem[] = [];
+  while (true) {
+    const { data } = await api.get<ApiResponse<TaskItem[]>>('/tasks', {
+      params: { take: 100, skip: tasks.length },
+    });
+    const page = data.data ?? [];
+    tasks.push(...page);
+    if (page.length < 100) return tasks;
+  }
 }
 
 export async function createTask(dto: CreateTaskDto): Promise<TaskItem> {

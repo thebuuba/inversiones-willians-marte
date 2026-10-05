@@ -101,7 +101,37 @@ export class InvestorsService {
       take,
       skip,
     });
-    return investors.map((investor) => this.decorateInvestor(investor));
+    const year = Number(
+      new Intl.DateTimeFormat('en', { year: 'numeric', timeZone: 'America/Santo_Domingo' }).format(
+        new Date(),
+      ),
+    );
+    const where = { investorId: { in: investors.map((investor) => investor.id) } };
+    const [allPayments, yearPayments] = await Promise.all([
+      prisma.investorPayment.groupBy({ by: ['investorId'], where, _sum: { amount: true } }),
+      prisma.investorPayment.groupBy({
+        by: ['investorId'],
+        where: {
+          ...where,
+          paymentDate: {
+            gte: new Date(`${year}-01-01T00:00:00-04:00`),
+            lt: new Date(`${year + 1}-01-01T00:00:00-04:00`),
+          },
+        },
+        _sum: { amount: true },
+      }),
+    ]);
+    const totals = new Map(
+      allPayments.map((payment) => [payment.investorId, Number(payment._sum.amount ?? 0)]),
+    );
+    const yearTotals = new Map(
+      yearPayments.map((payment) => [payment.investorId, Number(payment._sum.amount ?? 0)]),
+    );
+    return investors.map((investor) => ({
+      ...this.decorateInvestor(investor),
+      totalGainsPaid: totals.get(investor.id) ?? 0,
+      yearGainsPaid: yearTotals.get(investor.id) ?? 0,
+    }));
   }
 
   async findOne(id: string) {
