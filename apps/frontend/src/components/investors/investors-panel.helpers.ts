@@ -5,7 +5,12 @@ export function formatInvestorCurrency(value: number | string): string {
   return formatDop(value);
 }
 
-export function getInvestorOverview(investors: InvestorItem[]) {
+export function getInvestorOverview(
+  investors: Pick<
+    InvestorItem,
+    'capital' | 'monthlyPayment' | 'totalCapital' | 'totalMonthlyReturn' | 'yearGainsPaid'
+  >[],
+) {
   const capital = investors.reduce(
     (sum, investor) => sum + Number(investor.totalCapital ?? investor.capital),
     0,

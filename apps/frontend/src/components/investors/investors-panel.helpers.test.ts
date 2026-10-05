@@ -11,8 +11,8 @@ test('weights the return by capital and distinguishes unavailable gains from zer
   const overview = getInvestorOverview([
     { capital: 100000, monthlyPayment: 4000, yearGainsPaid: 12000 },
     { capital: 300000, monthlyPayment: 6000, yearGainsPaid: 18000 },
-  ] as any);
+  ]);
   assert.deepEqual(overview, { capital: 400000, rate: 2.5, yearGains: 30000 });
-  assert.equal(getInvestorOverview([{ capital: 0, monthlyPayment: 0 } as any]).yearGains, null);
+  assert.equal(getInvestorOverview([{ capital: 0, monthlyPayment: 0 }]).yearGains, null);
   assert.deepEqual(getInvestorOverview([]), { capital: 0, rate: 0, yearGains: 0 });
 });
