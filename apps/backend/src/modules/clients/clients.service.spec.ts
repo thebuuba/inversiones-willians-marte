@@ -127,7 +127,9 @@ describe('ClientsService', () => {
       jest.mocked(prisma.client.count).mockResolvedValue(0);
       const before = Date.now() - 30 * 86400000;
       await service.findAll(adminScope, undefined, 50, 0, 'NEW');
-      const query = jest.mocked(prisma.client.findMany).mock.calls[0][0] as any;
+      const query = jest.mocked(prisma.client.findMany).mock.calls[0][0] as {
+        where: { AND: [unknown, unknown, { createdAt: { gte: Date } }] };
+      };
       const threshold = query.where.AND[2].createdAt.gte;
       expect(threshold.getTime()).toBeGreaterThanOrEqual(before);
       expect(threshold.getTime()).toBeLessThanOrEqual(Date.now() - 30 * 86400000);
@@ -142,10 +144,12 @@ describe('ClientsService', () => {
       for (const search of ['46', 'Juan', '99999999999999999999']) {
         await service.findAll(adminScope, search);
         const calls = jest.mocked(prisma.client.findMany).mock.calls;
-        const query = calls[calls.length - 1][0] as any;
+        const query = calls[calls.length - 1][0] as {
+          where: { AND: [unknown, { OR: Record<string, unknown>[] }, unknown] };
+        };
         const conditions = query.where.AND[1].OR;
         if (search === '46') expect(conditions).toContainEqual({ id: 46 });
-        else expect(conditions.some((condition: any) => 'id' in condition)).toBe(false);
+        else expect(conditions.some((condition) => 'id' in condition)).toBe(false);
       }
     });
 
