@@ -384,7 +384,7 @@ export default function AgendaPage() {
   }
   return (
     <div className="min-h-screen bg-page p-4 text-text-primary sm:p-6">
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <header className="mb-6 flex animate-[fade-in-up_0.45s_ease-out_both] flex-wrap items-end justify-between gap-4 motion-reduce:animate-none">
         <div>
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-sky">
             General
@@ -407,7 +407,7 @@ export default function AgendaPage() {
       <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <section
           aria-label="Calendario mensual"
-          className="min-w-0 rounded-[32px] bg-card p-4 shadow-card sm:p-6"
+          className="min-w-0 animate-[fade-in-up_0.45s_ease-out_both] rounded-[32px] bg-card p-4 shadow-card [animation-delay:70ms] motion-reduce:animate-none sm:p-6"
         >
           <div className="mb-5 flex items-center justify-between gap-3">
             <h2 className="text-xl font-bold capitalize">{monthLabel.replace(' de ', ' ')}</h2>
@@ -484,7 +484,7 @@ export default function AgendaPage() {
         </section>
         <section
           aria-labelledby="agenda-day-title"
-          className="min-w-0 rounded-[32px] bg-card p-5 shadow-card sm:p-6"
+          className="min-w-0 animate-[fade-in-up_0.45s_ease-out_both] rounded-[32px] bg-card p-5 shadow-card [animation-delay:140ms] motion-reduce:animate-none sm:p-6"
         >
           <h2 id="agenda-day-title" className="text-xl font-bold">
             {dayLabel}

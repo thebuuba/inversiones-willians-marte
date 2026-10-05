@@ -394,7 +394,7 @@ export function DashboardHome() {
           <div
             key={metric.label}
             style={{ animationDelay: `${index * 70}ms` }}
-            className={`animate-[fade-in-up_0.45s_ease-out_both] motion-reduce:animate-none relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-2xl p-5 shadow-card ${metric.blue ? 'bg-highlight text-text-primary' : 'bg-card transition-shadow hover:shadow-md'}`}
+            className={`animate-[fade-in-up_0.45s_ease-out_both] motion-reduce:animate-none motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-in-out motion-safe:hover:-translate-y-0.5 relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-2xl p-5 shadow-card ${metric.blue ? 'bg-highlight text-text-primary' : 'bg-card'}`}
           >
             {metric.blue && (
               <>

@@ -342,6 +342,8 @@ export interface InvestorItem extends CreateInvestorDto {
   createdById: string;
   createdAt: string;
   updatedAt: string;
+  totalGainsPaid?: number;
+  yearGainsPaid?: number;
   totalCapital?: number;
   totalMonthlyReturn?: number;
   activeInvestments?: number;

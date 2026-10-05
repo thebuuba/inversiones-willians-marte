@@ -4,7 +4,9 @@ import { prisma, Prisma } from '@inversiones/database';
 jest.mock('@inversiones/database', () => ({
   prisma: {
     $transaction: jest.fn(),
+    investorPayment: { groupBy: jest.fn() },
     investor: {
+      findMany: jest.fn(),
       count: jest.fn(),
       create: jest.fn(),
       findFirst: jest.fn(),
@@ -62,6 +64,32 @@ describe('InvestorsService', () => {
   afterEach(() => {
     jest.useRealTimers();
     jest.clearAllMocks();
+  });
+
+  it('adds complete lifetime and calendar-year payment totals to investor cards', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2027-01-01T02:00:00Z'));
+    jest.mocked(prisma.investor.findMany).mockResolvedValue([
+      { id: 'investor-1', investments: [] },
+      { id: 'investor-2', investments: [] },
+    ] as never);
+    jest
+      .mocked(prisma.investorPayment.groupBy)
+      .mockResolvedValueOnce([{ investorId: 'investor-1', _sum: { amount: 9000 } }] as never)
+      .mockResolvedValueOnce([{ investorId: 'investor-1', _sum: { amount: 3000 } }] as never);
+    const result = await service.findAll();
+    expect(result[0]).toMatchObject({ totalGainsPaid: 9000, yearGainsPaid: 3000 });
+    expect(result[1]).toMatchObject({ totalGainsPaid: 0, yearGainsPaid: 0 });
+    expect(prisma.investorPayment.groupBy).toHaveBeenLastCalledWith({
+      by: ['investorId'],
+      where: {
+        investorId: { in: ['investor-1', 'investor-2'] },
+        paymentDate: {
+          gte: new Date('2026-01-01T00:00:00-04:00'),
+          lt: new Date('2027-01-01T00:00:00-04:00'),
+        },
+      },
+      _sum: { amount: true },
+    });
   });
 
   it('creates the next investor code from the highest existing code instead of row count', async () => {
