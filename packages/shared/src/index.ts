@@ -365,6 +365,19 @@ export interface AddInvestorCapitalDto {
   notes?: string;
 }
 
+export interface InvestorInterestPeriod {
+  periodMonth: number;
+  periodYear: number;
+  dueDate: string;
+  amount: number;
+  paidAmount: number;
+  balance: number;
+}
+export interface InvestorInterestAllocation {
+  periodMonth: number;
+  periodYear: number;
+  amount: number;
+}
 export interface InvestorInvestmentSummary {
   id: string;
   investorId: string;
@@ -383,6 +396,11 @@ export interface InvestorInvestmentSummary {
   currentPeriodMonth?: number;
   currentPeriodYear?: number;
   paymentStatus?: InvestorInvestmentPaymentStatus;
+  currentPeriodBalance?: number;
+  pendingAmount?: number;
+  pendingMonths?: number;
+  totalPaid?: number;
+  pendingPeriods?: InvestorInterestPeriod[];
 }
 
 export interface InvestorInvestmentMovementItem {
@@ -404,6 +422,7 @@ export interface InvestorInvestmentDetail extends InvestorInvestmentSummary {
 }
 
 export interface CreateInvestorPaymentDto {
+  requestId?: string;
   investorId?: string;
   investmentId?: string;
   amount: number;
@@ -416,6 +435,7 @@ export interface CreateInvestorPaymentDto {
 }
 
 export interface InvestorPaymentItem {
+  allocations?: InvestorInterestAllocation[];
   id: string;
   receiptNumber: number;
   investorId: string;

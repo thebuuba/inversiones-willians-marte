@@ -122,7 +122,7 @@ export function DocumentCapturePage({ token }: { token: string }) {
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white transition hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!isReady}
             onClick={() => cameraInputRef.current?.click()}
             type="button"

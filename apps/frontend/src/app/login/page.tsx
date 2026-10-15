@@ -34,7 +34,7 @@ export default function LoginPage() {
       setError(
         Array.isArray(message)
           ? message.join(' ')
-          : message ?? error.response?.data?.error ?? 'Error al iniciar sesión',
+          : (message ?? error.response?.data?.error ?? 'Error al iniciar sesión'),
       );
     } finally {
       setLoading(false);
@@ -48,7 +48,9 @@ export default function LoginPage() {
           <div className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-control-comfortable bg-primary-soft text-base font-bold text-primary shadow-soft">
             WM
           </div>
-          <h1 className="mt-5 text-3xl font-bold leading-tight text-text-primary">Willians Marte</h1>
+          <h1 className="mt-5 text-3xl font-bold leading-tight text-text-primary">
+            Willians Marte
+          </h1>
           <p className="mt-2 text-base font-medium text-text-secondary">
             Sistema de Préstamos · Ingresa tus credenciales
           </p>
@@ -66,7 +68,10 @@ export default function LoginPage() {
 
           <div className="space-y-5">
             <div>
-              <label htmlFor="username" className="mb-2.5 block text-sm font-bold text-text-primary">
+              <label
+                htmlFor="username"
+                className="mb-2.5 block text-sm font-bold text-text-primary"
+              >
                 Nombre de usuario
               </label>
               <div className="flex h-[48px] items-center rounded-control-comfortable border border-primary-border bg-surface-subtle px-4 transition-colors focus-within:border-primary-accent focus-within:ring-2 focus-within:ring-primary-soft">
@@ -118,7 +123,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="h-12 w-full rounded-full bg-primary-accent text-base font-bold text-text-inverse shadow-action transition hover:bg-primary active:translate-y-px disabled:pointer-events-none disabled:opacity-60"
+              className="h-12 w-full rounded-full bg-primary-accent text-base font-bold text-text-inverse shadow-action transition hover:bg-primary-hover active:translate-y-px disabled:pointer-events-none disabled:opacity-60"
             >
               {loading ? 'Iniciando...' : 'Iniciar sesión'}
             </button>

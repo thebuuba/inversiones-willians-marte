@@ -105,7 +105,7 @@ function SettingsHeader() {
           Cancelar
         </button>
         <button
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary"
+          className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary-hover"
           type="button"
         >
           <Check className="h-4 w-4" />
@@ -388,7 +388,7 @@ function CompanyInfoCard() {
           <span className="text-sm font-bold text-state-success">Información guardada</span>
         )}
         <button
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary disabled:opacity-60"
+          className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary-hover disabled:opacity-60"
           disabled={saving || !company.companyName.trim()}
           onClick={saveCompany}
           type="button"
@@ -497,7 +497,7 @@ function DefaultLoanParametersCard() {
             />
             <span className="text-sm font-medium text-text-secondary">días</span>
             <button
-              className="ml-auto h-10 rounded-full bg-primary-accent px-5 text-sm font-bold text-white hover:bg-primary disabled:opacity-50"
+              className="ml-auto h-10 rounded-full bg-primary-accent px-5 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-50"
               disabled={savingGrace}
               onClick={saveGraceDays}
               type="button"
@@ -744,7 +744,9 @@ function CreateUserModal({
               </button>
               <button
                 className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
-                  saving ? 'bg-text-secondary' : 'bg-primary-accent shadow-action hover:bg-primary'
+                  saving
+                    ? 'bg-text-secondary'
+                    : 'bg-primary-accent shadow-action hover:bg-primary-hover'
                 }`}
                 disabled={saving}
                 type="submit"
@@ -920,7 +922,7 @@ function UserPortfoliosModal({
               className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
                 saving || loading
                   ? 'bg-text-secondary'
-                  : 'bg-primary-accent shadow-action hover:bg-primary'
+                  : 'bg-primary-accent shadow-action hover:bg-primary-hover'
               }`}
               disabled={saving || loading}
               onClick={handleSave}
@@ -1049,7 +1051,7 @@ function SettingsUsersRolesTab() {
           </p>
           {isAdmin && (
             <button
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary-hover"
               onClick={() => setShowCreate(true)}
               type="button"
             >

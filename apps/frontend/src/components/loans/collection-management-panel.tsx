@@ -314,7 +314,7 @@ export function InteractionModal({
             </p>
           ) : null}
           <button
-            className="h-11 w-full rounded-full bg-primary-accent text-sm font-bold text-white transition hover:bg-primary disabled:opacity-60"
+            className="h-11 w-full rounded-full bg-primary-accent text-sm font-bold text-white transition hover:bg-primary-hover disabled:opacity-60"
             disabled={saving}
             onClick={handleSubmit}
             type="button"
@@ -396,7 +396,7 @@ export function CollectionManagementPanel({
             </a>
           ) : null}
           <button
-            className="inline-flex h-10 items-center gap-2 rounded-full bg-primary-accent px-4 text-sm font-bold text-white hover:bg-primary"
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-primary-accent px-4 text-sm font-bold text-white hover:bg-primary-hover"
             onClick={() => {
               setInitialResult('CONTACTED');
               setModalOpen(true);

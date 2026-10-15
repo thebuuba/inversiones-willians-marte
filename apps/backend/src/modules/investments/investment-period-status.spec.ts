@@ -1,7 +1,7 @@
 import { getInvestmentPeriodStatus } from './investment-period-status';
 
 describe('getInvestmentPeriodStatus', () => {
-  const startDate = '2026-01-20T00:00:00.000Z';
+  const startDate = '2026-07-20T00:00:00.000Z';
 
   it.each([
     ['2026-08-14T12:00:00.000Z', 'SCHEDULED'],

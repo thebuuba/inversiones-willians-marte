@@ -474,7 +474,7 @@ function DocumentCard({
               />
               <button
                 aria-label="Guardar nombre"
-                className="rounded-full bg-primary-accent p-2 text-white transition hover:bg-primary disabled:opacity-50"
+                className="rounded-full bg-primary-accent p-2 text-white transition hover:bg-primary-hover disabled:opacity-50"
                 disabled={savingName || !draftName.trim()}
                 onClick={() => void saveName()}
                 type="button"
@@ -710,7 +710,7 @@ function UploadModal({
               </p>
             </div>
             <button
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-accent text-white transition hover:bg-primary disabled:opacity-50"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-accent text-white transition hover:bg-primary-hover disabled:opacity-50"
               disabled={creatingCaptureSession}
               onClick={handleCreateCaptureSession}
               title="Generar QR de captura"
@@ -792,7 +792,7 @@ function UploadModal({
             Cancelar
           </button>
           <button
-            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white transition hover:bg-primary disabled:opacity-50"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:opacity-50"
             disabled={!file || uploading}
             onClick={handleSubmit}
             type="button"
@@ -862,7 +862,7 @@ function ClientDocumentsTab({ clientId }: { clientId: number }) {
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <p className="text-sm text-text-muted">{documents.length} documentos archivados</p>
         <button
-          className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm text-white hover:bg-primary"
+          className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm text-white hover:bg-primary-hover"
           onClick={() => setShowModal(true)}
           type="button"
         >
@@ -985,7 +985,7 @@ function NoteActions({ onCancel, onSave }: { onCancel: () => void; onSave: () =>
         Cancelar
       </button>
       <button
-        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-primary-accent px-4 text-sm font-semibold text-white transition hover:bg-primary"
+        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-primary-accent px-4 text-sm font-semibold text-white transition hover:bg-primary-hover"
         onClick={onSave}
         type="button"
       >
@@ -1268,7 +1268,7 @@ function ClientNotesTab({
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <p className="text-sm text-text-muted">{notes.length} notas</p>
         <button
-          className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm text-white hover:bg-primary"
+          className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm text-white hover:bg-primary-hover"
           onClick={startCreate}
           type="button"
         >
@@ -1550,7 +1550,7 @@ export function ClientDetailPage({ clientId }: { clientId: number }) {
                   <DropdownMenu.Trigger asChild>
                     <button
                       type="button"
-                      className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white hover:bg-primary"
+                      className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white hover:bg-primary-hover"
                     >
                       <ChevronDown className="h-4 w-4" />
                       Acciones

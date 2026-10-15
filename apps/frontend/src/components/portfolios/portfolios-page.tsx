@@ -59,7 +59,7 @@ const PortfolioCard = forwardRef<HTMLElement, PortfolioCardProps>(function Portf
   return (
     <motion.article
       animate={{ opacity: 1, x: 0 }}
-      className="relative min-h-[230px] rounded-panel border border-border-soft bg-card shadow-card transition hover:border-primary-border hover:shadow-action"
+      className="relative min-h-[230px] rounded-panel border border-border-soft bg-card shadow-card transition hover:border-primary-border hover:shadow-card"
       exit={{ opacity: 0 }}
       initial={{ opacity: 0, x: -16 }}
       layout="position"
@@ -235,7 +235,7 @@ export function PortfoliosPage() {
           <Dialog.Root open={createOpen} onOpenChange={setCreateOpen}>
             <Dialog.Trigger asChild>
               <button
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary-hover"
                 type="button"
               >
                 <Plus className="h-4 w-4" />
@@ -318,7 +318,7 @@ export function PortfoliosPage() {
                       Cancelar
                     </Dialog.Close>
                     <button
-                      className="h-10 rounded-full bg-primary-accent px-5 text-sm font-bold text-white hover:bg-primary disabled:opacity-50"
+                      className="h-10 rounded-full bg-primary-accent px-5 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-50"
                       disabled={name.trim().length < 2 || saving}
                       type="submit"
                     >

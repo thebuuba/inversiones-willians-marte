@@ -7,8 +7,14 @@ import { FolderOpen, Palette, Plus, Check, X } from 'lucide-react';
 import { getPortfolios, createPortfolio, type PortfolioItem } from '@/lib/api/portfolios';
 
 const PRESET_COLORS = [
-  '#139666', '#FFD23D', '#EF4444', '#EE8FAF',
-  '#74CDB0', '#D78138', '#0D7D55', '#F97316',
+  '#139666',
+  '#FFD23D',
+  '#EF4444',
+  '#EE8FAF',
+  '#74CDB0',
+  '#D78138',
+  '#0D7D55',
+  '#F97316',
 ];
 const LOAN_CARD_SHADOW = 'shadow-card';
 
@@ -100,7 +106,7 @@ export function CarterasCard({
             {error && (
               <p className="mb-3 rounded-control-compact border border-state-danger-bg bg-state-danger-bg px-3 py-2 text-xs font-medium text-state-danger">
                 {error}
-            </p>
+              </p>
             )}
 
             {loading ? (
@@ -115,7 +121,10 @@ export function CarterasCard({
                     placeholder="Ej. Cartera Personal"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') setCreating(false); }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleCreate();
+                      if (e.key === 'Escape') setCreating(false);
+                    }}
                   />
                 </label>
                 <div>
@@ -128,7 +137,10 @@ export function CarterasCard({
                     >
                       <Palette className="h-4 w-4 text-text-secondary" />
                     </button>
-                    <span className="h-[28px] w-[28px] rounded-md border border-primary-border" style={{ backgroundColor: newColor }} />
+                    <span
+                      className="h-[28px] w-[28px] rounded-md border border-primary-border"
+                      style={{ backgroundColor: newColor }}
+                    />
                     <span className="text-xs text-text-secondary">{newColor}</span>
                   </div>
                   {showColorPicker && (
@@ -137,10 +149,15 @@ export function CarterasCard({
                         <button
                           key={color}
                           className={`h-[28px] w-[28px] rounded-full border-2 transition ${
-                            newColor === color ? 'border-text-primary scale-110' : 'border-transparent'
+                            newColor === color
+                              ? 'border-text-primary scale-110'
+                              : 'border-transparent'
                           }`}
                           style={{ backgroundColor: color }}
-                          onClick={() => { setNewColor(color); setShowColorPicker(false); }}
+                          onClick={() => {
+                            setNewColor(color);
+                            setShowColorPicker(false);
+                          }}
                           type="button"
                         />
                       ))}
@@ -149,7 +166,7 @@ export function CarterasCard({
                 </div>
                 <div className="flex gap-2">
                   <button
-                    className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-control-compact bg-primary-accent text-xs font-bold text-white transition hover:bg-primary disabled:opacity-50"
+                    className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-control-compact bg-primary-accent text-xs font-bold text-white transition hover:bg-primary-hover disabled:opacity-50"
                     disabled={newName.trim().length < 2 || saving}
                     onClick={handleCreate}
                     type="button"
@@ -182,14 +199,21 @@ export function CarterasCard({
                       onClick={() => onSelectPortfolio(selectedPortfolioId === p.id ? null : p.id)}
                       type="button"
                     >
-                      <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: p.color }} />
+                      <span
+                        className="h-3 w-3 shrink-0 rounded-full"
+                        style={{ backgroundColor: p.color }}
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold text-text-primary">{p.name}</p>
                         {p.description && (
-                          <p className="mt-0.5 truncate text-xs text-text-secondary">{p.description}</p>
+                          <p className="mt-0.5 truncate text-xs text-text-secondary">
+                            {p.description}
+                          </p>
                         )}
                       </div>
-                      <span className="shrink-0 text-xs font-medium text-text-secondary">{p._count.loans}</span>
+                      <span className="shrink-0 text-xs font-medium text-text-secondary">
+                        {p._count.loans}
+                      </span>
                       {selectedPortfolioId === p.id && (
                         <Check className="h-4 w-4 shrink-0 text-primary-accent" />
                       )}
@@ -198,7 +222,10 @@ export function CarterasCard({
                 )}
                 <button
                   className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-control-compact border border-dashed border-primary-border text-xs font-bold text-primary-accent transition hover:bg-surface-muted-ui"
-                  onClick={() => { setCreating(true); setError(''); }}
+                  onClick={() => {
+                    setCreating(true);
+                    setError('');
+                  }}
                   type="button"
                 >
                   <Plus className="h-3.5 w-3.5" />

@@ -24,7 +24,7 @@ test('builds the investment history from capital movements and payments', () => 
   assert.match(source, /investment\.payments \?\? \[\]/);
   assert.match(source, /Inversión creada/);
   assert.match(source, /Aporte de capital registrado/);
-  assert.match(source, /Pago del período/);
+  assert.match(source, /Pago de \$\{formatPaymentPeriods\(payment\)\}/);
 });
 
 test('lists and opens every payment receipt for the investment', () => {
@@ -34,17 +34,14 @@ test('lists and opens every payment receipt for the investment', () => {
 });
 
 test('separates the investment summary into individual cards', () => {
-  assert.match(source, /grid grid-cols-1 gap-3 border-t[^\n]*bg-page p-4/);
-  assert.match(
-    source,
-    /rounded-control-comfortable border border-border-soft bg-card p-5 shadow-card/,
-  );
+  assert.match(source, /grid grid-cols-1 gap-4 py-6/);
+  assert.match(source, /rounded-2xl p-5 shadow-card/);
 });
 
 test('prioritizes the investor name over the investment code', () => {
   assert.match(
     source,
-    /<h1 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">\s*\{investment\.investor\?\.name\}\s*<\/h1>/,
+    /<h1 className="text-\[29px\] font-bold leading-tight text-text-primary">\s*\{investment\.investor\?\.name\}\s*<\/h1>/,
   );
   assert.match(
     source,

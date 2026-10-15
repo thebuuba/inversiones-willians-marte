@@ -27,5 +27,5 @@ test('uses an actions menu instead of a direct register-payment button', () => {
   assert.match(source, />\s*Exportar\s*<\/button>/);
   assert.match(source, /href={`\/inversionistas\/nuevo\?sourceInvestorId=\$\{investorId\}`}/);
   assert.match(source, />\s*Nueva inversión\s*<\/Link>/);
-  assert.match(source, /href={`\/inversionistas\/pago\?investmentId=\$\{investments\[0\]\.id\}`}/);
+  assert.match(source, /setPaymentInvestmentId\(investments\[0\]\.id\)/);
 });

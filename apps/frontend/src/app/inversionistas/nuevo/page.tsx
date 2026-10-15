@@ -3,7 +3,18 @@
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Phone, FileText, TrendingUp, Calendar, Camera, Save, UserPlus, X, Calculator } from 'lucide-react';
+import {
+  ArrowLeft,
+  Phone,
+  FileText,
+  TrendingUp,
+  Calendar,
+  Camera,
+  Save,
+  UserPlus,
+  X,
+  Calculator,
+} from 'lucide-react';
 import { createInvestor, getInvestor, updateInvestor } from '@/lib/api/investors';
 import { createInvestment } from '@/lib/api/investments';
 import { compressImage } from '@/lib/compress-image';
@@ -12,8 +23,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { DatePickerInput } from '@/components/ui/date-picker-input';
 import { getNextMonthIsoDate } from '@/components/ui/date-picker.helpers';
-import { calculateMonthlyInterest, formatDopCurrency } from '@/components/investors/investor-calculation.helpers';
-import { getApiErrorMessage, getInvestorNameValidationError } from '@/components/investors/investor-form.helpers';
+import {
+  calculateMonthlyInterest,
+  formatDopCurrency,
+} from '@/components/investors/investor-calculation.helpers';
+import {
+  getApiErrorMessage,
+  getInvestorNameValidationError,
+} from '@/components/investors/investor-form.helpers';
 import { InvestmentReceiptModal } from '@/components/investors/investment-receipt-modal';
 import type { InvestorInvestmentSummary, InvestorItem } from '@inversiones/shared';
 
@@ -78,12 +95,30 @@ function StepIndicator({ step, onStep }: { step: number; onStep: (s: number) => 
 
 const cardVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
-  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: i * 0.06 } }),
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: i * 0.06 },
+  }),
 };
 
-function MotionCard({ children, className = '', index = 0 }: { children: React.ReactNode; className?: string; index?: number }) {
+function MotionCard({
+  children,
+  className = '',
+  index = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  index?: number;
+}) {
   return (
-    <motion.div variants={cardVariants} initial="hidden" animate="visible" custom={index} className={className}>
+    <motion.div
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      custom={index}
+      className={className}
+    >
       {children}
     </motion.div>
   );
@@ -111,7 +146,10 @@ function FormSection({
       <div className="mb-6 flex items-center justify-between gap-6 xl:mb-7">
         <div className="flex min-w-0 items-center gap-3">
           {icon && (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control-comfortable" style={{ backgroundColor: accent }}>
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control-comfortable"
+              style={{ backgroundColor: accent }}
+            >
               {icon}
             </div>
           )}
@@ -127,10 +165,25 @@ function FormSection({
   );
 }
 
-function Field({ label, htmlFor, hint, full, children }: { label: string; htmlFor: string; hint?: string; full?: boolean; children: React.ReactNode }) {
+function Field({
+  label,
+  htmlFor,
+  hint,
+  full,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  hint?: string;
+  full?: boolean;
+  children: React.ReactNode;
+}) {
   return full ? (
     <div>
-      <label htmlFor={htmlFor} className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
+      <label
+        htmlFor={htmlFor}
+        className="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-text-secondary"
+      >
         {label}
       </label>
       {children}
@@ -138,7 +191,10 @@ function Field({ label, htmlFor, hint, full, children }: { label: string; htmlFo
   ) : (
     <div className="space-y-2">
       <div>
-        <label htmlFor={htmlFor} className="block text-xs font-bold uppercase tracking-[0.08em] text-text-secondary">
+        <label
+          htmlFor={htmlFor}
+          className="block text-xs font-bold uppercase tracking-[0.08em] text-text-secondary"
+        >
           {label}
         </label>
         {hint && <p className="mt-1 text-xs text-text-subtle">{hint}</p>}
@@ -148,9 +204,16 @@ function Field({ label, htmlFor, hint, full, children }: { label: string; htmlFo
   );
 }
 
-const inputClass = 'h-14 w-full rounded-control-comfortable border border-primary-border bg-card px-5 text-base outline-none focus:border-primary-accent focus:ring-2 focus:ring-primary-soft';
+const inputClass =
+  'h-14 w-full rounded-control-comfortable border border-primary-border bg-card px-5 text-base outline-none focus:border-primary-accent focus:ring-2 focus:ring-primary-soft';
 
-function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onPhotoChange: (url: string | null) => void }) {
+function ProfilePhotoInput({
+  photo,
+  onPhotoChange,
+}: {
+  photo: string | null;
+  onPhotoChange: (url: string | null) => void;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
@@ -182,7 +245,13 @@ function ProfilePhotoInput({ photo, onPhotoChange }: { photo: string | null; onP
           {photo ? 'Cambiar' : 'Subir'}
         </span>
       </button>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => handleFile(e.target.files?.[0])}
+      />
       {photo && (
         <button
           type="button"
@@ -212,10 +281,21 @@ function AddInvestorForm() {
   } | null>(null);
 
   const [form, setForm] = useState({
-    firstName: '', lastName: '', cedula: '', birthDate: '', nationality: '', type: 'individual',
-    phone: '', phone2: '', email: '',
-    capital: '', rate: '', frequency: 'mensual',
-    startDate: getNextMonthIsoDate(), term: '12m', bank: '',
+    firstName: '',
+    lastName: '',
+    cedula: '',
+    birthDate: '',
+    nationality: '',
+    type: 'individual',
+    phone: '',
+    phone2: '',
+    email: '',
+    capital: '',
+    rate: '',
+    frequency: 'mensual',
+    startDate: getNextMonthIsoDate(),
+    term: '12m',
+    bank: '',
     notes: '',
   });
 
@@ -230,35 +310,39 @@ function AddInvestorForm() {
 
   useEffect(() => {
     if (!investorToLoadId) return;
-    getInvestor(investorToLoadId).then((inv) => {
-      if (!inv) return;
-      setLoadedInvestor(inv);
-      const [firstName = '', ...rest] = inv.name.split(' ');
-      setForm((f) => ({
-        ...f,
-        firstName,
-        lastName: rest.join(' ') || '',
-        cedula: inv.cedula || '',
-        phone: inv.phone || '',
-        phone2: inv.phone2 || '',
-        email: inv.email || '',
-        nationality: inv.nationality || '',
-        type: inv.type || 'individual',
-        birthDate: toDateInputValue(inv.birthDate),
-        capital: formatIntegerAmount(String(inv.capital ?? '')),
-        rate: String(inv.rate ?? ''),
-        startDate: toDateInputValue(inv.startDate) || getNextMonthIsoDate(),
-        term: inv.term || '12m',
-        bank: inv.bank || '',
-        notes: inv.notes || '',
-      }));
-      setPhoto(inv.photo || null);
-      setStep(2);
-    }).catch(() => {});
+    getInvestor(investorToLoadId)
+      .then((inv) => {
+        if (!inv) return;
+        setLoadedInvestor(inv);
+        const [firstName = '', ...rest] = inv.name.split(' ');
+        setForm((f) => ({
+          ...f,
+          firstName,
+          lastName: rest.join(' ') || '',
+          cedula: inv.cedula || '',
+          phone: inv.phone || '',
+          phone2: inv.phone2 || '',
+          email: inv.email || '',
+          nationality: inv.nationality || '',
+          type: inv.type || 'individual',
+          birthDate: toDateInputValue(inv.birthDate),
+          capital: formatIntegerAmount(String(inv.capital ?? '')),
+          rate: String(inv.rate ?? ''),
+          startDate: toDateInputValue(inv.startDate) || getNextMonthIsoDate(),
+          term: inv.term || '12m',
+          bank: inv.bank || '',
+          notes: inv.notes || '',
+        }));
+        setPhoto(inv.photo || null);
+        setStep(2);
+      })
+      .catch(() => {});
   }, [investorToLoadId]);
 
   const handleCalculateInterest = () => {
-    setMonthlyInterest(calculateMonthlyInterest(parseIntegerAmount(form.capital), Number(form.rate)));
+    setMonthlyInterest(
+      calculateMonthlyInterest(parseIntegerAmount(form.capital), Number(form.rate)),
+    );
   };
 
   const handleSave = async (andNew: boolean) => {
@@ -319,11 +403,32 @@ function AddInvestorForm() {
       }
       invalidateCache('investors');
       if (andNew) {
-        setForm({ firstName: '', lastName: '', cedula: '', birthDate: '', nationality: '', type: 'individual', phone: '', phone2: '', email: '', capital: '', rate: '', frequency: 'mensual', startDate: getNextMonthIsoDate(), term: '12m', bank: '', notes: '' });
+        setForm({
+          firstName: '',
+          lastName: '',
+          cedula: '',
+          birthDate: '',
+          nationality: '',
+          type: 'individual',
+          phone: '',
+          phone2: '',
+          email: '',
+          capital: '',
+          rate: '',
+          frequency: 'mensual',
+          startDate: getNextMonthIsoDate(),
+          term: '12m',
+          bank: '',
+          notes: '',
+        });
         setPhoto(null);
         setMonthlyInterest(null);
       } else if (!receiptData) {
-        router.push(isCreatingAdditionalInvestment && sourceInvestorId ? `/inversionistas/${sourceInvestorId}` : '/inversionistas');
+        router.push(
+          isCreatingAdditionalInvestment && sourceInvestorId
+            ? `/inversionistas/${sourceInvestorId}`
+            : '/inversionistas',
+        );
       }
       if (receiptData) setCreatedReceipt(receiptData);
     } catch (err: unknown) {
@@ -337,7 +442,10 @@ function AddInvestorForm() {
       <div className="mx-auto max-w-[1640px]">
         <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
           <div>
-            <Link href="/inversionistas" className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.14em] text-primary-accent transition hover:text-text-primary">
+            <Link
+              href="/inversionistas"
+              className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.14em] text-primary-accent transition hover:text-text-primary"
+            >
               <ArrowLeft className="h-3.5 w-3.5" />
               Volver a inversionistas
             </Link>
@@ -359,28 +467,57 @@ function AddInvestorForm() {
           <div className="flex flex-wrap gap-2 md:justify-end">
             {step === 1 ? (
               <>
-                <button onClick={() => router.push('/inversionistas')} className="h-12 rounded-full border border-primary-border bg-card px-5 text-base font-bold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-2">
-                  <X className="h-4 w-4" />Cancelar
+                <button
+                  onClick={() => router.push('/inversionistas')}
+                  className="h-12 rounded-full border border-primary-border bg-card px-5 text-base font-bold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Cancelar
                 </button>
-                <button onClick={() => setStep(2)} className="h-12 rounded-full bg-primary-accent px-7 text-base font-bold text-white shadow-card hover:bg-primary inline-flex items-center gap-2">
+                <button
+                  onClick={() => setStep(2)}
+                  className="h-12 rounded-full bg-primary-accent px-7 text-base font-bold text-white shadow-card hover:bg-primary-hover inline-flex items-center gap-2"
+                >
                   Siguiente <ArrowLeft className="h-4 w-4 rotate-180" />
                 </button>
               </>
             ) : (
               <>
-                <button onClick={() => router.push('/inversionistas')} className="h-10 rounded-full border border-primary-border bg-card px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5">
-                  <X className="h-4 w-4" />Cancelar
+                <button
+                  onClick={() => router.push('/inversionistas')}
+                  className="h-10 rounded-full border border-primary-border bg-card px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5"
+                >
+                  <X className="h-4 w-4" />
+                  Cancelar
                 </button>
-                <button onClick={() => setStep(1)} className="h-10 rounded-full border border-primary-border bg-card px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5">
-                  <ArrowLeft className="h-4 w-4" />Atrás
+                <button
+                  onClick={() => setStep(1)}
+                  className="h-10 rounded-full border border-primary-border bg-card px-4 text-sm font-semibold text-text-secondary hover:bg-surface-subtle inline-flex items-center gap-1.5"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Atrás
                 </button>
                 {!isEditing && (
-                  <button onClick={() => handleSave(true)} disabled={saving} className="h-10 rounded-full border border-border-strong-ui bg-primary-soft px-4 text-sm font-semibold text-primary-accent hover:bg-surface-muted-ui disabled:opacity-50 inline-flex items-center gap-1.5">
-                    <UserPlus className="h-4 w-4" />Guardar y nuevo
+                  <button
+                    onClick={() => handleSave(true)}
+                    disabled={saving}
+                    className="h-10 rounded-full border border-border-strong-ui bg-primary-soft px-4 text-sm font-semibold text-primary-accent hover:bg-surface-muted-ui disabled:opacity-50 inline-flex items-center gap-1.5"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Guardar y nuevo
                   </button>
                 )}
-                <button onClick={() => handleSave(false)} disabled={saving} className="h-10 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white shadow-card hover:bg-primary disabled:opacity-50 inline-flex items-center gap-1.5">
-                  <Save className="h-4 w-4" />{saving ? 'Guardando...' : isEditing ? 'Actualizar inversionista' : 'Guardar inversión'}
+                <button
+                  onClick={() => handleSave(false)}
+                  disabled={saving}
+                  className="h-10 rounded-full bg-primary-accent px-5 text-sm font-semibold text-white shadow-card hover:bg-primary-hover disabled:opacity-50 inline-flex items-center gap-1.5"
+                >
+                  <Save className="h-4 w-4" />
+                  {saving
+                    ? 'Guardando...'
+                    : isEditing
+                      ? 'Actualizar inversionista'
+                      : 'Guardar inversión'}
                 </button>
               </>
             )}
@@ -411,22 +548,58 @@ function AddInvestorForm() {
                     contentClassName="grid grid-cols-1 gap-5 md:grid-cols-2"
                   >
                     <Field label="Nombres" htmlFor="inv-first">
-                      <input id="inv-first" value={form.firstName} onChange={(e) => set('firstName', e.target.value)} placeholder="Juan Carlos" className={inputClass} />
+                      <input
+                        id="inv-first"
+                        value={form.firstName}
+                        onChange={(e) => set('firstName', e.target.value)}
+                        placeholder="Juan Carlos"
+                        className={inputClass}
+                      />
                     </Field>
                     <Field label="Apellidos" htmlFor="inv-last">
-                      <input id="inv-last" value={form.lastName} onChange={(e) => set('lastName', e.target.value)} placeholder="Pérez Montero" className={inputClass} />
+                      <input
+                        id="inv-last"
+                        value={form.lastName}
+                        onChange={(e) => set('lastName', e.target.value)}
+                        placeholder="Pérez Montero"
+                        className={inputClass}
+                      />
                     </Field>
                     <Field label="Cédula / Documento" htmlFor="inv-cedula">
-                      <input id="inv-cedula" value={form.cedula} onChange={(e) => set('cedula', maskCedula(e.target.value))} placeholder="000-0000000-0" className={inputClass} maxLength={13} />
+                      <input
+                        id="inv-cedula"
+                        value={form.cedula}
+                        onChange={(e) => set('cedula', maskCedula(e.target.value))}
+                        placeholder="000-0000000-0"
+                        className={inputClass}
+                        maxLength={13}
+                      />
                     </Field>
                     <Field label="Fecha de nacimiento" htmlFor="inv-dob">
-                      <input id="inv-dob" type="date" value={form.birthDate} onChange={(e) => set('birthDate', e.target.value)} className={inputClass} />
+                      <input
+                        id="inv-dob"
+                        type="date"
+                        value={form.birthDate}
+                        onChange={(e) => set('birthDate', e.target.value)}
+                        className={inputClass}
+                      />
                     </Field>
                     <Field label="Nacionalidad" htmlFor="inv-nat">
-                      <input id="inv-nat" value={form.nationality} onChange={(e) => set('nationality', e.target.value)} placeholder="Dominicana" className={inputClass} />
+                      <input
+                        id="inv-nat"
+                        value={form.nationality}
+                        onChange={(e) => set('nationality', e.target.value)}
+                        placeholder="Dominicana"
+                        className={inputClass}
+                      />
                     </Field>
                     <Field label="Tipo de inversionista" htmlFor="inv-type">
-                      <select id="inv-type" value={form.type} onChange={(e) => set('type', e.target.value)} className={inputClass}>
+                      <select
+                        id="inv-type"
+                        value={form.type}
+                        onChange={(e) => set('type', e.target.value)}
+                        className={inputClass}
+                      >
                         <option value="individual">Individual</option>
                         <option value="empresa">Empresa</option>
                         <option value="familiar">Familiar</option>
@@ -445,19 +618,39 @@ function AddInvestorForm() {
                     contentClassName="grid grid-cols-1 gap-5 md:grid-cols-2"
                   >
                     <Field label="Teléfono móvil" htmlFor="inv-phone">
-                      <input id="inv-phone" value={form.phone} onChange={(e) => set('phone', maskPhone(e.target.value))} placeholder="(000) 000-0000" className={inputClass} maxLength={15} />
+                      <input
+                        id="inv-phone"
+                        value={form.phone}
+                        onChange={(e) => set('phone', maskPhone(e.target.value))}
+                        placeholder="(000) 000-0000"
+                        className={inputClass}
+                        maxLength={15}
+                      />
                     </Field>
                     <Field label="Teléfono alternativo" htmlFor="inv-phone2">
-                      <input id="inv-phone2" value={form.phone2} onChange={(e) => set('phone2', maskPhone(e.target.value))} placeholder="(000) 000-0000" className={inputClass} maxLength={15} />
+                      <input
+                        id="inv-phone2"
+                        value={form.phone2}
+                        onChange={(e) => set('phone2', maskPhone(e.target.value))}
+                        placeholder="(000) 000-0000"
+                        className={inputClass}
+                        maxLength={15}
+                      />
                     </Field>
                     <div className="md:col-span-2">
                       <Field label="Correo electrónico" htmlFor="inv-email">
-                        <input id="inv-email" type="email" value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="inversionista@correo.com" className={inputClass} />
+                        <input
+                          id="inv-email"
+                          type="email"
+                          value={form.email}
+                          onChange={(e) => set('email', e.target.value)}
+                          placeholder="inversionista@correo.com"
+                          className={inputClass}
+                        />
                       </Field>
                     </div>
                   </FormSection>
                 </MotionCard>
-
               </div>
             </motion.div>
           ) : (
@@ -470,8 +663,17 @@ function AddInvestorForm() {
             >
               <div className="grid items-start gap-4 lg:grid-cols-2">
                 <MotionCard index={0}>
-                  <FormSection icon={<TrendingUp className="h-5 w-5 text-state-warning" />} title="Condiciones" description="Capital e inversión." accent="var(--state-warning-bg)">
-                    <Field label="Capital inicial (RD$)" htmlFor="inv-capital" hint="Monto de inicio">
+                  <FormSection
+                    icon={<TrendingUp className="h-5 w-5 text-state-warning" />}
+                    title="Condiciones"
+                    description="Capital e inversión."
+                    accent="var(--state-warning-bg)"
+                  >
+                    <Field
+                      label="Capital inicial (RD$)"
+                      htmlFor="inv-capital"
+                      hint="Monto de inicio"
+                    >
                       <input
                         id="inv-capital"
                         inputMode="numeric"
@@ -498,7 +700,12 @@ function AddInvestorForm() {
                       />
                     </Field>
                     <Field label="Frecuencia de pago" htmlFor="inv-freq">
-                      <select id="inv-freq" value={form.frequency} onChange={(e) => set('frequency', e.target.value)} className={inputClass}>
+                      <select
+                        id="inv-freq"
+                        value={form.frequency}
+                        onChange={(e) => set('frequency', e.target.value)}
+                        className={inputClass}
+                      >
                         <option value="mensual">Mensual</option>
                         <option value="trimestral">Trimestral</option>
                         <option value="semestral">Semestral</option>
@@ -511,24 +718,38 @@ function AddInvestorForm() {
 
                 <MotionCard index={1}>
                   <div className="space-y-4">
-                    <FormSection icon={<Calendar className="h-5 w-5 text-state-info" />} title="Plazo" description="Vigencia de la inversión." accent="var(--state-info-bg)">
+                    <FormSection
+                      icon={<Calendar className="h-5 w-5 text-state-info" />}
+                      title="Plazo"
+                      description="Vigencia de la inversión."
+                      accent="var(--state-info-bg)"
+                    >
                       <Field label="Fecha de inicio" htmlFor="inv-start">
-                        <DatePickerInput id="inv-start" value={form.startDate} onChange={(value) => set('startDate', value)} className={inputClass} />
+                        <DatePickerInput
+                          id="inv-start"
+                          value={form.startDate}
+                          onChange={(value) => set('startDate', value)}
+                          className={inputClass}
+                        />
                       </Field>
                     </FormSection>
                     <div className="space-y-3">
                       <button
                         type="button"
                         onClick={handleCalculateInterest}
-                        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control-comfortable bg-primary-accent px-8 text-base font-bold text-white shadow-card transition hover:bg-primary"
+                        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control-comfortable bg-primary-accent px-8 text-base font-bold text-white shadow-card transition hover:bg-primary-hover"
                       >
                         <Calculator className="h-5 w-5" />
                         Calcular
                       </button>
                       {monthlyInterest !== null && (
                         <div className="rounded-control border border-border-strong-ui bg-surface-muted-ui px-5 py-2.5">
-                          <p className="text-xs font-bold uppercase tracking-wide text-text-secondary">Interés mensual</p>
-                          <p className="text-xl font-bold text-text-primary">{formatDopCurrency(monthlyInterest)}</p>
+                          <p className="text-xs font-bold uppercase tracking-wide text-text-secondary">
+                            Interés mensual
+                          </p>
+                          <p className="text-xl font-bold text-text-primary">
+                            {formatDopCurrency(monthlyInterest)}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -536,9 +757,21 @@ function AddInvestorForm() {
                 </MotionCard>
 
                 <MotionCard index={2} className="lg:col-span-2">
-                  <FormSection icon={<FileText className="h-5 w-5 text-primary-accent" />} title="Notas y observaciones" description="Acuerdos, condiciones especiales o historial previo." accent="var(--border-strong-ui)">
+                  <FormSection
+                    icon={<FileText className="h-5 w-5 text-primary-accent" />}
+                    title="Notas y observaciones"
+                    description="Acuerdos, condiciones especiales o historial previo."
+                    accent="var(--border-strong-ui)"
+                  >
                     <Field label="Comentarios" htmlFor="inv-notes" full>
-                      <textarea id="inv-notes" rows={3} value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Condiciones especiales, acuerdos verbales, historial previo..." className="w-full resize-none rounded-control-comfortable border border-primary-border bg-card p-3.5 text-sm outline-none focus:border-primary-accent focus:ring-2 focus:ring-primary-soft" />
+                      <textarea
+                        id="inv-notes"
+                        rows={3}
+                        value={form.notes}
+                        onChange={(e) => set('notes', e.target.value)}
+                        placeholder="Condiciones especiales, acuerdos verbales, historial previo..."
+                        className="w-full resize-none rounded-control-comfortable border border-primary-border bg-card p-3.5 text-sm outline-none focus:border-primary-accent focus:ring-2 focus:ring-primary-soft"
+                      />
                     </Field>
                   </FormSection>
                 </MotionCard>
@@ -553,7 +786,9 @@ function AddInvestorForm() {
                         type="checkbox"
                       />
                       <span>
-                        <span className="block text-sm font-bold text-text-primary">Generar recibo</span>
+                        <span className="block text-sm font-bold text-text-primary">
+                          Generar recibo
+                        </span>
                         <span className="block text-xs text-text-muted">
                           Abrir el recibo de recepción de capital al guardar la inversión.
                         </span>
@@ -587,7 +822,13 @@ function AddInvestorForm() {
 
 export default function AddInvestorPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-page"><p className="text-sm text-text-subtle">Cargando...</p></div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-page">
+          <p className="text-sm text-text-subtle">Cargando...</p>
+        </div>
+      }
+    >
       <AddInvestorForm />
     </Suspense>
   );

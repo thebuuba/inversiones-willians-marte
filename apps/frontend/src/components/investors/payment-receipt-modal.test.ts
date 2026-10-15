@@ -5,10 +5,10 @@ import test from 'node:test';
 const source = readFileSync(new URL('./payment-receipt-modal.tsx', import.meta.url), 'utf8');
 
 test('shows payment information instead of the printable receipt after registration', () => {
-  assert.match(source, />Información del recibo</);
+  assert.match(source, />\s*Información del recibo\s*</);
   assert.match(source, />Pago registrado correctamente</);
   assert.match(source, /<ReceiptDetail label="Monto pagado"/);
-  assert.match(source, /aria-hidden="true" style=\{\{ position: 'fixed', left: '-10000px'/);
+  assert.match(source, /aria-hidden="true"\s+style=\{\{\s*position: 'fixed',\s*left: '-10000px'/);
   assert.match(source, />\s*Imprimir recibo\s*<\/button>/);
 });
 

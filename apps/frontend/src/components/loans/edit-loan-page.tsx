@@ -121,7 +121,9 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
 
           <div className="space-y-6 px-8 py-6">
             {error && (
-              <div className="rounded-control-comfortable bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+              <div className="rounded-control-comfortable bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
+              </div>
             )}
 
             <div className="grid grid-cols-2 gap-4">
@@ -276,7 +278,7 @@ export function EditLoanPage({ loanId }: { loanId: string }) {
               type="button"
               disabled={saving}
               onClick={handleSave}
-              className="inline-flex h-10 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-semibold text-white hover:bg-primary disabled:opacity-50"
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {saving ? 'Guardando...' : 'Guardar cambios'}

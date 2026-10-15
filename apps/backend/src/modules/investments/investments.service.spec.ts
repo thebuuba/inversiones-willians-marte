@@ -117,6 +117,7 @@ describe('InvestmentsService', () => {
           id: 'investment-1',
           investorId: 'investor-1',
           capital: 100000,
+          monthlyPayment: 3000,
           rate: 3,
           status: 'ACTIVE',
         }),
@@ -163,5 +164,24 @@ describe('InvestmentsService', () => {
       where: { id: 'investment-1' },
       data: { monthlyPayment: 4500 },
     });
+  });
+});
+
+describe('legacy capital additions', () => {
+  it('preserves historical terms by rejecting additions to a mismatched legacy contract', async () => {
+    const service = new InvestmentsService();
+    jest
+      .mocked(prisma.investorInvestment.findUnique)
+      .mockResolvedValue({
+        id: 'legacy',
+        status: 'ACTIVE',
+        capital: 10000,
+        rate: 3,
+        monthlyPayment: 100,
+      } as never);
+    jest.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(prisma));
+    await expect(
+      service.addCapital('legacy', { amount: 5000, movementDate: '2026-03-01' }, 'user'),
+    ).rejects.toThrow(/nueva inversión/);
   });
 });

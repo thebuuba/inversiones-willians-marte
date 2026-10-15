@@ -151,7 +151,7 @@ function FormHeaderActions({
         Cancelar
       </Link>
       <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-[18px] bg-brand-sky px-5 text-sm font-bold text-white shadow-action transition hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-[18px] bg-brand-sky px-5 text-sm font-bold text-white shadow-action transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
         disabled={saving}
         onClick={onSave}
         type="button"
@@ -503,7 +503,7 @@ function ClientPhotoUploader({
           {processing ? 'Procesando...' : 'Subir'}
         </button>
         <button
-          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[18px] bg-brand-sky text-sm font-bold text-white shadow-action transition hover:bg-primary disabled:opacity-50"
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[18px] bg-brand-sky text-sm font-bold text-white shadow-action transition hover:bg-primary-hover disabled:opacity-50"
           disabled={creatingQr}
           onClick={() => void handleCreateQr()}
           type="button"

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -398,7 +398,7 @@ export default function AgendaPage() {
           type="button"
           disabled={loading}
           onClick={() => setEditor(null)}
-          className="flex h-11 items-center gap-2 rounded-full bg-brand-sky px-5 text-sm font-semibold text-white transition hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky focus-visible:ring-offset-2 disabled:opacity-50"
+          className="flex h-11 items-center gap-2 rounded-full bg-brand-sky px-5 text-sm font-semibold text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <Plus className="h-4 w-4" />
           Nuevo evento

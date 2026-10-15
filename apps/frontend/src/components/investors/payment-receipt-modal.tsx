@@ -3,17 +3,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, Printer, Download, MessageCircle, CheckCircle2 } from 'lucide-react';
 import { formatDop } from '@/lib/currency';
+import { formatPaymentPeriods } from './payment-period-label';
 import { getSettings, type SystemSettings } from '@/lib/api/settings';
-import type { InvestorInvestmentSummary, InvestorItem, InvestorPaymentItem } from '@inversiones/shared';
+import type {
+  InvestorInvestmentSummary,
+  InvestorItem,
+  InvestorPaymentItem,
+} from '@inversiones/shared';
 
-const fmt = (n: number | string) => formatDop(n);
+const fmt = (n: number | string) => formatDop(n, { decimals: 2 });
 const fmtDate = (s: string | Date) =>
-  new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
-
-const MONTHS = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
+  new Date(s).toLocaleDateString('es-DO', {
+    timeZone: 'UTC',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 
 const safeFilename = (value: string) =>
   value
@@ -43,25 +48,36 @@ function ReceiptDetail({
   return (
     <div className="rounded-control-comfortable border border-border-soft bg-surface-subtle px-4 py-3">
       <p className="text-xs font-medium text-text-muted">{label}</p>
-      <p className={`mt-1 break-words font-bold ${emphasized ? 'text-lg text-primary-accent' : 'text-sm text-text-primary'}`}>
+      <p
+        className={`mt-1 break-words font-bold ${emphasized ? 'text-lg text-primary-accent' : 'text-sm text-text-primary'}`}
+      >
         {value}
       </p>
     </div>
   );
 }
 
-export function PaymentReceiptModal({ payment, investor, investment, onClose, newlyCreated = false }: PaymentReceiptModalProps) {
+export function PaymentReceiptModal({
+  payment,
+  investor,
+  investment,
+  onClose,
+  newlyCreated = false,
+}: PaymentReceiptModalProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [company, setCompany] = useState<SystemSettings | null>(null);
 
   useEffect(() => {
-    getSettings().then(setCompany).catch(() => undefined);
+    getSettings()
+      .then(setCompany)
+      .catch(() => undefined);
   }, []);
 
   const padReceipt = String(payment.receiptNumber).padStart(5, '0');
-  const monthLabel = MONTHS[payment.periodMonth - 1] ?? String(payment.periodMonth);
+  const monthLabel = formatPaymentPeriods(payment);
   const receiptFilename = [
     'Recibo',
+    padReceipt,
     safeFilename(investor.name),
     investment?.code ? safeFilename(investment.code) : null,
     safeFilename(monthLabel),
@@ -124,7 +140,11 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose, ne
       filename: `${receiptFilename}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: [76, 210] as [number, number], orientation: 'portrait' as const },
+      jsPDF: {
+        unit: 'mm',
+        format: [76, 210] as [number, number],
+        orientation: 'portrait' as const,
+      },
     };
 
     const worker = html2pdf().set(opt).from(content);
@@ -136,7 +156,7 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose, ne
       `Recibo de pago #${padReceipt}`,
       `Inversionista: ${investor.name}`,
       investment?.code ? `Inversión: ${investment.code}` : `Código: ${investor.code}`,
-      `Período: ${monthLabel} ${payment.periodYear}`,
+      `Período: ${monthLabel}`,
       `Monto pagado: ${fmt(Number(payment.amount))}`,
       `Fecha: ${fmtDate(payment.paymentDate)}`,
       `Método: ${payment.paymentMethod ?? 'No especificado'}`,
@@ -145,7 +165,11 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose, ne
       'Inversiones Willians Marte',
     ].filter(Boolean);
 
-    window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener,noreferrer');
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`,
+      '_blank',
+      'noopener,noreferrer',
+    );
   }
 
   return (
@@ -162,7 +186,9 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose, ne
       >
         <header className="flex items-start justify-between gap-4 bg-surface-muted px-6 py-5">
           <div>
-            <h2 className="text-xl font-bold text-text-primary" id="investor-payment-receipt-title">Información del recibo</h2>
+            <h2 className="text-xl font-bold text-text-primary" id="investor-payment-receipt-title">
+              Información del recibo
+            </h2>
             <p className="mt-1 text-sm font-medium text-text-muted">
               Recibo #{padReceipt} — {investor.name}
             </p>
@@ -177,7 +203,10 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose, ne
           </button>
         </header>
 
-        <section className="border-b border-border-soft px-4 py-5 sm:px-6" aria-label="Datos del pago registrado">
+        <section
+          className="border-b border-border-soft px-4 py-5 sm:px-6"
+          aria-label="Datos del pago registrado"
+        >
           {newlyCreated && (
             <div className="mb-4 flex items-center gap-2 text-primary-accent">
               <CheckCircle2 className="h-5 w-5" />
@@ -188,7 +217,7 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose, ne
             <ReceiptDetail label="Número de recibo" value={`#${padReceipt}`} />
             <ReceiptDetail label="Inversionista" value={investor.name} />
             <ReceiptDetail label="Inversión" value={investment?.code ?? investor.code} />
-            <ReceiptDetail label="Período" value={`${monthLabel} ${payment.periodYear}`} />
+            <ReceiptDetail label="Período" value={monthLabel} />
             <ReceiptDetail label="Monto pagado" value={fmt(Number(payment.amount))} emphasized />
             <ReceiptDetail label="Fecha del pago" value={fmtDate(payment.paymentDate)} />
             <ReceiptDetail label="Método" value={payment.paymentMethod ?? 'No especificado'} />
@@ -210,42 +239,102 @@ export function PaymentReceiptModal({ payment, investor, investment, onClose, ne
               color: '#000',
             }}
           >
-            <div style={{ borderBottom: '1px dashed #000', paddingBottom: '8px', marginBottom: '8px' }}>
+            <div
+              style={{ borderBottom: '1px dashed #000', paddingBottom: '8px', marginBottom: '8px' }}
+            >
               <strong style={{ fontSize: '14px' }}>
                 {(company?.companyName ?? 'Inversiones Willians Marte').toUpperCase()}
               </strong>
-              {company?.companyTaxId && <><br />RNC: {company.companyTaxId}</>}
-              {company?.companyPhone && <><br />Tel: {company.companyPhone}</>}
-              {company?.companyAddress && <><br />{company.companyAddress}</>}
+              {company?.companyTaxId && (
+                <>
+                  <br />
+                  RNC: {company.companyTaxId}
+                </>
+              )}
+              {company?.companyPhone && (
+                <>
+                  <br />
+                  Tel: {company.companyPhone}
+                </>
+              )}
+              {company?.companyAddress && (
+                <>
+                  <br />
+                  {company.companyAddress}
+                </>
+              )}
             </div>
 
             <div style={{ fontSize: '14px', margin: '8px 0' }}>
-              <strong>RECIBO DE PAGO</strong><br />
+              <strong>RECIBO DE PAGO</strong>
+              <br />
               <span style={{ fontSize: '11px' }}>No. {padReceipt}</span>
             </div>
 
-            <div style={{ borderBottom: '1px dashed #000', borderTop: '1px dashed #000', padding: '8px 0', textAlign: 'left' }}>
-              <strong>Fecha:</strong> {fmtDate(payment.paymentDate)}<br />
-              <strong>Inversionista:</strong> {investor.name}<br />
+            <div
+              style={{
+                borderBottom: '1px dashed #000',
+                borderTop: '1px dashed #000',
+                padding: '8px 0',
+                textAlign: 'left',
+              }}
+            >
+              <strong>Fecha:</strong> {fmtDate(payment.paymentDate)}
+              <br />
+              <strong>Inversionista:</strong> {investor.name}
+              <br />
               {investment?.code && (
                 <>
-                  <strong>Inversión:</strong> {investment.code}<br />
+                  <strong>Inversión:</strong> {investment.code}
+                  <br />
                 </>
               )}
-              <strong>Período:</strong> {monthLabel} {payment.periodYear}<br />
+              <strong>Período:</strong> {monthLabel}
+              <br />
               <strong>Método:</strong> {payment.paymentMethod ?? '—'}
             </div>
 
             <div style={{ borderBottom: '1px dashed #000', padding: '10px 0' }}>
-              <span style={{ fontSize: '10px' }}>MONTO PAGADO</span><br />
+              <span style={{ fontSize: '10px' }}>MONTO PAGADO</span>
+              <br />
               <strong style={{ fontSize: '18px' }}>{fmt(Number(payment.amount))}</strong>
             </div>
 
+            {!!payment.allocations?.length && (
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  marginTop: '8px',
+                  fontSize: '11px',
+                }}
+              >
+                <tbody>
+                  {payment.allocations.map((allocation) => (
+                    <tr key={`${allocation.periodYear}-${allocation.periodMonth}`}>
+                      <td style={{ textAlign: 'left', padding: '3px 0' }}>
+                        {formatPaymentPeriods(allocation)}
+                      </td>
+                      <td style={{ textAlign: 'right', padding: '3px 0' }}>
+                        {fmt(allocation.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
             <p style={{ fontSize: '10px', margin: '10px 0 24px' }}>
               Recibí conforme el pago indicado en este recibo.
             </p>
 
-            <div style={{ borderTop: '1px solid #000', margin: '0 auto', paddingTop: '4px', width: '70%' }}>
+            <div
+              style={{
+                borderTop: '1px solid #000',
+                margin: '0 auto',
+                paddingTop: '4px',
+                width: '70%',
+              }}
+            >
               Firma del inversionista
             </div>
           </div>

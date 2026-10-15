@@ -397,7 +397,7 @@ export function LoanDetailPage({ loanId }: { loanId: string }) {
                 Editar
               </Link>
               <Link
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:bg-primary"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_12px_22px_rgba(90,154,122,0.22)] transition hover:bg-primary-hover"
                 href={`/prestamos/cobrar?loanId=${loan.id}`}
               >
                 <Plus className="h-4 w-4" />

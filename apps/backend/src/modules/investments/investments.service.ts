@@ -5,9 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { prisma, Prisma } from '@inversiones/database';
+import { paymentReference } from '../investor-payments/payment-reference';
 import { AddCapitalDto } from './dto/add-capital.dto';
 import { CreateInvestmentDto } from './dto/create-investment.dto';
-import { getInvestmentPeriodStatus } from './investment-period-status';
+import { getInvestmentPeriodStatus, investmentBusinessDate } from './investment-period-status';
 
 @Injectable()
 export class InvestmentsService {
@@ -18,8 +19,7 @@ export class InvestmentsService {
     });
     if (!investor) throw new NotFoundException('Investor not found');
 
-    const monthlyPayment =
-      dto.monthlyPayment ?? this.calculateMonthlyPayment(dto.capital, dto.rate);
+    const monthlyPayment = this.calculateMonthlyPayment(dto.capital, dto.rate);
 
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       try {
@@ -34,7 +34,9 @@ export class InvestmentsService {
                 capital: dto.capital,
                 monthlyPayment,
                 rate: dto.rate,
-                startDate: dto.startDate ? new Date(dto.startDate) : null,
+                startDate: dto.startDate
+                  ? new Date(dto.startDate)
+                  : investmentBusinessDate(new Date()),
                 term: dto.term,
                 notes: dto.notes,
                 createdById: userId,
@@ -85,9 +87,9 @@ export class InvestmentsService {
     const investments = await prisma.investorInvestment.findMany({
       where: { investorId },
       include: {
+        movements: true,
         payments: {
           orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }],
-          take: 200,
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -112,6 +114,16 @@ export class InvestmentsService {
       if (!investment) throw new NotFoundException('Investment not found');
       if (investment.status !== 'ACTIVE') {
         throw new BadRequestException('Only active investments can receive capital additions');
+      }
+      if (
+        Math.round(Number(investment.monthlyPayment) * 100) !==
+        Math.round(
+          this.calculateMonthlyPayment(Number(investment.capital), Number(investment.rate)) * 100,
+        )
+      ) {
+        throw new BadRequestException(
+          'Esta inversión tiene una mensualidad pactada distinta a la tasa. Registra el aporte en una nueva inversión para conservar su historial.',
+        );
       }
       const updatedInvestment = await tx.investorInvestment.update({
         where: { id },
@@ -171,7 +183,7 @@ export class InvestmentsService {
 
   calculateMonthlyPayment(capital: number, rate: number) {
     if (!Number.isFinite(capital) || !Number.isFinite(rate) || capital <= 0 || rate <= 0) return 0;
-    return capital * (rate / 100);
+    return Math.round(capital * rate) / 100;
   }
 
   getCurrentPeriodStatus(
@@ -187,17 +199,40 @@ export class InvestmentsService {
     return getInvestmentPeriodStatus(startDate, payments, today, monthlyPayment);
   }
 
+  private periodStatus(investment: {
+    startDate: Date | null;
+    createdAt: Date;
+    monthlyPayment: Prisma.Decimal;
+    rate: Prisma.Decimal;
+    capital: Prisma.Decimal;
+    payments?: Array<{
+      id: string;
+      receiptNumber: number;
+      periodMonth: number;
+      periodYear: number;
+      amount: Prisma.Decimal;
+    }>;
+    movements?: Array<{ amount: Prisma.Decimal; movementDate: Date }>;
+  }) {
+    return getInvestmentPeriodStatus(
+      investment.startDate ??
+        (investment.createdAt ? investmentBusinessDate(investment.createdAt) : null),
+      investment.payments ?? [],
+      new Date(),
+      investment.monthlyPayment,
+      { rate: investment.rate, capital: investment.capital, movements: investment.movements ?? [] },
+    );
+  }
   private detailInclude() {
     return {
       investor: true,
       payments: {
+        include: { receivedBy: { select: { id: true, name: true } } },
         orderBy: [{ periodYear: 'desc' as const }, { periodMonth: 'desc' as const }],
-        take: 500,
       },
       movements: {
         include: { createdBy: { select: { id: true, name: true } } },
         orderBy: { movementDate: 'desc' as const },
-        take: 500,
       },
     };
   }
@@ -207,10 +242,15 @@ export class InvestmentsService {
       include: ReturnType<InvestmentsService['detailInclude']>;
     }>,
   ) {
+    const periodStatus = this.periodStatus(investment);
     return {
       ...this.toInvestmentSummary(investment),
       investor: investment.investor,
-      payments: investment.payments,
+      payments: investment.payments.map((payment) => ({
+        ...payment,
+        reference: paymentReference(payment.reference),
+        allocations: periodStatus.paymentAllocations[payment.id] ?? [],
+      })),
       movements: investment.movements,
     };
   }
@@ -220,15 +260,18 @@ export class InvestmentsService {
       | Prisma.InvestorInvestmentGetPayload<{ include: { payments: true } }>
       | Prisma.InvestorInvestmentGetPayload<Record<string, never>>,
   ) {
-    const payments = 'payments' in investment ? investment.payments : [];
-    const status = this.getCurrentPeriodStatus(
-      investment.startDate,
-      payments,
-      new Date(),
-      investment.monthlyPayment,
-    );
+    const status = this.periodStatus(investment);
+
     return {
       ...investment,
+      ...('payments' in investment
+        ? {
+            payments: investment.payments.map((payment) => ({
+              ...payment,
+              reference: paymentReference(payment.reference),
+            })),
+          }
+        : {}),
       capital: Number(investment.capital),
       monthlyPayment: Number(investment.monthlyPayment),
       rate: Number(investment.rate),
@@ -236,6 +279,11 @@ export class InvestmentsService {
       currentPeriodMonth: status.currentPeriodMonth,
       currentPeriodYear: status.currentPeriodYear,
       paymentStatus: status.paymentStatus,
+      currentPeriodBalance: status.currentPeriodBalance,
+      pendingAmount: status.pendingAmount,
+      pendingMonths: status.pendingMonths,
+      pendingPeriods: status.pendingPeriods,
+      totalPaid: status.totalPaid,
     };
   }
 }

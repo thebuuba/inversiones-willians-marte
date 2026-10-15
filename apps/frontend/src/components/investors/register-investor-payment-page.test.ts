@@ -49,10 +49,7 @@ test('assigns the investment period and current payment date automatically', () 
   assert.doesNotMatch(source, /onChange=\{\(e\) => setPeriodYear/);
   assert.doesNotMatch(source, />Fecha del pago<\/span>/);
   assert.doesNotMatch(source, /type="date"/);
-  assert.match(
-    source,
-    /new Date\(\)\.toLocaleDateString\('en-CA', \{ timeZone: 'America\/Santo_Domingo' \}\)/,
-  );
+  assert.match(source, /formatBusinessDateInput\(\)/);
   assert.match(source, /periodMonth,\s*periodYear,\s*paymentDate,/);
 });
 

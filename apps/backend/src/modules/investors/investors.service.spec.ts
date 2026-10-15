@@ -4,8 +4,9 @@ import { prisma, Prisma } from '@inversiones/database';
 jest.mock('@inversiones/database', () => ({
   prisma: {
     $transaction: jest.fn(),
-    investorPayment: { groupBy: jest.fn() },
+    investorPayment: { groupBy: jest.fn(), aggregate: jest.fn() },
     investor: {
+      update: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
       create: jest.fn(),
@@ -13,6 +14,8 @@ jest.mock('@inversiones/database', () => ({
       findUnique: jest.fn(),
     },
     investorInvestment: {
+      findFirst: jest.fn(),
+      update: jest.fn(),
       create: jest.fn(),
     },
   },
@@ -41,6 +44,18 @@ describe('InvestorsService', () => {
 
   beforeEach(() => {
     service = new InvestorsService();
+    jest
+      .mocked(prisma.investorPayment.aggregate)
+      .mockResolvedValue({ _sum: { amount: 0 } } as never);
+    jest.mocked(prisma.investorInvestment.findFirst).mockResolvedValue({
+      id: 'investment-1',
+      capital: 10000,
+      rate: 3,
+      monthlyPayment: 300,
+      startDate: new Date('2026-07-10'),
+      payments: [],
+      movements: [],
+    } as never);
     jest.mocked(prisma.$transaction).mockImplementation(async (callback) =>
       callback({
         investor: prisma.investor,
@@ -186,6 +201,31 @@ describe('InvestorsService', () => {
     expect(investor.investments[0].paymentStatus).toBe('SCHEDULED');
     expect(investor.investments[0].currentPeriodMonth).toBe(8);
     expect(investor.investments[0].currentPeriodYear).toBe(2026);
-    expect(investor.investments[0].nextDueDate.toISOString().slice(0, 10)).toBe('2026-08-09');
+    expect(investor.investments[0].nextDueDate?.toISOString().slice(0, 10)).toBe('2026-08-09');
+  });
+  it('recalculates monthly interest when changing a new investment rate', async () => {
+    await service.update('investor-6', { rate: 4 });
+    expect(prisma.investorInvestment.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ monthlyPayment: 400, rate: 4 }) }),
+    );
+  });
+  it('does not rewrite terms after financial history exists', async () => {
+    jest.mocked(prisma.investorInvestment.findFirst).mockResolvedValue({
+      id: 'investment-1',
+      capital: 10000,
+      rate: 3,
+      monthlyPayment: 300,
+      startDate: new Date('2026-07-10'),
+      payments: [{ id: 'payment-1' }],
+      movements: [],
+    } as never);
+    await expect(service.update('investor-6', { rate: 4 })).rejects.toThrow(/historial/);
+    expect(prisma.investorInvestment.update).not.toHaveBeenCalled();
+  });
+  it('uses complete payment totals for the state of account, including historical receipts', async () => {
+    jest
+      .mocked(prisma.investorPayment.aggregate)
+      .mockResolvedValue({ _sum: { amount: 59000 } } as never);
+    expect(await service.findOne('investor-6')).toMatchObject({ totalGainsPaid: 59000 });
   });
 });

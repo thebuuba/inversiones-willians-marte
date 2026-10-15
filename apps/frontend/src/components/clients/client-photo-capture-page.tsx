@@ -88,7 +88,7 @@ export function ClientPhotoCapturePage({ token }: { token: string }) {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-page px-5 py-8 text-text-primary">
-      <section className="w-full max-w-md rounded-[24px] border border-primary-border bg-card p-7 shadow-[0_12px_36px_rgba(40,92,67,0.08)]">
+      <section className="w-full max-w-md rounded-[24px] border border-primary-border bg-card p-7 shadow-card">
         <div className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-primary-soft text-primary">
           {state === 'success' ? (
             <CheckCircle2 className="h-7 w-7" />
@@ -121,7 +121,7 @@ export function ClientPhotoCapturePage({ token }: { token: string }) {
 
         {state !== 'success' && state !== 'expired' ? (
           <button
-            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(47,118,84,0.22)] transition hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(47,118,84,0.22)] transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!canCapture}
             onClick={() => inputRef.current?.click()}
             type="button"

@@ -18,3 +18,14 @@ export function formatRelativeDate(value: string | Date, now = new Date()): stri
   if (hours < 48) return 'Ayer';
   return formatShortDate(date);
 }
+
+export function formatBusinessDateInput(value = new Date()): string {
+  const parts = new Intl.DateTimeFormat('en', {
+    timeZone: 'America/Santo_Domingo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(value);
+  const part = (name: string) => parts.find((item) => item.type === name)?.value ?? '';
+  return `${part('year')}-${part('month')}-${part('day')}`;
+}

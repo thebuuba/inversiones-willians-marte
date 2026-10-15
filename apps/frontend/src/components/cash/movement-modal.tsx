@@ -364,7 +364,7 @@ export const MovementModal = memo(function MovementModal({
             Cancelar
           </button>
           <button
-            className="h-11 rounded-[18px] bg-brand-sky px-5 text-sm font-bold text-white shadow-action transition-colors hover:bg-primary disabled:cursor-wait disabled:opacity-70"
+            className="h-11 rounded-[18px] bg-brand-sky px-5 text-sm font-bold text-white shadow-action transition-colors hover:bg-primary-hover disabled:cursor-wait disabled:opacity-70"
             disabled={saving}
             type="submit"
           >

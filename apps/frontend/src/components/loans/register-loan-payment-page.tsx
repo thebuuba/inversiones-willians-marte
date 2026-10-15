@@ -518,7 +518,7 @@ export function RegisterLoanPaymentPage() {
                   className="grid gap-3 rounded-panel border border-border-soft bg-card p-4 shadow-card sm:grid-cols-2 xl:grid-cols-5"
                 >
                   <a
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-control-comfortable bg-primary-accent px-4 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-control-comfortable bg-primary-accent px-4 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent disabled:cursor-not-allowed disabled:opacity-50"
                     href="#loan-payment-form"
                   >
                     <HandCoins className="h-4 w-4" /> Ir al cobro

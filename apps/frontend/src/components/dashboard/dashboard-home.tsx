@@ -48,7 +48,6 @@ import {
 } from '@/lib/api/dashboard';
 import { getLoans, type LoanListItem } from '@/lib/api/loans';
 import { getClient } from '@/lib/api/clients';
-import { CircleProgress } from '@/components/ui/circle-progress';
 import { formatDop } from '@/lib/currency';
 import { formatRelativeDate, formatShortDate } from '@/lib/date-format';
 import { toDashboardAuditRow } from './dashboard-audit';
@@ -316,46 +315,36 @@ export function DashboardHome() {
       value: money(balance),
       detail: `de RD$${new Intl.NumberFormat('es-DO', { notation: 'compact', maximumFractionDigits: 1 }).format(totalContracted)} contratado`,
       icon: Wallet,
-      color: '#139666',
       iconTone: 'bg-white text-primary',
       blue: true,
-      percent: totalContracted ? (balance / totalContracted) * 100 : 0,
     },
     {
       label: 'Préstamos activos',
       value: String(activeLoans),
       detail: `de ${totalLoans} en cartera`,
       icon: BriefcaseBusiness,
-      color: '#139666',
       iconTone: 'bg-primary-soft text-primary',
-      percent: totalLoans ? (activeLoans / totalLoans) * 100 : 0,
     },
     {
       label: 'Cobrado hoy',
       value: money(collected),
       detail: `meta ${money(dueToday)}`,
       icon: Banknote,
-      color: '#10b981',
       iconTone: 'bg-emerald-100 text-emerald-600',
-      percent: collected + dueToday ? (collected / (collected + dueToday)) * 100 : 0,
     },
     {
       label: 'Por cobrar hoy',
       value: money(dueToday),
       detail: `${installmentsDueToday} ${installmentsDueToday === 1 ? 'cuota pendiente' : 'cuotas pendientes'}`,
       icon: CalendarClock,
-      color: '#ffd23d',
       iconTone: 'bg-amber-100 text-amber-600',
-      percent: upcoming.length ? (installmentsDueToday / upcoming.length) * 100 : 0,
     },
     {
       label: 'Total vencido',
       value: money(overdue),
       detail: `${overdueLoans} préstamos`,
       icon: ClipboardList,
-      color: '#f43f5e',
       iconTone: 'bg-rose-100 text-rose-600',
-      percent: totalLoans ? (overdueLoans / totalLoans) * 100 : 0,
     },
   ];
 
@@ -381,7 +370,7 @@ export function DashboardHome() {
           </Link>
           <Link
             href="/prestamos/nuevo"
-            className="flex h-11 items-center gap-2 rounded-xl bg-brand-sky px-5 text-sm font-bold text-white shadow-action hover:bg-primary"
+            className="flex h-11 items-center gap-2 rounded-xl bg-brand-sky px-5 text-sm font-bold text-white shadow-action hover:bg-primary-hover"
           >
             <Plus className="h-4 w-4" />
             Nuevo préstamo
@@ -413,7 +402,6 @@ export function DashboardHome() {
                 <p className="mt-0.5 truncate text-lg font-bold tabular-nums">{metric.value}</p>
                 <p className="truncate text-xs text-text-secondary">{metric.detail}</p>
               </div>
-              <CircleProgress value={metric.percent} color={metric.color} />
             </div>
           </div>
         ))}

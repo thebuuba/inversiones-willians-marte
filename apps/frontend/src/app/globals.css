@@ -11,7 +11,7 @@
 
 :root {
   color-scheme: light;
-  --background: #faf8f5;
+  --background: #f1eee9;
   --foreground: #241d19;
 
   --brand-950: #052e16;
@@ -25,10 +25,10 @@
   --brand-200: #b8ebc9;
   --brand-100: #dcf7e5;
   --brand-50: #f0fbf4;
-  --brand-sky: #0d7d55;
+  --brand-sky: #139666;
   --highlight: #ffd23d;
 
-  --surface: #faf8f5;
+  --surface: #f1eee9;
   --surface-muted: #f5f3ef;
   --border: #e9e5df;
   --border-strong: #d6d0c8;
@@ -51,14 +51,14 @@
   --loan: #0f766e;
   --document: #475569;
 
-  --page: #faf8f5;
+  --page: #f1eee9;
   --card: #ffffff;
   --surface-subtle: #f8f6f2;
   --surface-muted-ui: #f5f3ef;
   --surface-elevated: #ffffff;
-  --primary: #0d7d55;
-  --primary-hover: #096b49;
-  --primary-accent: #0d7d55;
+  --primary: #139666;
+  --primary-hover: #0d7d55;
+  --primary-accent: #139666;
   --primary-soft: #e7f4ee;
   --primary-border: #c9e6d8;
   --text-primary: #241d19;
@@ -85,7 +85,7 @@
   --state-neutral-dot: #64748b;
   --shadow-soft: 0 2px 5px rgba(51, 39, 27, 0.04);
   --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-action: 0 4px 9px rgba(13, 125, 85, 0.20);
+  --shadow-action: 0 4px 9px rgba(19, 150, 102, 0.20);
   --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.22);
   --radius-panel: 1.375rem;
   --radius-control-compact: 0.5rem;
@@ -231,7 +231,7 @@
   --color-state-neutral-dot: var(--state-neutral-dot);
   --shadow-soft: 0 2px 5px rgba(39, 63, 105, 0.04);
   --shadow-card: var(--shadow-card);
-  --shadow-action: 0 4px 9px rgba(62, 150, 231, 0.20);
+  --shadow-action: 0 4px 9px rgba(19, 150, 102, 0.20);
   --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.22);
   --radius-panel: var(--radius-panel);
   --radius-control-compact: 0.5rem;

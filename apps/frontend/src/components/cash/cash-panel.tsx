@@ -137,7 +137,7 @@ function Header({ onNewMovement, onPrint }: { onNewMovement: () => void; onPrint
           Imprimir cuadre
         </button>
         <button
-          className="flex h-11 items-center gap-2 rounded-[18px] bg-brand-sky px-5 text-sm font-bold text-white shadow-action transition hover:bg-primary"
+          className="flex h-11 items-center gap-2 rounded-[18px] bg-brand-sky px-5 text-sm font-bold text-white shadow-action transition hover:bg-primary-hover"
           onClick={onNewMovement}
           type="button"
         >
@@ -186,7 +186,7 @@ function SummaryCard({
     <ShellCard
       className={cn(
         'relative flex h-[160px] flex-col justify-between overflow-hidden p-5',
-        isBalance ? 'bg-brand-sky text-white shadow-action' : 'bg-card',
+        isBalance ? 'bg-brand-sky text-white' : 'bg-card',
       )}
       index={index}
     >

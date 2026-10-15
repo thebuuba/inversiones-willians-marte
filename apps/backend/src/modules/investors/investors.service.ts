@@ -9,7 +9,11 @@ import {
 import { prisma, Prisma } from '@inversiones/database';
 import { CreateInvestorDto } from './dto/create-investor.dto';
 import { UpdateInvestorDto } from './dto/update-investor.dto';
-import { getInvestmentPeriodStatus } from '../investments/investment-period-status';
+import {
+  getInvestmentPeriodStatus,
+  investmentBusinessDate,
+} from '../investments/investment-period-status';
+import { paymentReference } from '../investor-payments/payment-reference';
 import { formatPersonName } from '../../common/text/name-case';
 
 @Injectable()
@@ -44,9 +48,9 @@ export class InvestorsService {
             type: dto.type ?? 'individual',
             photo: dto.photo,
             capital: dto.capital,
-            monthlyPayment: dto.monthlyPayment,
+            monthlyPayment: Math.round(dto.capital * dto.rate) / 100,
             rate: dto.rate,
-            startDate: dto.startDate ? new Date(dto.startDate) : null,
+            startDate: dto.startDate ? new Date(dto.startDate) : investmentBusinessDate(new Date()),
             term: dto.term,
             bank: dto.bank,
             notes: dto.notes,
@@ -60,9 +64,9 @@ export class InvestorsService {
             investorId: created.id,
             code: `${created.code}-01`,
             capital: dto.capital,
-            monthlyPayment: dto.monthlyPayment,
+            monthlyPayment: Math.round(dto.capital * dto.rate) / 100,
             rate: dto.rate,
-            startDate: dto.startDate ? new Date(dto.startDate) : null,
+            startDate: dto.startDate ? new Date(dto.startDate) : investmentBusinessDate(new Date()),
             term: dto.term,
             notes: dto.notes,
             createdById: userId,
@@ -140,59 +144,85 @@ export class InvestorsService {
       include: this.investorInclude(),
     });
     if (!investor) throw new NotFoundException('Investor not found');
-    return this.decorateInvestor(investor);
+    const payments = await prisma.investorPayment.aggregate({
+      where: { investorId: id },
+      _sum: { amount: true },
+    });
+    return {
+      ...this.decorateInvestor(investor),
+      totalGainsPaid: Number(payments._sum.amount ?? 0),
+    };
   }
 
   async update(id: string, dto: UpdateInvestorDto) {
     try {
       await this.findOne(id);
-      await prisma.$transaction(async (tx) => {
-        await tx.investor.update({
-          where: { id },
-          data: {
-            name: dto.name === undefined ? undefined : formatPersonName(dto.name),
-            email: dto.email,
-            phone: dto.phone,
-            phone2: dto.phone2,
-            cedula: dto.cedula,
-            birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
-            nationality: dto.nationality,
-            type: dto.type,
-            photo: dto.photo,
-            capital: dto.capital,
-            monthlyPayment: dto.monthlyPayment,
-            rate: dto.rate,
-            startDate: dto.startDate ? new Date(dto.startDate) : undefined,
-            term: dto.term,
-            bank: dto.bank,
-            notes: dto.notes,
-          },
-        });
-
-        const firstInvestment = await tx.investorInvestment.findFirst({
-          where: { investorId: id },
-          orderBy: { createdAt: 'asc' },
-        });
-        if (firstInvestment) {
-          await tx.investorInvestment.update({
-            where: { id: firstInvestment.id },
-            data: {
-              capital: dto.capital,
-              monthlyPayment: dto.monthlyPayment,
-              rate: dto.rate,
-              startDate: dto.startDate ? new Date(dto.startDate) : undefined,
-              term: dto.term,
-              notes: dto.notes,
+      await prisma.$transaction(
+        async (tx) => {
+          const firstInvestment = await tx.investorInvestment.findFirst({
+            where: { investorId: id },
+            orderBy: { createdAt: 'asc' },
+            include: {
+              payments: { select: { id: true }, take: 1 },
+              movements: { select: { id: true }, take: 1 },
             },
           });
-        }
-      });
+          const financialChange =
+            firstInvestment &&
+            ((dto.capital !== undefined && dto.capital !== Number(firstInvestment.capital)) ||
+              (dto.rate !== undefined && dto.rate !== Number(firstInvestment.rate)) ||
+              (dto.monthlyPayment !== undefined &&
+                dto.monthlyPayment !== Number(firstInvestment.monthlyPayment)) ||
+              (dto.startDate !== undefined &&
+                dto.startDate.slice(0, 10) !==
+                  firstInvestment.startDate?.toISOString().slice(0, 10)));
+          if (
+            financialChange &&
+            ((firstInvestment.payments?.length ?? 0) > 0 ||
+              (firstInvestment.movements?.length ?? 0) > 0)
+          ) {
+            throw new BadRequestException(
+              'Esta inversión tiene historial. Registra un aporte o una nueva inversión para conservar sus condiciones anteriores',
+            );
+          }
+          const monthlyPayment =
+            firstInvestment && financialChange
+              ? Math.round(
+                  (dto.capital ?? Number(firstInvestment.capital)) *
+                    (dto.rate ?? Number(firstInvestment.rate)),
+                ) / 100
+              : undefined;
+          await tx.investor.update({
+            where: { id },
+            data: {
+              ...dto,
+              name: dto.name === undefined ? undefined : formatPersonName(dto.name),
+              birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
+              startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+              monthlyPayment,
+            },
+          });
+          if (firstInvestment) {
+            await tx.investorInvestment.update({
+              where: { id: firstInvestment.id },
+              data: {
+                capital: dto.capital,
+                rate: dto.rate,
+                monthlyPayment,
+                startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+                term: dto.term,
+                notes: dto.notes,
+              },
+            });
+          }
+        },
+        { isolationLevel: 'Serializable' },
+      );
       return this.findOne(id);
     } catch (error) {
       this.handlePrismaError(error, 'Error al actualizar el inversionista');
     }
   }
-
   async remove(id: string) {
     try {
       await this.findOne(id);
@@ -243,13 +273,12 @@ export class InvestorsService {
     return {
       investments: {
         include: {
+          movements: true,
           payments: {
             orderBy: [{ periodYear: 'desc' as const }, { periodMonth: 'desc' as const }],
-            take: 200,
           },
         },
         orderBy: { createdAt: 'desc' as const },
-        take: 100,
       },
     };
   }
@@ -279,16 +308,28 @@ export class InvestorsService {
       rate: primaryInvestment ? Number(primaryInvestment.rate) : Number(investor.rate),
       startDate: primaryInvestment?.startDate ?? investor.startDate,
       term: primaryInvestment?.term ?? investor.term,
+      totalGainsPaid: investor.investments.reduce(
+        (sum, investment) =>
+          sum +
+          (investment.payments ?? []).reduce((paid, payment) => paid + Number(payment.amount), 0),
+        0,
+      ),
       totalCapital,
       totalMonthlyReturn,
       activeInvestments: activeInvestments.length,
       investments: investor.investments.map((investment) => ({
         ...investment,
+        payments: (investment.payments ?? []).map((payment) => ({
+          ...payment,
+          reference: paymentReference(payment.reference),
+        })),
         ...getInvestmentPeriodStatus(
-          investment.startDate,
+          investment.startDate ??
+            (investment.createdAt ? investmentBusinessDate(investment.createdAt) : null),
           investment.payments,
           new Date(),
           investment.monthlyPayment,
+          { rate: investment.rate, capital: investment.capital, movements: investment.movements },
         ),
         capital: Number(investment.capital),
         monthlyPayment: Number(investment.monthlyPayment),

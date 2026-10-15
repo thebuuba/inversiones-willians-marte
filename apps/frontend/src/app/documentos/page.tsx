@@ -183,7 +183,7 @@ function UploadModal({
               <button
                 className={`flex-1 rounded-full py-2.5 text-sm font-bold text-white transition ${
                   file && !uploading
-                    ? 'bg-primary-accent shadow-action hover:bg-primary'
+                    ? 'bg-primary-accent shadow-action hover:bg-primary-hover'
                     : 'bg-text-secondary cursor-not-allowed'
                 }`}
                 disabled={!file || uploading}
@@ -232,7 +232,7 @@ export default function DocumentosPage() {
           <p className="mt-1.5 text-sm text-text-secondary">Gestión documental del sistema.</p>
         </div>
         <button
-          className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary"
+          className="flex h-11 items-center gap-2 rounded-full bg-primary-accent px-6 text-sm font-bold text-text-inverse shadow-action transition hover:bg-primary-hover"
           onClick={() => setShowUpload(true)}
           type="button"
         >

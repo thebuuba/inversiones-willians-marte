@@ -498,7 +498,7 @@ function ReplacementOptions({
               Total a saldar: {formatCurrency(selectedTotal)}
             </p>
             <button
-              className="h-11 rounded-full bg-primary-accent px-5 text-sm font-bold text-white transition hover:bg-primary disabled:opacity-40"
+              className="h-11 rounded-full bg-primary-accent px-5 text-sm font-bold text-white transition hover:bg-primary-hover disabled:opacity-40"
               disabled={selectedIds.length === 0}
               onClick={() => {
                 onApply(openType, selectedIds, selectedTotal);
@@ -1212,7 +1212,7 @@ function NewLoanStepTwo({
       </div>
 
       <button
-        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-control-comfortable bg-primary-accent text-sm font-bold text-white shadow-card transition hover:-translate-y-0.5 hover:bg-primary"
+        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-control-comfortable bg-primary-accent text-sm font-bold text-white shadow-card transition hover:-translate-y-0.5 hover:bg-primary-hover"
         onClick={handleCalculate}
         type="button"
       >
@@ -1260,7 +1260,7 @@ function NewLoanStepTwo({
 
       {shouldShowCalculatedLoanActions(showSchedule) && (
         <button
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control-comfortable bg-primary-accent text-sm font-bold text-white shadow-action transition hover:-translate-y-0.5 hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control-comfortable bg-primary-accent text-sm font-bold text-white shadow-action transition hover:-translate-y-0.5 hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
           disabled={!calculationReady || !selectedClient || saving}
           onClick={onSave}
           type="button"

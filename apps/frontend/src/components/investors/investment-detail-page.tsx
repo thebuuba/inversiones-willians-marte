@@ -5,6 +5,9 @@ import { useEffect, useState, type FormEvent } from 'react';
 import {
   ArrowLeft,
   Banknote,
+  CalendarDays,
+  Percent,
+  TrendingUp,
   ChevronDown,
   History,
   Landmark,
@@ -22,12 +25,19 @@ import type {
   InvestorPaymentItem,
 } from '@inversiones/shared';
 import { CapitalAdditionReceiptModal } from './capital-addition-receipt-modal';
+import { InvestorPaymentDialog } from './investor-payment-dialog';
 import { PaymentReceiptModal } from './payment-receipt-modal';
+import { formatPaymentPeriods } from './payment-period-label';
 import { InvestmentReceiptModal } from './investment-receipt-modal';
 
-const fmt = (n: number | string) => formatDop(n, { space: true });
+const fmt = (n: number | string) => formatDop(n, { space: true, decimals: 2 });
 const fmtDate = (s: string | Date) =>
-  new Date(s).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' });
+  new Date(s).toLocaleDateString('es-DO', {
+    timeZone: 'UTC',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 
 const TABS = ['Historial de pagos', 'Movimientos de capital', 'Historial', 'Recibos'];
 
@@ -45,6 +55,8 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
   const [tab, setTab] = useState<number | null>(null);
   const [investment, setInvestment] = useState<InvestorInvestmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [paymentRefreshError, setPaymentRefreshError] = useState(false);
   const [amount, setAmount] = useState('');
   const [movementDate, setMovementDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState('');
@@ -109,7 +121,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
     ...(investment.payments ?? []).map((payment) => ({
       id: `payment-${payment.id}`,
       type: 'Pago' as const,
-      title: `Pago del período ${payment.periodMonth}/${payment.periodYear}`,
+      title: `Pago de ${formatPaymentPeriods(payment)}`,
       detail: `Recibo #${String(payment.receiptNumber).padStart(5, '0')}`,
       amount: Number(payment.amount),
       author: payment.receivedBy?.name ?? 'Sistema',
@@ -149,20 +161,20 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
 
   return (
     <>
-      <div className="min-h-screen bg-page px-4 py-5 font-sans text-text-primary sm:px-6 lg:px-8">
-        <div className="mx-auto w-full max-w-[1480px]">
+      <div className="min-h-screen bg-page p-4 font-sans text-text-primary md:p-5">
+        <div className="w-full">
           <Link
-            className="mb-5 inline-flex min-h-11 items-center gap-2 rounded-full px-1 text-xs font-bold uppercase tracking-wider text-primary-accent transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
+            className="mb-5 inline-flex min-h-11 items-center gap-2 rounded-full px-1 text-sm font-semibold text-primary-accent transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent"
             href={investorHref}
           >
             <ArrowLeft className="h-4 w-4" />
             Volver al inversionista
           </Link>
 
-          <header className="overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
+          <header className="overflow-hidden rounded-2xl bg-card shadow-card">
             <div className="flex flex-col gap-5 p-5 sm:p-7 md:flex-row md:items-center md:justify-between">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+                <h1 className="text-[29px] font-bold leading-tight text-text-primary">
                   {investment.investor?.name}
                 </h1>
                 <p className="mt-1 text-base font-semibold tracking-wide text-primary-accent">
@@ -180,7 +192,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
                   {statusVisual.label}
                 </span>
                 <details className="relative">
-                  <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white transition hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2">
+                  <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl bg-brand-sky px-5 text-sm font-bold text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2">
                     Acciones
                     <ChevronDown className="h-4 w-4" />
                   </summary>
@@ -193,13 +205,14 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
                       <Plus className="h-4 w-4" />
                       Sumar capital
                     </button>
-                    <Link
+                    <button
                       className="flex min-h-11 items-center gap-2 rounded-control-comfortable px-3 text-sm font-semibold hover:bg-primary-soft"
-                      href={`/inversionistas/pago?investmentId=${investment.id}`}
+                      type="button"
+                      onClick={() => setPaymentOpen(true)}
                     >
                       <Banknote className="h-4 w-4" />
                       Registrar pago
-                    </Link>
+                    </button>
                     <button
                       className="flex min-h-11 w-full items-center gap-2 rounded-control-comfortable px-3 text-left text-sm font-semibold hover:bg-primary-soft"
                       onClick={() => setShowInvestmentReceipt(true)}
@@ -212,30 +225,59 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
                 </details>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 gap-3 border-t border-border-soft bg-page p-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Summary label="Capital" value={fmt(investment.capital)} />
-              <Summary label="Tasa" value={`${investment.rate}% mensual`} />
-              <Summary label="Retorno mensual" value={fmt(investment.monthlyPayment)} />
-              <Summary
-                label="Próximo vencimiento"
-                value={investment.nextDueDate ? fmtDate(investment.nextDueDate) : '—'}
-              />
-            </div>
           </header>
 
-          <section className="mt-6 overflow-hidden rounded-panel border border-border-soft bg-card shadow-card">
+          <div className="grid grid-cols-1 gap-4 py-6 sm:grid-cols-2 lg:grid-cols-4">
+            <Summary highlight icon={Banknote} label="Capital" value={fmt(investment.capital)} />
+            <Summary icon={Percent} label="Tasa" value={`${investment.rate}% mensual`} />
+            <Summary
+              icon={TrendingUp}
+              label="Retorno mensual"
+              value={fmt(investment.monthlyPayment)}
+            />
+            <Summary
+              icon={CalendarDays}
+              label="Próximo vencimiento"
+              value={investment.nextDueDate ? fmtDate(investment.nextDueDate) : '—'}
+            />
+          </div>
+
+          <section
+            className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-card p-5 shadow-card"
+            aria-label="Intereses pendientes"
+          >
+            <div>
+              <p className="text-sm font-bold text-text-secondary">Interés pendiente acumulado</p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-text-primary">
+                {fmt(investment.pendingAmount ?? 0)}
+              </p>
+              <p className="mt-1 text-xs text-text-secondary">
+                {investment.pendingMonths ?? 0} meses pendientes · Interés simple
+              </p>
+            </div>
+            {(investment.pendingAmount ?? 0) > 0 && investment.status === 'ACTIVE' && (
+              <button
+                type="button"
+                onClick={() => setPaymentOpen(true)}
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-sky px-5 text-sm font-bold text-white shadow-action"
+              >
+                <Banknote className="h-4 w-4" /> Pagar intereses
+              </button>
+            )}
+          </section>
+
+          <section className="mt-6 overflow-hidden rounded-2xl bg-card shadow-card">
             <nav
               aria-label="Secciones de la inversión"
-              className="scrollbar-none flex w-full gap-1 overflow-x-auto border-b border-border-soft px-4 pt-2 sm:px-6"
+              className="scrollbar-none flex w-full gap-2 overflow-x-auto border-b border-border-soft p-3 sm:px-6"
               role="tablist"
             >
               {TABS.map((label, index) => (
                 <button
                   aria-selected={tab === index}
-                  className={`relative min-h-12 shrink-0 px-4 py-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent sm:px-5 ${
+                  className={`relative min-h-11 shrink-0 rounded-xl px-4 py-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent sm:px-5 ${
                     tab === index
-                      ? 'text-primary-accent after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-primary-accent'
+                      ? 'bg-highlight text-text-primary'
                       : 'text-text-muted hover:text-primary-accent'
                   }`}
                   key={label}
@@ -259,13 +301,14 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
                     <p className="mt-1 max-w-md text-sm leading-6 text-text-secondary">
                       Los pagos registrados aparecerán aquí con su fecha, monto y recibo.
                     </p>
-                    <Link
-                      className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white transition hover:bg-primary"
-                      href={`/inversionistas/pago?investmentId=${investment.id}`}
+                    <button
+                      className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-sky px-5 text-sm font-bold text-white transition hover:bg-primary-hover"
+                      type="button"
+                      onClick={() => setPaymentOpen(true)}
                     >
                       <Banknote className="h-4 w-4" />
                       Registrar primer pago
-                    </Link>
+                    </button>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -315,7 +358,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
                       Los aportes adicionales quedarán organizados aquí con su fecha y nota.
                     </p>
                     <button
-                      className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white transition hover:bg-primary"
+                      className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-sky px-5 text-sm font-bold text-white transition hover:bg-primary-hover"
                       onClick={() => setShowAddCapital(true)}
                       type="button"
                     >
@@ -367,7 +410,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           onClick={() => setShowAddCapital(false)}
         >
           <section
-            className="w-full max-w-lg rounded-panel border border-border-soft bg-card p-6 shadow-modal"
+            className="w-full max-w-lg rounded-2xl bg-card p-6 shadow-modal"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-start justify-between gap-3">
@@ -420,7 +463,7 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
               </label>
               {error && <p className="text-sm font-semibold text-state-danger">{error}</p>}
               <button
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary-accent px-5 text-sm font-bold text-white disabled:opacity-60"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-sky px-5 text-sm font-bold text-white disabled:opacity-60"
                 disabled={saving}
                 type="submit"
               >
@@ -457,19 +500,52 @@ export function InvestmentDetailPage({ investmentId }: { investmentId: string })
           onClose={() => setShowInvestmentReceipt(false)}
         />
       )}
+      {paymentRefreshError && (
+        <p role="alert" className="px-6 pb-4 text-sm text-state-danger">
+          El pago se registró, pero no se pudo actualizar el saldo. Recarga la inversión.
+        </p>
+      )}
+      <InvestorPaymentDialog
+        investmentId={paymentOpen ? investment.id : null}
+        onClose={() => setPaymentOpen(false)}
+        onPaid={() => {
+          setPaymentRefreshError(false);
+          void getInvestment(investmentId)
+            .then(setInvestment)
+            .catch(() => setPaymentRefreshError(true));
+        }}
+      />
     </>
   );
 }
 
-function Summary({ label, value }: { label: string; value: string }) {
+function Summary({
+  label,
+  value,
+  highlight = false,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+  icon: typeof Banknote;
+}) {
   return (
-    <div className="rounded-control-comfortable border border-border-soft bg-card p-5 shadow-card">
-      <p className="text-xs font-medium text-text-subtle">{label}</p>
-      <p className="mt-1.5 text-lg font-bold tabular-nums text-text-primary">{value}</p>
+    <div
+      className={`flex min-h-[160px] flex-col justify-between rounded-2xl p-5 shadow-card ${highlight ? 'bg-highlight' : 'bg-card'}`}
+    >
+      <span
+        className={`flex h-10 w-10 items-center justify-center rounded-xl ${highlight ? 'bg-white text-primary' : 'bg-primary-soft text-primary'}`}
+      >
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <div>
+        <p className="text-sm font-semibold text-text-secondary">{label}</p>
+        <p className="mt-0.5 text-lg font-bold tabular-nums text-text-primary">{value}</p>
+      </div>
     </div>
   );
 }
-
 function InvestmentHistoryTab({ events }: { events: InvestmentHistoryEvent[] }) {
   const visuals = {
     Inversión: { icon: History, className: 'bg-state-info-bg text-state-info' },

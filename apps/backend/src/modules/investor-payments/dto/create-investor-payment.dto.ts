@@ -1,6 +1,18 @@
-import { IsDateString, IsString, IsNumber, IsInt, IsOptional, Min, Max } from 'class-validator';
+import {
+  IsDateString,
+  IsString,
+  IsNumber,
+  IsInt,
+  IsOptional,
+  IsUUID,
+  Min,
+  Max,
+} from 'class-validator';
 
 export class CreateInvestorPaymentDto {
+  @IsOptional()
+  @IsUUID()
+  requestId?: string;
   @IsOptional()
   @IsString()
   investorId?: string;

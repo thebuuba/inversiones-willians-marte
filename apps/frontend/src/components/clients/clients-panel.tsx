@@ -218,7 +218,7 @@ export function ClientsPanel() {
               {exporting ? 'Exportando...' : 'Exportar'}
             </button>
             <Link
-              className="flex h-11 items-center gap-2 rounded-[18px] bg-brand-sky px-5 text-sm font-bold text-white shadow-action transition-colors hover:bg-primary"
+              className="flex h-11 items-center gap-2 rounded-[18px] bg-brand-sky px-5 text-sm font-bold text-white shadow-action transition-colors hover:bg-primary-hover"
               href="/clientes/nuevo"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
@@ -233,7 +233,7 @@ export function ClientsPanel() {
             return (
               <PanelCard
                 key={stat.label}
-                className={`${pageEntryStatCardClassName(index)} relative flex h-[136px] flex-col justify-between overflow-hidden p-4 shadow-card ${stat.blue ? 'bg-brand-sky text-white shadow-action' : 'bg-card transition-shadow hover:shadow-md'}`}
+                className={`${pageEntryStatCardClassName(index)} relative flex h-[136px] flex-col justify-between overflow-hidden p-4 shadow-card ${stat.blue ? 'bg-brand-sky text-white' : 'bg-card'}`}
               >
                 {stat.blue && (
                   <>
@@ -268,7 +268,7 @@ export function ClientsPanel() {
           </div>
         )}
 
-        <div className="flex shrink-0 flex-col gap-3 rounded-[32px] border border-border-soft bg-card p-3 shadow-sm md:flex-row md:items-center">
+        <div className="flex shrink-0 flex-col gap-3 rounded-[32px] border border-border-soft bg-card p-3 shadow-card md:flex-row md:items-center">
           <label className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full bg-surface-muted-ui px-4 focus-within:ring-2 focus-within:ring-primary-border">
             <Search className="h-4 w-4 shrink-0 text-text-secondary" aria-hidden="true" />
             <span className="sr-only">Buscar clientes</span>
@@ -301,7 +301,7 @@ export function ClientsPanel() {
         </div>
 
         <PanelCard
-          className={`${pageEntryTableClassName} flex flex-col overflow-hidden bg-card md:min-h-0 md:flex-1`}
+          className={`${pageEntryTableClassName} flex flex-col overflow-hidden bg-card shadow-card md:min-h-0 md:flex-1`}
         >
           <div className="min-h-0 flex-1 overflow-x-auto">
             <div className="flex h-full min-w-[920px] flex-col">
