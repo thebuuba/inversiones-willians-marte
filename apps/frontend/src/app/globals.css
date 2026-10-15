@@ -11,7 +11,7 @@
 
 :root {
   color-scheme: light;
-  --background: #f1eee9;
+  --background: #e2edf8;
   --foreground: #241d19;
 
   --brand-950: #052e16;
@@ -28,9 +28,9 @@
   --brand-sky: #139666;
   --highlight: #ffd23d;
 
-  --surface: #f1eee9;
+  --surface: #e2edf8;
   --surface-muted: #f5f3ef;
-  --border: #e9e5df;
+  --border: #ccdceb;
   --border-strong: #d6d0c8;
   --ink: #241d19;
   --ink-secondary: #675f58;
@@ -51,7 +51,7 @@
   --loan: #0f766e;
   --document: #475569;
 
-  --page: #f1eee9;
+  --page: #e2edf8;
   --card: #ffffff;
   --surface-subtle: #f8f6f2;
   --surface-muted-ui: #f5f3ef;
@@ -66,7 +66,7 @@
   --text-muted: #766e66;
   --text-subtle: #766e66;
   --text-inverse: #ffffff;
-  --border-soft: #e9e5df;
+  --border-soft: #ccdceb;
   --border-strong-ui: #d6d0c8;
   --state-success: #047857;
   --state-success-bg: #d1fae5;
