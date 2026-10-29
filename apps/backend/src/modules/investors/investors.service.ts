@@ -223,18 +223,42 @@ export class InvestorsService {
       this.handlePrismaError(error, 'Error al actualizar el inversionista');
     }
   }
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     try {
-      await this.findOne(id);
-      return await prisma.$transaction(async (tx) => {
-        await tx.investorPayment.deleteMany({ where: { investorId: id } });
-        await tx.investorInvestmentMovement.deleteMany({
-          where: { investment: { investorId: id } },
-        });
-        await tx.investorInvestment.deleteMany({ where: { investorId: id } });
-        await tx.document.updateMany({ where: { investorId: id }, data: { investorId: null } });
-        return tx.investor.delete({ where: { id } });
-      });
+      return await prisma.$transaction(
+        async (tx) => {
+          const investor = await tx.investor.findUnique({
+            where: { id },
+            select: { id: true, code: true },
+          });
+          if (!investor) throw new NotFoundException('Investor not found');
+
+          const investmentCount = await tx.investorInvestment.count({ where: { investorId: id } });
+          const paymentCount = await tx.investorPayment.count({ where: { investorId: id } });
+          const movementCount = await tx.investorInvestmentMovement.count({
+            where: { investment: { investorId: id } },
+          });
+          if (investmentCount > 0 || paymentCount > 0 || movementCount > 0) {
+            throw new BadRequestException(
+              'No se puede eliminar un inversionista con inversiones registradas, historial de pagos o movimientos de capital',
+            );
+          }
+
+          await tx.document.updateMany({ where: { investorId: id }, data: { investorId: null } });
+          const deleted = await tx.investor.delete({ where: { id } });
+          await tx.auditLog.create({
+            data: {
+              userId,
+              action: 'INVESTOR_DELETED',
+              entityType: 'Investor',
+              entityId: id,
+              oldValues: { code: investor.code },
+            },
+          });
+          return deleted;
+        },
+        { isolationLevel: 'Serializable' },
+      );
     } catch (error) {
       this.handlePrismaError(error, 'Error al eliminar el inversionista');
     }

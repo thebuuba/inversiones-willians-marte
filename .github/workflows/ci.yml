@@ -56,6 +56,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Audit production dependencies
+        id: dependency_audit
+        continue-on-error: true
         run: pnpm audit --prod --audit-level high
 
       - name: Generate Prisma client
@@ -90,3 +92,8 @@ jobs:
         run: |
           pnpm --filter backend worker:build:staging
           pnpm --filter @inversiones/frontend worker:build
+      - name: Enforce dependency audit
+        if: always() && steps.dependency_audit.outcome == 'failure'
+        run: |
+          echo "::error::La auditoría detectó dependencias vulnerables. El job sigue fallando hasta corregirlas."
+          exit 1

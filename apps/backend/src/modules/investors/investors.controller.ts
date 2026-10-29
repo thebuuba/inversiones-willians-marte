@@ -49,7 +49,7 @@ export class InvestorsController {
 
   @Delete(':id')
   @Roles('ADMIN')
-  remove(@Param('id') id: string) {
-    return this.investors.remove(id);
+  remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.investors.remove(id, userId);
   }
 }
