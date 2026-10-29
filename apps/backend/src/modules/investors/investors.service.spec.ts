@@ -250,9 +250,7 @@ describe('InvestorsService', () => {
 
   it('rejects deleting an investor who has capital movement history', async () => {
     jest.mocked(prisma.investorInvestmentMovement.count).mockResolvedValue(1);
-    await expect(service.remove('investor-6', 'admin-1')).rejects.toThrow(
-      /movimientos de capital/,
-    );
+    await expect(service.remove('investor-6', 'admin-1')).rejects.toThrow(/movimientos de capital/);
     expect(prisma.investorInvestment.deleteMany).not.toHaveBeenCalled();
     expect(prisma.investor.delete).not.toHaveBeenCalled();
   });
