@@ -244,9 +244,7 @@ describe('InvestorsService', () => {
 
   it('rejects deletion when an investment exists even without payment or movement rows', async () => {
     jest.mocked(prisma.investorInvestment.count).mockResolvedValue(1);
-    await expect(service.remove('investor-6', 'admin-1')).rejects.toThrow(
-      /inversiones registradas/,
-    );
+    await expect(service.remove('investor-6', 'admin-1')).rejects.toThrow(/inversiones registradas/);
     expect(prisma.investor.delete).not.toHaveBeenCalled();
     expect(prisma.auditLog.create).not.toHaveBeenCalled();
   });
