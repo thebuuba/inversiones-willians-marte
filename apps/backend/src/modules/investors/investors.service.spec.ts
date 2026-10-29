@@ -21,6 +21,7 @@ jest.mock('@inversiones/database', () => ({
       findFirst: jest.fn(),
       update: jest.fn(),
       create: jest.fn(),
+      count: jest.fn(),
       deleteMany: jest.fn(),
     },
   },
@@ -52,6 +53,7 @@ describe('InvestorsService', () => {
     jest
       .mocked(prisma.investorPayment.aggregate)
       .mockResolvedValue({ _sum: { amount: 0 } } as never);
+    jest.mocked(prisma.investorInvestment.count).mockResolvedValue(0);
     jest.mocked(prisma.investorPayment.count).mockResolvedValue(0);
     jest.mocked(prisma.investorInvestmentMovement.count).mockResolvedValue(0);
     jest.mocked(prisma.investorInvestment.findFirst).mockResolvedValue({
@@ -240,6 +242,15 @@ describe('InvestorsService', () => {
     expect(await service.findOne('investor-6')).toMatchObject({ totalGainsPaid: 59000 });
   });
 
+  it('rejects deletion when an investment exists even without payment or movement rows', async () => {
+    jest.mocked(prisma.investorInvestment.count).mockResolvedValue(1);
+    await expect(service.remove('investor-6', 'admin-1')).rejects.toThrow(
+      /inversiones registradas/,
+    );
+    expect(prisma.investor.delete).not.toHaveBeenCalled();
+    expect(prisma.auditLog.create).not.toHaveBeenCalled();
+  });
+
   it('rejects deleting an investor who has payment history', async () => {
     jest.mocked(prisma.investorPayment.count).mockResolvedValue(1);
     await expect(service.remove('investor-6', 'admin-1')).rejects.toThrow(/historial de pagos/);
@@ -268,7 +279,8 @@ describe('InvestorsService', () => {
     await expect(service.remove('investor-6', 'admin-1')).resolves.toMatchObject({
       id: 'investor-6',
     });
-    expect(prisma.investorInvestment.deleteMany).toHaveBeenCalledWith({
+    expect(prisma.investorInvestment.deleteMany).not.toHaveBeenCalled();
+    expect(prisma.investorInvestment.count).toHaveBeenCalledWith({
       where: { investorId: 'investor-6' },
     });
     expect(prisma.investorPayment.count).toHaveBeenCalledWith({
