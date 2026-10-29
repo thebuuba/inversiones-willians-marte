@@ -233,17 +233,17 @@ export class InvestorsService {
           });
           if (!investor) throw new NotFoundException('Investor not found');
 
+          const investmentCount = await tx.investorInvestment.count({ where: { investorId: id } });
           const paymentCount = await tx.investorPayment.count({ where: { investorId: id } });
           const movementCount = await tx.investorInvestmentMovement.count({
             where: { investment: { investorId: id } },
           });
-          if (paymentCount > 0 || movementCount > 0) {
+          if (investmentCount > 0 || paymentCount > 0 || movementCount > 0) {
             throw new BadRequestException(
-              'No se puede eliminar un inversionista con historial de pagos o movimientos de capital',
+              'No se puede eliminar un inversionista con inversiones registradas, historial de pagos o movimientos de capital',
             );
           }
 
-          await tx.investorInvestment.deleteMany({ where: { investorId: id } });
           await tx.document.updateMany({ where: { investorId: id }, data: { investorId: null } });
           const deleted = await tx.investor.delete({ where: { id } });
           await tx.auditLog.create({
