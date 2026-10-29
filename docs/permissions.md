@@ -24,7 +24,7 @@ The backend has two roles:
 - Investor capital and profile changes:
   - `POST /api/v1/investors`
   - `PATCH /api/v1/investors/:id`
-  - `DELETE /api/v1/investors/:id` (only if the investor has no payments or capital movements; deletion is audited)
+  - `DELETE /api/v1/investors/:id` (only if the investor has no investments, payments, or capital movements; deletion is audited)
   - `POST /api/v1/investors/:investorId/investments`
   - `POST /api/v1/investments/:investmentId/capital-additions`
 - Deletes:
